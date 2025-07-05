@@ -5,9 +5,11 @@ import java.util.UUID;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
+@Setter
 @SuperBuilder
 public class UserModel {
     private UUID id;

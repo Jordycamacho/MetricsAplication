@@ -3,6 +3,7 @@ package com.fitapp.backend.infrastructure.persistence.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +16,7 @@ import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 public class UserRepository implements UserPersistencePort {
 
     private final SpringDataUserRepository jpaRepository;
-    
+
     public UserRepository(SpringDataUserRepository jpaRepository) {
         this.jpaRepository = jpaRepository;
     }
@@ -34,7 +35,9 @@ public class UserRepository implements UserPersistencePort {
 
     @Override
     public List<UserModel> findAll() {
-        throw new UnsupportedOperationException("Unimplemented method 'findAll'");
+        return jpaRepository.findAll().stream()
+                .map(UserConverter::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -44,8 +47,8 @@ public class UserRepository implements UserPersistencePort {
 
     @Override
     public Optional<UserModel> findByEmail(String email) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByEmail'");
+        return jpaRepository.findByEmail(email)
+                .map(UserConverter::toDomain);
     }
 
 }

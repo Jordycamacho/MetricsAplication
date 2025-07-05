@@ -1,6 +1,5 @@
 package com.fitapp.backend.application.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.fitapp.backend.application.dto.user.UserCreationRequest;
+import com.fitapp.backend.application.dto.user.UserUpdateRequest;
 import com.fitapp.backend.application.ports.input.UserUseCase;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.exception.UserNotFoundException;
@@ -44,25 +44,39 @@ public class UserServiceImpl implements UserUseCase {
     }
 
     @Override
-    public UserModel updateUser(UUID id, UserModel user) {
-        return persistencePort.findById(id)
-                .map(existing -> {
-                    UserModel updated = UserModel.builder()
-                            .id(existing.getId())
-                            .createdAt(existing.getCreatedAt())
-                            .updatedAt(LocalDateTime.now())
-                            .version(existing.getVersion())
-                            .supabaseUid(existing.getSupabaseUid())
-                            .email(user.getEmail() != null ? user.getEmail() : existing.getEmail())
-                            .role(user.getRole() != null ? user.getRole() : existing.getRole())
-                            .lastLogin(user.getLastLogin() != null ? user.getLastLogin() : existing.getLastLogin())
-                            .isActive(user.isActive())
-                            .maxRoutines(
-                                    user.getMaxRoutines() != null ? user.getMaxRoutines() : existing.getMaxRoutines())
-                            .build();
-                    return persistencePort.save(updated);
-                })
+    public void updatePassword(UUID userId, String newPassword) {
+        UserModel user = persistencePort.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        persistencePort.save(user);
+    }
+
+    /**
+     * Actualiza los datos básicos de un usuario
+     * 
+     * @param id            Identificador del usuario
+     * @param updateRequest Datos a actualizar
+     * @return Usuario actualizado
+     * @throws UserNotFoundException Si el usuario no existe
+     */
+
+    @Override
+    public UserModel updateUser(UUID id, UserUpdateRequest updateRequest) {
+        UserModel existing = persistencePort.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+
+        if (updateRequest.getRole() != null) {
+            existing.setRole(updateRequest.getRole());
+        }
+        if (updateRequest.getIsActive() != null) {
+            existing.setActive(updateRequest.getIsActive());
+        }
+        if (updateRequest.getMaxRoutines() != null) {
+            existing.setMaxRoutines(updateRequest.getMaxRoutines());
+        }
+
+        return persistencePort.save(existing);
     }
 
     @Override
@@ -107,9 +121,11 @@ public class UserServiceImpl implements UserUseCase {
     }
 
     @Override
-    public UserModel activateUser(UUID id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'activateUser'");
+    public void activateUser(UUID id) {
+        UserModel user = persistencePort.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.setActive(true);
+        persistencePort.save(user);
     }
 
     @Override
@@ -134,5 +150,6 @@ public class UserServiceImpl implements UserUseCase {
         if (request.getPassword().length() < 8) {
             throw new IllegalArgumentException("Password must be at least 8 characters");
         }
+        
     }
 }
