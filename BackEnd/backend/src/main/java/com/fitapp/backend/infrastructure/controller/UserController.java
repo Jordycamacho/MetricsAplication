@@ -32,6 +32,16 @@ public class UserController {
         this.userUseCase = userUseCase;
     }
 
+    @Operation(summary = "Obtener todos los usuarios")
+    @GetMapping("")
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserModel> users = userUseCase.getAllUsers();
+        List<UserResponse> responses = users.stream()
+                .map(UserConverter::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
+
     @PostMapping("/create")
     @Operation(summary = "Crear un nuevo usuario")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserCreationRequest request) {
@@ -50,6 +60,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    /*Da Error */
     @Operation(summary = "Actualizar datos de un usuario")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
@@ -67,16 +78,7 @@ public class UserController {
         return ResponseEntity.ok(UserConverter.toResponse(user));
     }
 
-    @Operation(summary = "Obtener todos los usuarios")
-    @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserModel> users = userUseCase.getAllUsers();
-        List<UserResponse> responses = users.stream()
-                .map(UserConverter::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
-    }
-
+    /*Da Error */
     @Operation(summary = "Eliminar un usuario por ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
@@ -84,7 +86,8 @@ public class UserController {
         userUseCase.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-
+    
+    /*Da Error */
     @Operation(summary = "Activar un usuario")
     @PatchMapping("/{id}/activate")
     public ResponseEntity<Void> activateUser(
@@ -93,6 +96,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    /*Da Error */
     @Operation(summary = "Desactivar un usuario")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<Void> deactivateUser(
@@ -101,6 +105,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    /*Da Error */
     @Operation(summary = "Obtener usuario por email")
     @GetMapping("/by-email/{email}")
     public ResponseEntity<UserResponse> getUserByEmail(
@@ -110,6 +115,7 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /*Da Error */
     @Operation(summary = "Obtener usuario por Supabase UID")
     @GetMapping("/by-supabase/{uid}")
     public ResponseEntity<UserResponse> getUserBySupabaseUid(
