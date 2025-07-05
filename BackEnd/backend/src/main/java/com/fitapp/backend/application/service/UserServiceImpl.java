@@ -1,6 +1,7 @@
 package com.fitapp.backend.application.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,20 +105,18 @@ public class UserServiceImpl implements UserUseCase {
 
     @Override
     public void deleteUser(UUID id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteUser'");
+        persistencePort.deleteById(id);
     }
 
     @Override
     public UserModel getUserById(UUID id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUserById'");
+        return persistencePort.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
     public List<UserModel> getAllUsers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllUsers'");
+        return persistencePort.findAll();
     }
 
     @Override
@@ -129,9 +128,24 @@ public class UserServiceImpl implements UserUseCase {
     }
 
     @Override
-    public UserModel deactivateUser(UUID id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deactivateUser'");
+    public void deactivateUser(UUID id) {
+        UserModel user = persistencePort.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.deactivate();
+        persistencePort.save(user);
+    }
+
+    @Override
+    public Optional<UserModel> findByEmail(String email) {
+        return persistencePort.findByEmail(email.toLowerCase().trim());
+    }
+
+    @Override
+    public Optional<UserModel> findBySupabaseUid(String supabaseUid) {
+        if (supabaseUid == null || supabaseUid.isBlank()) {
+            throw new IllegalArgumentException("Supabase UID no puede estar vacío");
+        }
+        return persistencePort.findBySupabaseUid(supabaseUid);
     }
 
     private void validateUserRequest(UserCreationRequest request) {
@@ -150,6 +164,7 @@ public class UserServiceImpl implements UserUseCase {
         if (request.getPassword().length() < 8) {
             throw new IllegalArgumentException("Password must be at least 8 characters");
         }
-        
+
     }
+
 }

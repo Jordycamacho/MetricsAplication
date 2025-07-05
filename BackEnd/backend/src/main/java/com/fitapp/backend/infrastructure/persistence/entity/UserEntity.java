@@ -54,6 +54,7 @@ public class UserEntity extends BaseEntity {
     private LocalDateTime lastLogin;
 
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private boolean isActive = true;
 
     @Column(name = "max_routines")
@@ -62,10 +63,12 @@ public class UserEntity extends BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private SubscriptionEntity subscription;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @BatchSize(size = 20)
     private List<RoutineEntity> routines = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PersonalRecordEntity> personalRecords = new ArrayList<>();
 }

@@ -12,4 +12,5 @@ public interface UserPersistencePort {
     List<UserModel> findAll();
     void deleteById(UUID id);
     Optional<UserModel> findByEmail(String email);
+    Optional<UserModel> findBySupabaseUid(String supabaseUid);
 }

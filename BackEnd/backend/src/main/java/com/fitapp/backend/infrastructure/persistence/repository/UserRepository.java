@@ -42,7 +42,7 @@ public class UserRepository implements UserPersistencePort {
 
     @Override
     public void deleteById(UUID id) {
-        throw new UnsupportedOperationException("Unimplemented method 'deleteById'");
+        jpaRepository.deleteById(id);
     }
 
     @Override
@@ -51,4 +51,9 @@ public class UserRepository implements UserPersistencePort {
                 .map(UserConverter::toDomain);
     }
 
+    @Override
+    public Optional<UserModel> findBySupabaseUid(String supabaseUid) {
+        return jpaRepository.findBySupabaseUid(supabaseUid)
+                .map(UserConverter::toDomain);
+    }
 }
