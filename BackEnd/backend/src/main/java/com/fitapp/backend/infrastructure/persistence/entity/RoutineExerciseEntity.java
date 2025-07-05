@@ -2,7 +2,7 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 
 import java.time.Duration;
 
-import com.fitapp.backend.domain.service.DurationToLongConverter;
+import com.fitapp.backend.application.service.DurationToLongConverter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;

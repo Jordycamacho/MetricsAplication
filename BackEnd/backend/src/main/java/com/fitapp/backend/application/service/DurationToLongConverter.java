@@ -1,4 +1,4 @@
-package com.fitapp.backend.domain.service;
+package com.fitapp.backend.application.service;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
