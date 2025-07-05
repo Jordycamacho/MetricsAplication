@@ -60,9 +60,8 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    /*Da Error */
     @Operation(summary = "Actualizar datos de un usuario")
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @Parameter(description = "ID del usuario") @PathVariable UUID id,
             @Valid @RequestBody UserUpdateRequest updateRequest) {
@@ -78,7 +77,6 @@ public class UserController {
         return ResponseEntity.ok(UserConverter.toResponse(user));
     }
 
-    /*Da Error */
     @Operation(summary = "Eliminar un usuario por ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
@@ -87,7 +85,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
     
-    /*Da Error */
     @Operation(summary = "Activar un usuario")
     @PatchMapping("/{id}/activate")
     public ResponseEntity<Void> activateUser(
@@ -96,16 +93,14 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    /*Da Error */
     @Operation(summary = "Desactivar un usuario")
-    @PatchMapping("/{id}/deactivate")
+    @PatchMapping("/{id}/desactivate")
     public ResponseEntity<Void> deactivateUser(
             @Parameter(description = "ID del usuario") @PathVariable UUID id) {
         userUseCase.deactivateUser(id);
         return ResponseEntity.noContent().build();
     }
 
-    /*Da Error */
     @Operation(summary = "Obtener usuario por email")
     @GetMapping("/by-email/{email}")
     public ResponseEntity<UserResponse> getUserByEmail(
@@ -115,7 +110,6 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /*Da Error */
     @Operation(summary = "Obtener usuario por Supabase UID")
     @GetMapping("/by-supabase/{uid}")
     public ResponseEntity<UserResponse> getUserBySupabaseUid(

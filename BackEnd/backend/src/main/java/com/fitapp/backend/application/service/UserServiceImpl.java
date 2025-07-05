@@ -1,5 +1,6 @@
 package com.fitapp.backend.application.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,20 +14,22 @@ import com.fitapp.backend.application.ports.input.UserUseCase;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.exception.UserNotFoundException;
 import com.fitapp.backend.domain.model.UserModel;
+import com.fitapp.backend.infrastructure.persistence.converter.UserConverter;
+import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 
 import jakarta.persistence.EntityNotFoundException;
+import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserUseCase {
 
     private final UserPersistencePort persistencePort;
     private final PasswordEncoder passwordEncoder;
-
-    public UserServiceImpl(UserPersistencePort persistencePort, PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-        this.persistencePort = persistencePort;
-    }
+    private final SpringDataUserRepository jpaRepository;
 
     @Override
     public UserModel createUser(UserCreationRequest request) {
@@ -63,21 +66,23 @@ public class UserServiceImpl implements UserUseCase {
      */
 
     @Override
+    @Transactional
     public UserModel updateUser(UUID id, UserUpdateRequest updateRequest) {
-        UserModel existing = persistencePort.findById(id)
+        UserEntity entity = jpaRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
         if (updateRequest.getRole() != null) {
-            existing.setRole(updateRequest.getRole());
+            entity.setRole(updateRequest.getRole());
         }
         if (updateRequest.getIsActive() != null) {
-            existing.setActive(updateRequest.getIsActive());
+            entity.setActive(updateRequest.getIsActive());
         }
         if (updateRequest.getMaxRoutines() != null) {
-            existing.setMaxRoutines(updateRequest.getMaxRoutines());
+            entity.setMaxRoutines(updateRequest.getMaxRoutines());
         }
 
-        return persistencePort.save(existing);
+        entity.setUpdatedAt(LocalDateTime.now());
+        return UserConverter.toDomain(entity); // No necesita save() por @Transactional
     }
 
     @Override
@@ -120,19 +125,22 @@ public class UserServiceImpl implements UserUseCase {
     }
 
     @Override
+    @Transactional
     public void activateUser(UUID id) {
-        UserModel user = persistencePort.findById(id)
+        UserEntity userEntity = jpaRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        user.setActive(true);
-        persistencePort.save(user);
+        userEntity.setActive(true);
+        userEntity.setUpdatedAt(LocalDateTime.now());
     }
 
     @Override
+    @Transactional
     public void deactivateUser(UUID id) {
-        UserModel user = persistencePort.findById(id)
+        UserEntity userEntity = jpaRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        user.deactivate();
-        persistencePort.save(user);
+
+        userEntity.setActive(false);
+        userEntity.setUpdatedAt(LocalDateTime.now());
     }
 
     @Override
