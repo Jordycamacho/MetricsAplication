@@ -17,6 +17,12 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import jakarta.persistence.Index;
 
 @Entity
@@ -25,12 +31,20 @@ import jakarta.persistence.Index;
         @Index(name = "idx_user_role", columnList = "role"),
         @Index(name = "idx_supabase_uid", columnList = "supabase_uid")
 })
-public class UserEntity extends BaseEntity{
-    @Column(name = "supabase_uid", unique = true)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
+public class UserEntity extends BaseEntity {
+    @Column(name = "supabase_uid", unique = true, nullable = false)
     private String supabaseUid;
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,15 +57,15 @@ public class UserEntity extends BaseEntity{
     private boolean isActive = true;
 
     @Column(name = "max_routines")
-    private Integer maxRoutines; // Null = ilimitado (PREMIUM), 1 para FREE
+    private Integer maxRoutines;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private SubscriptionEntity subscription;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @BatchSize(size = 20)
     private List<RoutineEntity> routines = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PersonalRecordEntity> personalRecords = new ArrayList<>();
 }
