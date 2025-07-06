@@ -1,5 +1,10 @@
 package com.fitapp.backend.infrastructure.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +22,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Tag(name = "User Management", description = "Endpoints para gestionar usuarios")
 @RestController
@@ -32,13 +35,13 @@ public class UserController {
         this.userUseCase = userUseCase;
     }
 
-    @Operation(summary = "Obtener todos los usuarios")
+    @Operation(summary = "Obtener todos los usuarios paginados")
     @GetMapping("")
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserModel> users = userUseCase.getAllUsers();
-        List<UserResponse> responses = users.stream()
-                .map(UserConverter::toResponse)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
+            @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Direction.DESC) Pageable pageable) {
+
+        Page<UserModel> users = userUseCase.findAll(pageable);
+        Page<UserResponse> responses = users.map(UserConverter::toResponse);
         return ResponseEntity.ok(responses);
     }
 
@@ -49,7 +52,7 @@ public class UserController {
         UserResponse response = UserConverter.toResponse(createdUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
- 
+
     @PatchMapping("/{id}/password")
     @Operation(summary = "Actualiza la contraseña de un usuario")
     public ResponseEntity<Void> updatePassword(
@@ -84,7 +87,7 @@ public class UserController {
         userUseCase.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     @Operation(summary = "Activar un usuario")
     @PatchMapping("/{id}/activate")
     public ResponseEntity<Void> activateUser(

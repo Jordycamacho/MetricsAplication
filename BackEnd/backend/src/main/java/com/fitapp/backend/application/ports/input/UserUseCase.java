@@ -1,8 +1,10 @@
 package com.fitapp.backend.application.ports.input;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.fitapp.backend.application.dto.user.UserCreationRequest;
 import com.fitapp.backend.application.dto.user.UserUpdateRequest;
@@ -14,7 +16,7 @@ public interface UserUseCase {
     void updatePassword(UUID userId, String newPassword);
     void deleteUser(UUID id);
     UserModel getUserById(UUID id);
-    List<UserModel> getAllUsers();
+    Page<UserModel> findAll(Pageable pageable);
     void activateUser(UUID id);
     void deactivateUser(UUID id);
     public void updateLastLogin(UUID userId);

@@ -1,10 +1,10 @@
 package com.fitapp.backend.infrastructure.persistence.repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
@@ -24,7 +24,9 @@ public class UserRepository implements UserPersistencePort {
     @Override
     public UserModel save(UserModel user) {
         UserEntity entity = UserConverter.toEntity(user);
-        return UserConverter.toDomain(jpaRepository.save(entity));
+        entity.updateTimestamps();
+        UserEntity savedEntity = jpaRepository.save(entity);
+        return UserConverter.toDomain(jpaRepository.save(savedEntity));
     }
 
     @Override
@@ -34,10 +36,9 @@ public class UserRepository implements UserPersistencePort {
     }
 
     @Override
-    public List<UserModel> findAll() {
-        return jpaRepository.findAll().stream()
-                .map(UserConverter::toDomain)
-                .collect(Collectors.toList());
+    public Page<UserModel> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable)
+                .map(UserConverter::toDomain);
     }
 
     @Override

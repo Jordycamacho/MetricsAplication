@@ -37,13 +37,13 @@ import jakarta.persistence.Index;
 @AllArgsConstructor
 @SuperBuilder
 public class UserEntity extends BaseEntity {
-    @Column(name = "supabase_uid", unique = true, nullable = false)
+    @Column(name = "supabase_uid", unique = true, nullable = false, length = 36)
     private String supabaseUid;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -71,4 +71,11 @@ public class UserEntity extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PersonalRecordEntity> personalRecords = new ArrayList<>();
+
+    public void updateTimestamps() {
+        if (this.getCreatedAt() == null) {
+            this.setCreatedAt(LocalDateTime.now());
+        }
+        this.setUpdatedAt(LocalDateTime.now());
+    }
 }

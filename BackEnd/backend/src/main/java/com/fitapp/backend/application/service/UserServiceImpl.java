@@ -1,10 +1,11 @@
 package com.fitapp.backend.application.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import com.fitapp.backend.application.ports.input.UserUseCase;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.exception.UserNotFoundException;
 import com.fitapp.backend.domain.model.UserModel;
+import com.fitapp.backend.infrastructure.persistence.adapter.out.supabase.SupabaseAuthClient;
 import com.fitapp.backend.infrastructure.persistence.converter.UserConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
@@ -30,15 +32,18 @@ public class UserServiceImpl implements UserUseCase {
     private final UserPersistencePort persistencePort;
     private final PasswordEncoder passwordEncoder;
     private final SpringDataUserRepository jpaRepository;
+    private final SupabaseAuthClient supabaseAuthClient;
 
     @Override
+    @Transactional
     public UserModel createUser(UserCreationRequest request) {
         validateUserRequest(request);
+        supabaseAuthClient.verifySupabaseUid(request.getSupabaseUid());
 
         UserModel user = UserModel.builder()
                 .email(request.getEmail().toLowerCase().trim())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : Role.FREE)
+                .role(request.getRole() != null ? request.getRole() : Role.STANDARD)
                 .isActive(request.isActive())
                 .maxRoutines(request.getMaxRoutines())
                 .supabaseUid(request.getSupabaseUid())
@@ -82,7 +87,7 @@ public class UserServiceImpl implements UserUseCase {
         }
 
         entity.setUpdatedAt(LocalDateTime.now());
-        return UserConverter.toDomain(entity); // No necesita save() por @Transactional
+        return UserConverter.toDomain(entity);
     }
 
     @Override
@@ -120,8 +125,8 @@ public class UserServiceImpl implements UserUseCase {
     }
 
     @Override
-    public List<UserModel> getAllUsers() {
-        return persistencePort.findAll();
+    public Page<UserModel> findAll(Pageable pageable) {
+        return persistencePort.findAll(pageable);
     }
 
     @Override
