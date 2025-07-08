@@ -18,7 +18,6 @@ public class UserModel {
     private Long version;
     private String supabaseUid;
     private String email;
-    private String passwordHash;
     private Role role;
     private LocalDateTime lastLogin;
     private boolean isActive;

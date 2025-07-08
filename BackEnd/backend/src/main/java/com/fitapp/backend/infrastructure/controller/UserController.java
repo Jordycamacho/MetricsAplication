@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.fitapp.backend.application.dto.user.PasswordUpdateRequest;
 import com.fitapp.backend.application.dto.user.UserCreationRequest;
 import com.fitapp.backend.application.dto.user.UserResponse;
 import com.fitapp.backend.application.dto.user.UserUpdateRequest;
@@ -21,20 +20,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 import java.util.UUID;
 
 @Tag(name = "User Management", description = "Endpoints para gestionar usuarios")
+@AllArgsConstructor
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserUseCase userUseCase;
-
-    public UserController(UserUseCase userUseCase) {
-        this.userUseCase = userUseCase;
-    }
-
+    
     @Operation(summary = "Obtener todos los usuarios paginados")
     @GetMapping("")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
@@ -51,16 +48,6 @@ public class UserController {
         UserModel createdUser = userUseCase.createUser(request);
         UserResponse response = UserConverter.toResponse(createdUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @PatchMapping("/{id}/password")
-    @Operation(summary = "Actualiza la contraseña de un usuario")
-    public ResponseEntity<Void> updatePassword(
-            @Parameter(description = "ID del usuario") @PathVariable UUID id,
-            @Valid @RequestBody PasswordUpdateRequest request) {
-
-        userUseCase.updatePassword(id, request.getNewPassword());
-        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Actualizar datos de un usuario")

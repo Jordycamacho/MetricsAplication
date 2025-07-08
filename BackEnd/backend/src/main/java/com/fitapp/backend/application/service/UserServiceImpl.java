@@ -42,7 +42,6 @@ public class UserServiceImpl implements UserUseCase {
 
         UserModel user = UserModel.builder()
                 .email(request.getEmail().toLowerCase().trim())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole() != null ? request.getRole() : Role.STANDARD)
                 .isActive(request.isActive())
                 .maxRoutines(request.getMaxRoutines())
@@ -52,14 +51,6 @@ public class UserServiceImpl implements UserUseCase {
         return persistencePort.save(user);
     }
 
-    @Override
-    public void updatePassword(UUID userId, String newPassword) {
-        UserModel user = persistencePort.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        persistencePort.save(user);
-    }
 
     /**
      * Actualiza los datos básicos de un usuario
@@ -169,15 +160,6 @@ public class UserServiceImpl implements UserUseCase {
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException("Email is required");
         }
-
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("Password is required");
-        }
-
-        if (request.getPassword().length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters");
-        }
-
     }
 
 }

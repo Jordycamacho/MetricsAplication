@@ -41,7 +41,6 @@ public class UserConverter {
                 .version(domain.getVersion())
                 .supabaseUid(domain.getSupabaseUid())
                 .email(domain.getEmail())
-                .passwordHash(domain.getPasswordHash())
                 .role(domain.getRole())
                 .lastLogin(domain.getLastLogin())
                 .isActive(domain.isActive())

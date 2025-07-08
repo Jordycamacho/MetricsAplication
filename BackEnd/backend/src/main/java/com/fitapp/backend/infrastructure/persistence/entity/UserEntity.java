@@ -43,9 +43,6 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 100)
-    private String passwordHash;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

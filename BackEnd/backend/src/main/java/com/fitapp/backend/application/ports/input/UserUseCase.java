@@ -13,7 +13,6 @@ import com.fitapp.backend.domain.model.UserModel;
 public interface UserUseCase {
     UserModel createUser(UserCreationRequest  request);
     UserModel updateUser(UUID id, UserUpdateRequest updateRequest);
-    void updatePassword(UUID userId, String newPassword);
     void deleteUser(UUID id);
     UserModel getUserById(UUID id);
     Page<UserModel> findAll(Pageable pageable);
