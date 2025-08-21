@@ -21,7 +21,7 @@ public class UserRepository implements UserPersistencePort {
 
     private final SpringDataUserRepository jpaRepository;
     private final SubscriptionPersistencePort subscriptionRepository;
-
+ 
     @Override
     public Optional<UserModel> findById(Long id) {
         return jpaRepository.findById(id)
