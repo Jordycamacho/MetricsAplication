@@ -1,26 +1,26 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
-
+import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "exercise_parameters")
-public class ExerciseParameterEntity extends BaseEntity {
+public class ExerciseParameterEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "set_id", nullable = false)
     private ExerciseSetEntity set;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "parameter_type", nullable = false)
-    private ParameterType type;
 
     @Column(nullable = false)
     private Double value;

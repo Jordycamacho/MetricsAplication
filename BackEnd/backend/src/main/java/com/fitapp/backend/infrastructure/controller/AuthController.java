@@ -1,69 +1,68 @@
 package com.fitapp.backend.infrastructure.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fitapp.backend.application.dto.Auth.AuthResponse;
-import com.fitapp.backend.application.dto.user.UserCreationRequest;
+import com.fitapp.backend.application.dto.Auth.LoginRequest;
+import com.fitapp.backend.application.dto.Auth.RegisterRequest;
+import com.fitapp.backend.application.dto.user.PasswordUpdateRequest;
+import com.fitapp.backend.application.ports.input.AuthUseCase;
 import com.fitapp.backend.application.ports.input.UserUseCase;
-import com.fitapp.backend.domain.model.UserModel;
-import com.fitapp.backend.infrastructure.persistence.adapter.out.supabase.SupabaseAuthClient;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
+import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.web.bind.annotation.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Endpoints para gestión de autenticación")
 public class AuthController {
 
-    private final UserUseCase userService;
-    private final SupabaseAuthClient supabaseClient;
-    private final int DEFAULT_MAX_ROUTINES = 1;
+    private final AuthUseCase authUseCase;
+    private final UserUseCase userUseCase;
 
+    @Operation(summary = "Registrar nuevo usuario")
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authUseCase.register(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Iniciar sesión")
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request) {
 
-        AuthResponse auth = supabaseClient.signIn(request.email(), request.password());
-
-        UserModel user = userService.findBySupabaseUid(auth.getUserId())
-                .orElseGet(() -> userService.createUser(
-                        new UserCreationRequest(
-                                auth.getUserId(),
-                                auth.getEmail(),
-                                Role.STANDARD,
-                                true,
-                                DEFAULT_MAX_ROUTINES)));
-
-        userService.updateLastLogin(user.getId());
-
-        return ResponseEntity.ok(new LoginResponse(auth.getAccessToken()));
+        AuthResponse response = authUseCase.login(request);
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
-        String token = extractToken(request);
-        if (token != null) {
-            supabaseClient.signOut(token);
-        }
-        return ResponseEntity.ok().build();
+    @Operation(summary = "Actualizar contraseña")
+    @PostMapping("/password")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Void> updatePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody PasswordUpdateRequest request) {
+
+        userUseCase.updatePassword(userDetails.getUserId(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
     }
 
-    private String extractToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
-        }
-        return null;
-    }
+    @Operation(summary = "Refrescar token")
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-    public record LoginRequest(String email, String password) {
-    }
-
-    public record LoginResponse(String accessToken) {
+        AuthResponse response = authUseCase.refreshToken(userDetails);
+        return ResponseEntity.ok(response);
     }
 }

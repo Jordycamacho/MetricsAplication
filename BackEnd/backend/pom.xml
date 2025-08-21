@@ -29,11 +29,13 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<!-- Versiones específicas para resolver conflictos -->
+		<!-- Versiones actualizadas para compatibilidad con Spring Boot 3.5.3 -->
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
 		<lombok.version>1.18.32</lombok.version>
 		<lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 		<maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+		<!-- Nueva propiedad para versión de Hibernate -->
+		<hibernate.version>6.4.8.Final</hibernate.version>
 	</properties>
 	<dependencies>
 		<!-- Spring Boot Starters -->
@@ -43,15 +45,34 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<!-- Excluir Tomcat para evitar conflicto con Jetty -->
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-jetty</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<!-- Forzar versión compatible de Hibernate -->
+			<exclusions>
+				<exclusion>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>${hibernate.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -67,8 +88,8 @@
 		</dependency>
 		<!-- Base de datos y ORM -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
+			<groupId>org.springframework.session</groupId>
+			<artifactId>spring-session-jdbc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.vladmihalcea</groupId>
@@ -79,6 +100,8 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+			<!-- Actualizar driver PostgreSQL -->
+			<version>42.7.3</version>
 		</dependency>
 
 		<!-- Utilidades y librerías esenciales -->
@@ -91,6 +114,7 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
+			<version>${lombok.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
@@ -99,6 +123,7 @@
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
+			<version>3.1.8</version>
 		</dependency>
 
 		<!-- Documentación API -->
@@ -108,44 +133,13 @@
 			<version>2.3.0</version>
 		</dependency>
 
-		<!-- Seguridad y autenticación -->
+		<!-- Seguridad -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-authorization-server</artifactId>
+			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-oauth2-jose</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.session</groupId>
-			<artifactId>spring-session-jdbc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.11.5</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.11.5</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.11.5</version>
-			<scope>runtime</scope>
-		</dependency>
+
+		<!-- oauth2 - Usar solo un proveedor JWT -->
 		<dependency>
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>
@@ -156,6 +150,23 @@
 			<artifactId>guava</artifactId>
 			<version>33.0.0-jre</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-resource-server</artifactId>
+		</dependency>
+
 		<!-- Desarrollo y testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -185,6 +196,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven.compiler.plugin.version}</version>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
@@ -212,6 +224,8 @@
 					<compilerArgs>
 						<arg>-Amapstruct.defaultComponentModel=spring</arg>
 						<arg>-Amapstruct.unmappedTargetPolicy=IGNORE</arg>
+						<!-- Habilitar procesamiento de anotaciones en constructores -->
+						<arg>-parameters</arg>
 					</compilerArgs>
 				</configuration>
 			</plugin>
@@ -225,6 +239,8 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<!-- Solucionar problema de classpath -->
+					<jvmArguments>-Dspring.devtools.restart.enabled=false</jvmArguments>
 				</configuration>
 			</plugin>
 		</plugins>

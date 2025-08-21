@@ -1,33 +1,16 @@
 package com.fitapp.backend.application.dto.Auth;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.Instant;
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Value
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthResponse {
-    @JsonProperty("access_token")
-    String accessToken;
-    
-    @JsonProperty("token_type")
-    String tokenType;
-    
-    @JsonProperty("user")
-    UserData user;
-    
-    @Value
-    public static class UserData {
-        String id;
-        String email;
-    }
-    
-    public String getUserId() {
-        return user.getId();
-    }
-    
-    public String getEmail() {
-        return user.getEmail();
-    }
+    private String token;
+    private String refreshToken;
+    private Instant expiresAt;
 }

@@ -1,15 +1,15 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import java.time.LocalDate;
-
+import jakarta.persistence.Id;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricPeriod;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -17,10 +17,14 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "personal_records", indexes = {
-    @Index(name = "idx_record_user_exercise", columnList = "user_id, exercise_id"),
-    @Index(name = "idx_record_type", columnList = "parameter_type")
+    @Index(name = "idx_record_user_exercise", columnList = "user_id, exercise_id")
 })
-public class PersonalRecordEntity extends BaseEntity {
+public class PersonalRecordEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    private Long id;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
@@ -29,9 +33,9 @@ public class PersonalRecordEntity extends BaseEntity {
     @JoinColumn(name = "exercise_id")
     private ExerciseEntity exercise;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "parameter_type", nullable = false)
-    private ParameterType parameterType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parameter_id", nullable = false)
+    private CustomParameterEntity parameter;
     
     @Column(nullable = false)
     private Double value;

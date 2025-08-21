@@ -3,10 +3,13 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.Formula;
+import jakarta.persistence.Id;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -16,7 +19,12 @@ import jakarta.persistence.ManyToOne;
 @Table(name = "workout_logs", indexes = {
     @Index(name = "idx_workout_user_date", columnList = "user_id, start_time")
 })
-public class WorkoutLogEntity extends BaseEntity {
+public class WorkoutLogEntity  {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;

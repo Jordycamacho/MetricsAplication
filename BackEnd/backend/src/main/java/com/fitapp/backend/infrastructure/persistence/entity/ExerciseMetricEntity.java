@@ -1,16 +1,16 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import jakarta.persistence.Table;
-
 import java.time.LocalDate;
-
+import jakarta.persistence.Id;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricPeriod;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -21,7 +21,11 @@ import jakarta.persistence.ManyToOne;
         @Index(name = "idx_exercise_metric_date", columnList = "date"),
         @Index(name = "idx_metric_user_period", columnList = "user_id, period")
 })
-public class ExerciseMetricEntity extends BaseEntity {
+public class ExerciseMetricEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
@@ -43,9 +47,13 @@ public class ExerciseMetricEntity extends BaseEntity {
     private Double totalVolume;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20) 
+    @Column(length = 20)
     private MetricPeriod period;
 
-    @Column(name = "pr_delta") 
+    @Column(name = "pr_delta")
     private Double prDelta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parameter_id") 
+    private CustomParameterEntity parameter;
 }
