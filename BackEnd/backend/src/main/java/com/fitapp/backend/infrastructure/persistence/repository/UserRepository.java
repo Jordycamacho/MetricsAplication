@@ -13,6 +13,8 @@ import com.fitapp.backend.infrastructure.persistence.converter.SubscriptionConve
 import com.fitapp.backend.infrastructure.persistence.converter.UserConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -21,7 +23,7 @@ public class UserRepository implements UserPersistencePort {
 
     private final SpringDataUserRepository jpaRepository;
     private final SubscriptionPersistencePort subscriptionRepository;
- 
+
     @Override
     public Optional<UserModel> findById(Long id) {
         return jpaRepository.findById(id)
@@ -36,30 +38,35 @@ public class UserRepository implements UserPersistencePort {
 
     @Override
     public Optional<UserModel> findByEmail(String email) {
-        return jpaRepository.findByEmail(email)
-                .map(this::mapToDomainWithSubscription);
+        Optional<UserEntity> userEntity = jpaRepository.findByEmail(email);
+
+        // Debug
+        if (userEntity.isPresent()) {
+            System.out.println("User found: " + userEntity.get().getEmail());
+            System.out.println("User subscription: " + userEntity.get().getSubscription());
+        }
+
+        return userEntity.map(this::mapToDomainWithSubscription);
     }
 
     @Override
+    @Transactional 
     public UserModel save(UserModel userModel) {
         UserEntity entity = UserConverter.toEntity(userModel);
         UserEntity savedUser = jpaRepository.save(entity);
 
         if (userModel.getSubscription() != null) {
-            // PRIMERO: Establecer el userId en el subscriptionModel
+            
             SubscriptionModel subscription = userModel.getSubscription();
-            subscription.setUserId(savedUser.getId()); // ← ESTA LÍNEA ES CRÍTICA
+            subscription.setUserId(savedUser.getId());
 
-            // SEGUNDO: Guardar la suscripción
             SubscriptionModel savedSubscription = subscriptionRepository.save(subscription);
 
-            // TERCERO: Actualizar la referencia en el userModel
             userModel.setSubscription(savedSubscription);
 
-            // CUARTO: Actualizar la entidad de usuario con la suscripción
             SubscriptionEntity subscriptionEntity = SubscriptionConverter.toEntity(savedSubscription, savedUser);
             savedUser.setSubscription(subscriptionEntity);
-            jpaRepository.save(savedUser); // Guardar la relación
+            jpaRepository.save(savedUser);
         }
 
         return mapToDomainWithSubscription(savedUser);
@@ -68,9 +75,10 @@ public class UserRepository implements UserPersistencePort {
     private UserModel mapToDomainWithSubscription(UserEntity userEntity) {
         UserModel userModel = UserConverter.toDomain(userEntity);
 
-        // Cargar la suscripción si existe
-        Optional<SubscriptionModel> subscription = subscriptionRepository.findByUserId(userEntity.getId());
-        subscription.ifPresent(userModel::setSubscription);
+        if (userEntity.getSubscription() == null) {
+            Optional<SubscriptionModel> subscription = subscriptionRepository.findByUserId(userEntity.getId());
+            subscription.ifPresent(userModel::setSubscription);
+        }
 
         return userModel;
     }

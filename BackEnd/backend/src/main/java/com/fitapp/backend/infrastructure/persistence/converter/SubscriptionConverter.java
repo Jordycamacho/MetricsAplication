@@ -11,41 +11,41 @@ import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 
 public class SubscriptionConverter {
-    
+
     public static SubscriptionModel toDomain(SubscriptionEntity entity) {
+   
         SubscriptionModel model;
-        
         Long userId = entity.getUser() != null ? entity.getUser().getId() : null;
 
-        switch(entity.getType()) {
+        switch (entity.getType()) {
             case FREE:
-                model =  FreeSubscriptionModel.builder()
-                    .id(entity.getId())
-                    .userId(userId)
-                    .startDate(entity.getStartDate())
-                    .endDate(entity.getEndDate())
-                    .build();
+                model = FreeSubscriptionModel.builder()
+                        .id(entity.getId())
+                        .userId(userId)
+                        .startDate(entity.getStartDate())
+                        .endDate(entity.getEndDate())
+                        .build();
                 break;
             case STANDARD:
                 StandardSubscriptionEntity stdEntity = (StandardSubscriptionEntity) entity;
-                model =  StandardSubscriptionModel.builder()
-                    .id(stdEntity.getId())
-                    .userId(userId)
-                    .startDate(stdEntity.getStartDate())
-                    .endDate(stdEntity.getEndDate())
-                    .basicAnalyticsEnabled(stdEntity.isBasicAnalyticsEnabled())
-                    .build();
+                model = StandardSubscriptionModel.builder()
+                        .id(stdEntity.getId())
+                        .userId(userId)
+                        .startDate(stdEntity.getStartDate())
+                        .endDate(stdEntity.getEndDate())
+                        .basicAnalyticsEnabled(stdEntity.isBasicAnalyticsEnabled())
+                        .build();
                 break;
             case PREMIUM:
                 PremiumSubscriptionEntity premEntity = (PremiumSubscriptionEntity) entity;
-                model =  PremiumSubscriptionModel.builder()
-                    .id(premEntity.getId())
-                    .userId(userId)
-                    .startDate(premEntity.getStartDate())
-                    .endDate(premEntity.getEndDate())
-                    .advancedAnalyticsEnabled(premEntity.isAdvancedAnalyticsEnabled())
-                    .maxRoutines(premEntity.getMaxRoutines())
-                    .build();
+                model = PremiumSubscriptionModel.builder()
+                        .id(premEntity.getId())
+                        .userId(userId)
+                        .startDate(premEntity.getStartDate())
+                        .endDate(premEntity.getEndDate())
+                        .advancedAnalyticsEnabled(premEntity.isAdvancedAnalyticsEnabled())
+                        .maxRoutines(premEntity.getMaxRoutines())
+                        .build();
                 break;
             default:
                 throw new IllegalArgumentException("Tipo de suscripción no soportado");
@@ -53,11 +53,11 @@ public class SubscriptionConverter {
 
         return model;
     }
-    
+
     public static SubscriptionEntity toEntity(SubscriptionModel model, UserEntity user) {
         SubscriptionEntity entity;
-        
-        switch(model.getType()) {
+
+        switch (model.getType()) {
             case FREE:
                 entity = new FreeSubscriptionEntity();
                 ((FreeSubscriptionEntity) entity).setMaxRoutines(((FreeSubscriptionModel) model).getMaxRoutines());
@@ -78,12 +78,12 @@ public class SubscriptionConverter {
             default:
                 throw new IllegalArgumentException("Tipo de suscripción no soportado");
         }
-        
+
         entity.setId(model.getId());
         entity.setUser(user);
         entity.setStartDate(model.getStartDate());
         entity.setEndDate(model.getEndDate());
-        
+
         return entity;
     }
 }

@@ -6,18 +6,26 @@ import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 public class UserConverter {
 
     public static UserModel toDomain(UserEntity entity) {
-        return UserModel.builder()
+        if (entity == null)
+            return null;
+
+        UserModel.UserModelBuilder builder = UserModel.builder()
                 .id(entity.getId())
                 .email(entity.getEmail())
                 .fullName(entity.getFullName())
                 .profileImage(entity.getProfileImage())
+                .password(entity.getPassword())
                 .maxRoutines(entity.getMaxRoutines())
                 .role(entity.getRole())
                 .lastLogin(entity.getLastLogin())
-                .isActive(entity.isActive())
-                .maxRoutines(entity.getMaxRoutines())
-                .subscription(SubscriptionConverter.toDomain(entity.getSubscription()))
-                .build();
+                .isActive(entity.isActive());
+
+        // Manejar suscripción nula
+        if (entity.getSubscription() != null) {
+            builder.subscription(SubscriptionConverter.toDomain(entity.getSubscription()));
+        }
+
+        return builder.build();
     }
 
     public static UserEntity toEntity(UserModel model) {

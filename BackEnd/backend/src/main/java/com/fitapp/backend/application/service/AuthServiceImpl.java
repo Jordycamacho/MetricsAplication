@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthUseCase {
 
         UserCreationRequest userCreationRequest = UserCreationRequest.builder()
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .password(request.getPassword())
                 .fullName(request.getFullName())
                 .role(Role.USER)
                 .isActive(true)
@@ -48,31 +48,30 @@ public class AuthServiceImpl implements AuthUseCase {
                 .build();
 
         UserModel userModel = userUseCase.createUser(userCreationRequest);
-        
+
         return generateAuthResponse(userModel);
     }
 
     @Override
+    @Transactional
     public AuthResponse login(LoginRequest request) {
-        // Buscar usuario por email
         UserModel userModel = userUseCase.findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
-        // Verificar contraseña
+        if (userModel.getSubscription() != null) {
+            userModel.getSubscription().getType();
+        }
+
         if (!passwordEncoder.matches(request.password(), userModel.getPassword())) {
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        // Actualizar último login
         userUseCase.updateLastLogin(userModel.getId());
-
-        // Generar tokens
         return generateAuthResponse(userModel);
     }
 
     @Override
     public AuthResponse refreshToken(CustomUserDetails userDetails) {
-
         UserModel userModel = userUseCase.findById(userDetails.getUserId());
         if (userModel == null) {
             throw new RuntimeException("User not found with id: " + userDetails.getUserId());
@@ -83,11 +82,10 @@ public class AuthServiceImpl implements AuthUseCase {
     private AuthResponse generateAuthResponse(UserModel userModel) {
         String accessToken = jwtService.generateToken(userModel);
         String refreshToken = jwtService.generateRefreshToken(userModel);
-        
+
         return new AuthResponse(
-            accessToken,
-            refreshToken,
-            Instant.now().plus(12, ChronoUnit.HOURS)
-        );
+                accessToken,
+                refreshToken,
+                Instant.now().plus(12, ChronoUnit.HOURS));
     }
 }

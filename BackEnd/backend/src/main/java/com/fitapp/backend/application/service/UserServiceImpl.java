@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserUseCase {
         FreeSubscriptionModel freeSubscription = FreeSubscriptionModel.builder()
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusYears(1))
-                .maxRoutines(3)
+                .maxRoutines(1)
                 .build();
 
         userModel.setSubscription(freeSubscription);

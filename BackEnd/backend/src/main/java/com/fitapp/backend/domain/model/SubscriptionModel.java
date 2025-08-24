@@ -1,9 +1,7 @@
 package com.fitapp.backend.domain.model;
 
 import java.time.LocalDate;
-
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
