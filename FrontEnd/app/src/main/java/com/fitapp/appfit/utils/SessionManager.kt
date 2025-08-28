@@ -56,7 +56,7 @@ object SessionManager {
 
     fun isTokenValid(): Boolean {
         if (!::sharedPreferences.isInitialized) return false
-        val expirationTime = tokenExpiration * 1000
+        val expirationTime = tokenExpiration
         return !accessToken.isNullOrEmpty() && System.currentTimeMillis() < expirationTime
     }
 

@@ -8,14 +8,14 @@ class TokenInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        val token = SessionManager.accessToken
-        return if (!token.isNullOrEmpty()) {
-            val authenticatedRequest = originalRequest.newBuilder()
-                .header("Authorization", "Bearer $token")
-                .build()
-            chain.proceed(authenticatedRequest)
-        } else {
-            chain.proceed(originalRequest)
+        // No agregar token para endpoints de auth
+        if (originalRequest.url.encodedPath.contains("/auth/")) {
+            return chain.proceed(originalRequest)
         }
+
+        val request = originalRequest.newBuilder()
+            .addHeader("Authorization", "Bearer ${SessionManager.accessToken}")
+            .build()
+        return chain.proceed(request)
     }
 }

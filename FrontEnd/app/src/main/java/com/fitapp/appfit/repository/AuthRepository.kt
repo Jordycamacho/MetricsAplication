@@ -1,5 +1,6 @@
 package com.fitapp.appfit.repository
 
+import android.util.Log
 import com.fitapp.appfit.network.AuthService
 import com.fitapp.appfit.response.AuthResponse
 import com.fitapp.appfit.response.LoginRequest
@@ -23,8 +24,12 @@ class AuthRepository {
     suspend fun login(email: String, password: String): Resource<AuthResponse> {
         return try {
             val response = authService.login(LoginRequest(email, password))
+            Log.d("AuthRepository", "Response: $response")
+            Log.d("AuthRepository", "Response code: ${response.code()}")
+            Log.d("AuthRepository", "Response body: ${response.body()}")
             handleAuthResponse(response)
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Error: ${e.message}", e)
             Resource.Error(e.message ?: "Error desconocido")
         }
     }
