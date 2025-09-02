@@ -15,8 +15,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "routine_exercises")
 public class RoutineExerciseEntity {
     @Id
@@ -33,7 +35,16 @@ public class RoutineExerciseEntity {
     private ExerciseEntity exercise;
 
     @Column(nullable = false)
+    private int sets; 
+    
+    @Column(nullable = false)
     private int position;
+
+    @Column(name = "target_reps")
+    private String targetReps;
+
+    @Column(name = "target_weight")
+    private Double targetWeight;
 
     @Convert(converter = DurationToLongConverter.class)
     @Column(name = "rest_interval")

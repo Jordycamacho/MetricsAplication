@@ -14,8 +14,10 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "exercises", indexes = {
         @Index(name = "idx_exercise_name", columnList = "name"),
         @Index(name = "idx_exercise_sport", columnList = "sport_id")
