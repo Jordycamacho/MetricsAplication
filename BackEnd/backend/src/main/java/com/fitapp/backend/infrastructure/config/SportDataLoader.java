@@ -3,9 +3,11 @@ package com.fitapp.backend.infrastructure.config;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +16,11 @@ import java.util.Map;
 public class SportDataLoader {
     private final SportRepository sportRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @PostConstruct
+    @Transactional
     public void loadPredefinedSports() {
         if (sportRepository.count() == 0) {
             createPredefinedSports();
@@ -22,36 +28,43 @@ public class SportDataLoader {
     }
 
     private void createPredefinedSports() {
-        // Deportes de fuerza
-        createSport("Gimnasio", "strength", createGymParameters());
-        createSport("CrossFit", "strength", createCrossfitParameters());
-        createSport("Calistenia", "strength", createCalisthenicsParameters());
+        try {
+            // Deportes de fuerza
+            createSport("Gimnasio", "strength", createGymParameters());
+            createSport("CrossFit", "strength", createCrossfitParameters());
+            createSport("Calistenia", "strength", createCalisthenicsParameters());
 
-        // Deportes de cardio
-        createSport("Running", "cardio", createRunningParameters());
-        createSport("Ciclismo", "cardio", createCyclingParameters());
-        createSport("Natación", "cardio", createSwimmingParameters());
+            // Deportes de cardio
+            createSport("Running", "cardio", createRunningParameters());
+            createSport("Ciclismo", "cardio", createCyclingParameters());
+            createSport("Natación", "cardio", createSwimmingParameters());
 
-        // Deportes de combate
-        createSport("Boxeo", "combat", createBoxingParameters());
-        createSport("MMA", "combat", createMMAParameters());
-        createSport("Judo", "combat", createJudoParameters());
+            // Deportes de combate
+            createSport("Boxeo", "combat", createBoxingParameters());
+            createSport("MMA", "combat", createMMAParameters());
+            createSport("Judo", "combat", createJudoParameters());
 
-        // Deportes de flexibilidad
-        createSport("Yoga", "flexibility", createYogaParameters());
-        createSport("Pilates", "flexibility", createPilatesParameters());
+            // Deportes de flexibilidad
+            createSport("Yoga", "flexibility", createYogaParameters());
+            createSport("Pilates", "flexibility", createPilatesParameters());
+        } catch (Exception e) {
+            System.err.println("Error loading predefined sports: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void createSport(String name, String category, Map<String, String> parameters) {
         SportEntity sport = new SportEntity();
         sport.setName(name);
         sport.setCategory(category);
-        sport.setParameterTemplate(parameters);
         sport.setIsPredefined(true);
         sport.setIconUrl("/icons/sports/" + name.toLowerCase() + ".png");
+        sport.setParameterTemplate(parameters);
+
         sportRepository.save(sport);
     }
 
+    // Los métodos create...Parameters() se mantienen igual
     private Map<String, String> createGymParameters() {
         Map<String, String> params = new HashMap<>();
         params.put("peso", "kg");

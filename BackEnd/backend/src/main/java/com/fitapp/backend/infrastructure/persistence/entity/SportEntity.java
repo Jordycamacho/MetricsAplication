@@ -2,7 +2,7 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.fitapp.backend.infrastructure.config.HashMapConverter;
+import com.fitapp.backend.infrastructure.config.StringMapConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -32,15 +32,15 @@ public class SportEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
-    private UserEntity createdBy; 
+    private UserEntity createdBy;
 
-    @Convert(converter = HashMapConverter.class)
-    @Column(columnDefinition = "jsonb")
+    @Convert(converter = StringMapConverter.class)
+    @Column(columnDefinition = "TEXT")
     private Map<String, String> parameterTemplate = new HashMap<>();
 
     @Column(name = "icon_url")
     private String iconUrl;
 
     @Column(name = "category")
-    private String category; 
+    private String category;
 }
