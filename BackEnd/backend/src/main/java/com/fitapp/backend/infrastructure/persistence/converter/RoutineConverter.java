@@ -6,6 +6,7 @@ import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Component
@@ -26,6 +27,8 @@ public class RoutineConverter {
             routine.setExercises(entity.getExercises().stream()
                     .map(this::toDomainExercise)
                     .collect(Collectors.toList()));
+        } else {
+            routine.setExercises(new ArrayList<>());
         }
         
         return routine;
@@ -41,12 +44,12 @@ public class RoutineConverter {
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
         
-        // Nota: user y sport se deben establecer mediante sus IDs usando los servicios correspondientes
-        
         if (domain.getExercises() != null) {
             entity.setExercises(domain.getExercises().stream()
                     .map(this::toEntityExercise)
                     .collect(Collectors.toList()));
+        } else {
+            entity.setExercises(new ArrayList<>());
         }
         
         return entity;
@@ -61,6 +64,7 @@ public class RoutineConverter {
         exercise.setTargetWeight(entity.getTargetWeight());
         exercise.setRestIntervalSeconds(entity.getRestInterval() != null ? 
                 (int) entity.getRestInterval().getSeconds() : null);
+        exercise.setRoutineId(entity.getRoutine().getId());
         return exercise;
     }
 
@@ -71,7 +75,7 @@ public class RoutineConverter {
         entity.setTargetReps(domain.getTargetReps());
         entity.setTargetWeight(domain.getTargetWeight());
         entity.setRestInterval(domain.getRestIntervalSeconds() != null ? 
-        java.time.Duration.ofSeconds(domain.getRestIntervalSeconds()) : null);
+                java.time.Duration.ofSeconds(domain.getRestIntervalSeconds()) : null);
         return entity;
     }
 }

@@ -1,8 +1,6 @@
 package com.fitapp.backend.application.dto.routine;
 
-import java.util.List;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -16,7 +14,4 @@ public class CreateRoutineRequest {
     private String description;
     
     private Long sportId;
-    
-    @NotNull(message = "Routine must contain at least one exercise")
-    private List<RoutineExerciseRequest> exercises;
 }

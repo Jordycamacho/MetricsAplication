@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fitapp.backend.application.dto.exercise.AddExercisesToRoutineRequest;
 import com.fitapp.backend.application.dto.routine.CreateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.RoutineResponse;
 import com.fitapp.backend.application.ports.input.RoutineUseCase;
@@ -32,6 +33,15 @@ public class RoutineController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/exercises")
+    public ResponseEntity<RoutineResponse> addExercisesToRoutine(
+            @Valid @RequestBody AddExercisesToRoutineRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = jwt.getClaimAsString("email");
+        RoutineResponse response = routineUseCase.addExercisesToRoutine(request, userEmail);
+        return ResponseEntity.ok(response);
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<RoutineResponse> getRoutine(
             @PathVariable Long id,

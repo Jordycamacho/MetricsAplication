@@ -1,5 +1,6 @@
 package com.fitapp.backend.application.service;
 
+import com.fitapp.backend.application.dto.exercise.AddExercisesToRoutineRequest;
 import com.fitapp.backend.application.dto.routine.CreateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.RoutineExerciseResponse;
 import com.fitapp.backend.application.dto.routine.RoutineResponse;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,39 +38,22 @@ public class RoutineServiceImpl implements RoutineUseCase {
     public RoutineResponse createRoutine(CreateRoutineRequest request, String userEmail) {
         UserModel user = userPersistencePort.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         SportModel sport = null;
         if (request.getSportId() != null) {
             sport = sportPersistencePort.findById(request.getSportId())
                     .orElseThrow(() -> new RuntimeException("Sport not found"));
         }
-        
+
         RoutineModel routine = new RoutineModel();
         routine.setName(request.getName());
         routine.setDescription(request.getDescription());
         routine.setUserId(user.getId());
         routine.setSportId(sport != null ? sport.getId() : null);
         routine.setIsActive(true);
-        
-        List<RoutineExerciseModel> exercises = request.getExercises().stream()
-                .map(exerciseRequest -> {
-                    ExerciseModel exercise = exercisePersistencePort.findById(exerciseRequest.getExerciseId())
-                            .orElseThrow(() -> new ExerciseNotFoundException(exerciseRequest.getExerciseId()));
-                    
-                    RoutineExerciseModel routineExercise = new RoutineExerciseModel();
-                    routineExercise.setExerciseId(exercise.getId());
-                    routineExercise.setSets(exerciseRequest.getSets());
-                    routineExercise.setTargetReps(exerciseRequest.getTargetReps());
-                    routineExercise.setTargetWeight(exerciseRequest.getTargetWeight());
-                    routineExercise.setRestIntervalSeconds(exerciseRequest.getRestIntervalSeconds());
-                    
-                    return routineExercise;
-                })
-                .collect(Collectors.toList());
-        
-        routine.setExercises(exercises);
-        routine.setEstimatedDuration(calculateEstimatedDuration(exercises));
-        
+        routine.setExercises(new ArrayList<>());
+        routine.setEstimatedDuration(calculateEstimatedDuration(routine.getExercises()));
+
         RoutineModel savedRoutine = routinePersistencePort.save(routine);
         return mapToResponse(savedRoutine, sport);
     }
@@ -77,29 +62,34 @@ public class RoutineServiceImpl implements RoutineUseCase {
     public RoutineResponse getRoutineById(Long id, String userEmail) {
         UserModel user = userPersistencePort.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         RoutineModel routine = routinePersistencePort.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new RoutineNotFoundException(id));
-        
+
         SportModel sport = null;
         if (routine.getSportId() != null) {
             sport = sportPersistencePort.findById(routine.getSportId())
                     .orElse(null);
         }
-        
+
         return mapToResponse(routine, sport);
     }
 
     private Integer calculateEstimatedDuration(List<RoutineExerciseModel> exercises) {
+        if (exercises == null || exercises.isEmpty()) {
+            return 0;
+        }
+
         int totalSeconds = exercises.stream()
                 .mapToInt(exercise -> {
                     int exerciseTime = exercise.getSets() * 60; // 60 segundos por serie
-                    int restTime = exercise.getRestIntervalSeconds() != null ? 
-                            exercise.getRestIntervalSeconds() * (exercise.getSets() - 1) : 0;
+                    int restTime = exercise.getRestIntervalSeconds() != null
+                            ? exercise.getRestIntervalSeconds() * (exercise.getSets() - 1)
+                            : 0;
                     return exerciseTime + restTime;
                 })
                 .sum();
-        
+
         return (int) Math.ceil(totalSeconds / 60.0); // Convertir a minutos
     }
 
@@ -114,7 +104,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
         response.setEstimatedDuration(routine.getEstimatedDuration());
         response.setCreatedAt(routine.getCreatedAt());
         response.setUpdatedAt(routine.getUpdatedAt());
-        
+
         List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
                 .map(exercise -> {
                     RoutineExerciseResponse exerciseResponse = new RoutineExerciseResponse();
@@ -127,8 +117,49 @@ public class RoutineServiceImpl implements RoutineUseCase {
                     return exerciseResponse;
                 })
                 .collect(Collectors.toList());
-        
+
         response.setExercises(exerciseResponses);
         return response;
+    }
+
+    @Override
+    @Transactional
+    public RoutineResponse addExercisesToRoutine(AddExercisesToRoutineRequest request, String userEmail) {
+        UserModel user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        RoutineModel routine = routinePersistencePort.findByIdAndUserId(request.getRoutineId(), user.getId())
+                .orElseThrow(() -> new RoutineNotFoundException(request.getRoutineId()));
+
+        SportModel sport = null;
+        if (routine.getSportId() != null) {
+            sport = sportPersistencePort.findById(routine.getSportId())
+                    .orElse(null);
+        }
+
+        List<RoutineExerciseModel> exercises = request.getExercises().stream()
+                .map(exerciseRequest -> {
+                    ExerciseModel exercise = exercisePersistencePort.findById(exerciseRequest.getExerciseId())
+                            .orElseThrow(() -> new ExerciseNotFoundException(exerciseRequest.getExerciseId()));
+
+                    RoutineExerciseModel routineExercise = new RoutineExerciseModel();
+                    routineExercise.setExerciseId(exercise.getId());
+                    routineExercise.setSets(exerciseRequest.getSets());
+                    routineExercise.setTargetReps(
+                            exerciseRequest.getTargetReps() != null ? exerciseRequest.getTargetReps().toString()
+                                    : null);
+                    routineExercise.setTargetWeight(exerciseRequest.getTargetWeight());
+                    routineExercise.setRestIntervalSeconds(exerciseRequest.getRestIntervalSeconds());
+                    routineExercise.setId(routine.getId());
+
+                    return routineExercise;
+                })
+                .collect(Collectors.toList());
+
+        routine.getExercises().addAll(exercises);
+        routine.setEstimatedDuration(calculateEstimatedDuration(routine.getExercises()));
+
+        RoutineModel updatedRoutine = routinePersistencePort.save(routine);
+        return mapToResponse(updatedRoutine, sport);
     }
 }
