@@ -20,11 +20,6 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.textHome.text = "Esta es la pantalla de inicio"
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
