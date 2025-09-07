@@ -26,6 +26,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import com.fitapp.backend.infrastructure.security.auth.converter.JwtAuthConverter;
 import com.fitapp.backend.infrastructure.security.auth.handler.OAuth2SuccessHandler;
@@ -78,6 +79,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/api/premium/**").hasAnyRole("PREMIUM_USER", "ADMIN")
                                                 .requestMatchers("/api/coach/**").hasAnyRole("COACH", "ADMIN")
+                                                .requestMatchers(HttpMethod.GET, "/api/routines/**").authenticated() // GET públicas para rutinas
+                                                .requestMatchers(HttpMethod.POST, "/api/routines").hasAnyRole("USER", "PREMIUM_USER", "COACH", "ADMIN")
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
                                                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
