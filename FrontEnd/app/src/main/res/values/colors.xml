@@ -8,4 +8,24 @@
     <color name="black">#FF000000</color>
     <color name="blue_500">#FF2196F3</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Colores principales - Tema oscuro con dorado -->
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="gold_primary">#78703F</color>
+    <color name="gold_secondary">#B8860B</color>
+    <color name="gold_light">#FFF9C4</color>
+
+    <!-- Textos -->
+    <color name="text_primary_dark">#FFFFFF</color>
+    <color name="text_secondary_dark">#B3B3B3</color>
+    <color name="text_gold">#FFD700</color>
+
+    <!-- Elementos de UI -->
+    <color name="divider_dark">#333333</color>
+    <color name="card_dark">#1E1E1E</color>
+    <color name="progress_background_dark">#333333</color>
+
+    <!-- Estados -->
+    <color name="gold_pressed">#B8860B</color>
+    <color name="gold_focused">#FFEE58</color>
 </resources>
