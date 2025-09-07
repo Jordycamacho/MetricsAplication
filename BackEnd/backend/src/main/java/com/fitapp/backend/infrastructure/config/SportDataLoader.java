@@ -64,7 +64,6 @@ public class SportDataLoader {
         sportRepository.save(sport);
     }
 
-    // Los métodos create...Parameters() se mantienen igual
     private Map<String, String> createGymParameters() {
         Map<String, String> params = new HashMap<>();
         params.put("peso", "kg");
