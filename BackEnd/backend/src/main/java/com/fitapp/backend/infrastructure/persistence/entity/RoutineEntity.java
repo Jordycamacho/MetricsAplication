@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -63,8 +62,7 @@ public class RoutineEntity {
     @JoinColumn(name = "sport_id")
     private SportEntity sport;
 
-    @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL,  orphanRemoval = true)
     @OrderColumn(name = "position")
-    @BatchSize(size = 15)
     private List<RoutineExerciseEntity> exercises = new ArrayList<>();
 }
