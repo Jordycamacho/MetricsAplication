@@ -1,6 +1,6 @@
 package com.fitapp.appfit.response.sport
 
-class SportResponse(
+data class SportResponse(
     val id: Long,
     val name: String,
     val isPredefined: Boolean,

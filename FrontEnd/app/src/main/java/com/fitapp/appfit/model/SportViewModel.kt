@@ -26,6 +26,13 @@ class SportViewModel : ViewModel() {
         }
     }
 
+    fun getPredefinedSports() {
+        _sportsState.value = Resource.Loading()
+        viewModelScope.launch {
+            _sportsState.value = repository.getPredefinedSports()
+        }
+    }
+
     fun createCustomSport(name: String, category: String, parameters: Map<String, String>) {
         _createSportState.value = Resource.Loading()
         viewModelScope.launch {

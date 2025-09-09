@@ -13,9 +13,15 @@ class RoutineRepository {
     suspend fun createRoutine(request: CreateRoutineRequest): Resource<RoutineResponse> {
         return try {
             val response = routineService.createRoutine(request)
-            handleResponse(response)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Resource.Success(it)
+                } ?: Resource.Error("Empty response")
+            } else {
+                Resource.Error("Error ${response.code()}: ${response.message()}")
+            }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Error creating routine")
+            Resource.Error(e.message ?: "Unknown error")
         }
     }
 

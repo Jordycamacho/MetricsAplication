@@ -12,9 +12,30 @@ class SportRepository {
     suspend fun getSports(): Resource<List<SportResponse>> {
         return try {
             val response = sportService.getSports()
-            handleResponse(response)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Resource.Success(it)
+                } ?: Resource.Error("Empty response")
+            } else {
+                Resource.Error("Error ${response.code()}: ${response.message()}")
+            }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Error getting sports")
+        }
+    }
+
+    suspend fun getPredefinedSports(): Resource<List<SportResponse>> {
+        return try {
+            val response = sportService.getPredefinedSports()
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Resource.Success(it)
+                } ?: Resource.Error("Empty response")
+            } else {
+                Resource.Error("Error ${response.code()}: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Unknown error")
         }
     }
 
