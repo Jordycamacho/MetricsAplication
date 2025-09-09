@@ -4,6 +4,10 @@ import com.fitapp.backend.application.ports.input.SportUseCase;
 import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.model.SportModel;
+import com.fitapp.backend.infrastructure.persistence.converter.SportConverter;
+import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
+
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -14,13 +18,17 @@ public class SportServiceImpl implements SportUseCase {
 
     private final SportPersistencePort sportPersistencePort;
     private final UserPersistencePort userPersistencePort;
+    private final SportRepository sportRepository;
+    private final SportConverter sportConverter;
 
     @Override
+    @Transactional(readOnly = true)
     public List<SportModel> getAllSports() {
         return sportPersistencePort.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SportModel> getPredefinedSports() {
         return sportPersistencePort.findByIsPredefinedTrue();
     }

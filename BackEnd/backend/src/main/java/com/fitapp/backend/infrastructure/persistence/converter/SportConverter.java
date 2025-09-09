@@ -11,7 +11,11 @@ public class SportConverter {
         model.setId(entity.getId());
         model.setName(entity.getName());
         model.setIsPredefined(entity.getIsPredefined());
-        model.setCreatedBy(entity.getCreatedBy() != null ? entity.getCreatedBy().getId() : null);
+        if (entity.getCreatedBy() != null) {
+            model.setCreatedBy(entity.getCreatedBy().getId());
+        } else {
+            model.setCreatedBy(null);
+        }
         model.setParameterTemplate(entity.getParameterTemplate());
         model.setIconUrl(entity.getIconUrl());
         model.setCategory(entity.getCategory());

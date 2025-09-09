@@ -30,7 +30,7 @@ public class SportEntity {
     @Column(name = "is_predefined", nullable = false)
     private Boolean isPredefined = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
 
