@@ -75,10 +75,10 @@ public class UserRepository implements UserPersistencePort {
     private UserModel mapToDomainWithSubscription(UserEntity userEntity) {
         UserModel userModel = UserConverter.toDomain(userEntity);
 
-        if (userEntity.getSubscription() == null) {
+        /*if (userEntity.getSubscription() == null) {
             Optional<SubscriptionModel> subscription = subscriptionRepository.findByUserId(userEntity.getId());
             subscription.ifPresent(userModel::setSubscription);
-        }
+        }*/
 
         return userModel;
     }

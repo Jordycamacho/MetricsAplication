@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface SpringDataUserRepository extends JpaRepository<UserEntity, Long> {
+    @EntityGraph(attributePaths = {"subscription"})
     Optional<UserEntity> findByEmail(String email);
     
     @EntityGraph(attributePaths = {"subscription"})
