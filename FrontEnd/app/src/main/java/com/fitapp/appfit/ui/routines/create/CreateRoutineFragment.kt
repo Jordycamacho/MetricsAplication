@@ -10,15 +10,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.FragmentCreateRoutineBinding
+import com.fitapp.appfit.enums.DayOfWeek
 import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.model.SportViewModel
 import com.fitapp.appfit.response.sport.SportResponse
 import com.fitapp.appfit.utils.Resource
 
 class CreateRoutineFragment : Fragment() {
-
     private var _binding: FragmentCreateRoutineBinding? = null
     private val binding get() = _binding!!
     private val routineViewModel: RoutineViewModel by viewModels()
@@ -41,12 +40,10 @@ class CreateRoutineFragment : Fragment() {
         setupClickListeners()
         setupObservers()
 
-        // Cargar deportes
         sportViewModel.getPredefinedSports()
     }
 
     private fun setupSportsSpinner() {
-        // Spinner inicial con placeholder
         val placeholder = arrayOf("Seleccionar deporte")
         val adapter = ArrayAdapter(
             requireContext(),
@@ -58,7 +55,6 @@ class CreateRoutineFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        // Observar cambios en la lista de deportes
         sportViewModel.sportsState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
@@ -75,7 +71,6 @@ class CreateRoutineFragment : Fragment() {
             }
         })
 
-        // Observar estado de creación de rutina
         routineViewModel.createRoutineState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
@@ -99,6 +94,7 @@ class CreateRoutineFragment : Fragment() {
         val sportNames = mutableListOf("Seleccionar deporte")
 
         sports.forEach { sport ->
+            println("Adding sport: ${sport.name} with ID: ${sport.id}")
             sportNames.add(sport.name)
             sportsMap[sport.name] = sport.id
         }
@@ -126,25 +122,72 @@ class CreateRoutineFragment : Fragment() {
         val name = binding.etRoutineName.text.toString()
         val selectedSport = binding.spinnerSports.selectedItem.toString()
         val description = binding.etRoutineDescription.text.toString()
+        val trainingDays = getSelectedTrainingDaysAsStrings()
+        val goal = binding.etGoal.text.toString()
+        val difficultyLevel = binding.etDifficultyLevel.text.toString().toIntOrNull() ?: 3
+        val weeksDuration = binding.etWeeksDuration.text.toString().toIntOrNull() ?: 4
+        val sessionsPerWeek = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
+        val equipmentNeeded = binding.etEquipmentNeeded.text.toString()
 
-        // Validaciones
         if (name.isBlank()) {
             binding.etRoutineName.error = "El nombre es obligatorio"
             return
         }
 
+        if (goal.isBlank()) {
+            binding.etGoal.error = "El objetivo es obligatorio"
+            return
+        }
+
+        if (difficultyLevel == null) {
+            binding.etDifficultyLevel.error = "La dificultad es requerida"
+            return
+        }
+
+        if (weeksDuration == null) {
+            binding.etWeeksDuration.error = "La duración es requerida"
+            return
+        }
+
+        if (sessionsPerWeek == null) {
+            binding.etSessionsPerWeek.error = "Las sesiones por semana son requeridas"
+            return
+        }
+
+        if (equipmentNeeded.isBlank()) {
+            binding.etEquipmentNeeded.error = "El equipo necesario es requerido"
+            return
+        }
+
         val sportId = if (selectedSport != "Seleccionar deporte") {
-            sportsMap[selectedSport]
+            sportsMap[selectedSport] ?: run {
+                Toast.makeText(requireContext(), "Error Deporte no válido", Toast.LENGTH_SHORT).show()
+                return
+            }
         } else {
             null
         }
 
-        // Crear rutina
-        routineViewModel.createRoutine(name, description, sportId)
+        routineViewModel.createRoutine(
+            name, description, sportId, trainingDays, goal,
+            difficultyLevel, weeksDuration, sessionsPerWeek, equipmentNeeded
+        )
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun getSelectedTrainingDaysAsStrings(): List<String> {
+        val days = mutableListOf<String>()
+        if (binding.cbMonday.isChecked) days.add("MONDAY")
+        if (binding.cbTuesday.isChecked) days.add("TUESDAY")
+        if (binding.cbWednesday.isChecked) days.add("WEDNESDAY")
+        if (binding.cbThursday.isChecked) days.add("THURSDAY")
+        if (binding.cbFriday.isChecked) days.add("FRIDAY")
+        if (binding.cbSaturday.isChecked) days.add("SATURDAY")
+        if (binding.cbSunday.isChecked) days.add("SUNDAY")
+        return days
     }
 }

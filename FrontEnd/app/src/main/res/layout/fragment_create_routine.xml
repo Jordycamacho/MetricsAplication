@@ -251,6 +251,103 @@
                     android:backgroundTint="@color/gold_primary"
                     android:inputType="textMultiLine" />
 
+                <!-- Objetivo -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Objetivo"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary_dark"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_goal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Ej: Ganar masa muscular"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Nivel de dificultad -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nivel de dificultad (1-5)"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary_dark"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_difficulty_level"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:hint="3"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Duración en semanas -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Duración (semanas)"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary_dark"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_weeks_duration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:hint="4"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Sesiones por semana -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Sesiones por semana"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary_dark"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_sessions_per_week"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:hint="3"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Equipo necesario -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Equipo necesario"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary_dark"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_equipment_needed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Ej: Mancuernas, barra, banco"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -261,6 +358,16 @@
             android:layout_height="48dp"
             android:text="Crear Rutina"
             style="@style/GoldButton" />
+
+        <EditText
+            android:id="@+id/et_equipment_ne"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="..."
+            android:textColor="@color/text_primary_dark"
+            android:textColorHint="@color/text_secondary_dark"
+            android:backgroundTint="@color/gold_primary"
+            android:layout_marginBottom="16dp" />
 
     </LinearLayout>
 </ScrollView>

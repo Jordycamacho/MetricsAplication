@@ -12,7 +12,11 @@ class RoutineRepository {
 
     suspend fun createRoutine(request: CreateRoutineRequest): Resource<RoutineResponse> {
         return try {
+            println("DEBUG: Request to send: $request")
+            println("DEBUG: Training days: ${request.trainingDays}")
             val response = routineService.createRoutine(request)
+            println("DEBUG: Response code: ${response.code()}")
+            println("DEBUG: Response body: ${response.body()}")
             if (response.isSuccessful) {
                 response.body()?.let {
                     Resource.Success(it)

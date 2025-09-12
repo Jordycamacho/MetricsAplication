@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fitapp.appfit.enums.DayOfWeek
 import com.fitapp.appfit.repository.RoutineRepository
 import com.fitapp.appfit.response.routine.AddExercisesToRoutineRequest
 import com.fitapp.appfit.response.routine.CreateRoutineRequest
@@ -21,10 +22,30 @@ class RoutineViewModel : ViewModel() {
     private val _addExercisesState = MutableLiveData<Resource<RoutineResponse>>()
     val addExercisesState: LiveData<Resource<RoutineResponse>> = _addExercisesState
 
-    fun createRoutine(name: String, description: String?, sportId: Long?) {
+    fun createRoutine(
+        name: String,
+        description: String?,
+        sportId: Long?,
+        trainingDays: List<String>,
+        goal: String,
+        difficultyLevel: Int,
+        weeksDuration: Int,
+        sessionsPerWeek: Int,
+        equipmentNeeded: String
+    ) {
         _createRoutineState.value = Resource.Loading()
         viewModelScope.launch {
-            val request = CreateRoutineRequest(name, description, sportId)
+            val request = CreateRoutineRequest(
+                name = name,
+                description = description,
+                sportId = sportId,
+                trainingDays = trainingDays,
+                goal = goal,
+                difficultyLevel = difficultyLevel,
+                weeksDuration = weeksDuration,
+                sessionsPerWeek = sessionsPerWeek,
+                equipmentNeeded = equipmentNeeded
+            )
             _createRoutineState.value = repository.createRoutine(request)
         }
     }
