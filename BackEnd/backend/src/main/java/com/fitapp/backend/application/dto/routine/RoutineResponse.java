@@ -3,6 +3,9 @@ package com.fitapp.backend.application.dto.routine;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+
+import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 @Data
 public class RoutineResponse {
@@ -16,4 +19,10 @@ public class RoutineResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<RoutineExerciseResponse> exercises;
+    private Set<DayOfWeek> trainingDays;
+    private String goal;
+    private Integer difficultyLevel;
+    private Integer weeksDuration;
+    private Integer sessionsPerWeek;
+    private String equipmentNeeded;
 }

@@ -24,7 +24,7 @@ public class RoutineConverter {
     private final SpringDataUserRepository springDataUserRepository;
     private final SportRepository sportRepository;
     private final ExerciseRepository exerciseRepository;
-    
+
     public RoutineModel toDomain(RoutineEntity entity) {
         RoutineModel routine = new RoutineModel();
         routine.setId(entity.getId());
@@ -36,7 +36,12 @@ public class RoutineConverter {
         routine.setUpdatedAt(entity.getUpdatedAt());
         routine.setUserId(entity.getUser().getId());
         routine.setSportId(entity.getSport() != null ? entity.getSport().getId() : null);
-        
+        routine.setTrainingDays(entity.getTrainingDays());
+        routine.setGoal(entity.getGoal());
+        routine.setDifficultyLevel(entity.getDifficultyLevel());
+        routine.setWeeksDuration(entity.getWeeksDuration());
+        routine.setSessionsPerWeek(entity.getSessionsPerWeek());
+        routine.setEquipmentNeeded(entity.getEquipmentNeeded());
         if (entity.getExercises() != null) {
             routine.setExercises(entity.getExercises().stream()
                     .map(this::toDomainExercise)
@@ -44,7 +49,7 @@ public class RoutineConverter {
         } else {
             routine.setExercises(new ArrayList<>());
         }
-        
+
         return routine;
     }
 
@@ -57,6 +62,12 @@ public class RoutineConverter {
         entity.setEstimatedDuration(domain.getEstimatedDuration());
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
+        entity.setTrainingDays(domain.getTrainingDays());
+        entity.setGoal(domain.getGoal());
+        entity.setDifficultyLevel(domain.getDifficultyLevel());
+        entity.setWeeksDuration(domain.getWeeksDuration());
+        entity.setSessionsPerWeek(domain.getSessionsPerWeek());
+        entity.setEquipmentNeeded(domain.getEquipmentNeeded());
 
         UserEntity user = springDataUserRepository.findById(domain.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + domain.getUserId()));
@@ -75,7 +86,7 @@ public class RoutineConverter {
         } else {
             entity.setExercises(new ArrayList<>());
         }
-        
+
         return entity;
     }
 
@@ -86,27 +97,26 @@ public class RoutineConverter {
         exercise.setSets(entity.getSets());
         exercise.setTargetReps(entity.getTargetReps());
         exercise.setTargetWeight(entity.getTargetWeight());
-        exercise.setRestIntervalSeconds(entity.getRestInterval() != null ? 
-                (int) entity.getRestInterval().getSeconds() : null);
+        exercise.setRestIntervalSeconds(
+                entity.getRestInterval() != null ? (int) entity.getRestInterval().getSeconds() : null);
         exercise.setRoutineId(entity.getRoutine().getId());
         return exercise;
     }
 
     private RoutineExerciseEntity toEntityExercise(RoutineExerciseModel domain, RoutineEntity routineEntity) {
-    RoutineExerciseEntity entity = new RoutineExerciseEntity();
-    entity.setId(domain.getId());
-    entity.setRoutine(routineEntity); // Establecer la relación
-    entity.setSets(domain.getSets());
-    entity.setTargetReps(domain.getTargetReps());
-    entity.setTargetWeight(domain.getTargetWeight());
-    entity.setRestInterval(domain.getRestIntervalSeconds() != null ? 
-            Duration.ofSeconds(domain.getRestIntervalSeconds()) : null);
-    
-    // Necesitarías también cargar ExerciseEntity aquí
-    ExerciseEntity exercise = exerciseRepository.findById(domain.getExerciseId())
-            .orElseThrow(() -> new RuntimeException("Exercise not found"));
-     entity.setExercise(exercise);
-    
-    return entity;
-}
+        RoutineExerciseEntity entity = new RoutineExerciseEntity();
+        entity.setId(domain.getId());
+        entity.setRoutine(routineEntity); // Establecer la relación
+        entity.setSets(domain.getSets());
+        entity.setTargetReps(domain.getTargetReps());
+        entity.setTargetWeight(domain.getTargetWeight());
+        entity.setRestInterval(
+                domain.getRestIntervalSeconds() != null ? Duration.ofSeconds(domain.getRestIntervalSeconds()) : null);
+
+        ExerciseEntity exercise = exerciseRepository.findById(domain.getExerciseId())
+                .orElseThrow(() -> new RuntimeException("Exercise not found"));
+        entity.setExercise(exercise);
+
+        return entity;
+    }
 }
