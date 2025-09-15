@@ -2,6 +2,7 @@ package com.fitapp.backend.application.dto.routine;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.Max;
@@ -24,6 +25,7 @@ public class CreateRoutineRequest {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
     
+    @JsonAlias({"sportId", "sportid", "sport_id"})
     private Long sportId;
 
     @Min(value = 1, message = "La dificultad no puede ser inferior a 1")
