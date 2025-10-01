@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                android:tint="@color/gold_primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Agregar Ejercicios"
+                android:textColor="@color/gold_primary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Routine Info -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/card_dark">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tv_routine_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Rutina: "
+                    android:textColor="@color/gold_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_routine_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ID: "
+                    android:textColor="@color/text_secondary_dark"
+                    android:textSize="14sp"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tv_sport_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Deporte: "
+                    android:textColor="@color/text_secondary_dark"
+                    android:textSize="14sp"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tv_selected_count"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ejercicios seleccionados: 0"
+                    android:textColor="@color/gold_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- SECTION 1: SELECT EXISTING EXERCISE -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. Seleccionar Ejercicio Existente"
+            android:textColor="@color/gold_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_dark">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Exercise Search -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Buscar ejercicio:"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <AutoCompleteTextView
+                    android:id="@+id/actv_exercise_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Escribe para buscar..."
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Exercise Configuration -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Configurar para rutina:"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
+
+                    <!-- Sets -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Series"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="12sp" />
+
+                        <EditText
+                            android:id="@+id/et_sets"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="3"
+                            android:inputType="number"
+                            android:textColor="@color/text_primary_dark"
+                            android:textColorHint="@color/text_secondary_dark"
+                            android:backgroundTint="@color/gold_primary" />
+                    </LinearLayout>
+
+                    <!-- Reps -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Repeticiones"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="12sp" />
+
+                        <EditText
+                            android:id="@+id/et_target_reps"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="8-12"
+                            android:textColor="@color/text_primary_dark"
+                            android:textColorHint="@color/text_secondary_dark"
+                            android:backgroundTint="@color/gold_primary" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Weight and Rest -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:layout_marginTop="12dp">
+
+                    <!-- Weight -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Peso (kg)"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="12sp" />
+
+                        <EditText
+                            android:id="@+id/et_target_weight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="0.0"
+                            android:inputType="numberDecimal"
+                            android:textColor="@color/text_primary_dark"
+                            android:textColorHint="@color/text_secondary_dark"
+                            android:backgroundTint="@color/gold_primary" />
+                    </LinearLayout>
+
+                    <!-- Rest -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Descanso (seg)"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="12sp" />
+
+                        <EditText
+                            android:id="@+id/et_rest_interval"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="60"
+                            android:inputType="number"
+                            android:textColor="@color/text_primary_dark"
+                            android:textColorHint="@color/text_secondary_dark"
+                            android:backgroundTint="@color/gold_primary" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Position and Notes -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Posición en rutina"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="12sp" />
+
+                    <EditText
+                        android:id="@+id/et_position"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="1"
+                        android:inputType="number"
+                        android:textColor="@color/text_primary_dark"
+                        android:textColorHint="@color/text_secondary_dark"
+                        android:backgroundTint="@color/gold_primary"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Notas (opcional)"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="12sp" />
+
+                    <EditText
+                        android:id="@+id/et_notes"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:gravity="top"
+                        android:hint="Notas adicionales..."
+                        android:inputType="textMultiLine"
+                        android:textColor="@color/text_primary_dark"
+                        android:textColorHint="@color/text_secondary_dark"
+                        android:backgroundTint="@color/gold_primary" />
+                </LinearLayout>
+
+                <!-- Custom Parameters Area -->
+                <LinearLayout
+                    android:id="@+id/ll_custom_parameters"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp" />
+
+                <!-- Add Exercise Button -->
+                <Button
+                    android:id="@+id/btn_add_exercise"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Agregar Ejercicio a Rutina"
+                    android:backgroundTint="@color/gold_primary"
+                    android:textColor="@color/white"
+                    android:layout_marginTop="16dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- SECTION 2: CREATE NEW EXERCISE -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2. Crear Nuevo Ejercicio"
+            android:textColor="@color/gold_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_dark">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre del ejercicio:"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_new_exercise_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Ej: Press de banca"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Descripción (opcional):"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/et_new_exercise_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:gravity="top"
+                    android:hint="Describe el ejercicio..."
+                    android:inputType="textMultiLine"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:backgroundTint="@color/gold_primary"
+                    android:layout_marginBottom="16dp" />
+
+                <Button
+                    android:id="@+id/btn_create_exercise"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Crear Nuevo Ejercicio"
+                    android:backgroundTint="@android:color/transparent"
+                    android:textColor="@color/gold_primary"
+                    android:background="@drawable/button_outline_gold" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>

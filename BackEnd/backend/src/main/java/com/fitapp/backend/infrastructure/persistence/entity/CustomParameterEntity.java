@@ -1,5 +1,9 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,6 +37,9 @@ public class CustomParameterEntity {
     @Column(nullable = false)
     private String unit;  // Ej: "kg", "rep", "m"
     
+    @Column(nullable = false)
+    private String dataType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id") 
     private UserEntity owner;  // Dueño del parámetro (puede ser nulo si es global)
@@ -40,4 +47,11 @@ public class CustomParameterEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sport_id")
     private SportEntity sport;  // Deporte asociado (opcional)
+
+    @Column(name = "is_global", nullable = false)
+    private Boolean isGlobal = false;
+    
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

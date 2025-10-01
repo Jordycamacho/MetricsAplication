@@ -1,7 +1,7 @@
 package com.fitapp.appfit.service
 
 import com.fitapp.appfit.network.ApiClient
-import com.fitapp.appfit.response.routine.AddExercisesToRoutineRequest
+import com.fitapp.appfit.response.exercise.AddExercisesToRoutineRequest
 import com.fitapp.appfit.response.routine.CreateRoutineRequest
 import com.fitapp.appfit.response.routine.RoutineResponse
 import retrofit2.Response

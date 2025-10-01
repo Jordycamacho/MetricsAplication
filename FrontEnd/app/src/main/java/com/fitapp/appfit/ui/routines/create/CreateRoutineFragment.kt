@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.R
 import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.databinding.FragmentCreateRoutineBinding
 import com.fitapp.appfit.enums.DayOfWeek
@@ -66,7 +67,6 @@ class CreateRoutineFragment : Fragment() {
                     Toast.makeText(requireContext(), "Error cargando deportes", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> {
-                    // Mostrar loading si es necesario
                 }
             }
         })
@@ -76,7 +76,20 @@ class CreateRoutineFragment : Fragment() {
                 is Resource.Success -> {
                     binding.btnCreateRoutine.isEnabled = true
                     Toast.makeText(requireContext(), "Rutina creada exitosamente", Toast.LENGTH_SHORT).show()
-                    findNavController().navigateUp()
+
+                    val selectedSport = binding.spinnerSports.selectedItem.toString()
+                    val sportId = sportsMap[selectedSport]
+
+                    if (sportId != null) {
+                        val action = CreateRoutineFragmentDirections.actionCreateRoutineFragmentToAddExercisesFragment(
+                            routineId = resource.data?.id ?: -1L,
+                            sportId = sportId,
+                            routineName = binding.etRoutineName.text.toString()
+                        )
+                        findNavController().navigate(action)
+                    } else {
+                        findNavController().navigateUp()
+                    }
                 }
                 is Resource.Error -> {
                     binding.btnCreateRoutine.isEnabled = true

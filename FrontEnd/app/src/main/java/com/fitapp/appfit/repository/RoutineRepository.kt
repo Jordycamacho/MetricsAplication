@@ -1,6 +1,6 @@
 package com.fitapp.appfit.repository
 
-import com.fitapp.appfit.response.routine.AddExercisesToRoutineRequest
+import com.fitapp.appfit.response.exercise.AddExercisesToRoutineRequest
 import com.fitapp.appfit.response.routine.CreateRoutineRequest
 import com.fitapp.appfit.response.routine.RoutineResponse
 import com.fitapp.appfit.service.RoutineService

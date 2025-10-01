@@ -35,24 +35,24 @@
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile" />
 
-    <!-- Pantallas de creación de rutinas -->
-    <fragment
-        android:id="@+id/navigation_create_routine"
-        android:name="com.fitapp.appfit.ui.routines.create.CreateRoutineFragment"
-        android:label="@string/title_create_routine"
-        tools:layout="@layout/fragment_create_routine" />
-
-    <fragment
-        android:id="@+id/navigation_add_exercises"
-        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesFragment"
-        android:label="@string/title_add_exercises"
-        tools:layout="@layout/fragment_add_exercises" />
-
-    <!-- Pantallas de deportes -->
     <fragment
         android:id="@+id/navigation_sports"
         android:name="com.fitapp.appfit.ui.sports.SportsFragment"
         android:label="@string/title_sports"
         tools:layout="@layout/fragment_sports" />
+
+    <fragment
+        android:id="@+id/navigation_create_exercise"
+        android:name="com.fitapp.appfit.ui.exercises.CreateExerciseFragment"
+        android:label="Crear Ejercicio"
+        tools:layout="@layout/fragment_create_exercise">
+        <argument
+            android:name="routineId"
+            app:argType="long" />
+        <argument
+            android:name="sportId"
+            app:argType="long" />
+    </fragment>
+
 
 </navigation>

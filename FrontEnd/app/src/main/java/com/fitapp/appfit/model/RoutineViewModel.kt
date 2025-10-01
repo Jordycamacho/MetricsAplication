@@ -6,19 +6,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.enums.DayOfWeek
 import com.fitapp.appfit.repository.RoutineRepository
-import com.fitapp.appfit.response.routine.AddExercisesToRoutineRequest
+import com.fitapp.appfit.response.exercise.AddExercisesToRoutineRequest
 import com.fitapp.appfit.response.routine.CreateRoutineRequest
-import com.fitapp.appfit.response.routine.ExerciseRequest
+import com.fitapp.appfit.response.exercise.ExerciseRequest
 import com.fitapp.appfit.response.routine.RoutineResponse
 import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 
 class RoutineViewModel : ViewModel() {
     private val repository = RoutineRepository()
-
     private val _createRoutineState = MutableLiveData<Resource<RoutineResponse>>()
     val createRoutineState: LiveData<Resource<RoutineResponse>> = _createRoutineState
-
     private val _addExercisesState = MutableLiveData<Resource<RoutineResponse>>()
     val addExercisesState: LiveData<Resource<RoutineResponse>> = _addExercisesState
 

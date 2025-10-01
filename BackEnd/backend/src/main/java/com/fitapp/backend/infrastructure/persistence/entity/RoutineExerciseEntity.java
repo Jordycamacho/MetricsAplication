@@ -1,11 +1,18 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Id;
 
 import com.fitapp.backend.application.service.DurationToLongConverter;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -14,6 +21,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -35,10 +43,23 @@ public class RoutineExerciseEntity {
     private ExerciseEntity exercise;
 
     @Column(nullable = false)
-    private int sets; 
-    
+    private int sets;
+
+    @Column(name = "rest_interval_seconds")
+    private Integer restIntervalSeconds;
+
+    @Column(name = "notes")
+    private String notes;
+
     @Column(nullable = false)
     private int position;
+
+    @OneToMany(mappedBy = "routineExercise", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoutineExerciseParameterEntity> parameters = new ArrayList<>();
+
+    @Convert(converter = DurationToLongConverter.class)
+    @Column(name = "rest_interval")
+    private Duration restInterval;
 
     @Column(name = "target_reps")
     private String targetReps;
@@ -46,7 +67,11 @@ public class RoutineExerciseEntity {
     @Column(name = "target_weight")
     private Double targetWeight;
 
-    @Convert(converter = DurationToLongConverter.class)
-    @Column(name = "rest_interval")
-    private Duration restInterval;
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
