@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">AppFit</string>
+    <string name="title_home">Inicio</string>
+    <string name="title_routines">Rutinas</string>
+    <string name="title_progress">Progreso</string>
+    <string name="title_exercises">Ejercicios</string>
+    <string name="title_profile">Perfil</string>
+    <string name="title_create_routine">Crear Rutina</string>
+    <string name="title_add_exercises">Agregar Ejercicios</string>
+    <string name="title_sports">Deportes</string>
+
+    <!-- Textos adicionales -->
+    <string name="routine_name">Nombre de la rutina</string>
+    <string name="routine_description">Descripción</string>
+    <string name="select_sport">Seleccionar deporte</string>
+    <string name="create_routine">Crear rutina</string>
+</resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.fitapp.appfit.ui.home.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/navigation_routines"
+        android:name="com.fitapp.appfit.ui.routines.RoutinesFragment"
+        android:label="@string/title_routines"
+        tools:layout="@layout/fragment_routines" />
+
+    <fragment
+        android:id="@+id/navigation_progress"
+        android:name="com.fitapp.appfit.ui.progress.ProgressFragment"
+        android:label="@string/title_progress"
+        tools:layout="@layout/fragment_progress" />
+
+    <fragment
+        android:id="@+id/navigation_exercises"
+        android:name="com.fitapp.appfit.ui.exercises.ExercisesFragment"
+        android:label="@string/title_exercises"
+        tools:layout="@layout/fragment_exercises" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.fitapp.appfit.ui.profile.ProfileFragment"
+        android:label="@string/title_profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <!-- Pantallas de creación de rutinas -->
+    <fragment
+        android:id="@+id/navigation_create_routine"
+        android:name="com.fitapp.appfit.ui.routines.create.CreateRoutineFragment"
+        android:label="@string/title_create_routine"
+        tools:layout="@layout/fragment_create_routine" />
+
+    <fragment
+        android:id="@+id/navigation_add_exercises"
+        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesFragment"
+        android:label="@string/title_add_exercises"
+        tools:layout="@layout/fragment_add_exercises" />
+
+    <!-- Pantallas de deportes -->
+    <fragment
+        android:id="@+id/navigation_sports"
+        android:name="com.fitapp.appfit.ui.sports.SportsFragment"
+        android:label="@string/title_sports"
+        tools:layout="@layout/fragment_sports" />
+
+</navigation>
