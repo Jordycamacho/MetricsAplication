@@ -4,6 +4,7 @@ import com.fitapp.backend.application.dto.exercise.AddExercisesToRoutineRequest;
 import com.fitapp.backend.application.dto.routine.CreateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.RoutineExerciseResponse;
 import com.fitapp.backend.application.dto.routine.RoutineResponse;
+import com.fitapp.backend.application.logging.RoutineServiceLogger;
 import com.fitapp.backend.application.ports.input.RoutineUseCase;
 import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
@@ -19,6 +20,9 @@ import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +38,14 @@ public class RoutineServiceImpl implements RoutineUseCase {
         private final UserPersistencePort userPersistencePort;
         private final ExercisePersistencePort exercisePersistencePort;
         private final SportPersistencePort sportPersistencePort;
+        private final RoutineServiceLogger serviceLogger;
 
         @Override
-        @Transactional
+        @CacheEvict(value = {"routines", "userRoutines"}, allEntries = true)
         public RoutineResponse createRoutine(CreateRoutineRequest request, String userEmail) {
 
+                serviceLogger.logRoutineCreationStart(userEmail, request.getName());
+                
                 if (request.getTrainingDays() == null || request.getTrainingDays().isEmpty()) {
                         throw new IllegalArgumentException("Training days are required");
                 }
@@ -73,6 +80,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
         }
 
         @Override
+        @Cacheable(value = "routines", key = "#id + '_' + #userEmail")
         public RoutineResponse getRoutineById(Long id, String userEmail) {
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -121,6 +129,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
         @Override
         @Transactional
+        @CacheEvict(value = {"routines", "userRoutines"}, key = "#request.routineId")
         public RoutineResponse addExercisesToRoutine(AddExercisesToRoutineRequest request, String userEmail) {
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));

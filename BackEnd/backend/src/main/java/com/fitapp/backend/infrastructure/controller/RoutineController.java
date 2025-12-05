@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,11 @@ import com.fitapp.backend.application.dto.routine.RoutineResponse;
 import com.fitapp.backend.application.ports.input.RoutineUseCase;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +32,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/routines")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Routines", description = "Routine management endpoints")
 public class RoutineController {
     private final RoutineUseCase routineUseCase;
 
+    @Operation(summary = "Create a new routine", description = "Creates a personalized workout routine for the authenticated user", responses = {
+            @ApiResponse(responseCode = "200", description = "Routine created successfully", content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing token"),
+            @ApiResponse(responseCode = "403", description = "Subscription limit reached")
+    })
     @PostMapping("/create")
     public ResponseEntity<RoutineResponse> createRoutine(
             @Valid @RequestBody CreateRoutineRequest request,
