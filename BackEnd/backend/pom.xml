@@ -133,6 +133,13 @@
 			<version>2.3.0</version>
 		</dependency>
 
+		<!-- logs-->
+		<dependency>
+			<groupId>net.logstash.logback</groupId>
+			<artifactId>logstash-logback-encoder</artifactId>
+			<version>7.4</version>
+		</dependency>
+
 		<!-- Seguridad -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
