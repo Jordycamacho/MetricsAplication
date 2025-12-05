@@ -27,24 +27,11 @@ public class CreateRoutineRequest {
     
     @JsonAlias({"sportId", "sportid", "sport_id"})
     private Long sportId;
-
-    @Min(value = 1, message = "La dificultad no puede ser inferior a 1")
-    @Max(value = 5, message = "La dificultad no puede exeder 5")
-    @JsonProperty("difficultyLevel")
-    private Integer difficultyLevel;
-    
-    @Min(value = 1, message = "no puede ser inferior a 1 semana")
-    @JsonProperty("weeksDuration")
-    private Integer weeksDuration;
     
     @JsonProperty("sessionsPerWeek")
     @Min(value = 1, message = "La sesiones por semana no puede ser inferior a 1")
     @Max(value = 7, message = "La sesiones por semana no puede ser superior a 17")
     private Integer sessionsPerWeek;
-    
-    @JsonProperty("equipmentNeeded")
-    @Size(max = 200, message = "Equipo necesario no puede exeder 200 caracteres")
-    private String equipmentNeeded;
 
     @NotEmpty(message = "dias de entrenamiento son requeridos")
     @JsonProperty("trainingDays") 

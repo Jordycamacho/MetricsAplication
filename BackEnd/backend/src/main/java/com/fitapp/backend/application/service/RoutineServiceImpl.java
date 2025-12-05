@@ -64,14 +64,10 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 routine.setSportId(sport != null ? sport.getId() : null);
                 routine.setIsActive(true);
                 routine.setExercises(new ArrayList<>());
-                routine.setEstimatedDuration(calculateEstimatedDuration(routine.getExercises()));
                 routine.setTrainingDays(trainingDays);
                 routine.setGoal(request.getGoal());
-                routine.setDifficultyLevel(request.getDifficultyLevel());
-                routine.setWeeksDuration(request.getWeeksDuration());
                 routine.setSessionsPerWeek(request.getSessionsPerWeek());
-                routine.setEquipmentNeeded(request.getEquipmentNeeded());
-                
+
                 RoutineModel savedRoutine = routinePersistencePort.save(routine);
                 return mapToResponse(savedRoutine, sport);
         }
@@ -93,24 +89,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 return mapToResponse(routine, sport);
         }
 
-        private Integer calculateEstimatedDuration(List<RoutineExerciseModel> exercises) {
-                if (exercises == null || exercises.isEmpty()) {
-                        return 0;
-                }
-
-                int totalSeconds = exercises.stream()
-                                .mapToInt(exercise -> {
-                                        int exerciseTime = exercise.getSets() * 60; // 60 segundos por serie
-                                        int restTime = exercise.getRestIntervalSeconds() != null
-                                                        ? exercise.getRestIntervalSeconds() * (exercise.getSets() - 1)
-                                                        : 0;
-                                        return exerciseTime + restTime;
-                                })
-                                .sum();
-
-                return (int) Math.ceil(totalSeconds / 60.0); // Convertir a minutos
-        }
-
         private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
                 RoutineResponse response = new RoutineResponse();
                 response.setId(routine.getId());
@@ -119,15 +97,11 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 response.setSportId(routine.getSportId());
                 response.setSportName(sport != null ? sport.getName() : null);
                 response.setIsActive(routine.getIsActive());
-                response.setEstimatedDuration(routine.getEstimatedDuration());
                 response.setCreatedAt(routine.getCreatedAt());
                 response.setUpdatedAt(routine.getUpdatedAt());
                 response.setTrainingDays(routine.getTrainingDays());
                 response.setGoal(routine.getGoal());
-                response.setDifficultyLevel(routine.getDifficultyLevel());
-                response.setWeeksDuration(routine.getWeeksDuration());
                 response.setSessionsPerWeek(routine.getSessionsPerWeek());
-                response.setEquipmentNeeded(routine.getEquipmentNeeded());
                 List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
                                 .map(exercise -> {
                                         RoutineExerciseResponse exerciseResponse = new RoutineExerciseResponse();
@@ -184,7 +158,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
                                 .collect(Collectors.toList());
 
                 routine.getExercises().addAll(exercises);
-                routine.setEstimatedDuration(calculateEstimatedDuration(routine.getExercises()));
 
                 RoutineModel updatedRoutine = routinePersistencePort.save(routine);
                 return mapToResponse(updatedRoutine, sport);

@@ -28,10 +28,7 @@ class RoutineViewModel : ViewModel() {
         sportId: Long?,
         trainingDays: List<String>,
         goal: String,
-        difficultyLevel: Int,
-        weeksDuration: Int,
         sessionsPerWeek: Int,
-        equipmentNeeded: String
     ) {
         _createRoutineState.value = Resource.Loading()
         viewModelScope.launch {
@@ -41,10 +38,7 @@ class RoutineViewModel : ViewModel() {
                 sportId = sportId,
                 trainingDays = trainingDays,
                 goal = goal,
-                difficultyLevel = difficultyLevel,
-                weeksDuration = weeksDuration,
-                sessionsPerWeek = sessionsPerWeek,
-                equipmentNeeded = equipmentNeeded
+                sessionsPerWeek = sessionsPerWeek
             )
             _createRoutineState.value = repository.createRoutine(request)
         }

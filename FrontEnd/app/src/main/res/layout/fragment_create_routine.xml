@@ -57,45 +57,45 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Nombre de la rutina"
-                    android:textSize="16sp"
                     android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/et_routine_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="48dp"
+                    android:backgroundTint="@color/gold_primary"
                     android:hint="Ej: Rutina de fuerza"
                     android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="48dp" />
+                    android:textColorHint="@color/text_secondary_dark" />
 
                 <!-- Selección de deporte -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Seleccionar deporte"
-                    android:textSize="16sp"
                     android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
+                    android:textSize="16sp" />
 
                 <Spinner
                     android:id="@+id/spinner_sports"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="16dp"
+                    android:backgroundTint="@color/gold_primary" />
 
                 <!-- Días de la semana -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Días de la semana"
-                    android:textSize="16sp"
                     android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
+                    android:textSize="16sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -107,72 +107,72 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="L"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="M"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="X"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="J"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="V"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="S"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="D"
-                        android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark"
-                        android:gravity="center" />
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
                     android:orientation="horizontal"
-                    android:weightSum="7"
-                    android:layout_marginBottom="16dp">
+                    android:weightSum="7">
 
                     <CheckBox
                         android:id="@+id/cb_monday"
@@ -235,119 +235,61 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Descripción (opcional)"
-                    android:textSize="16sp"
                     android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/et_routine_description"
                     android:layout_width="match_parent"
                     android:layout_height="100dp"
+                    android:backgroundTint="@color/gold_primary"
                     android:gravity="top"
                     android:hint="Describe el propósito de esta rutina..."
+                    android:inputType="textMultiLine"
                     android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:inputType="textMultiLine" />
+                    android:textColorHint="@color/text_secondary_dark" />
 
                 <!-- Objetivo -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Objetivo"
-                    android:textSize="16sp"
                     android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/et_goal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:backgroundTint="@color/gold_primary"
                     android:hint="Ej: Ganar masa muscular"
                     android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Nivel de dificultad -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nivel de dificultad (1-5)"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/et_difficulty_level"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:hint="3"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Duración en semanas -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Duración (semanas)"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/et_weeks_duration"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:hint="4"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="16dp" />
+                    android:textColorHint="@color/text_secondary_dark" />
 
                 <!-- Sesiones por semana -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Sesiones por semana"
-                    android:textSize="16sp"
                     android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/et_sessions_per_week"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="number"
+                    android:layout_marginBottom="16dp"
+                    android:backgroundTint="@color/gold_primary"
                     android:hint="3"
+                    android:inputType="number"
                     android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="16dp" />
+                    android:textColorHint="@color/text_secondary_dark" />
 
-                <!-- Equipo necesario -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Equipo necesario"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary_dark"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/et_equipment_needed"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Ej: Mancuernas, barra, banco"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:backgroundTint="@color/gold_primary"
-                    android:layout_marginBottom="16dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

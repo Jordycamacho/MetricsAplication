@@ -35,10 +35,7 @@ public class RoutineController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Received request: {}", request);
         log.info("Sport ID: {}", request.getSportId());
-        log.info("Difficulty Level: {}", request.getDifficultyLevel());
-        log.info("Weeks Duration: {}", request.getWeeksDuration());
         log.info("Sessions Per Week: {}", request.getSessionsPerWeek());
-        log.info("Equipment Needed: {}", request.getEquipmentNeeded());
 
         if (request.getTrainingDays() != null) {
             for (String day : request.getTrainingDays()) {

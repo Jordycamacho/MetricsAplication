@@ -15,14 +15,10 @@ public class RoutineResponse {
     private Long sportId;
     private String sportName;
     private Boolean isActive;
-    private Integer estimatedDuration;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<RoutineExerciseResponse> exercises;
     private Set<DayOfWeek> trainingDays;
     private String goal;
-    private Integer difficultyLevel;
-    private Integer weeksDuration;
     private Integer sessionsPerWeek;
-    private String equipmentNeeded;
 }

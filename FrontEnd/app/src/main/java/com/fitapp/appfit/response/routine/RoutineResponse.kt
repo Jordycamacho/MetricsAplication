@@ -9,8 +9,8 @@ data class RoutineResponse(
     val sportId: Long?,
     val sportName: String?,
     val isActive: Boolean,
-    val estimatedDuration: Int,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val exercises: List<RoutineExerciseResponse>
+    val exercises: List<RoutineExerciseResponse>,
+    val sessionsPerWeek: Int
 )

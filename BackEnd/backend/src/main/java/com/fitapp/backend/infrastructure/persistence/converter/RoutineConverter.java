@@ -31,17 +31,13 @@ public class RoutineConverter {
         routine.setName(entity.getName());
         routine.setDescription(entity.getDescription());
         routine.setIsActive(entity.getIsActive());
-        routine.setEstimatedDuration(entity.getEstimatedDuration());
         routine.setCreatedAt(entity.getCreatedAt());
         routine.setUpdatedAt(entity.getUpdatedAt());
         routine.setUserId(entity.getUser().getId());
         routine.setSportId(entity.getSport() != null ? entity.getSport().getId() : null);
         routine.setTrainingDays(entity.getTrainingDays());
         routine.setGoal(entity.getGoal());
-        routine.setDifficultyLevel(entity.getDifficultyLevel());
-        routine.setWeeksDuration(entity.getWeeksDuration());
         routine.setSessionsPerWeek(entity.getSessionsPerWeek());
-        routine.setEquipmentNeeded(entity.getEquipmentNeeded());
         if (entity.getExercises() != null) {
             routine.setExercises(entity.getExercises().stream()
                     .map(this::toDomainExercise)
@@ -59,15 +55,11 @@ public class RoutineConverter {
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
         entity.setIsActive(domain.getIsActive());
-        entity.setEstimatedDuration(domain.getEstimatedDuration());
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
         entity.setTrainingDays(domain.getTrainingDays());
         entity.setGoal(domain.getGoal());
-        entity.setDifficultyLevel(domain.getDifficultyLevel());
-        entity.setWeeksDuration(domain.getWeeksDuration());
         entity.setSessionsPerWeek(domain.getSessionsPerWeek());
-        entity.setEquipmentNeeded(domain.getEquipmentNeeded());
 
         UserEntity user = springDataUserRepository.findById(domain.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + domain.getUserId()));

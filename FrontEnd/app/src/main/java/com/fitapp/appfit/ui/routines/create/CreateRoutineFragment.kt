@@ -66,7 +66,6 @@ class CreateRoutineFragment : Fragment() {
                     Toast.makeText(requireContext(), "Error cargando deportes", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> {
-                    // Mostrar loading si es necesario
                 }
             }
         })
@@ -124,10 +123,7 @@ class CreateRoutineFragment : Fragment() {
         val description = binding.etRoutineDescription.text.toString()
         val trainingDays = getSelectedTrainingDaysAsStrings()
         val goal = binding.etGoal.text.toString()
-        val difficultyLevel = binding.etDifficultyLevel.text.toString().toIntOrNull() ?: 3
-        val weeksDuration = binding.etWeeksDuration.text.toString().toIntOrNull() ?: 4
         val sessionsPerWeek = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
-        val equipmentNeeded = binding.etEquipmentNeeded.text.toString()
 
         if (name.isBlank()) {
             binding.etRoutineName.error = "El nombre es obligatorio"
@@ -139,23 +135,8 @@ class CreateRoutineFragment : Fragment() {
             return
         }
 
-        if (difficultyLevel == null) {
-            binding.etDifficultyLevel.error = "La dificultad es requerida"
-            return
-        }
-
-        if (weeksDuration == null) {
-            binding.etWeeksDuration.error = "La duración es requerida"
-            return
-        }
-
         if (sessionsPerWeek == null) {
             binding.etSessionsPerWeek.error = "Las sesiones por semana son requeridas"
-            return
-        }
-
-        if (equipmentNeeded.isBlank()) {
-            binding.etEquipmentNeeded.error = "El equipo necesario es requerido"
             return
         }
 
@@ -169,8 +150,7 @@ class CreateRoutineFragment : Fragment() {
         }
 
         routineViewModel.createRoutine(
-            name, description, sportId, trainingDays, goal,
-            difficultyLevel, weeksDuration, sessionsPerWeek, equipmentNeeded
+            name, description, sportId, trainingDays, goal, sessionsPerWeek
         )
     }
 

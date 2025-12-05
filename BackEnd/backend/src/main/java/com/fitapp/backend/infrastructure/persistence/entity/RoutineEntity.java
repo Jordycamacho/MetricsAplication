@@ -51,9 +51,6 @@ public class RoutineEntity {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(name = "estimated_duration")
-    private Integer estimatedDuration; // en minutos
-
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -68,20 +65,9 @@ public class RoutineEntity {
     
     private String goal;
     
-    @Min(1) @Max(5)
-    @Column(name = "difficulty_level")
-    private Integer difficultyLevel;
-    
-    @Min(1)
-    @Column(name = "weeks_duration")
-    private Integer weeksDuration;
-    
     @Min(1) @Max(7)
     @Column(name = "sessions_per_week")
     private Integer sessionsPerWeek;
-    
-    @Column(name = "equipment_needed")
-    private String equipmentNeeded;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

@@ -20,8 +20,6 @@ interface RoutineService {
     @GET("api/routines/{id}")
     suspend fun getRoutine(@Path("id") id: Long): Response<RoutineResponse>
 
-    @GET("api/routines")
-    suspend fun getUserRoutines(): Response<List<RoutineResponse>>
 
     companion object {
         val instance: RoutineService by lazy {

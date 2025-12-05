@@ -13,7 +13,6 @@ public class RoutineModel {
     private String name;
     private String description;
     private Boolean isActive;
-    private Integer estimatedDuration;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userId;
@@ -21,8 +20,5 @@ public class RoutineModel {
     private List<RoutineExerciseModel> exercises;
     private Set<DayOfWeek> trainingDays;
     private String goal;
-    private Integer difficultyLevel;
-    private Integer weeksDuration;
     private Integer sessionsPerWeek;
-    private String equipmentNeeded;
 }
