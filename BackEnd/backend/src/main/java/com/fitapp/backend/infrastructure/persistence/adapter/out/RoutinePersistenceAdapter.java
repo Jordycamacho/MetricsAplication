@@ -19,7 +19,9 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     @Override
     public RoutineModel save(RoutineModel routine) {
         RoutineEntity entity = routineConverter.toEntity(routine);
+        System.out.println("ID antes de save: " + entity.getId());
         RoutineEntity savedEntity = routineRepository.save(entity);
+        System.out.println("ID antes de save:========== " + entity.getId());
         return routineConverter.toDomain(savedEntity);
     }
 
