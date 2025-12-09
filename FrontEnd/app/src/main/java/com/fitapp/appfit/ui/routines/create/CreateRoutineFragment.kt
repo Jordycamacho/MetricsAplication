@@ -11,10 +11,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.databinding.FragmentCreateRoutineBinding
-import com.fitapp.appfit.enums.DayOfWeek
 import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.model.SportViewModel
 import com.fitapp.appfit.response.sport.SportResponse
+import com.fitapp.appfit.utils.FormValidator
 import com.fitapp.appfit.utils.Resource
 
 class CreateRoutineFragment : Fragment() {
@@ -41,6 +41,44 @@ class CreateRoutineFragment : Fragment() {
         setupObservers()
 
         sportViewModel.getPredefinedSports()
+
+        // Agrega validación mientras escribe
+        setupTextWatchers()
+    }
+
+    private fun setupTextWatchers() {
+        // Validar nombre mientras escribe
+        binding.etRoutineName.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val name = binding.etRoutineName.text.toString()
+                val result = FormValidator.validateRoutineName(name)
+                if (result is FormValidator.ValidationResult.Error) {
+                    binding.etRoutineName.error = result.message
+                }
+            }
+        }
+
+        // Validar objetivo mientras escribe
+        binding.etGoal.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val goal = binding.etGoal.text.toString()
+                val result = FormValidator.validateGoal(goal)
+                if (result is FormValidator.ValidationResult.Error) {
+                    binding.etGoal.error = result.message
+                }
+            }
+        }
+
+        // Validar sesiones mientras escribe
+        binding.etSessionsPerWeek.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val sessions = binding.etSessionsPerWeek.text.toString()
+                val result = FormValidator.validateSessionsPerWeek(sessions)
+                if (result is FormValidator.ValidationResult.Error) {
+                    binding.etSessionsPerWeek.error = result.message
+                }
+            }
+        }
     }
 
     private fun setupSportsSpinner() {
@@ -63,9 +101,10 @@ class CreateRoutineFragment : Fragment() {
                     }
                 }
                 is Resource.Error -> {
-                    Toast.makeText(requireContext(), "Error cargando deportes", Toast.LENGTH_SHORT).show()
+                    showToast("Error cargando deportes: ${resource.message}")
                 }
                 is Resource.Loading -> {
+                    // Puedes mostrar un progress bar si quieres
                 }
             }
         })
@@ -74,12 +113,16 @@ class CreateRoutineFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     binding.btnCreateRoutine.isEnabled = true
-                    Toast.makeText(requireContext(), "Rutina creada exitosamente", Toast.LENGTH_SHORT).show()
-                    findNavController().navigateUp()
+                    showToast("✅ Rutina creada exitosamente")
+
+                    // Navegar a otra pantalla después de 1 segundo
+                    binding.root.postDelayed({
+                        findNavController().navigateUp()
+                    }, 1000)
                 }
                 is Resource.Error -> {
                     binding.btnCreateRoutine.isEnabled = true
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    showError(resource.message ?: "Error desconocido")
                 }
                 is Resource.Loading -> {
                     binding.btnCreateRoutine.isEnabled = false
@@ -93,7 +136,6 @@ class CreateRoutineFragment : Fragment() {
         val sportNames = mutableListOf("Seleccionar deporte")
 
         sports.forEach { sport ->
-            println("Adding sport: ${sport.name} with ID: ${sport.id}")
             sportNames.add(sport.name)
             sportsMap[sport.name] = sport.id
         }
@@ -113,8 +155,45 @@ class CreateRoutineFragment : Fragment() {
         }
 
         binding.btnCreateRoutine.setOnClickListener {
-            createRoutine()
+            if (validateAllFields()) {
+                createRoutine()
+            }
         }
+    }
+
+    private fun validateAllFields(): Boolean {
+        var isValid = true
+
+        // Validar nombre
+        val nameResult = FormValidator.validateRoutineName(binding.etRoutineName.text.toString())
+        if (nameResult is FormValidator.ValidationResult.Error) {
+            binding.etRoutineName.error = nameResult.message
+            isValid = false
+        }
+
+        // Validar objetivo
+        val goalResult = FormValidator.validateGoal(binding.etGoal.text.toString())
+        if (goalResult is FormValidator.ValidationResult.Error) {
+            binding.etGoal.error = goalResult.message
+            isValid = false
+        }
+
+        // Validar sesiones
+        val sessionsResult = FormValidator.validateSessionsPerWeek(binding.etSessionsPerWeek.text.toString())
+        if (sessionsResult is FormValidator.ValidationResult.Error) {
+            binding.etSessionsPerWeek.error = sessionsResult.message
+            isValid = false
+        }
+
+        // Validar días de entrenamiento
+        val days = getSelectedTrainingDaysAsStrings()
+        val daysResult = FormValidator.validateTrainingDays(days)
+        if (daysResult is FormValidator.ValidationResult.Error) {
+            showToast(daysResult.message)
+            isValid = false
+        }
+
+        return isValid
     }
 
     private fun createRoutine() {
@@ -125,24 +204,10 @@ class CreateRoutineFragment : Fragment() {
         val goal = binding.etGoal.text.toString()
         val sessionsPerWeek = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
 
-        if (name.isBlank()) {
-            binding.etRoutineName.error = "El nombre es obligatorio"
-            return
-        }
-
-        if (goal.isBlank()) {
-            binding.etGoal.error = "El objetivo es obligatorio"
-            return
-        }
-
-        if (sessionsPerWeek == null) {
-            binding.etSessionsPerWeek.error = "Las sesiones por semana son requeridas"
-            return
-        }
-
+        // Obtener sportId del mapa
         val sportId = if (selectedSport != "Seleccionar deporte") {
             sportsMap[selectedSport] ?: run {
-                Toast.makeText(requireContext(), "Error Deporte no válido", Toast.LENGTH_SHORT).show()
+                showError("Error: Deporte no válido")
                 return
             }
         } else {
@@ -150,8 +215,22 @@ class CreateRoutineFragment : Fragment() {
         }
 
         routineViewModel.createRoutine(
-            name, description, sportId, trainingDays, goal, sessionsPerWeek
+            name,
+            if (description.isNotBlank()) description else null,
+            sportId,
+            trainingDays,
+            goal,
+            sessionsPerWeek
         )
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showError(message: String) {
+        // Puedes hacer un Toast con color rojo si quieres
+        Toast.makeText(requireContext(), "❌ $message", Toast.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {
