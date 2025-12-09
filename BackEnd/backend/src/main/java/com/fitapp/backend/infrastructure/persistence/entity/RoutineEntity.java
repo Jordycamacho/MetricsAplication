@@ -77,7 +77,7 @@ public class RoutineEntity {
     @JoinColumn(name = "sport_id")
     private SportEntity sport;
 
-    @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL,  orphanRemoval = true)
+    @OneToMany(mappedBy = "routine", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @OrderColumn(name = "position")
     private List<RoutineExerciseEntity> exercises = new ArrayList<>();
 }
