@@ -1,4 +1,4 @@
-package com.fitapp.backend.application.dto.routine;
+package com.fitapp.backend.application.dto.routine.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

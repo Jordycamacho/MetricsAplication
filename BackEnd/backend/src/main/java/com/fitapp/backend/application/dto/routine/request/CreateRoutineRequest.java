@@ -1,4 +1,4 @@
-package com.fitapp.backend.application.dto.routine;
+package com.fitapp.backend.application.dto.routine.request;
 
 import java.util.List;
 
