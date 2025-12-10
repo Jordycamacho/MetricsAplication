@@ -1,4 +1,4 @@
-package com.fitapp.appfit.response.sport
+package com.fitapp.appfit.response.sport.request
 
 data class SportRequest(
     val name: String,

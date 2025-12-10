@@ -1,9 +1,9 @@
 package com.fitapp.appfit.service
 
 import com.fitapp.appfit.network.ApiClient
-import com.fitapp.appfit.response.routine.AddExercisesToRoutineRequest
-import com.fitapp.appfit.response.routine.CreateRoutineRequest
-import com.fitapp.appfit.response.routine.RoutineResponse
+import com.fitapp.appfit.response.routine.request.AddExercisesToRoutineRequest
+import com.fitapp.appfit.response.routine.request.CreateRoutineRequest
+import com.fitapp.appfit.response.routine.response.RoutineResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

@@ -1,4 +1,4 @@
-package com.fitapp.appfit.response.routine
+package com.fitapp.appfit.response.routine.request
 
 import com.google.gson.annotations.SerializedName
 

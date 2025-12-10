@@ -6,8 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.repository.RoutineRepository
-import com.fitapp.appfit.response.routine.CreateRoutineRequest
-import com.fitapp.appfit.response.routine.RoutineResponse
+import com.fitapp.appfit.response.routine.request.CreateRoutineRequest
+import com.fitapp.appfit.response.routine.response.RoutineResponse
 import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 

@@ -1,8 +1,8 @@
 package com.fitapp.appfit.repository
 
 import android.util.Log
-import com.fitapp.appfit.response.routine.CreateRoutineRequest
-import com.fitapp.appfit.response.routine.RoutineResponse
+import com.fitapp.appfit.response.routine.request.CreateRoutineRequest
+import com.fitapp.appfit.response.routine.response.RoutineResponse
 import com.fitapp.appfit.service.RoutineService
 import com.fitapp.appfit.utils.Resource
 

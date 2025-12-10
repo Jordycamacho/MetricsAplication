@@ -1,4 +1,4 @@
-package com.fitapp.appfit.response.sport
+package com.fitapp.appfit.response.sport.response
 
 data class SportResponse(
     val id: Long,

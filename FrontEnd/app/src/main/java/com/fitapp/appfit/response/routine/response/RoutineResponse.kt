@@ -1,4 +1,4 @@
-package com.fitapp.appfit.response.routine
+package com.fitapp.appfit.response.routine.response
 
 import java.time.LocalDateTime
 

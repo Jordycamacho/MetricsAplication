@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.repository.SportRepository
-import com.fitapp.appfit.response.sport.SportRequest
-import com.fitapp.appfit.response.sport.SportResponse
+import com.fitapp.appfit.response.sport.request.SportRequest
+import com.fitapp.appfit.response.sport.response.SportResponse
 import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 

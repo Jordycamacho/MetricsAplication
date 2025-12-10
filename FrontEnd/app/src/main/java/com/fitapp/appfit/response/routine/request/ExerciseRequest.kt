@@ -1,4 +1,4 @@
-package com.fitapp.appfit.response.routine
+package com.fitapp.appfit.response.routine.request
 
 data class ExerciseRequest(
     val exerciseId: Long,

@@ -1,7 +1,7 @@
 package com.fitapp.appfit.repository
 
-import com.fitapp.appfit.response.sport.SportRequest
-import com.fitapp.appfit.response.sport.SportResponse
+import com.fitapp.appfit.response.sport.request.SportRequest
+import com.fitapp.appfit.response.sport.response.SportResponse
 import com.fitapp.appfit.service.SportService
 import com.fitapp.appfit.utils.Resource
 import retrofit2.Response

@@ -13,7 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.databinding.FragmentCreateRoutineBinding
 import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.model.SportViewModel
-import com.fitapp.appfit.response.sport.SportResponse
+import com.fitapp.appfit.response.sport.response.SportResponse
 import com.fitapp.appfit.utils.FormValidator
 import com.fitapp.appfit.utils.Resource
 

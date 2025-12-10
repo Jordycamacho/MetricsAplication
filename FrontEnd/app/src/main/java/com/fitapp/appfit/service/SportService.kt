@@ -1,8 +1,8 @@
 package com.fitapp.appfit.service
 
 import com.fitapp.appfit.network.ApiClient
-import com.fitapp.appfit.response.sport.SportRequest
-import com.fitapp.appfit.response.sport.SportResponse
+import com.fitapp.appfit.response.sport.request.SportRequest
+import com.fitapp.appfit.response.sport.response.SportResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
