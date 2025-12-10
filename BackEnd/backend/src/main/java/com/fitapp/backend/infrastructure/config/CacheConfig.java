@@ -13,14 +13,42 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @Configuration
 @EnableCaching
 public class CacheConfig {
-    
+
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+
         cacheManager.setCaffeine(Caffeine.newBuilder()
-            .expireAfterWrite(10, TimeUnit.MINUTES)
-            .maximumSize(100)
-            .recordStats());
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .maximumSize(100)
+                .recordStats());
+
+        cacheManager.registerCustomCache("routines", Caffeine.newBuilder()
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .maximumSize(100)
+                .recordStats()
+                .build());
+
+        cacheManager.registerCustomCache("userRoutines", Caffeine.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .maximumSize(50)
+                .recordStats()
+                .build());
+
+        cacheManager.registerCustomCache("recentRoutines", Caffeine.newBuilder()
+                .expireAfterWrite(2, TimeUnit.MINUTES)
+                .maximumSize(20)
+                .build());
+
+        cacheManager.registerCustomCache("activeRoutines", Caffeine.newBuilder()
+                .expireAfterWrite(15, TimeUnit.MINUTES)
+                .maximumSize(20)
+                .build());
+
+        cacheManager.registerCustomCache("routineStats", Caffeine.newBuilder()
+                .expireAfterWrite(30, TimeUnit.MINUTES)
+                .maximumSize(10)
+                .build());
         return cacheManager;
     }
 }
