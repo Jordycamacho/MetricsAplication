@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/card_dark">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Encabezado de la rutina -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_routine_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nombre de rutina"
+                android:textSize="18sp"
+                android:textColor="@color/text_primary_dark"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_routine_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="60 min"
+                android:textSize="14sp"
+                android:textColor="@color/gold_primary"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Detalles de la rutina -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_exercise_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="8 ejercicios"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary_dark" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="12dp"
+                android:background="@color/divider_dark"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:id="@+id/tv_sport_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Deporte"
+                android:textSize="14sp"
+                android:textColor="@color/gold_primary"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Descripción -->
+        <TextView
+            android:id="@+id/tv_routine_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descripción de la rutina..."
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary_dark"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Botones de acción -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <TextView
+                android:id="@+id/btn_start_workout"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="INICIAR"
+                android:gravity="center"
+                android:textColor="@color/background_dark"
+                android:textStyle="bold"
+                android:background="@drawable/button_gold_background"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/btn_edit"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="EDITAR"
+                android:gravity="center"
+                android:textColor="@color/gold_primary"
+                android:textStyle="bold"
+                android:background="@drawable/button_outline_gold" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

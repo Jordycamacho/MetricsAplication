@@ -15,7 +15,7 @@
         android:id="@+id/navigation_routines"
         android:name="com.fitapp.appfit.ui.routines.RoutinesFragment"
         android:label="@string/title_routines"
-        tools:layout="@layout/fragment_routines" />
+        tools:layout="@layout/fragment_routines_list" />
 
     <fragment
         android:id="@+id/navigation_progress"

@@ -3,6 +3,7 @@ package com.fitapp.appfit.repository
 import android.util.Log
 import com.fitapp.appfit.response.routine.request.CreateRoutineRequest
 import com.fitapp.appfit.response.routine.response.RoutineResponse
+import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import com.fitapp.appfit.service.RoutineService
 import com.fitapp.appfit.utils.Resource
 
@@ -31,6 +32,33 @@ class RoutineRepository {
                 } ?: run {
                     Log.w(TAG, "⚠️ Respuesta vacía del servidor")
                     Resource.Error("El servidor respondió sin datos")
+                }
+            } else {
+                val errorMsg = "Error ${response.code()}: ${response.errorBody()?.string() ?: response.message()}"
+                Log.e(TAG, errorMsg)
+                Resource.Error(errorMsg)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error de red/excepción: ${e.message}", e)
+            Resource.Error("Error de conexión: ${e.message ?: "Verifica tu internet"}")
+        }
+    }
+
+    suspend fun getRoutines(): Resource<List<RoutineSummaryResponse>> {
+        return try {
+            Log.d(TAG, "Obteniendo lista de rutinas...")
+
+            val response = routineService.getRoutines()
+            Log.d(TAG, "Respuesta recibida - Código: ${response.code()}")
+
+            if (response.isSuccessful) {
+                response.body()?.let { pageResponse ->
+                    // Extraer solo el contenido (la lista de rutinas)
+                    Log.d(TAG, "✅ Rutinas obtenidas: ${pageResponse.content.size}")
+                    Resource.Success(pageResponse.content)
+                } ?: run {
+                    Log.w(TAG, "⚠️ Respuesta vacía del servidor")
+                    Resource.Error("No hay rutinas para mostrar")
                 }
             } else {
                 val errorMsg = "Error ${response.code()}: ${response.errorBody()?.string() ?: response.message()}"
