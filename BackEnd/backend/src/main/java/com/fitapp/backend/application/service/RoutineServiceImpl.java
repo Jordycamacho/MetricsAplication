@@ -85,6 +85,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 routine.setSessionsPerWeek(request.getSessionsPerWeek());
 
                 RoutineModel savedRoutine = routinePersistencePort.save(routine);
+                serviceLogger.logRoutineCreationSuccess(routine.getId(), userEmail);
                 return mapToResponse(savedRoutine, sport);
         }
 
@@ -106,40 +107,11 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 return mapToResponse(routine, sport);
         }
 
-        private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
-                RoutineResponse response = new RoutineResponse();
-                response.setId(routine.getId());
-                response.setName(routine.getName());
-                response.setDescription(routine.getDescription());
-                response.setSportId(routine.getSportId());
-                response.setSportName(sport != null ? sport.getName() : null);
-                response.setIsActive(routine.getIsActive());
-                response.setCreatedAt(routine.getCreatedAt());
-                response.setUpdatedAt(routine.getUpdatedAt());
-                response.setTrainingDays(routine.getTrainingDays());
-                response.setGoal(routine.getGoal());
-                response.setSessionsPerWeek(routine.getSessionsPerWeek());
-                List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
-                                .map(exercise -> {
-                                        RoutineExerciseResponse exerciseResponse = new RoutineExerciseResponse();
-                                        exerciseResponse.setId(exercise.getId());
-                                        exerciseResponse.setExerciseId(exercise.getExerciseId());
-                                        exerciseResponse.setSets(exercise.getSets());
-                                        exerciseResponse.setTargetReps(exercise.getTargetReps());
-                                        exerciseResponse.setTargetWeight(exercise.getTargetWeight());
-                                        exerciseResponse.setRestIntervalSeconds(exercise.getRestIntervalSeconds());
-                                        return exerciseResponse;
-                                })
-                                .collect(Collectors.toList());
-
-                response.setExercises(exerciseResponses);
-                return response;
-        }
-
         @Override
         @Transactional
         @CacheEvict(value = { "routines", "userRoutines" }, key = "#request.routineId")
         public RoutineResponse addExercisesToRoutine(AddExercisesToRoutineRequest request, String userEmail) {
+                serviceLogger.logExercisesAdditionStart(null, userEmail, request.getExercises().size());
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -178,6 +150,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 routine.getExercises().addAll(exercises);
 
                 RoutineModel updatedRoutine = routinePersistencePort.save(routine);
+                serviceLogger.logExercisesAdditionSuccess(updatedRoutine.getId(), userEmail, exercises.size());
                 return mapToResponse(updatedRoutine, sport);
         }
 
@@ -185,6 +158,9 @@ public class RoutineServiceImpl implements RoutineUseCase {
         @Transactional
         @CacheEvict(value = { "routines", "userRoutines", "routineStats" }, key = "#userEmail")
         public RoutineResponse updateRoutine(Long id, UpdateRoutineRequest request, String userEmail) {
+
+                serviceLogger.logRoutineUpdateStart(id, userEmail);
+
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -223,7 +199,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                         sport = sportPersistencePort.findById(updatedRoutine.getSportId()).orElse(null);
                 }
 
-                // --------serviceLogger.logRoutineUpdate(updatedRoutine.getId(), userEmail);
+                serviceLogger.logRoutineUpdateSuccess(updatedRoutine.getId(), userEmail);
                 return mapToResponse(updatedRoutine, sport);
         }
 
@@ -231,11 +207,14 @@ public class RoutineServiceImpl implements RoutineUseCase {
         @Transactional
         @CacheEvict(value = { "routines", "userRoutines", "routineStats" }, key = "#userEmail")
         public void deleteRoutine(Long id, String userEmail) {
+                serviceLogger.logRoutineDeletionStart(id, userEmail);
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
+                                .orElseThrow(() -> {
+                                        serviceLogger.logRoutineDeletionError(id, userEmail, userEmail);
+                                        return new RuntimeException("User not found");
+                                });
                 routinePersistencePort.deleteByIdAndUserId(id, user.getId());
-                // ------serviceLogger.logRoutineDeletion(id, userEmail);
+                serviceLogger.logRoutineDeletionSuccess(id, userEmail);
         }
 
         @Override
@@ -246,7 +225,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
                 routinePersistencePort.toggleActiveStatus(id, user.getId(), isActive);
-                // -----serviceLogger.logRoutineStatusChange(id, isActive, userEmail);
+                serviceLogger.logRoutineStatusToggle(id, isActive, userEmail);
         }
 
         @Override
@@ -267,6 +246,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
         @Cacheable(value = "userRoutinesFiltered", key = "#userEmail + '_' + #filters.hashCode() + '_' + #page + '_' + #size")
         public PageResponse<RoutineSummaryResponse> getUserRoutinesWithFilters(String userEmail,
                         RoutineFilterRequest filters, int page, int size) {
+            
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -280,11 +260,13 @@ public class RoutineServiceImpl implements RoutineUseCase {
         @Override
         @Cacheable(value = "recentRoutines", key = "#userEmail + '_' + #limit")
         public List<RoutineSummaryResponse> getRecentRoutines(String userEmail, int limit) {
+                serviceLogger.logRecentRoutinesRetrievalStart(userEmail, limit);
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
                 List<RoutineModel> recentRoutines = routinePersistencePort.findRecentByUserId(user.getId(), limit);
 
+                serviceLogger.logRecentRoutinesRetrievalSuccess(userEmail, recentRoutines.size());
                 return recentRoutines.stream()
                                 .map(this::mapToSummaryResponse)
                                 .collect(Collectors.toList());
@@ -293,11 +275,13 @@ public class RoutineServiceImpl implements RoutineUseCase {
         @Override
         @Cacheable(value = "activeRoutines", key = "#userEmail")
         public List<RoutineSummaryResponse> getActiveRoutines(String userEmail) {
+                serviceLogger.logActiveRoutinesRetrievalStart(userEmail);
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
                 List<RoutineModel> activeRoutines = routinePersistencePort.findActiveRoutinesByUserId(user.getId());
 
+                serviceLogger.logActiveRoutinesRetrievalSuccess(userEmail, activeRoutines.size());
                 return activeRoutines.stream()
                                 .map(this::mapToSummaryResponse)
                                 .collect(Collectors.toList());
@@ -306,17 +290,49 @@ public class RoutineServiceImpl implements RoutineUseCase {
         @Override
         @Cacheable(value = "routineStats", key = "#userEmail")
         public RoutineStatisticsResponse getRoutineStatistics(String userEmail) {
+                serviceLogger.logRoutineStatisticsRetrievalStart(userEmail);
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
                 long totalRoutines = routinePersistencePort.countByUserId(user.getId());
                 List<RoutineModel> activeRoutines = routinePersistencePort.findActiveRoutinesByUserId(user.getId());
 
+                serviceLogger.logRoutineStatisticsRetrievalSuccess(userEmail);
                 return RoutineStatisticsResponse.builder()
                                 .totalRoutines(totalRoutines)
                                 .activeRoutines(activeRoutines.size())
                                 .inactiveRoutines(totalRoutines - activeRoutines.size())
                                 .build();
+        }
+
+        private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
+                RoutineResponse response = new RoutineResponse();
+                response.setId(routine.getId());
+                response.setName(routine.getName());
+                response.setDescription(routine.getDescription());
+                response.setSportId(routine.getSportId());
+                response.setSportName(sport != null ? sport.getName() : null);
+                response.setIsActive(routine.getIsActive());
+                response.setCreatedAt(routine.getCreatedAt());
+                response.setUpdatedAt(routine.getUpdatedAt());
+                response.setTrainingDays(routine.getTrainingDays());
+                response.setGoal(routine.getGoal());
+                response.setSessionsPerWeek(routine.getSessionsPerWeek());
+                List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
+                                .map(exercise -> {
+                                        RoutineExerciseResponse exerciseResponse = new RoutineExerciseResponse();
+                                        exerciseResponse.setId(exercise.getId());
+                                        exerciseResponse.setExerciseId(exercise.getExerciseId());
+                                        exerciseResponse.setSets(exercise.getSets());
+                                        exerciseResponse.setTargetReps(exercise.getTargetReps());
+                                        exerciseResponse.setTargetWeight(exercise.getTargetWeight());
+                                        exerciseResponse.setRestIntervalSeconds(exercise.getRestIntervalSeconds());
+                                        return exerciseResponse;
+                                })
+                                .collect(Collectors.toList());
+
+                response.setExercises(exerciseResponses);
+                return response;
         }
 
         private PageResponse<RoutineSummaryResponse> mapToPageResponse(Page<RoutineModel> routinePage) {

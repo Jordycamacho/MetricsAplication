@@ -24,26 +24,6 @@ public class RoutineServiceLogger {
         log.debug("Routine {} created successfully for user {}", routineId, userEmail);
     }
     
-    public void logRoutineCreationError(String userEmail, String error) {
-        log.error("ROUTINE_CREATION_ERROR | user={} | error={} | correlationId={}", 
-                  userEmail, error, getCorrelationId());
-    }
-    
-    public void logRoutineRetrievalStart(Long routineId, String userEmail) {
-        log.debug("ROUTINE_RETRIEVAL_START | routineId={} | user={} | correlationId={}", 
-                  routineId, userEmail, getCorrelationId());
-    }
-    
-    public void logRoutineRetrievalSuccess(Long routineId, String userEmail) {
-        log.debug("ROUTINE_RETRIEVAL_SUCCESS | routineId={} | user={} | correlationId={}", 
-                  routineId, userEmail, getCorrelationId());
-    }
-    
-    public void logRoutineRetrievalError(Long routineId, String userEmail, String error) {
-        log.error("ROUTINE_RETRIEVAL_ERROR | routineId={} | user={} | error={} | correlationId={}", 
-                  routineId, userEmail, error, getCorrelationId());
-    }
-    
     public void logRoutineUpdateStart(Long routineId, String userEmail) {
         log.info("ROUTINE_UPDATE_START | routineId={} | user={} | correlationId={}", 
                  routineId, userEmail, getCorrelationId());
@@ -82,20 +62,6 @@ public class RoutineServiceLogger {
     }
     
     // --- List Operations ---
-    public void logRoutineListRetrievalStart(String userEmail, String filterType, int page, int size) {
-        log.debug("ROUTINE_LIST_START | user={} | filter={} | page={} | size={} | correlationId={}", 
-                  userEmail, filterType, page, size, getCorrelationId());
-    }
-    
-    public void logRoutineListRetrievalSuccess(String userEmail, String filterType, long totalElements) {
-        log.debug("ROUTINE_LIST_SUCCESS | user={} | filter={} | total={} | correlationId={}", 
-                  userEmail, filterType, totalElements, getCorrelationId());
-    }
-    
-    public void logRoutineListRetrievalError(String userEmail, String filterType, String error) {
-        log.error("ROUTINE_LIST_ERROR | user={} | filter={} | error={} | correlationId={}", 
-                  userEmail, filterType, error, getCorrelationId());
-    }
     
     public void logRecentRoutinesRetrievalStart(String userEmail, int limit) {
         log.debug("RECENT_ROUTINES_START | user={} | limit={} | correlationId={}", 
@@ -148,22 +114,6 @@ public class RoutineServiceLogger {
     public void logExercisesAdditionError(Long routineId, String userEmail, String error) {
         log.error("EXERCISES_ADDITION_ERROR | routineId={} | user={} | error={} | correlationId={}", 
                   routineId, userEmail, error, getCorrelationId());
-    }
-    
-    // --- Cache Operations ---
-    public void logCacheEvict(String cacheName, String key) {
-        log.debug("CACHE_EVICT | cache={} | key={} | correlationId={}", 
-                  cacheName, key, getCorrelationId());
-    }
-    
-    public void logCacheHit(String cacheName, String key) {
-        log.debug("CACHE_HIT | cache={} | key={} | correlationId={}", 
-                  cacheName, key, getCorrelationId());
-    }
-    
-    public void logCacheMiss(String cacheName, String key) {
-        log.debug("CACHE_MISS | cache={} | key={} | correlationId={}", 
-                  cacheName, key, getCorrelationId());
     }
     
     // --- Performance Logging ---
