@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_dark"
@@ -10,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="20dp"
+        tools:ignore="ExtraText">
 
         <!-- Encabezado con saludo -->
         <LinearLayout
@@ -66,9 +68,10 @@
                     android:layout_marginBottom="12dp">
 
                     <TextView
+                        android:id="@+id/textProgress"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Entrenamientos completados"
+                        android:text="0 de 0 rutinas activas"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary_dark" />
 
@@ -76,7 +79,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="4 de 6"
+                        android:text="66%"
                         android:textSize="14sp"
                         android:textColor="@color/gold_primary"
                         android:textStyle="bold"
@@ -84,6 +87,7 @@
                 </LinearLayout>
 
                 <ProgressBar
+                    android:id="@+id/progressBarWeekly"
                     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="10dp"
@@ -151,253 +155,60 @@
         </androidx.cardview.widget.CardView>
 
         <!-- Sección de Rutinas Recientes -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="💪 Rutinas Recientes"
-            android:textSize="20sp"
-            android:textColor="@color/gold_primary"
-            android:textStyle="bold"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="💪 Rutinas Recientes"
+                android:textSize="20sp"
+                android:textColor="@color/gold_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textViewSeeAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ver todas"
+                android:textSize="14sp"
+                android:textColor="@color/gold_primary"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- ProgressBar para carga -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
             android:layout_marginBottom="16dp" />
 
-        <!-- Tarjeta de Rutina de Gym -->
-        <androidx.cardview.widget.CardView
+        <!-- Mensaje cuando no hay rutinas -->
+        <TextView
+            android:id="@+id/textEmptyRecentRoutines"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            style="@style/CardView.AppFit"
-            android:foreground="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
+            android:text="No hay rutinas recientes"
+            android:textColor="@color/text_secondary_dark"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="🏋️ Rutina de Gym"
-                    android:textSize="17sp"
-                    android:textColor="@color/text_primary_dark"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Lun, Mié, Vie"
-                    android:textSize="14sp"
-                    android:textColor="@color/gold_secondary"
-                    android:layout_marginTop="6dp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/divider_dark"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="3">
-
-                    <!-- Tiempo -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="45"
-                            android:textSize="20sp"
-                            android:textColor="@color/gold_primary"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="min hoy"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_secondary_dark" />
-                    </LinearLayout>
-
-                    <!-- Peso -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="320"
-                            android:textSize="20sp"
-                            android:textColor="@color/gold_primary"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="kg"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_secondary_dark" />
-                    </LinearLayout>
-
-                    <!-- Ejercicios -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="12"
-                            android:textSize="20sp"
-                            android:textColor="@color/gold_primary"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="ejercicios"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_secondary_dark" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Tarjeta de Rutina de Boxeo -->
-        <androidx.cardview.widget.CardView
+        <!-- RecyclerView para rutinas recientes -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_recent_routines"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/CardView.AppFit"
-            android:foreground="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="🥊 Boxeo"
-                    android:textSize="17sp"
-                    android:textColor="@color/text_primary_dark"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Mar, Jue"
-                    android:textSize="14sp"
-                    android:textColor="@color/gold_secondary"
-                    android:layout_marginTop="6dp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/divider_dark"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="3">
-
-                    <!-- Tiempo -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="30"
-                            android:textSize="20sp"
-                            android:textColor="@color/gold_primary"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="min hoy"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_secondary_dark" />
-                    </LinearLayout>
-
-                    <!-- Peso -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="120"
-                            android:textSize="20sp"
-                            android:textColor="@color/gold_primary"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="kg"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_secondary_dark" />
-                    </LinearLayout>
-
-                    <!-- Ejercicios -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="8"
-                            android:textSize="20sp"
-                            android:textColor="@color/gold_primary"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="ejercicios"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_secondary_dark" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+            android:layout_height="280dp"
+            android:layout_marginBottom="24dp" />
 
     </LinearLayout>
 </ScrollView>
