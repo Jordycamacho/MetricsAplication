@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.FragmentRoutinesListBinding
 import com.fitapp.appfit.model.RoutineViewModel
+import com.fitapp.appfit.response.page.PageResponse
 import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import com.fitapp.appfit.ui.routines.adapter.RoutineAdapter
 import com.fitapp.appfit.utils.Resource
@@ -95,12 +96,13 @@ class RoutinesFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let { routines ->
-                        if (routines.isEmpty()) {
+                    resource.data?.let { pageResponse ->
+                        val routinesList = pageResponse.content
+                        if (routinesList.isEmpty()) {
                             showEmptyState()
                         } else {
                             showRoutinesList()
-                            routineAdapter.updateRoutines(routines)
+                            routineAdapter.updateRoutines(routinesList)
                         }
                     }
                 }
