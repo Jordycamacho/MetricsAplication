@@ -2,12 +2,17 @@ package com.fitapp.backend.infrastructure.persistence.converter;
 
 import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
+@Component
+@RequiredArgsConstructor
 public class UserConverter {
 
-    public static UserModel toDomain(UserEntity entity) {
-        if (entity == null)
+    public UserModel toDomain(UserEntity entity) {
+        if (entity == null) {
             return null;
+        }
 
         UserModel.UserModelBuilder builder = UserModel.builder()
                 .id(entity.getId())
@@ -18,9 +23,12 @@ public class UserConverter {
                 .maxRoutines(entity.getMaxRoutines())
                 .role(entity.getRole())
                 .lastLogin(entity.getLastLogin())
-                .isActive(entity.isActive());
+                .isActive(entity.isActive())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .version(entity.getVersion());
 
-        // Manejar suscripción nula
+        // Manejar suscripción
         if (entity.getSubscription() != null) {
             builder.subscription(SubscriptionConverter.toDomain(entity.getSubscription()));
         }
@@ -28,11 +36,13 @@ public class UserConverter {
         return builder.build();
     }
 
-    public static UserEntity toEntity(UserModel model) {
-        UserEntity entity = new UserEntity();
-        if (model.getId() != null) {
-            entity.setId(model.getId());
+    public UserEntity toEntity(UserModel model) {
+        if (model == null) {
+            return null;
         }
+
+        UserEntity entity = new UserEntity();
+        entity.setId(model.getId());
         entity.setEmail(model.getEmail());
         entity.setFullName(model.getFullName());
         entity.setProfileImage(model.getProfileImage());
@@ -41,6 +51,11 @@ public class UserConverter {
         entity.setLastLogin(model.getLastLogin());
         entity.setActive(model.isActive());
         entity.setMaxRoutines(model.getMaxRoutines());
+        entity.setCreatedAt(model.getCreatedAt());
+        entity.setUpdatedAt(model.getUpdatedAt());
+        entity.setVersion(model.getVersion());
+
+        // NOTA: La suscripción se manejará por separado en el adapter
         return entity;
     }
 }

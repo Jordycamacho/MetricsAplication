@@ -14,8 +14,8 @@ public interface SpringDataUserRepository extends JpaRepository<UserEntity, Long
     Optional<UserEntity> findByEmail(String email);
     
     @EntityGraph(attributePaths = {"subscription"})
-    Optional<UserEntity> findWithSubscriptionById(Long id);
-    
+    Optional<UserEntity> findById(Long id);
+
     @EntityGraph(attributePaths = {"subscription"})
     Optional<UserEntity> findWithSubscriptionByEmail(String email);
 }

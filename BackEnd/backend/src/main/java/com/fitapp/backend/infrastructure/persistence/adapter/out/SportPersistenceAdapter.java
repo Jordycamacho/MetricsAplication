@@ -4,7 +4,9 @@ import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.domain.model.SportModel;
 import com.fitapp.backend.infrastructure.persistence.converter.SportConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
+import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +17,9 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SportPersistenceAdapter implements SportPersistencePort {
-private final SportRepository sportRepository;
+    
+    private final SportRepository sportRepository;
+    private final SpringDataUserRepository userRepository;
     private final SportConverter sportConverter;
 
     @Override
@@ -48,6 +52,13 @@ private final SportRepository sportRepository;
     @Override
     public SportModel save(SportModel sportModel) {
         SportEntity entity = sportConverter.toEntity(sportModel);
+        
+        if (sportModel.getCreatedBy() != null) {
+            UserEntity user = userRepository.findById(sportModel.getCreatedBy())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            entity.setCreatedBy(user);
+        }
+        
         SportEntity savedEntity = sportRepository.save(entity);
         return sportConverter.toDomain(savedEntity);
     }

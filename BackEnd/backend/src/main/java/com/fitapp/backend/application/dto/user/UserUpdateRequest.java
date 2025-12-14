@@ -8,7 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserUpdateRequest {
-    private Role role;
-    private Boolean isActive;
     private Integer maxRoutines;
+    private Boolean isActive;
+    private String fullName;
+    private Role role;
 }
