@@ -1,6 +1,7 @@
 package com.fitapp.backend.infrastructure.persistence.adapter.out;
 
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
+import com.fitapp.backend.domain.exception.UserNotFoundException;
 import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.converter.UserConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
@@ -43,11 +44,33 @@ public class UserPersistenceAdapter implements UserPersistencePort {
     }
     
     @Override
+    @Transactional
     public UserModel save(UserModel userModel) {
-        UserEntity entity = userConverter.toEntity(userModel);  
+        UserEntity entity;
+        
+        if (userModel.getId() != null) {
+            entity = springDataUserRepository.findById(userModel.getId())
+                    .orElseThrow(() -> new UserNotFoundException(userModel.getId()));
+            
+            updateEntityFromModel(entity, userModel);
+        } else {
+            entity = userConverter.toEntity(userModel);
+        }
+        
         UserEntity savedEntity = springDataUserRepository.save(entity);
-    
         return userConverter.toDomain(savedEntity);
+    }
+    
+    private void updateEntityFromModel(UserEntity entity, UserModel model) {
+        entity.setEmail(model.getEmail());
+        entity.setFullName(model.getFullName());
+        entity.setProfileImage(model.getProfileImage());
+        entity.setPassword(model.getPassword());
+        entity.setRole(model.getRole());
+        entity.setLastLogin(model.getLastLogin());
+        entity.setActive(model.isActive());
+        entity.setMaxRoutines(model.getMaxRoutines());
+        entity.setUpdatedAt(model.getUpdatedAt());
     }
     
     @Override

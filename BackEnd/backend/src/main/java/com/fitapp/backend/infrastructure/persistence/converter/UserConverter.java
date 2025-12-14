@@ -54,7 +54,7 @@ public class UserConverter {
         entity.setCreatedAt(model.getCreatedAt());
         entity.setUpdatedAt(model.getUpdatedAt());
         entity.setVersion(model.getVersion());
-
+        
         // NOTA: La suscripción se manejará por separado en el adapter
         return entity;
     }
