@@ -8,8 +8,7 @@ import lombok.Data;
 public class SportResponse {
     private Long id;
     private String name;
+    private String category;
     private Boolean isPredefined;
     private Map<String, String> parameterTemplate;
-    private String iconUrl;
-    private String category;
 }

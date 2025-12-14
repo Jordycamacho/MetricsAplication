@@ -58,7 +58,6 @@ public class SportDataLoader {
         sport.setName(name);
         sport.setCategory(category);
         sport.setIsPredefined(true);
-        sport.setIconUrl("/icons/sports/" + name.toLowerCase() + ".png");
         sport.setParameterTemplate(parameters);
 
         sportRepository.save(sport);

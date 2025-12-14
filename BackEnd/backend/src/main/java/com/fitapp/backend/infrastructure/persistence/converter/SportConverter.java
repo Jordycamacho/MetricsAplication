@@ -17,7 +17,6 @@ public class SportConverter {
             model.setCreatedBy(null);
         }
         model.setParameterTemplate(entity.getParameterTemplate());
-        model.setIconUrl(entity.getIconUrl());
         model.setCategory(entity.getCategory());
         return model;
     }
@@ -28,7 +27,6 @@ public class SportConverter {
         entity.setName(model.getName());
         entity.setIsPredefined(model.getIsPredefined());
         entity.setParameterTemplate(model.getParameterTemplate());
-        entity.setIconUrl(model.getIconUrl());
         entity.setCategory(model.getCategory());
         return entity;
     }

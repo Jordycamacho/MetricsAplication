@@ -38,9 +38,6 @@ public class SportEntity {
     @Column(columnDefinition = "TEXT")
     private Map<String, String> parameterTemplate = new HashMap<>();
 
-    @Column(name = "icon_url")
-    private String iconUrl;
-
     @Column(name = "category")
     private String category;
 }

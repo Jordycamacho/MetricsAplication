@@ -1,5 +1,6 @@
 package com.fitapp.backend.application.service;
 
+import com.fitapp.backend.application.dto.sport.SportRequest;
 import com.fitapp.backend.application.ports.input.SportUseCase;
 import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
@@ -41,12 +42,17 @@ public class SportServiceImpl implements SportUseCase {
     }
 
     @Override
-    public SportModel createCustomSport(SportModel sportModel, String userEmail) {
+    @Transactional
+    public SportModel createCustomSport(SportRequest sportRequest, String userEmail) {
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        SportModel sportModel = new SportModel();
+        sportModel.setName(sportRequest.getName());
+        sportModel.setParameterTemplate(sportRequest.getParameterTemplate());
+        sportModel.setCategory(sportRequest.getCategory());
         sportModel.setIsPredefined(false);
         sportModel.setCreatedBy(user.getId());
+
         return sportPersistencePort.save(sportModel);
     }
 

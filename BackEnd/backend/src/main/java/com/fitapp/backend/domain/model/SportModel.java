@@ -10,6 +10,5 @@ public class SportModel {
     private Boolean isPredefined;
     private Long createdBy;
     private Map<String, String> parameterTemplate;
-    private String iconUrl;
     private String category;
 }
