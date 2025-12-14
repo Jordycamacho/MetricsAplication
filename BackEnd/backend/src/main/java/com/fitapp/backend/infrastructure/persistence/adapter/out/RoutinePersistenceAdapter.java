@@ -44,11 +44,8 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
                 .map(routineConverter::toDomain);
     }
 
-
-    //===========================ERROR AQUI===========================
     @Override
     public Page<RoutineModel> findByUserIdAndFilters(Long userId, RoutineFilterRequest filters, Pageable pageable) {
-        
         Specification<RoutineEntity> spec = Specification
                 .where((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
 
@@ -65,8 +62,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
                     "%" + filters.getName().toLowerCase() + "%"));
         }
 
-        //return routineRepository.findAll(pageable, spec)
-        return routineRepository.findAll(pageable)
+        return routineRepository.findAll(spec, pageable)
                 .map(routineConverter::toDomain);
     }
 
@@ -93,7 +89,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     public RoutineModel update(RoutineModel routine) {
         RoutineEntity existing = routineRepository.findByIdAndUserId(routine.getId(), routine.getUserId())
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
-        
+
         // Actualizar campos
         existing.setName(routine.getName());
         existing.setDescription(routine.getDescription());
@@ -101,11 +97,11 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
         existing.setGoal(routine.getGoal());
         existing.setSessionsPerWeek(routine.getSessionsPerWeek());
         existing.setIsActive(routine.getIsActive());
-        
+
         if (routine.getSportId() != null) {
             // El sport se actualiza en el converter
         }
-        
+
         RoutineEntity updated = routineRepository.save(existing);
         return routineConverter.toDomain(updated);
     }

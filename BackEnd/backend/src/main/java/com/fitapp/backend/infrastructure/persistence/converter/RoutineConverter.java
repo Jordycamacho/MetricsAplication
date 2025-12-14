@@ -11,7 +11,10 @@ import com.fitapp.backend.infrastructure.persistence.repository.ExerciseReposito
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -25,6 +28,7 @@ public class RoutineConverter {
     private final SportRepository sportRepository;
     private final ExerciseRepository exerciseRepository;
 
+    @Transactional(readOnly = true)
     public RoutineModel toDomain(RoutineEntity entity) {
         RoutineModel routine = new RoutineModel();
         routine.setId(entity.getId());
@@ -34,11 +38,16 @@ public class RoutineConverter {
         routine.setCreatedAt(entity.getCreatedAt());
         routine.setUpdatedAt(entity.getUpdatedAt());
         routine.setUserId(entity.getUser().getId());
-        routine.setSportId(entity.getSport() != null ? entity.getSport().getId() : null);
+
+        if (entity.getSport() != null) {
+            routine.setSportId(entity.getSport().getId());
+        }
+
         routine.setTrainingDays(entity.getTrainingDays());
         routine.setGoal(entity.getGoal());
         routine.setSessionsPerWeek(entity.getSessionsPerWeek());
-        if (entity.getExercises() != null) {
+
+        if (entity.getExercises() != null && Hibernate.isInitialized(entity.getExercises())) {
             routine.setExercises(entity.getExercises().stream()
                     .map(this::toDomainExercise)
                     .collect(Collectors.toList()));

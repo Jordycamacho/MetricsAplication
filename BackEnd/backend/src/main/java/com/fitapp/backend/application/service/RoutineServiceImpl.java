@@ -243,16 +243,16 @@ public class RoutineServiceImpl implements RoutineUseCase {
         }
 
         @Override
-        @Cacheable(value = "userRoutinesFiltered", key = "#userEmail + '_' + #filters.hashCode() + '_' + #page + '_' + #size")
         public PageResponse<RoutineSummaryResponse> getUserRoutinesWithFilters(String userEmail,
                         RoutineFilterRequest filters, int page, int size) {
-            
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-                Pageable pageable = PageRequest.of(page, size);
-                Page<RoutineModel> routinePage = routinePersistencePort.findByUserIdAndFilters(user.getId(), filters,
-                                pageable);
+                Sort sort = Sort.by(Sort.Direction.fromString(filters.getSortDirection()), filters.getSortBy());
+                Pageable pageable = PageRequest.of(page, size, sort);
+
+                Page<RoutineModel> routinePage = routinePersistencePort.findByUserIdAndFilters(
+                                user.getId(), filters, pageable);
 
                 return mapToPageResponse(routinePage);
         }
