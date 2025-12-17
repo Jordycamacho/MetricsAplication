@@ -164,7 +164,9 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 UserModel user = userPersistencePort.findByEmail(userEmail)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-                RoutineModel existingRoutine = routinePersistencePort.findByIdAndUserId(id, user.getId())
+                Long userId = user.getId();
+
+                RoutineModel existingRoutine = routinePersistencePort.findByIdAndUserId(id, userId)
                                 .orElseThrow(() -> new RoutineNotFoundException(id));
 
                 if (request.getName() != null)
@@ -187,9 +189,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 }
 
                 if (request.getSportId() != null) {
-                        SportModel sport = sportPersistencePort.findById(request.getSportId())
-                                        .orElseThrow(() -> new RuntimeException("Sport not found"));
-                        existingRoutine.setSportId(sport.getId());
+                        existingRoutine.setSportId(request.getSportId());
                 }
 
                 RoutineModel updatedRoutine = routinePersistencePort.update(existingRoutine);

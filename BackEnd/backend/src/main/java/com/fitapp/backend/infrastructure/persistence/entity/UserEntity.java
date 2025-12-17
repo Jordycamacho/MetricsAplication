@@ -80,7 +80,7 @@ public class UserEntity {
     private int maxRoutines = 1;
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
     private List<RoutineEntity> routines = new ArrayList<>();
 
