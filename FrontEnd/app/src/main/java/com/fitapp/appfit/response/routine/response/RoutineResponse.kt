@@ -8,6 +8,7 @@ data class RoutineResponse(
     val description: String?,
     val sportId: Long?,
     val sportName: String?,
+    val goal: String?,
     val isActive: Boolean,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,

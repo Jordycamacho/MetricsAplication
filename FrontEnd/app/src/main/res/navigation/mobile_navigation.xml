@@ -15,7 +15,13 @@
         android:id="@+id/navigation_routines"
         android:name="com.fitapp.appfit.ui.routines.RoutinesFragment"
         android:label="@string/title_routines"
-        tools:layout="@layout/fragment_routines_list" />
+        tools:layout="@layout/fragment_routines_list">
+
+        <!-- ACCIÓN MOVIDA AQUÍ -->
+        <action
+            android:id="@+id/action_navigation_routines_to_navigation_edit_routine"
+            app:destination="@id/navigation_edit_routine" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_progress"
@@ -47,6 +53,18 @@
         android:name="com.fitapp.appfit.ui.routines.create.AddExercisesFragment"
         android:label="@string/title_add_exercises"
         tools:layout="@layout/fragment_add_exercises" />
+
+    <fragment
+        android:id="@+id/navigation_edit_routine"
+        android:name="com.fitapp.appfit.ui.routines.create.EditRoutineFragment"
+        android:label="@string/title_edit_routine"
+        tools:layout="@layout/fragment_edit_routine">
+
+        <!-- ARGUMENTO AGREGADO AQUÍ -->
+        <argument
+            android:name="routineId"
+            app:argType="long" />
+    </fragment>
 
     <!-- Pantallas de deportes -->
     <fragment

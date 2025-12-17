@@ -148,8 +148,17 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun editRoutine(routine: RoutineSummaryResponse) {
-        // TODO: Navegar a pantalla de edición
-        Toast.makeText(requireContext(), "Editar: ${routine.name}", Toast.LENGTH_SHORT).show()
+        // Navegar a pantalla de edición usando SafeArgs
+        try {
+            val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationEditRoutine(routine.id)
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Toast.makeText(
+                requireContext(),
+                "Error al navegar: ${e.message}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
