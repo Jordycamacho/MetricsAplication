@@ -175,8 +175,10 @@ public class RoutineServiceImpl implements RoutineUseCase {
                         existingRoutine.setDescription(request.getDescription());
                 if (request.getGoal() != null)
                         existingRoutine.setGoal(request.getGoal());
-                if (request.getSessionsPerWeek() != null)
+                if (request.getSessionsPerWeek() != null) {
+                        System.out.println("  - Setting sessionsPerWeek to: " + request.getSessionsPerWeek());
                         existingRoutine.setSessionsPerWeek(request.getSessionsPerWeek());
+                }
                 if (request.getIsActive() != null)
                         existingRoutine.setIsActive(request.getIsActive());
 
@@ -185,10 +187,18 @@ public class RoutineServiceImpl implements RoutineUseCase {
                                         .map(String::toUpperCase)
                                         .map(DayOfWeek::valueOf)
                                         .collect(Collectors.toSet());
+                        System.out.println("  - Setting trainingDays to: " + trainingDays);
                         existingRoutine.setTrainingDays(trainingDays);
                 }
 
+                System.out.println("---------DEBUG - Update Routine Request:");
+                System.out.println("  - SportId from request: " + request.getSportId());
+                System.out.println("  - TrainingDays from request: " + request.getTrainingDays());
+                System.out.println("  - SessionsPerWeek from request: " + request.getSessionsPerWeek());
+                System.out.println("  - Goald from request: " + request.getGoal());
+
                 if (request.getSportId() != null) {
+                        System.out.println("  - Setting sportId to: " + request.getSportId());
                         existingRoutine.setSportId(request.getSportId());
                 }
 

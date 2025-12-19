@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Component
@@ -34,18 +35,20 @@ public class RoutineConverter {
         routine.setId(entity.getId());
         routine.setName(entity.getName());
         routine.setDescription(entity.getDescription());
-        routine.setIsActive(entity.getIsActive());
+        routine.setIsActive(entity.getIsActive() != null ? entity.getIsActive() : true);
         routine.setCreatedAt(entity.getCreatedAt());
         routine.setUpdatedAt(entity.getUpdatedAt());
         routine.setUserId(entity.getUser().getId());
 
         if (entity.getSport() != null) {
             routine.setSportId(entity.getSport().getId());
+        } else {
+            routine.setSportId(null);
         }
 
-        routine.setTrainingDays(entity.getTrainingDays());
-        routine.setGoal(entity.getGoal());
-        routine.setSessionsPerWeek(entity.getSessionsPerWeek());
+        routine.setTrainingDays(entity.getTrainingDays() != null ? entity.getTrainingDays() : new HashSet<>());
+        routine.setGoal(entity.getGoal() != null ? entity.getGoal() : "");
+        routine.setSessionsPerWeek(entity.getSessionsPerWeek() != null ? entity.getSessionsPerWeek() : 3);
 
         if (entity.getExercises() != null && Hibernate.isInitialized(entity.getExercises())) {
             routine.setExercises(entity.getExercises().stream()
@@ -63,12 +66,13 @@ public class RoutineConverter {
         entity.setId(domain.getId());
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
-        entity.setIsActive(domain.getIsActive());
+        entity.setIsActive(domain.getIsActive() != null ? domain.getIsActive() : true);
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
-        entity.setTrainingDays(domain.getTrainingDays());
-        entity.setGoal(domain.getGoal());
-        entity.setSessionsPerWeek(domain.getSessionsPerWeek());
+
+        entity.setTrainingDays(domain.getTrainingDays() != null ? domain.getTrainingDays() : new HashSet<>());
+        entity.setGoal(domain.getGoal() != null ? domain.getGoal() : "");
+        entity.setSessionsPerWeek(domain.getSessionsPerWeek() != null ? domain.getSessionsPerWeek() : 3);
 
         UserEntity user = springDataUserRepository.findById(domain.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + domain.getUserId()));
@@ -78,6 +82,8 @@ public class RoutineConverter {
             SportEntity sport = sportRepository.findById(domain.getSportId())
                     .orElseThrow(() -> new RuntimeException("Sport not found with id: " + domain.getSportId()));
             entity.setSport(sport);
+        } else {
+            entity.setSport(null);
         }
 
         if (domain.getExercises() != null) {
@@ -87,7 +93,6 @@ public class RoutineConverter {
         } else {
             entity.setExercises(new ArrayList<>());
         }
-
         return entity;
     }
 

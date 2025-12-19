@@ -5,7 +5,9 @@ import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
 import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.infrastructure.persistence.converter.RoutineConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
+import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     private final RoutineRepository routineRepository;
     private final RoutineConverter routineConverter;
+    private final SportRepository sportRepository;
 
     @Override
     public RoutineModel save(RoutineModel routine) {
@@ -86,23 +90,40 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     }
 
     @Override
+    @Transactional
     public RoutineModel update(RoutineModel routine) {
         RoutineEntity existing = routineRepository.findByIdAndUserId(routine.getId(), routine.getUserId())
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
 
-        // Actualizar campos
+        System.out.println("DEBUG - Update Routine:");
+        System.out.println("  - Name: " + routine.getName());
+        System.out.println("  - SportId: " + routine.getSportId());
+        System.out.println("  - TrainingDays: " + routine.getTrainingDays());
+        System.out.println("  - SessionsPerWeek: " + routine.getSessionsPerWeek());
+        System.out.println("  - Goal: " + routine.getGoal());
+
         existing.setName(routine.getName());
         existing.setDescription(routine.getDescription());
-        existing.setTrainingDays(routine.getTrainingDays());
+        existing.setTrainingDays(routine.getTrainingDays() != null ? routine.getTrainingDays() : new HashSet<>());
         existing.setGoal(routine.getGoal());
-        existing.setSessionsPerWeek(routine.getSessionsPerWeek());
+        existing.setSessionsPerWeek(routine.getSessionsPerWeek() != null ? routine.getSessionsPerWeek() : 3);
         existing.setIsActive(routine.getIsActive());
 
         if (routine.getSportId() != null) {
-            // El sport se actualiza en el converter
+            SportEntity sport = sportRepository.findById(routine.getSportId())
+                    .orElseThrow(() -> new RuntimeException("Sport not found with id: " + routine.getSportId()));
+            existing.setSport(sport);
+            System.out.println("  - Sport updated to: " + sport.getName());
+        } else {
+            existing.setSport(null);
+            System.out.println("  - Sport set to null");
         }
 
         RoutineEntity updated = routineRepository.save(existing);
+        System.out.println("DEBUG - After save:");
+        System.out.println("  - Sport: " + (existing.getSport() != null ? existing.getSport().getId() : "null"));
+        System.out.println("  - TrainingDays: " + existing.getTrainingDays());
+        System.out.println("  - SessionsPerWeek: " + existing.getSessionsPerWeek());
         return routineConverter.toDomain(updated);
     }
 

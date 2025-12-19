@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 @Data
@@ -20,7 +21,9 @@ public class RoutineResponse {
     private Long id;
     private String name;
     private String description;
+    @JsonProperty("sportId")
     private Long sportId;
+    @JsonProperty("sportName")
     private String sportName;
     private Boolean isActive;
     private LocalDateTime createdAt;
