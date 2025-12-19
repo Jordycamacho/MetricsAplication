@@ -122,17 +122,19 @@ class RoutineViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val result = repository.getRoutine(id)
-                _routineDetailState.value = result
 
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutina obtenida: ${result.data?.id}")
+                if (result is Resource.Success) {
+                    result.data?.let { routine ->
+                        Log.d(TAG, "✅ Rutina obtenida - ID: ${routine.id}")
+                        Log.d(TAG, "  - Nombre: ${routine.name}")
+                        Log.d(TAG, "  - Días: ${routine.trainingDays}")
+                        Log.d(TAG, "  - Deporte: ${routine.sportName}")
+                        Log.d(TAG, "  - Objetivo: ${routine.goal}")
+                        Log.d(TAG, "  - Sesiones/semana: ${routine.sessionsPerWeek}")
                     }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo rutina: ${result.message}")
-                    }
-                    else -> {}
                 }
+
+                _routineDetailState.value = result
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Excepción obteniendo rutina: ${e.message}", e)
                 _routineDetailState.value = Resource.Error("Error: ${e.message}")
