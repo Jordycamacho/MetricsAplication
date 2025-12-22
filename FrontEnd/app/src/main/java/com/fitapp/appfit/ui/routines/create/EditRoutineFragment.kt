@@ -1,4 +1,3 @@
-// Archivo: com/fitapp/appfit/ui/routines/create/EditRoutineFragment.kt
 package com.fitapp.appfit.ui.routines.create
 
 import android.os.Bundle
@@ -33,6 +32,8 @@ class EditRoutineFragment : Fragment() {
     private var sportsMap = mutableMapOf<String, Long>()
     private var currentRoutineId: Long = 0
     private var currentRoutine: RoutineResponse? = null
+    private var isSportsLoaded = false
+    private var isRoutineLoaded = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,21 +50,14 @@ class EditRoutineFragment : Fragment() {
         // Obtener el ID de la rutina de los argumentos
         currentRoutineId = args.routineId
 
-        Log.d("EditRoutine", "Cargando rutina ID: $currentRoutineId") // Para debug
+        Log.d("EditRoutine", "Cargando rutina ID: $currentRoutineId")
 
         setupSportsSpinner()
         setupClickListeners()
         setupObservers()
 
-        // Cargar datos
+        // Cargar datos EN ORDEN: primero deportes, luego rutina
         sportViewModel.getPredefinedSports()
-        loadRoutineData()
-    }
-
-    private fun loadRoutineData() {
-        // Mostrar loading
-        binding.progressBar.isVisible = true
-        routineViewModel.getRoutine(currentRoutineId)
     }
 
     private fun setupSportsSpinner() {
@@ -78,36 +72,53 @@ class EditRoutineFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        // Observar los deportes
+        // Observar los deportes - ¡CARGAR PRIMERO ESTO!
         sportViewModel.sportsState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     resource.data?.let { sports ->
                         updateSportsSpinner(sports)
+                        isSportsLoaded = true
 
-                        // Una vez cargados deportes, si ya tenemos la rutina, seleccionar el correcto
-                        currentRoutine?.let { routine ->
-                            selectSportInSpinner(routine.sportName)
+                        // Una vez cargados deportes, cargar la rutina
+                        if (!isRoutineLoaded) {
+                            loadRoutineData()
+                        } else {
+                            // Si ya se cargó la rutina, actualizar el deporte
+                            currentRoutine?.let { routine ->
+                                selectSportInSpinner(routine.sportName)
+                            }
                         }
                     }
                 }
                 is Resource.Error -> {
                     showToast("Error cargando deportes: ${resource.message}")
+                    loadRoutineData()
                 }
-                else -> {}
+                is Resource.Loading -> {
+                }
             }
         })
 
-        // Observar los detalles de la rutina - ¡ESTO ES LO MÁS IMPORTANTE!
         routineViewModel.routineDetailState.observe(viewLifecycleOwner, Observer { resource ->
             binding.progressBar.isVisible = false
 
             when (resource) {
                 is Resource.Success -> {
                     resource.data?.let { routine ->
-                        Log.d("EditRoutine", "Rutina recibida: $routine")
+                        Log.d("EditRoutine", "✅ Rutina cargada: ${routine.id}")
+                        Log.d("EditRoutine", "  - SportName: ${routine.sportName}")
+                        Log.d("EditRoutine", "  - TrainingDays: ${routine.trainingDays}")
+                        Log.d("EditRoutine", "  - SessionsPerWeek: ${routine.sessionsPerWeek}")
+
                         currentRoutine = routine
+                        isRoutineLoaded = true
+
                         populateFormWithRoutineData(routine)
+
+                        if (isSportsLoaded) {
+                            selectSportInSpinner(routine.sportName)
+                        }
                     } ?: run {
                         showError("La rutina no contiene datos")
                     }
@@ -159,6 +170,12 @@ class EditRoutineFragment : Fragment() {
         })
     }
 
+    private fun loadRoutineData() {
+        // Mostrar loading
+        binding.progressBar.isVisible = true
+        routineViewModel.getRoutine(currentRoutineId)
+    }
+
     private fun updateSportsSpinner(sports: List<SportResponse>) {
         sportsMap.clear()
         val sportNames = mutableListOf("Seleccionar deporte")
@@ -175,65 +192,128 @@ class EditRoutineFragment : Fragment() {
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerSports.adapter = adapter
+
+        Log.d("EditRoutine", "Deportes cargados: ${sports.size} deportes")
     }
 
     private fun selectSportInSpinner(sportName: String?) {
         if (sportName != null) {
-            val adapter = binding.spinnerSports.adapter as ArrayAdapter<String>
-            val position = adapter.getPosition(sportName)
-            if (position >= 0) {
-                binding.spinnerSports.setSelection(position)
+            Log.d("EditRoutine", "Intentando seleccionar deporte: '$sportName'")
+
+            val adapter = binding.spinnerSports.adapter as? ArrayAdapter<String>
+            if (adapter != null) {
+                val position = adapter.getPosition(sportName)
+                if (position >= 0) {
+                    binding.spinnerSports.setSelection(position)
+                    Log.d("EditRoutine", "✅ Deporte seleccionado: $sportName (posición $position)")
+                } else {
+                    Log.w("EditRoutine", "⚠️ Deporte no encontrado en spinner: '$sportName'")
+                    // Listar los deportes disponibles para debug
+                    val items = (0 until adapter.count).map { adapter.getItem(it) }
+                    Log.d("EditRoutine", "Deportes disponibles: $items")
+                }
+            } else {
+                Log.w("EditRoutine", "Adapter del spinner es null")
             }
+        } else {
+            Log.d("EditRoutine", "La rutina no tiene deporte asignado (sportName es null)")
+            binding.spinnerSports.setSelection(0) // Seleccionar "Seleccionar deporte"
         }
     }
 
     private fun populateFormWithRoutineData(routine: RoutineResponse) {
-        Log.d("EditRoutine", "Llenando formulario con: ${routine.name}")
+        Log.d("EditRoutine", "=== POBLANDO FORMULARIO ===")
+        Log.d("EditRoutine", "Nombre: ${routine.name}")
+        Log.d("EditRoutine", "Deporte: ${routine.sportName}")
+        Log.d("EditRoutine", "Días: ${routine.trainingDays}")
+        Log.d("EditRoutine", "Sesiones/semana: ${routine.sessionsPerWeek}")
+        Log.d("EditRoutine", "Objetivo: ${routine.goal}")
+        Log.d("EditRoutine", "Activa: ${routine.isActive}")
 
         // 1. Nombre
         binding.etRoutineName.setText(routine.name)
 
-        // 2. Deporte (se seleccionará automáticamente cuando cargue el spinner)
-        if (routine.sportName != null && sportsMap.isNotEmpty()) {
-            selectSportInSpinner(routine.sportName)
-        }
-
-        // 3. Descripción
+        // 2. Descripción
         binding.etRoutineDescription.setText(routine.description ?: "")
 
-        // 4. Objetivo (VERIFICA que este campo existe en RoutineResponse)
+        // 3. Objetivo
         binding.etGoal.setText(routine.goal ?: "")
 
-        // 5. Sesiones por semana (VERIFICA que este campo existe)
-        binding.etSessionsPerWeek.setText(routine.sessionsPerWeek.toString())
+        // 4. Sesiones por semana - MANEJAR CASO NULL o 0
+        val sessions = when {
+            routine.sessionsPerWeek == null -> "3"
+            routine.sessionsPerWeek <= 0 -> "3"
+            else -> routine.sessionsPerWeek.toString()
+        }
+        binding.etSessionsPerWeek.setText(sessions)
+        Log.d("EditRoutine", "Sesiones establecidas: $sessions")
 
-        // 6. ¡DÍAS DE ENTRENAMIENTO! - Esto es lo que más te interesa
-        setTrainingDaysCheckboxes(routine.trainingDays ?: emptySet())
+        // 5. DÍAS DE ENTRENAMIENTO
+        val days = routine.trainingDays ?: emptySet()
+        setTrainingDaysCheckboxes(days)
+        Log.d("EditRoutine", "Checkboxes configurados para: $days")
 
-        // 7. Estado activo (opcional - para el botón toggle)
+        // 6. Estado activo
         updateToggleButton(routine.isActive)
 
-        Log.d("EditRoutine", "Formulario llenado correctamente")
+        Log.d("EditRoutine", "✅ Formulario poblado correctamente")
     }
 
     private fun setTrainingDaysCheckboxes(days: Set<String>) {
         // Limpiar todos primero
         clearAllDayCheckboxes()
 
+        Log.d("EditRoutine", "Configurando checkboxes para días: $days")
+
         // Marcar solo los días que están en el conjunto
         days.forEach { day ->
-            when (day.uppercase()) {
-                "MONDAY" -> binding.cbMonday.isChecked = true
-                "TUESDAY" -> binding.cbTuesday.isChecked = true
-                "WEDNESDAY" -> binding.cbWednesday.isChecked = true
-                "THURSDAY" -> binding.cbThursday.isChecked = true
-                "FRIDAY" -> binding.cbFriday.isChecked = true
-                "SATURDAY" -> binding.cbSaturday.isChecked = true
-                "SUNDAY" -> binding.cbSunday.isChecked = true
+            val upperDay = day.uppercase()
+            Log.d("EditRoutine", "Procesando día: $day -> $upperDay")
+
+            when (upperDay) {
+                "MONDAY" -> {
+                    binding.cbMonday.isChecked = true
+                    Log.d("EditRoutine", "✓ Lunes marcado")
+                }
+                "TUESDAY" -> {
+                    binding.cbTuesday.isChecked = true
+                    Log.d("EditRoutine", "✓ Martes marcado")
+                }
+                "WEDNESDAY" -> {
+                    binding.cbWednesday.isChecked = true
+                    Log.d("EditRoutine", "✓ Miércoles marcado")
+                }
+                "THURSDAY" -> {
+                    binding.cbThursday.isChecked = true
+                    Log.d("EditRoutine", "✓ Jueves marcado")
+                }
+                "FRIDAY" -> {
+                    binding.cbFriday.isChecked = true
+                    Log.d("EditRoutine", "✓ Viernes marcado")
+                }
+                "SATURDAY" -> {
+                    binding.cbSaturday.isChecked = true
+                    Log.d("EditRoutine", "✓ Sábado marcado")
+                }
+                "SUNDAY" -> {
+                    binding.cbSunday.isChecked = true
+                    Log.d("EditRoutine", "✓ Domingo marcado")
+                }
+                else -> Log.w("EditRoutine", "⚠️ Día no reconocido: $day")
             }
         }
 
-        Log.d("EditRoutine", "Checkboxes configurados: $days")
+        // Verificar qué checkboxes están marcados
+        val marcados = mutableListOf<String>()
+        if (binding.cbMonday.isChecked) marcados.add("Lunes")
+        if (binding.cbTuesday.isChecked) marcados.add("Martes")
+        if (binding.cbWednesday.isChecked) marcados.add("Miércoles")
+        if (binding.cbThursday.isChecked) marcados.add("Jueves")
+        if (binding.cbFriday.isChecked) marcados.add("Viernes")
+        if (binding.cbSaturday.isChecked) marcados.add("Sábado")
+        if (binding.cbSunday.isChecked) marcados.add("Domingo")
+
+        Log.d("EditRoutine", "Checkboxes marcados después: $marcados")
     }
 
     private fun clearAllDayCheckboxes() {
@@ -249,11 +329,19 @@ class EditRoutineFragment : Fragment() {
     private fun updateToggleButton(isActive: Boolean) {
         val text = if (isActive) "Desactivar Rutina" else "Activar Rutina"
         binding.btnToggleActive.text = text
+
+        // Cambiar color basado en estado
         if (isActive) {
-            binding.btnToggleActive.setBackgroundResource(android.R.color.holo_red_dark)
+            // Rojo para desactivar
+            binding.btnToggleActive.setBackgroundColor(android.graphics.Color.parseColor("#FF5252"))
+            binding.btnToggleActive.setTextColor(android.graphics.Color.WHITE)
         } else {
-            binding.btnToggleActive.setBackgroundResource(R.color.gold_primary)
+            // Verde para activar
+            binding.btnToggleActive.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"))
+            binding.btnToggleActive.setTextColor(android.graphics.Color.WHITE)
         }
+
+        Log.d("EditRoutine", "Botón configurado: $text (activa: $isActive)")
     }
 
     private fun setupClickListeners() {
@@ -274,7 +362,9 @@ class EditRoutineFragment : Fragment() {
         binding.btnToggleActive.setOnClickListener {
             currentRoutine?.let { routine ->
                 val newActiveState = !routine.isActive
-                routineViewModel.updateRoutine(currentRoutineId, UpdateRoutineRequest(isActive = newActiveState))
+                Log.d("EditRoutine", "Cambiando estado de rutina a: $newActiveState")
+                routineViewModel.updateRoutine(currentRoutineId,
+                    UpdateRoutineRequest(isActive = newActiveState))
             }
         }
     }
@@ -345,10 +435,13 @@ class EditRoutineFragment : Fragment() {
             null
         }
 
-        Log.d("EditRoutine", "Actualizando rutina:")
+        Log.d("EditRoutine", "=== ACTUALIZANDO RUTINA ===")
         Log.d("EditRoutine", "  - Nombre: $name")
-        Log.d("EditRoutine", "  - Días: $trainingDays")
+        Log.d("EditRoutine", "  - Deporte seleccionado: $selectedSport")
         Log.d("EditRoutine", "  - Deporte ID: $sportId")
+        Log.d("EditRoutine", "  - Días: $trainingDays")
+        Log.d("EditRoutine", "  - Sesiones/semana: $sessionsPerWeek")
+        Log.d("EditRoutine", "  - Objetivo: $goal")
 
         // Crear el request de actualización
         val request = UpdateRoutineRequest(
@@ -373,15 +466,6 @@ class EditRoutineFragment : Fragment() {
         if (binding.cbSaturday.isChecked) days.add("SATURDAY")
         if (binding.cbSunday.isChecked) days.add("SUNDAY")
         return days
-    }
-
-    private fun safeSetTrainingDays(days: Set<String>?) {
-        if (days == null) {
-            Log.w("EditRoutine", "⚠️ trainingDays es null, no se marcarán checkboxes")
-            clearAllDayCheckboxes()
-            return
-        }
-        setTrainingDaysCheckboxes(days)
     }
 
     private fun showToast(message: String) {

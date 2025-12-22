@@ -334,16 +334,6 @@
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
             android:text="Desactivar Rutina"
-            android:backgroundTint="@color/gold_primary"
-            style="@style/GoldButton" />
-
-        <Button
-            android:id="@+id/btn_toggle_active2"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="."
-            android:backgroundTint="@color/divider_dark"
             style="@style/GoldButton" />
 
     </LinearLayout>
