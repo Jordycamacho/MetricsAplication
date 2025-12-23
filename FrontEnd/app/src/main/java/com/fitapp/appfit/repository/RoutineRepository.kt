@@ -7,6 +7,8 @@ import com.fitapp.appfit.response.page.PageResponse
 import com.fitapp.appfit.service.RoutineService
 import com.fitapp.appfit.utils.Resource
 import retrofit2.Response
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 
 class RoutineRepository {
     private val routineService = RoutineService.instance
@@ -168,13 +170,34 @@ class RoutineRepository {
         } else {
             val errorMsg = "Error ${response.code()}: ${response.errorBody()?.string() ?: response.message()}"
             Log.e(TAG, "❌ Error en operación '$operation': $errorMsg")
-            Resource.Error(errorMsg)
+
+            // Manejo específico de errores
+            when (response.code()) {
+                500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
+                401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
+                404 -> Resource.Error("Recurso no encontrado.")
+                403 -> Resource.Error("No tienes permisos para realizar esta acción.")
+                else -> Resource.Error(errorMsg)
+            }
         }
     }
 
     private fun <T> handleException(e: Exception, operation: String): Resource<T> {
         Log.e(TAG, "❌ Excepción en operación '$operation': ${e.message}", e)
-        return Resource.Error("Error de conexión: ${e.message ?: "Verifica tu internet"}")
+
+        // Verificar tipo de excepción
+        return when (e) {
+            is SocketTimeoutException -> Resource.Error("Tiempo de espera agotado. Verifica tu conexión.")
+            is ConnectException -> Resource.Error("Error de conexión. Verifica tu internet.")
+            is retrofit2.HttpException -> {
+                when (e.code()) {
+                    500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
+                    401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
+                    else -> Resource.Error("Error ${e.code()}: ${e.message()}")
+                }
+            }
+            else -> Resource.Error("Error: ${e.message ?: "Error desconocido"}")
+        }
     }
 
     private fun handleResponseUnit(response: Response<Unit>, operation: String): Resource<Unit> {
@@ -186,12 +209,29 @@ class RoutineRepository {
         } else {
             val errorMsg = "Error ${response.code()}: ${response.errorBody()?.string() ?: response.message()}"
             Log.e(TAG, "❌ Error en operación '$operation': $errorMsg")
-            Resource.Error(errorMsg)
+
+            when (response.code()) {
+                500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
+                401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
+                else -> Resource.Error(errorMsg)
+            }
         }
     }
 
     private fun handleExceptionUnit(e: Exception, operation: String): Resource<Unit> {
         Log.e(TAG, "❌ Excepción en operación '$operation': ${e.message}", e)
-        return Resource.Error("Error de conexión: ${e.message ?: "Verifica tu internet"}")
+
+        return when (e) {
+            is SocketTimeoutException -> Resource.Error("Tiempo de espera agotado. Verifica tu conexión.")
+            is ConnectException -> Resource.Error("Error de conexión. Verifica tu internet.")
+            is retrofit2.HttpException -> {
+                when (e.code()) {
+                    500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
+                    401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
+                    else -> Resource.Error("Error ${e.code()}: ${e.message()}")
+                }
+            }
+            else -> Resource.Error("Error: ${e.message ?: "Error desconocido"}")
+        }
     }
 }

@@ -1,6 +1,8 @@
 package com.fitapp.appfit.ui.home
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -90,15 +92,23 @@ class HomeFragment : Fragment() {
                         } else {
                             showRecentRoutinesList()
                             val recentRoutines = routines.take(3)
-                            recentRoutineAdapter.updateRoutines(recentRoutines)
+                            recentRoutineAdapter.submitList(recentRoutines.toList()) // Usa toList()
                             updateProgressStats(routines)
                         }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    showError(resource.message ?: "Error al cargar rutinas")
-                    showEmptyRecentRoutines()
+                    val errorMsg = resource.message ?: "Error al cargar rutinas"
+                    if (errorMsg.contains("500")) {
+                        Log.e(TAG, "Error 500, reintentando en 2 segundos...")
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            loadRecentRoutines()
+                        }, 2000)
+                    } else {
+                        showError(errorMsg)
+                        showEmptyRecentRoutines()
+                    }
                 }
                 is Resource.Loading -> {
                     showLoading()
@@ -106,19 +116,12 @@ class HomeFragment : Fragment() {
             }
         })
 
-        // Observar cambios globales desde ViewModel
-        routineViewModel.routinesUpdated.observe(viewLifecycleOwner) { updated ->
-            if (updated == true) {
-                Log.d(TAG, "🔄 Home: ViewModel notificó actualización - Recargando")
+        // Observador único para actualizaciones
+        routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
+            Log.d(TAG, "🔄 Home: Evento de actualización recibido")
+            Handler(Looper.getMainLooper()).postDelayed({
                 loadRecentRoutines()
-            }
-        }
-
-        routineViewModel.routineDeleted.observe(viewLifecycleOwner) { deletedId ->
-            deletedId?.let {
-                Log.d(TAG, "🗑️ Home: ViewModel notificó eliminación - Recargando")
-                loadRecentRoutines()
-            }
+            }, 500)
         }
     }
 
@@ -177,8 +180,11 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "🔄 Home reanudado - Recargando rutinas")
-        loadRecentRoutines()
+        Log.d(TAG, "🔄 Home reanudado")
+        routineViewModel.clearAllUpdateStates()
+        Handler(Looper.getMainLooper()).postDelayed({
+            loadRecentRoutines()
+        }, 300)
     }
 
     override fun onDestroyView() {

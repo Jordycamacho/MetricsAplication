@@ -1,6 +1,8 @@
 package com.fitapp.appfit.ui.routines.create
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -142,15 +144,18 @@ class EditRoutineFragment : Fragment() {
                 is Resource.Success -> {
                     showToast("✅ Rutina actualizada exitosamente")
 
-                    // ✅ ENVIAR SEÑAL DE ACTUALIZACIÓN A LA LISTA
+                    // SOLO UNA FORMA DE NOTIFICAR
+                    routineViewModel.notifyAnyUpdate()
+
+                    // Enviar señal también por SavedStateHandle (opcional)
                     findNavController().previousBackStackEntry?.savedStateHandle?.set(
                         NavigationKeys.ROUTINE_UPDATED, true
                     )
 
-                    // Navegar hacia atrás después de un segundo
-                    binding.root.postDelayed({
+                    // Pequeño delay antes de navegar
+                    Handler(Looper.getMainLooper()).postDelayed({
                         findNavController().navigateUp()
-                    }, 1000)
+                    }, 500)
                 }
                 is Resource.Error -> {
                     showError("Error: ${resource.message ?: "Error desconocido"}")
@@ -168,12 +173,17 @@ class EditRoutineFragment : Fragment() {
                 is Resource.Success -> {
                     showToast("✅ Rutina eliminada exitosamente")
 
-                    // ✅ ENVIAR SEÑAL DE ELIMINACIÓN A LA LISTA
+                    // SOLO UNA FORMA DE NOTIFICAR
+                    routineViewModel.notifyAnyUpdate()
+
+                    // Enviar señal también por SavedStateHandle (opcional)
                     findNavController().previousBackStackEntry?.savedStateHandle?.set(
                         NavigationKeys.ROUTINE_DELETED, true
                     )
 
-                    findNavController().navigateUp()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        findNavController().navigateUp()
+                    }, 500)
                 }
                 is Resource.Error -> {
                     showError("Error eliminando rutina: ${resource.message}")

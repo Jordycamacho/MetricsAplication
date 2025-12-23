@@ -14,10 +14,20 @@ import kotlinx.coroutines.launch
 
 class RoutineViewModel : ViewModel() {
     private val repository = RoutineRepository()
+
+    // LiveData para notificaciones de actualización
     private val _routinesUpdated = MutableLiveData<Boolean>()
     val routinesUpdated: LiveData<Boolean> = _routinesUpdated
+
     private val _routineDeleted = MutableLiveData<Long?>()
     val routineDeleted: LiveData<Long?> = _routineDeleted
+
+    private val _refreshTrigger = MutableLiveData<Unit>()
+    val refreshTrigger: LiveData<Unit> = _refreshTrigger
+
+    // LiveData consolidada para todas las actualizaciones
+    private val _anyUpdateEvent = MutableLiveData<Any>()
+    val anyUpdateEvent: LiveData<Any> = _anyUpdateEvent
 
     companion object {
         private const val TAG = "RoutineViewModel"
@@ -73,11 +83,27 @@ class RoutineViewModel : ViewModel() {
 
     // ==================== Métodos públicos ====================
 
+    fun triggerRefresh() {
+        _refreshTrigger.value = Unit
+        // También resetea los otros estados para evitar duplicados
+        _routinesUpdated.value = false
+        _routineDeleted.value = null
+    }
+
     fun resetUpdateState() {
         _routinesUpdated.value = false
     }
 
     fun resetDeleteState() {
+        _routineDeleted.value = null
+    }
+
+    fun notifyAnyUpdate() {
+        _anyUpdateEvent.value = Any()
+    }
+
+    fun clearAllUpdateStates() {
+        _routinesUpdated.value = false
         _routineDeleted.value = null
     }
 
@@ -115,6 +141,7 @@ class RoutineViewModel : ViewModel() {
                 when (result) {
                     is Resource.Success -> {
                         Log.d(TAG, "✅ Rutina creada exitosamente, ID: ${result.data?.id}")
+                        notifyAnyUpdate()
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error creando rutina: ${result.message}")
@@ -166,6 +193,7 @@ class RoutineViewModel : ViewModel() {
                         Log.d(TAG, "✅ Rutina actualizada: ${result.data?.id}")
                         // Notificar que se actualizó
                         _routinesUpdated.value = true
+                        notifyAnyUpdate()
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error actualizando rutina: ${result.message}")
@@ -191,6 +219,7 @@ class RoutineViewModel : ViewModel() {
                         Log.d(TAG, "✅ Rutina eliminada: $id")
                         // Notificar que se eliminó
                         _routineDeleted.value = id
+                        notifyAnyUpdate()
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error eliminando rutina: ${result.message}")
@@ -218,6 +247,7 @@ class RoutineViewModel : ViewModel() {
                 when (result) {
                     is Resource.Success -> {
                         Log.d(TAG, "✅ Ejercicios agregados a rutina: $routineId")
+                        notifyAnyUpdate()
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error agregando ejercicios: ${result.message}")
@@ -346,6 +376,7 @@ class RoutineViewModel : ViewModel() {
                 when (result) {
                     is Resource.Success -> {
                         Log.d(TAG, "✅ Estado de rutina cambiado: $id a activo=$active")
+                        notifyAnyUpdate()
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error cambiando estado de rutina: ${result.message}")

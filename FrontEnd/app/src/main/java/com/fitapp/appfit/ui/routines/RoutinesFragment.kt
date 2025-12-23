@@ -1,6 +1,8 @@
 package com.fitapp.appfit.ui.routines
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -57,9 +59,10 @@ class RoutinesFragment : Fragment() {
             NavigationKeys.ROUTINE_UPDATED
         )?.observe(viewLifecycleOwner) { updated ->
             if (updated == true) {
-                Log.d(TAG, "🔄 Recibida señal de rutina actualizada")
-                loadRoutines()
-                // Limpiar el estado
+                Log.d(TAG, "🔄 Recibida señal de rutina actualizada desde SavedStateHandle")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    loadRoutines()
+                }, 500)
                 findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
                     NavigationKeys.ROUTINE_UPDATED
                 )
@@ -70,8 +73,10 @@ class RoutinesFragment : Fragment() {
             NavigationKeys.ROUTINE_DELETED
         )?.observe(viewLifecycleOwner) { deleted ->
             if (deleted == true) {
-                Log.d(TAG, "🗑️ Recibida señal de rutina eliminada")
-                loadRoutines()
+                Log.d(TAG, "🗑️ Recibida señal de rutina eliminada desde SavedStateHandle")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    loadRoutines()
+                }, 500)
                 findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
                     NavigationKeys.ROUTINE_DELETED
                 )
@@ -119,6 +124,11 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun setupObservers() {
+        setupRoutinesListObserver()
+        setupUpdateObservers()
+    }
+
+    private fun setupRoutinesListObserver() {
         // Observar lista de rutinas
         routineViewModel.routinesListState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
@@ -130,36 +140,47 @@ class RoutinesFragment : Fragment() {
                             showEmptyState()
                         } else {
                             showRoutinesList()
-                            routineAdapter.updateRoutines(routinesList)
+                            routineAdapter.submitList(routinesList.toList()) // Usa toList() para nueva instancia
                         }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    showError(resource.message ?: "Error al cargar rutinas")
-                    showEmptyState()
+                    // Verifica si es error 500 del servidor
+                    val errorMsg = resource.message ?: "Error al cargar rutinas"
+                    if (errorMsg.contains("500")) {
+                        Log.e(TAG, "Error 500 del servidor, esperando 2 segundos...")
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            loadRoutines()
+                        }, 2000)
+                    } else {
+                        showError(errorMsg)
+                        showEmptyState()
+                    }
                 }
                 is Resource.Loading -> {
                     showLoading()
                 }
             }
         })
+    }
 
-        // Observar cambios globales desde ViewModel
-        routineViewModel.routinesUpdated.observe(viewLifecycleOwner) { updated ->
-            if (updated == true) {
-                Log.d(TAG, "🔄 ViewModel notificó actualización - Recargando lista")
+    private fun setupUpdateObservers() {
+        // Observador ÚNICO para todas las actualizaciones
+        routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
+            Log.d(TAG, "🔄 Evento de actualización recibido - Recargando lista")
+            // Pequeño delay para evitar conflictos con el servidor
+            Handler(Looper.getMainLooper()).postDelayed({
                 loadRoutines()
-                routineViewModel.resetUpdateState()
-            }
+            }, 500)
         }
 
-        routineViewModel.routineDeleted.observe(viewLifecycleOwner) { deletedId ->
-            deletedId?.let {
-                Log.d(TAG, "🗑️ ViewModel notificó eliminación de ID: $it - Recargando lista")
+        // También observamos refreshTrigger por si acaso
+        routineViewModel.refreshTrigger.observe(viewLifecycleOwner) {
+            Log.d(TAG, "🔄 Refresh trigger recibido - Recargando lista")
+            Handler(Looper.getMainLooper()).postDelayed({
                 loadRoutines()
-                routineViewModel.resetDeleteState()
-            }
+            }, 500)
         }
     }
 
@@ -226,8 +247,13 @@ class RoutinesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "🔄 Fragmento reanudado - Recargando rutinas")
-        loadRoutines()
+        Log.d(TAG, "🔄 Fragmento reanudado - Limpiando estados y recargando")
+        routineViewModel.clearAllUpdateStates()
+
+        // Pequeño delay para evitar conflicto con otras operaciones
+        Handler(Looper.getMainLooper()).postDelayed({
+            loadRoutines()
+        }, 300)
     }
 
     override fun onDestroyView() {
