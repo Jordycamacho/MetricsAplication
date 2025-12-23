@@ -14,6 +14,10 @@ import kotlinx.coroutines.launch
 
 class RoutineViewModel : ViewModel() {
     private val repository = RoutineRepository()
+    private val _routinesUpdated = MutableLiveData<Boolean>()
+    val routinesUpdated: LiveData<Boolean> = _routinesUpdated
+    private val _routineDeleted = MutableLiveData<Long?>()
+    val routineDeleted: LiveData<Long?> = _routineDeleted
 
     companion object {
         private const val TAG = "RoutineViewModel"
@@ -68,6 +72,14 @@ class RoutineViewModel : ViewModel() {
     val isLoading: LiveData<Boolean> = _isLoading
 
     // ==================== Métodos públicos ====================
+
+    fun resetUpdateState() {
+        _routinesUpdated.value = false
+    }
+
+    fun resetDeleteState() {
+        _routineDeleted.value = null
+    }
 
     fun createRoutine(
         name: String,
@@ -152,6 +164,8 @@ class RoutineViewModel : ViewModel() {
                 when (result) {
                     is Resource.Success -> {
                         Log.d(TAG, "✅ Rutina actualizada: ${result.data?.id}")
+                        // Notificar que se actualizó
+                        _routinesUpdated.value = true
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error actualizando rutina: ${result.message}")
@@ -175,6 +189,8 @@ class RoutineViewModel : ViewModel() {
                 when (result) {
                     is Resource.Success -> {
                         Log.d(TAG, "✅ Rutina eliminada: $id")
+                        // Notificar que se eliminó
+                        _routineDeleted.value = id
                     }
                     is Resource.Error -> {
                         Log.e(TAG, "❌ Error eliminando rutina: ${result.message}")

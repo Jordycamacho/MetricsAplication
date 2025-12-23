@@ -7,13 +7,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.R
 import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 
 class RoutineAdapter(
-    private var routines: List<RoutineSummaryResponse> = emptyList(),
     private val onItemClick: (RoutineSummaryResponse) -> Unit = {},
     private val onEditClick: (RoutineSummaryResponse) -> Unit = {},
     private val onStartClick: (RoutineSummaryResponse) -> Unit = {}
-) : RecyclerView.Adapter<RoutineAdapter.RoutineViewHolder>() {
+) :ListAdapter<RoutineSummaryResponse, RoutineAdapter.RoutineViewHolder>(RoutineDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoutineViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -22,30 +23,24 @@ class RoutineAdapter(
     }
 
     override fun onBindViewHolder(holder: RoutineViewHolder, position: Int) {
-        val routine = routines[position]
+        val routine = getItem(position)
         holder.bind(routine)
 
-        // Click en toda la tarjeta
         holder.itemView.setOnClickListener {
             onItemClick(routine)
         }
 
-        // Click en botón editar
         holder.btnEdit.setOnClickListener {
             onEditClick(routine)
         }
 
-        // Click en botón iniciar
         holder.btnStart.setOnClickListener {
             onStartClick(routine)
         }
     }
 
-    override fun getItemCount(): Int = routines.size
-
     fun updateRoutines(newRoutines: List<RoutineSummaryResponse>) {
-        routines = newRoutines
-        notifyDataSetChanged()
+        submitList(newRoutines)
     }
 
     inner class RoutineViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -76,5 +71,13 @@ class RoutineAdapter(
         }
     }
 
+    class RoutineDiffCallback : DiffUtil.ItemCallback<RoutineSummaryResponse>() {
+        override fun areItemsTheSame(oldItem: RoutineSummaryResponse, newItem: RoutineSummaryResponse): Boolean {
+            return oldItem.id == newItem.id
+        }
 
+        override fun areContentsTheSame(oldItem: RoutineSummaryResponse, newItem: RoutineSummaryResponse): Boolean {
+            return oldItem == newItem
+        }
+    }
 }

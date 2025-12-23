@@ -1,6 +1,7 @@
 package com.fitapp.appfit.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +24,10 @@ class HomeFragment : Fragment() {
     private val routineViewModel: RoutineViewModel by viewModels()
     private lateinit var recentRoutineAdapter: RoutineAdapter
 
+    companion object {
+        private const val TAG = "HomeFragment"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -39,7 +44,6 @@ class HomeFragment : Fragment() {
         setupClickListeners()
         setupObservers()
 
-        // Cargar rutinas cuando se abre la pantalla
         loadRecentRoutines()
     }
 
@@ -64,15 +68,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        // Botón para crear rutina
         binding.cardCreateRoutine.setOnClickListener {
             findNavController().navigate(R.id.navigation_create_routine)
         }
 
-        // Ver todas las rutinas (puedes agregar un botón/texto para esto)
         binding.textViewSeeAll.setOnClickListener {
-            // Navegar a la pantalla completa de rutinas
-            // Puedes usar BottomNavigation o cualquier navegación que tengas configurada
             findNavController().navigate(R.id.navigation_routines)
         }
     }
@@ -89,7 +89,6 @@ class HomeFragment : Fragment() {
                             showEmptyRecentRoutines()
                         } else {
                             showRecentRoutinesList()
-                            // Tomar solo las primeras 3 rutinas para mostrar en el home
                             val recentRoutines = routines.take(3)
                             recentRoutineAdapter.updateRoutines(recentRoutines)
                             updateProgressStats(routines)
@@ -106,21 +105,34 @@ class HomeFragment : Fragment() {
                 }
             }
         })
+
+        // Observar cambios globales desde ViewModel
+        routineViewModel.routinesUpdated.observe(viewLifecycleOwner) { updated ->
+            if (updated == true) {
+                Log.d(TAG, "🔄 Home: ViewModel notificó actualización - Recargando")
+                loadRecentRoutines()
+            }
+        }
+
+        routineViewModel.routineDeleted.observe(viewLifecycleOwner) { deletedId ->
+            deletedId?.let {
+                Log.d(TAG, "🗑️ Home: ViewModel notificó eliminación - Recargando")
+                loadRecentRoutines()
+            }
+        }
     }
 
     private fun loadRecentRoutines() {
+        Log.d(TAG, "📥 Home: Cargando rutinas recientes...")
         routineViewModel.getRoutines()
     }
 
     private fun updateProgressStats(routines: List<RoutineSummaryResponse>) {
-        // Aquí puedes actualizar las estadísticas de progreso
         val activeRoutines = routines.count { it.isActive }
         val totalRoutines = routines.size
 
-        // Actualizar el texto de progreso
         binding.textProgress.text = "$activeRoutines de $totalRoutines rutinas activas"
 
-        // Actualizar la barra de progreso
         if (totalRoutines > 0) {
             val progress = (activeRoutines * 100) / totalRoutines
             binding.progressBarWeekly.progress = progress
@@ -128,20 +140,15 @@ class HomeFragment : Fragment() {
     }
 
     private fun showRoutineDetail(routine: RoutineSummaryResponse) {
-        // Navegar a pantalla de detalle
         Toast.makeText(requireContext(), "Ver detalle: ${routine.name}", Toast.LENGTH_SHORT).show()
-        // TODO: Implementar navegación a pantalla de detalle
     }
 
     private fun editRoutine(routine: RoutineSummaryResponse) {
-        // Navegar a pantalla de edición
         Toast.makeText(requireContext(), "Editar: ${routine.name}", Toast.LENGTH_SHORT).show()
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
-        // Iniciar entrenamiento
         Toast.makeText(requireContext(), "Iniciar entrenamiento: ${routine.name}", Toast.LENGTH_SHORT).show()
-        // TODO: Implementar navegación a pantalla de entrenamiento
     }
 
     private fun showLoading() {
@@ -170,7 +177,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refrescar rutinas cuando vuelva a la pantalla
+        Log.d(TAG, "🔄 Home reanudado - Recargando rutinas")
         loadRecentRoutines()
     }
 

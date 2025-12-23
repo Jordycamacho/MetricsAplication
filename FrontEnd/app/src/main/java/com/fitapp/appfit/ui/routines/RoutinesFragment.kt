@@ -1,6 +1,7 @@
 package com.fitapp.appfit.ui.routines
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
+import com.fitapp.appfit.constants.NavigationKeys
 import com.fitapp.appfit.databinding.FragmentRoutinesListBinding
 import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
@@ -23,6 +25,10 @@ class RoutinesFragment : Fragment() {
     private val binding get() = _binding!!
     private val routineViewModel: RoutineViewModel by viewModels()
     private lateinit var routineAdapter: RoutineAdapter
+
+    companion object {
+        private const val TAG = "RoutinesFragment"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,23 +45,49 @@ class RoutinesFragment : Fragment() {
         setupRecyclerView()
         setupClickListeners()
         setupObservers()
+        setupNavigationResultListener()
 
         // Cargar rutinas cuando se abre la pantalla
         loadRoutines()
     }
 
+    private fun setupNavigationResultListener() {
+        // Escuchar resultados de navegación desde edición
+        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>(
+            NavigationKeys.ROUTINE_UPDATED
+        )?.observe(viewLifecycleOwner) { updated ->
+            if (updated == true) {
+                Log.d(TAG, "🔄 Recibida señal de rutina actualizada")
+                loadRoutines()
+                // Limpiar el estado
+                findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
+                    NavigationKeys.ROUTINE_UPDATED
+                )
+            }
+        }
+
+        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>(
+            NavigationKeys.ROUTINE_DELETED
+        )?.observe(viewLifecycleOwner) { deleted ->
+            if (deleted == true) {
+                Log.d(TAG, "🗑️ Recibida señal de rutina eliminada")
+                loadRoutines()
+                findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
+                    NavigationKeys.ROUTINE_DELETED
+                )
+            }
+        }
+    }
+
     private fun setupRecyclerView() {
         routineAdapter = RoutineAdapter(
             onItemClick = { routine ->
-                // Ver detalle de rutina
                 showRoutineDetail(routine)
             },
             onEditClick = { routine ->
-                // Editar rutina
                 editRoutine(routine)
             },
             onStartClick = { routine ->
-                // Iniciar entrenamiento
                 startWorkout(routine)
             }
         )
@@ -68,17 +100,14 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        // Botón flotante para crear rutina
         binding.fabCreateRoutine.setOnClickListener {
             navigateToCreateRoutine()
         }
 
-        // Tarjeta para crear rutina
         binding.cardCreateRoutine.setOnClickListener {
             navigateToCreateRoutine()
         }
 
-        // Buscar rutinas
         binding.etSearchRoutines.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
                 searchRoutines()
@@ -116,24 +145,32 @@ class RoutinesFragment : Fragment() {
             }
         })
 
-        // Observar estado de carga
-        routineViewModel.isLoading.observe(viewLifecycleOwner, Observer { isLoading ->
-            if (isLoading) {
-                showLoading()
-            } else {
-                hideLoading()
+        // Observar cambios globales desde ViewModel
+        routineViewModel.routinesUpdated.observe(viewLifecycleOwner) { updated ->
+            if (updated == true) {
+                Log.d(TAG, "🔄 ViewModel notificó actualización - Recargando lista")
+                loadRoutines()
+                routineViewModel.resetUpdateState()
             }
-        })
+        }
+
+        routineViewModel.routineDeleted.observe(viewLifecycleOwner) { deletedId ->
+            deletedId?.let {
+                Log.d(TAG, "🗑️ ViewModel notificó eliminación de ID: $it - Recargando lista")
+                loadRoutines()
+                routineViewModel.resetDeleteState()
+            }
+        }
     }
 
     private fun loadRoutines() {
-        routineViewModel.getRoutines()
+        Log.d(TAG, "📥 Cargando lista de rutinas...")
+        routineViewModel.getRoutines(page = 0, size = 20)
     }
 
     private fun searchRoutines() {
         val query = binding.etSearchRoutines.text.toString().trim()
         if (query.isNotEmpty()) {
-            // TODO: Implementar búsqueda
             Toast.makeText(requireContext(), "Buscando: $query", Toast.LENGTH_SHORT).show()
         }
     }
@@ -143,12 +180,10 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun showRoutineDetail(routine: RoutineSummaryResponse) {
-        // TODO: Navegar a pantalla de detalle
         Toast.makeText(requireContext(), "Ver detalle: ${routine.name}", Toast.LENGTH_SHORT).show()
     }
 
     private fun editRoutine(routine: RoutineSummaryResponse) {
-        // Navegar a pantalla de edición usando SafeArgs
         try {
             val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationEditRoutine(routine.id)
             findNavController().navigate(action)
@@ -162,7 +197,6 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
-        // TODO: Iniciar entrenamiento
         Toast.makeText(requireContext(), "Iniciar: ${routine.name}", Toast.LENGTH_SHORT).show()
     }
 
@@ -192,7 +226,7 @@ class RoutinesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refrescar lista cuando vuelva a la pantalla
+        Log.d(TAG, "🔄 Fragmento reanudado - Recargando rutinas")
         loadRoutines()
     }
 

@@ -330,10 +330,18 @@
         <!-- Botón para activar/desactivar -->
         <Button
             android:id="@+id/btn_toggle_active"
+            style="@style/GoldButton"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"
-            android:text="Desactivar Rutina"
+            android:text="Desactivar Rutina" />
+
+        <Button
+            android:id="@+id/btn_temporal_por_error"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="..."
             style="@style/GoldButton" />
 
     </LinearLayout>

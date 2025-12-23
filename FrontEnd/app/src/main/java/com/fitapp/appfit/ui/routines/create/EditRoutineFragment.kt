@@ -14,6 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.fitapp.appfit.R
+import com.fitapp.appfit.constants.NavigationKeys
 import com.fitapp.appfit.databinding.FragmentEditRoutineBinding
 import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.model.SportViewModel
@@ -140,6 +141,12 @@ class EditRoutineFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     showToast("✅ Rutina actualizada exitosamente")
+
+                    // ✅ ENVIAR SEÑAL DE ACTUALIZACIÓN A LA LISTA
+                    findNavController().previousBackStackEntry?.savedStateHandle?.set(
+                        NavigationKeys.ROUTINE_UPDATED, true
+                    )
+
                     // Navegar hacia atrás después de un segundo
                     binding.root.postDelayed({
                         findNavController().navigateUp()
@@ -160,6 +167,12 @@ class EditRoutineFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     showToast("✅ Rutina eliminada exitosamente")
+
+                    // ✅ ENVIAR SEÑAL DE ELIMINACIÓN A LA LISTA
+                    findNavController().previousBackStackEntry?.savedStateHandle?.set(
+                        NavigationKeys.ROUTINE_DELETED, true
+                    )
+
                     findNavController().navigateUp()
                 }
                 is Resource.Error -> {
