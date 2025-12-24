@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.navigation_home,
                 R.id.navigation_routines,
-                R.id.navigation_progress,
                 R.id.navigation_exercises,
                 R.id.navigation_profile
             )
