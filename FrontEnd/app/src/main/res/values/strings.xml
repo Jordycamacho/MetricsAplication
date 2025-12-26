@@ -27,4 +27,7 @@
     <string name="training_exercises_description">Administra los ejercicios</string>
     <string name="training_params_description">Configura parámetros de ejercicios</string>
     <string name="training_import_export_description">Importa y exporta rutinas</string>
+
+
+    <string name="title_create_sport">Crear Deporte</string>
 </resources>

@@ -1,8 +1,10 @@
 package com.fitapp.appfit.response.sport.request
 
+import com.google.gson.annotations.SerializedName
+
 data class SportRequest(
-    val name: String,
-    val parameterTemplate: Map<String, String>,
-    val iconUrl: String? = null,
-    val category: String
+    @SerializedName("name") val name: String,
+    @SerializedName("parameterTemplate") val parameterTemplate: Map<String, String>? = null,
+    @SerializedName("category") val category: String? = null,
+    @SerializedName("sourceType") val sourceType: String? = "USER_CREATED"
 )

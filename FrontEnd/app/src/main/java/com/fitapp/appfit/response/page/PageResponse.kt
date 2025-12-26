@@ -1,11 +1,14 @@
 package com.fitapp.appfit.response.page
 
+import com.google.gson.annotations.SerializedName
 data class PageResponse<T>(
-    val content: List<T>,
-    val pageNumber: Int,
-    val pageSize: Int,
-    val totalElements: Long,
-    val totalPages: Int,
-    val first: Boolean,
-    val last: Boolean
+    @SerializedName("content") val content: List<T>,
+    @SerializedName("pageNumber") val pageNumber: Int,
+    @SerializedName("pageSize") val pageSize: Int,
+    @SerializedName("totalElements") val totalElements: Long,
+    @SerializedName("totalPages") val totalPages: Int,
+    @SerializedName("first") val first: Boolean,
+    @SerializedName("last") val last: Boolean,
+    @SerializedName("numberOfElements") val numberOfElements: Int,
+    @SerializedName("sort") val sort: String?
 )
