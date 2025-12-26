@@ -1,23 +1,17 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
+import com.fitapp.backend.infrastructure.config.StringMapConverter;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
-import com.fitapp.backend.infrastructure.config.StringMapConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Data;
 
 @Entity
 @Table(name = "sports")
 @Data
+@Slf4j
 public class SportEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,14 +24,31 @@ public class SportEntity {
     @Column(name = "is_predefined", nullable = false)
     private Boolean isPredefined = false;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "created_by")
-    private UserEntity createdBy;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_type", nullable = false)
+    private SportSourceType sourceType = SportSourceType.OFFICIAL;
 
     @Convert(converter = StringMapConverter.class)
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", name = "parameter_template")
     private Map<String, String> parameterTemplate = new HashMap<>();
 
     @Column(name = "category")
     private String category;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "created_by")
+    private UserEntity createdBy;
+
+    @PrePersist
+    @PreUpdate
+    public void logDataFormat() {
+        log.debug("SPORT_ENTITY_DATA | id={} | name={} | sourceType={} | isPredefined={}",
+                id, name, sourceType, isPredefined);
+        log.debug("SPORT_ENTITY_PARAMETERS | templateKeys={} | category={}",
+                parameterTemplate != null ? parameterTemplate.keySet().size() : 0, category);
+
+        if (name != null && !name.matches("^[a-zA-Z0-9\\s]+$")) {
+            log.warn("SPORT_NAME_FORMAT_WARNING | name contains special characters");
+        }
+    }
 }
