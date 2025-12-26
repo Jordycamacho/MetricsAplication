@@ -1,3 +1,4 @@
+// com.fitapp.appfit.ui.routines.create/EditRoutineFragment.kt
 package com.fitapp.appfit.ui.routines.create
 
 import android.os.Bundle
@@ -58,13 +59,31 @@ class EditRoutineFragment : Fragment() {
         setupSportsSpinner()
         setupClickListeners()
         setupObservers()
+        setupNavigationResultListener()
 
         // Cargar datos EN ORDEN: primero deportes, luego rutina
-        sportViewModel.getPredefinedSports()
+        sportViewModel.getAllSports()
+    }
+
+    private fun setupNavigationResultListener() {
+        // Escuchar resultados de navegación
+        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>(
+            NavigationKeys.NEED_REFRESH
+        )?.observe(viewLifecycleOwner) { needRefresh ->
+            if (needRefresh == true) {
+                Log.d("EditRoutine", "🔄 Recibida señal de refresco")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    loadRoutineData()
+                }, 500)
+                findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
+                    NavigationKeys.NEED_REFRESH
+                )
+            }
+        }
     }
 
     private fun setupSportsSpinner() {
-        val placeholder = arrayOf("Seleccionar deporte")
+        val placeholder = arrayOf("Seleccionar deporte (opcional)")
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -75,8 +94,8 @@ class EditRoutineFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        // Observar los deportes - ¡CARGAR PRIMERO ESTO!
-        sportViewModel.sportsState.observe(viewLifecycleOwner, Observer { resource ->
+        // Observar todos los deportes
+        sportViewModel.allSportsState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     resource.data?.let { sports ->
@@ -89,7 +108,7 @@ class EditRoutineFragment : Fragment() {
                         } else {
                             // Si ya se cargó la rutina, actualizar el deporte
                             currentRoutine?.let { routine ->
-                                selectSportInSpinner(routine.sportName)
+                                selectSportInSpinner(routine)
                             }
                         }
                     }
@@ -99,10 +118,12 @@ class EditRoutineFragment : Fragment() {
                     loadRoutineData()
                 }
                 is Resource.Loading -> {
+                    // Mostrar loading si quieres
                 }
             }
         })
 
+        // Observar los detalles de la rutina - ¡ESTE ES EL QUE FALTABA!
         routineViewModel.routineDetailState.observe(viewLifecycleOwner, Observer { resource ->
             binding.progressBar.isVisible = false
 
@@ -111,16 +132,19 @@ class EditRoutineFragment : Fragment() {
                     resource.data?.let { routine ->
                         Log.d("EditRoutine", "✅ Rutina cargada: ${routine.id}")
                         Log.d("EditRoutine", "  - SportName: ${routine.sportName}")
+                        Log.d("EditRoutine", "  - SportId: ${routine.sportId}")
                         Log.d("EditRoutine", "  - TrainingDays: ${routine.trainingDays}")
                         Log.d("EditRoutine", "  - SessionsPerWeek: ${routine.sessionsPerWeek}")
 
                         currentRoutine = routine
                         isRoutineLoaded = true
 
+                        // Poblar el formulario con los datos de la rutina
                         populateFormWithRoutineData(routine)
 
+                        // Si los deportes ya se cargaron, seleccionar el deporte en el spinner
                         if (isSportsLoaded) {
-                            selectSportInSpinner(routine.sportName)
+                            selectSportInSpinner(routine)
                         }
                     } ?: run {
                         showError("La rutina no contiene datos")
@@ -144,10 +168,10 @@ class EditRoutineFragment : Fragment() {
                 is Resource.Success -> {
                     showToast("✅ Rutina actualizada exitosamente")
 
-                    // SOLO UNA FORMA DE NOTIFICAR
+                    // Notificar que se actualizó
                     routineViewModel.notifyAnyUpdate()
 
-                    // Enviar señal también por SavedStateHandle (opcional)
+                    // Enviar señal por SavedStateHandle
                     findNavController().previousBackStackEntry?.savedStateHandle?.set(
                         NavigationKeys.ROUTINE_UPDATED, true
                     )
@@ -173,10 +197,10 @@ class EditRoutineFragment : Fragment() {
                 is Resource.Success -> {
                     showToast("✅ Rutina eliminada exitosamente")
 
-                    // SOLO UNA FORMA DE NOTIFICAR
+                    // Notificar que se eliminó
                     routineViewModel.notifyAnyUpdate()
 
-                    // Enviar señal también por SavedStateHandle (opcional)
+                    // Enviar señal por SavedStateHandle
                     findNavController().previousBackStackEntry?.savedStateHandle?.set(
                         NavigationKeys.ROUTINE_DELETED, true
                     )
@@ -204,8 +228,13 @@ class EditRoutineFragment : Fragment() {
         val sportNames = mutableListOf("Seleccionar deporte")
 
         sports.forEach { sport ->
-            sportNames.add(sport.name)
-            sportsMap[sport.name] = sport.id
+            val displayName = if (sport.isPredefined) {
+                " ${sport.name} (Predefinido)"
+            } else {
+                " ${sport.name} (Personalizado)"
+            }
+            sportNames.add(displayName)
+            sportsMap[displayName] = sport.id
         }
 
         val adapter = ArrayAdapter(
@@ -219,29 +248,51 @@ class EditRoutineFragment : Fragment() {
         Log.d("EditRoutine", "Deportes cargados: ${sports.size} deportes")
     }
 
-    private fun selectSportInSpinner(sportName: String?) {
-        if (sportName != null) {
-            Log.d("EditRoutine", "Intentando seleccionar deporte: '$sportName'")
+    private fun selectSportInSpinner(routine: RoutineResponse) {
+        val sportName = routine.sportName
+        val sportId = routine.sportId
 
-            val adapter = binding.spinnerSports.adapter as? ArrayAdapter<String>
-            if (adapter != null) {
-                val position = adapter.getPosition(sportName)
-                if (position >= 0) {
-                    binding.spinnerSports.setSelection(position)
-                    Log.d("EditRoutine", "✅ Deporte seleccionado: $sportName (posición $position)")
-                } else {
-                    Log.w("EditRoutine", "⚠️ Deporte no encontrado en spinner: '$sportName'")
-                    // Listar los deportes disponibles para debug
-                    val items = (0 until adapter.count).map { adapter.getItem(it) }
-                    Log.d("EditRoutine", "Deportes disponibles: $items")
+        Log.d("EditRoutine", "Intentando seleccionar deporte: sportName='$sportName', sportId='$sportId'")
+
+        if (sportName != null && sportId != null) {
+            // Buscar el deporte en la lista por ID
+            val displayName = sportsMap.entries.find { entry ->
+                entry.value == sportId
+            }?.key
+
+            if (displayName != null) {
+                val adapter = binding.spinnerSports.adapter as? ArrayAdapter<String>
+                if (adapter != null) {
+                    val position = adapter.getPosition(displayName)
+                    if (position >= 0) {
+                        binding.spinnerSports.setSelection(position)
+                        Log.d("EditRoutine", "✅ Deporte seleccionado: $displayName (posición $position)")
+                        return
+                    }
                 }
-            } else {
-                Log.w("EditRoutine", "Adapter del spinner es null")
             }
-        } else {
-            Log.d("EditRoutine", "La rutina no tiene deporte asignado (sportName es null)")
-            binding.spinnerSports.setSelection(0) // Seleccionar "Seleccionar deporte"
+
+            // Si no lo encuentra por ID, buscar por nombre
+            val alternativeDisplayName = sportsMap.entries.find { entry ->
+                entry.key.contains(sportName, ignoreCase = true)
+            }?.key
+
+            if (alternativeDisplayName != null) {
+                val adapter = binding.spinnerSports.adapter as? ArrayAdapter<String>
+                adapter?.let {
+                    val position = it.getPosition(alternativeDisplayName)
+                    if (position >= 0) {
+                        binding.spinnerSports.setSelection(position)
+                        Log.d("EditRoutine", "✅ Deporte encontrado por nombre: $alternativeDisplayName")
+                        return
+                    }
+                }
+            }
         }
+
+        // Si no encuentra el deporte, seleccionar la opción por defecto
+        Log.d("EditRoutine", "⚠️ Deporte no encontrado, seleccionando opcional")
+        binding.spinnerSports.setSelection(0)
     }
 
     private fun populateFormWithRoutineData(routine: RoutineResponse) {
@@ -452,7 +503,7 @@ class EditRoutineFragment : Fragment() {
         val sessionsPerWeek = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
 
         // Obtener sportId del mapa
-        val sportId = if (selectedSport != "Seleccionar deporte") {
+        val sportId = if (selectedSport != "Seleccionar deporte (opcional)") {
             sportsMap[selectedSport]
         } else {
             null

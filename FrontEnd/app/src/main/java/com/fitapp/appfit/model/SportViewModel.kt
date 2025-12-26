@@ -1,6 +1,7 @@
 // com.fitapp.appfit.model/SportViewModel.kt
 package com.fitapp.appfit.model
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,7 @@ import com.fitapp.appfit.response.sport.request.SportFilterRequest
 import com.fitapp.appfit.response.sport.request.SportRequest
 import com.fitapp.appfit.response.sport.response.SportResponse
 import com.fitapp.appfit.utils.Resource
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class SportViewModel : ViewModel() {
@@ -47,7 +49,8 @@ class SportViewModel : ViewModel() {
     private val _categoriesState = MutableLiveData<Resource<List<String>>>()
     val categoriesState: LiveData<Resource<List<String>>> = _categoriesState
 
-
+    private val _allSportsState = MutableLiveData<Resource<List<SportResponse>>>()
+    val allSportsState: LiveData<Resource<List<SportResponse>>> = _allSportsState
     // Función para obtener todos los deportes
     fun getSports() {
         _sportsState.value = Resource.Loading()
@@ -94,6 +97,45 @@ class SportViewModel : ViewModel() {
         _sportsPageState.value = Resource.Loading()
         viewModelScope.launch {
             _sportsPageState.value = repository.searchSports(filterRequest)
+        }
+    }
+
+    fun getAllSports() {
+        _allSportsState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                // Intentar obtener predefinidos primero
+                val predefinedResult = repository.getPredefinedSports()
+
+                val combinedList = mutableListOf<SportResponse>()
+
+                // Agregar predefinidos si se cargaron
+                if (predefinedResult is Resource.Success) {
+                    predefinedResult.data?.let { sports ->
+                        combinedList.addAll(sports)
+                    }
+                }
+
+                // Intentar obtener personales, si falla continuar con predefinidos
+                try {
+                    val userResult = repository.getUserSports()
+                    if (userResult is Resource.Success) {
+                        userResult.data?.let { sports ->
+                            combinedList.addAll(sports)
+                        }
+                    } else if (userResult is Resource.Error) {
+                        Log.e("SportViewModel", "Error cargando deportes personales: ${userResult.message}")
+                        // Continuar solo con predefinidos
+                    }
+                } catch (e: Exception) {
+                    Log.e("SportViewModel", "Excepción cargando deportes personales: ${e.message}")
+                    // Continuar solo con predefinidos
+                }
+
+                _allSportsState.value = Resource.Success(combinedList)
+            } catch (e: Exception) {
+                _allSportsState.value = Resource.Error("Error al cargar deportes: ${e.message}")
+            }
         }
     }
 

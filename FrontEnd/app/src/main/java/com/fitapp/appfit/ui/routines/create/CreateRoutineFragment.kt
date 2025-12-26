@@ -40,14 +40,13 @@ class CreateRoutineFragment : Fragment() {
         setupClickListeners()
         setupObservers()
 
-        sportViewModel.getPredefinedSports()
+        // CAMBIO: Obtener TODOS los deportes, no solo predefinidos
+        sportViewModel.getAllSports()
 
-        // Agrega validación mientras escribe
         setupTextWatchers()
     }
 
     private fun setupTextWatchers() {
-        // Validar nombre mientras escribe
         binding.etRoutineName.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val name = binding.etRoutineName.text.toString()
@@ -58,7 +57,6 @@ class CreateRoutineFragment : Fragment() {
             }
         }
 
-        // Validar objetivo mientras escribe
         binding.etGoal.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val goal = binding.etGoal.text.toString()
@@ -69,7 +67,6 @@ class CreateRoutineFragment : Fragment() {
             }
         }
 
-        // Validar sesiones mientras escribe
         binding.etSessionsPerWeek.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val sessions = binding.etSessionsPerWeek.text.toString()
@@ -93,7 +90,8 @@ class CreateRoutineFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        sportViewModel.sportsState.observe(viewLifecycleOwner, Observer { resource ->
+        // CAMBIO: Observar todos los deportes en lugar de solo predefinidos
+        sportViewModel.allSportsState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     resource.data?.let { sports ->
@@ -133,11 +131,16 @@ class CreateRoutineFragment : Fragment() {
 
     private fun updateSportsSpinner(sports: List<SportResponse>) {
         sportsMap.clear()
-        val sportNames = mutableListOf("Seleccionar deporte")
+        val sportNames = mutableListOf("Seleccionar deporte (opcional)")
 
         sports.forEach { sport ->
-            sportNames.add(sport.name)
-            sportsMap[sport.name] = sport.id
+            val displayName = if (sport.isPredefined) {
+                " ${sport.name} (Predefinido)"
+            } else {
+                " ${sport.name} (Personalizado)"
+            }
+            sportNames.add(displayName)
+            sportsMap[displayName] = sport.id
         }
 
         val adapter = ArrayAdapter(
@@ -205,7 +208,7 @@ class CreateRoutineFragment : Fragment() {
         val sessionsPerWeek = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
 
         // Obtener sportId del mapa
-        val sportId = if (selectedSport != "Seleccionar deporte") {
+        val sportId = if (selectedSport != "Seleccionar deporte (opcional)") {
             sportsMap[selectedSport] ?: run {
                 showError("Error: Deporte no válido")
                 return
@@ -229,7 +232,6 @@ class CreateRoutineFragment : Fragment() {
     }
 
     private fun showError(message: String) {
-        // Puedes hacer un Toast con color rojo si quieres
         Toast.makeText(requireContext(), "❌ $message", Toast.LENGTH_LONG).show()
     }
 

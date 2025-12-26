@@ -1,18 +1,17 @@
 package com.fitapp.appfit.response.routine.response
 
-import java.time.LocalDateTime
+import com.google.gson.annotations.SerializedName
 
 data class RoutineResponse(
-    val id: Long,
-    val name: String,
-    val description: String?,
-    val sportId: Long?,
-    val sportName: String?,
-    val isActive: Boolean,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
-    val exercises: List<RoutineExerciseResponse>,
-    val trainingDays: Set<String>,
-    val goal: String?,
-    val sessionsPerWeek: Int
+    @SerializedName("id") val id: Long,
+    @SerializedName("name") val name: String,
+    @SerializedName("description") val description: String?,
+    @SerializedName("sportId") val sportId: Long?,
+    @SerializedName("sportName") val sportName: String?,
+    @SerializedName("trainingDays") val trainingDays: Set<String>?,
+    @SerializedName("goal") val goal: String?,
+    @SerializedName("sessionsPerWeek") val sessionsPerWeek: Int?,
+    @SerializedName("isActive") val isActive: Boolean,
+    @SerializedName("createdAt") val createdAt: String?,
+    @SerializedName("updatedAt") val updatedAt: String?
 )
