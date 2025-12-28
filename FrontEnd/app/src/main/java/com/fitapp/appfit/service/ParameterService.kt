@@ -1,0 +1,82 @@
+package com.fitapp.appfit.service
+
+import com.fitapp.appfit.network.ApiClient
+import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
+import com.fitapp.appfit.response.parameter.request.CustomParameterRequest
+import com.fitapp.appfit.response.parameter.response.CustomParameterPageResponse
+import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
+import retrofit2.Response
+import retrofit2.http.*
+
+interface ParameterService {
+
+    // Búsqueda general de parámetros
+    @POST("api/parameters/search")
+    suspend fun searchParameters(
+        @Body filterRequest: CustomParameterFilterRequest
+    ): Response<CustomParameterPageResponse>
+
+    // Mis parámetros personales
+    @POST("api/parameters/my/search")
+    suspend fun searchMyParameters(
+        @Body filterRequest: CustomParameterFilterRequest
+    ): Response<CustomParameterPageResponse>
+
+    // Parámetros disponibles para un deporte específico
+    @POST("api/parameters/available/{sportId}/search")
+    suspend fun searchAvailableParameters(
+        @Path("sportId") sportId: Long,
+        @Body filterRequest: CustomParameterFilterRequest
+    ): Response<CustomParameterPageResponse>
+
+    // Obtener parámetro por ID
+    @GET("api/parameters/{id}")
+    suspend fun getParameterById(
+        @Path("id") id: Long
+    ): Response<CustomParameterResponse>
+
+    // Crear nuevo parámetro
+    @POST("api/parameters")
+    suspend fun createParameter(
+        @Body parameterRequest: CustomParameterRequest
+    ): Response<CustomParameterResponse>
+
+    // Actualizar parámetro
+    @PUT("api/parameters/{id}")
+    suspend fun updateParameter(
+        @Path("id") id: Long,
+        @Body parameterRequest: CustomParameterRequest
+    ): Response<CustomParameterResponse>
+
+    // Eliminar parámetro
+    @DELETE("api/parameters/{id}")
+    suspend fun deleteParameter(
+        @Path("id") id: Long
+    ): Response<Void>
+
+    // Activar/desactivar parámetro
+    @PATCH("api/parameters/{id}/toggle")
+    suspend fun toggleParameterStatus(
+        @Path("id") id: Long
+    ): Response<Void>
+
+    // Obtener categorías
+    @GET("api/parameters/categories")
+    suspend fun getCategories(): Response<List<String>>
+
+    // Obtener tipos de parámetros
+    @GET("api/parameters/types")
+    suspend fun getParameterTypes(): Response<List<String>>
+
+    // Incrementar contador de uso
+    @POST("api/parameters/{id}/increment-usage")
+    suspend fun incrementParameterUsage(
+        @Path("id") id: Long
+    ): Response<Void>
+
+    companion object {
+        val instance: ParameterService by lazy {
+            ApiClient.instance.create(ParameterService::class.java)
+        }
+    }
+}

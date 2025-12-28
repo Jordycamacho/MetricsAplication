@@ -54,11 +54,6 @@
         tools:layout="@layout/fragment_exercises" />
 
     <!-- Nuevas secciones -->
-    <fragment
-        android:id="@+id/navigation_exercise_params"
-        android:name="com.fitapp.appfit.ui.exercises.params.ExerciseParamsFragment"
-        android:label="@string/title_exercise_params"
-        tools:layout="@layout/fragment_exercise_params" />
 
     <fragment
         android:id="@+id/navigation_import_export"
@@ -94,5 +89,11 @@
         android:name="com.fitapp.appfit.ui.sports.create.CreateSportFragment"
         android:label="@string/title_create_sport"
         tools:layout="@layout/fragment_create_sport" />
+
+    <fragment
+        android:id="@+id/navigation_exercise_params"
+        android:name="com.fitapp.appfit.ui.exercises.params.ExerciseParamsFragment"
+        android:label="Parámetros"
+        tools:layout="@layout/fragment_exercise_params" />
 
 </navigation>

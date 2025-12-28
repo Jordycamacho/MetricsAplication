@@ -30,4 +30,6 @@
 
 
     <string name="title_create_sport">Crear Deporte</string>
+    <string name="title_create_parameter">Crear Parámetro</string>
+    <string name="title_edit_parameter">Editar Parámetro</string>
 </resources>

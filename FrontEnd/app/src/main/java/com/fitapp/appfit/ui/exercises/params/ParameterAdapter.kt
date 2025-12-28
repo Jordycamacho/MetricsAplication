@@ -1,0 +1,80 @@
+package com.fitapp.appfit.ui.parameters.adapter
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
+import com.fitapp.appfit.R
+import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
+
+class ParameterAdapter(
+    private var parameters: List<CustomParameterResponse> = emptyList(),
+    private val onItemClick: (CustomParameterResponse) -> Unit,
+    private val onEditClick: (CustomParameterResponse) -> Unit,
+    private val onDeleteClick: (CustomParameterResponse) -> Unit
+) : RecyclerView.Adapter<ParameterAdapter.ParameterViewHolder>() {
+
+    inner class ParameterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvName: TextView = itemView.findViewById(R.id.tv_parameter_name)
+        private val tvType: TextView = itemView.findViewById(R.id.tv_parameter_type)
+        private val tvUnit: TextView = itemView.findViewById(R.id.tv_parameter_unit)
+        private val tvCategory: TextView = itemView.findViewById(R.id.tv_parameter_category)
+        private val btnEdit: View = itemView.findViewById(R.id.btn_edit_parameter)
+        private val btnDelete: View = itemView.findViewById(R.id.btn_delete_parameter)
+
+        fun bind(parameter: CustomParameterResponse) {
+            // Nombre
+            tvName.text = parameter.displayName ?: parameter.name
+
+            // Tipo
+            tvType.text = parameter.parameterType.replaceFirstChar { it.uppercase() }
+
+            // Unidad
+            if (!parameter.unit.isNullOrEmpty()) {
+                tvUnit.text = "(${parameter.unit})"
+                tvUnit.visibility = View.VISIBLE
+            } else {
+                tvUnit.visibility = View.GONE
+            }
+
+            // Categoría
+            tvCategory.text = parameter.category ?: "Sin categoría"
+
+            // Botones de acción
+            if (parameter.isGlobal) {
+                // Parámetros globales no se pueden editar/eliminar
+                btnEdit.visibility = View.GONE
+                btnDelete.visibility = View.GONE
+            } else {
+                btnEdit.visibility = View.VISIBLE
+                btnDelete.visibility = View.VISIBLE
+                btnEdit.setOnClickListener { onEditClick(parameter) }
+                btnDelete.setOnClickListener { onDeleteClick(parameter) }
+            }
+
+            // Click en toda la tarjeta
+            itemView.setOnClickListener {
+                onItemClick(parameter)
+            }
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ParameterViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_parameter, parent, false)
+        return ParameterViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ParameterViewHolder, position: Int) {
+        holder.bind(parameters[position])
+    }
+
+    override fun getItemCount(): Int = parameters.size
+
+    fun updateList(newParameters: List<CustomParameterResponse>) {
+        parameters = newParameters
+        notifyDataSetChanged()
+    }
+}
