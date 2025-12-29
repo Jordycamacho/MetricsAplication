@@ -7,9 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.FragmentExerciseParamsBinding
 import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
@@ -218,21 +221,7 @@ class ExerciseParamsFragment: Fragment() {
     }
 
     private fun navigateToCreateParameter() {
-        showCreateParameterDialog()
-    }
-
-    private fun showCreateParameterDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Crear Parámetro")
-            .setMessage("¿Deseas crear un parámetro personalizado?")
-            .setPositiveButton("Crear") { dialog, _ ->
-                // Navegar a pantalla de creación
-                // findNavController().navigate(R.id.navigation_create_parameter)
-                Toast.makeText(requireContext(), "Pantalla de creación en desarrollo", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        findNavController().navigate(R.id.navigation_create_parameter)
     }
 
     private fun showParameterDetail(parameter: CustomParameterResponse) {
@@ -255,12 +244,21 @@ class ExerciseParamsFragment: Fragment() {
     }
 
     private fun editParameter(parameter: CustomParameterResponse) {
-        Toast.makeText(requireContext(), "Editando: ${parameter.name}", Toast.LENGTH_SHORT).show()
-        // Navegar a pantalla de edición
-        // findNavController().navigate(R.id.navigation_edit_parameter, bundleOf("parameterId" to parameter.id))
+        if (parameter.isGlobal && parameter.ownerId == null) {
+            Toast.makeText(requireContext(), "No se puede editar un parámetro por defecto", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val bundle = bundleOf("parameterId" to parameter.id)
+        findNavController().navigate(R.id.navigation_edit_parameter, bundle)
     }
 
+    // En el método showDeleteConfirmation():
     private fun showDeleteConfirmation(parameter: CustomParameterResponse) {
+        if (parameter.isGlobal && parameter.ownerId == null) {
+            Toast.makeText(requireContext(), "No se puede eliminar un parámetro por defecto", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar Parámetro")
             .setMessage("¿Estás seguro de que quieres eliminar '${parameter.displayName ?: parameter.name}'?\n\nEsta acción no se puede deshacer.")

@@ -96,4 +96,20 @@
         android:label="Parámetros"
         tools:layout="@layout/fragment_exercise_params" />
 
+    <fragment
+        android:id="@+id/navigation_create_parameter"
+        android:name="com.fitapp.appfit.ui.exercises.params.create.CreateParameterFragment"
+        android:label="@string/title_create_parameter"
+        tools:layout="@layout/fragment_create_parameter" />
+
+    <fragment
+        android:id="@+id/navigation_edit_parameter"
+        android:name="com.fitapp.appfit.ui.parameters.EditParameterFragment"
+        android:label="@string/title_edit_parameter"
+        tools:layout="@layout/fragment_edit_parameter">
+        <argument
+            android:name="parameterId"
+            app:argType="long" />
+    </fragment>
+
 </navigation>
