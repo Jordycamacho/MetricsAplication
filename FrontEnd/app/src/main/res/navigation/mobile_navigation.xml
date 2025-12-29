@@ -104,7 +104,7 @@
 
     <fragment
         android:id="@+id/navigation_edit_parameter"
-        android:name="com.fitapp.appfit.ui.parameters.EditParameterFragment"
+        android:name="com.fitapp.appfit.ui.exercises.params.create.EditParameterFragment"
         android:label="@string/title_edit_parameter"
         tools:layout="@layout/fragment_edit_parameter">
         <argument

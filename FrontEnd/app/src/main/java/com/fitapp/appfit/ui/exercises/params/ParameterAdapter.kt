@@ -21,6 +21,7 @@ class ParameterAdapter(
         private val tvType: TextView = itemView.findViewById(R.id.tv_parameter_type)
         private val tvUnit: TextView = itemView.findViewById(R.id.tv_parameter_unit)
         private val tvCategory: TextView = itemView.findViewById(R.id.tv_parameter_category)
+        private val tvVisibility: TextView = itemView.findViewById(R.id.tv_parameter_visibility)
         private val btnEdit: View = itemView.findViewById(R.id.btn_edit_parameter)
         private val btnDelete: View = itemView.findViewById(R.id.btn_delete_parameter)
 
@@ -42,12 +43,30 @@ class ParameterAdapter(
             // Categoría
             tvCategory.text = parameter.category ?: "Sin categoría"
 
-            // Botones de acción
-            if (parameter.isGlobal) {
+            // Visibilidad (GLOBAL vs PERSONAL)
+            if (parameter.isGlobal && parameter.ownerId == null) {
+                // Parámetro global por defecto del sistema
+                tvVisibility.text = "🌍 Global (Sistema)"
+                tvVisibility.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
+                tvVisibility.visibility = View.VISIBLE
+
                 // Parámetros globales no se pueden editar/eliminar
                 btnEdit.visibility = View.GONE
                 btnDelete.visibility = View.GONE
+            } else if (parameter.isGlobal) {
+                // Parámetro global creado por admin (raro, pero posible)
+                tvVisibility.text = "🌍 Global (Admin)"
+                tvVisibility.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
+                tvVisibility.visibility = View.VISIBLE
+                btnEdit.visibility = View.GONE
+                btnDelete.visibility = View.GONE
             } else {
+                // Parámetro personal del usuario
+                tvVisibility.text = "👤 Personal (Tuyo)"
+                tvVisibility.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
+                tvVisibility.visibility = View.VISIBLE
+
+                // Parámetros personales SI se pueden editar/eliminar
                 btnEdit.visibility = View.VISIBLE
                 btnDelete.visibility = View.VISIBLE
                 btnEdit.setOnClickListener { onEditClick(parameter) }

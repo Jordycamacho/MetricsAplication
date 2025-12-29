@@ -35,6 +35,40 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                <!-- Información importante -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@color/gold_primary"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="⚠️ Parámetro Personal"
+                            android:textColor="@color/background_dark"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Este parámetro solo será visible para ti."
+                            android:textColor="@color/background_dark"
+                            android:textSize="12sp"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- Nombre -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
@@ -124,10 +158,13 @@
                     <AutoCompleteTextView
                         android:id="@+id/spinner_parameter_type"
                         android:layout_width="match_parent"
-                        android:layout_height="63dp"
-                        android:focusable="false"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary_dark"
                         android:inputType="none"
-                        android:textColor="@color/text_primary_dark" />
+                        android:focusable="false"
+                        android:hint="Seleccionar tipo"
+                        android:textSize="16sp"
+                        android:padding="12dp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Unidad -->
@@ -176,62 +213,38 @@
                         android:inputType="text" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Switch para Global -->
-                <LinearLayout
+                <!-- Deporte -->
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="8dp"
-                    android:paddingVertical="8dp">
+                    android:hint="Deporte (opcional)"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusTopStart="8dp"
+                    app:boxCornerRadiusTopEnd="8dp"
+                    app:boxCornerRadiusBottomStart="8dp"
+                    app:boxCornerRadiusBottomEnd="8dp"
+                    app:hintTextColor="@color/text_secondary_dark"
+                    app:boxStrokeColor="@color/gold_primary"
+                    app:boxStrokeWidth="1dp"
+                    app:endIconMode="dropdown_menu">
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="¿Es global?"
-                        android:textColor="@color/text_primary_dark"
-                        android:textSize="16sp" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_global"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="false"
-                        app:trackTint="@color/gold_primary" />
-                </LinearLayout>
-
-                <!-- Deporte (solo si no es global) -->
-                <LinearLayout
-                    android:id="@+id/layout_sport"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="8dp">
-
-                    <com.google.android.material.textfield.TextInputLayout
+                    <AutoCompleteTextView
+                        android:id="@+id/spinner_sports"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Deporte (solo si no es global)"
-                        app:boxBackgroundMode="outline"
-                        app:boxCornerRadiusTopStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:hintTextColor="@color/text_secondary_dark"
-                        app:boxStrokeColor="@color/gold_primary"
-                        app:boxStrokeWidth="1dp"
-                        app:endIconMode="dropdown_menu">
+                        android:textColor="@color/text_primary_dark"
+                        android:inputType="none"
+                        android:focusable="false" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                        <AutoCompleteTextView
-                            android:id="@+id/spinner_sports"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/text_primary_dark"
-                            android:inputType="none"
-                            android:focusable="false" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
+                <!-- Nota sobre visibilidad -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="📝 Nota: Este parámetro será personal y solo tú podrás verlo y usarlo."
+                    android:textColor="@color/text_secondary_dark"
+                    android:textSize="12sp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -242,7 +255,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="GUARDAR"
+            android:text="CREAR PARÁMETRO PERSONAL"
+            android:textColor="@color/background_dark"
+            app:backgroundTint="@color/gold_primary"
+            app:cornerRadius="12dp"
+            android:elevation="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sdsad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="."
             android:textColor="@color/background_dark"
             app:backgroundTint="@color/gold_primary"
             app:cornerRadius="12dp"
@@ -256,16 +280,5 @@
             android:layout_marginTop="16dp"
             android:visibility="gone" />
 
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_sds"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="..."
-            android:textColor="@color/background_dark"
-            app:backgroundTint="@color/gold_primary"
-            app:cornerRadius="12dp"
-            android:elevation="4dp" />
     </LinearLayout>
 </ScrollView>

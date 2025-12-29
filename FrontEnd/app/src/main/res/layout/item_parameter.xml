@@ -51,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="4dp">
 
             <TextView
                 android:id="@+id/tv_parameter_unit"
@@ -78,6 +78,18 @@
                 android:textColor="@color/text_secondary_dark" />
         </LinearLayout>
 
+        <!-- Fila de visibilidad -->
+        <TextView
+            android:id="@+id/tv_parameter_visibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👤 Personal"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp" />
+
         <!-- Separador -->
         <View
             android:layout_width="match_parent"
@@ -85,7 +97,7 @@
             android:background="@color/divider_dark"
             android:layout_marginBottom="12dp" />
 
-        <!-- Fila inferior: Botones de acción -->
+        <!-- Fila inferior: Botones de acción (solo para parámetros personales) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

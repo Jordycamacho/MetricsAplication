@@ -52,7 +52,7 @@ class CreateParameterFragment : Fragment() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
-        binding.toolbar.title = "Crear Parámetro"
+        binding.toolbar.title = "Crear Parámetro Personal"
     }
 
     private fun setupForm() {
@@ -75,11 +75,6 @@ class CreateParameterFragment : Fragment() {
         // Botón de guardar
         binding.btnSave.setOnClickListener {
             createParameter()
-        }
-
-        // Switch para global
-        binding.switchGlobal.setOnCheckedChangeListener { _, isChecked ->
-            binding.layoutSport.visibility = if (isChecked) View.GONE else View.VISIBLE
         }
 
         // Listener para cuando se selecciona un deporte
@@ -142,7 +137,7 @@ class CreateParameterFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "✅ Parámetro creado exitosamente", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "✅ Parámetro personal creado exitosamente", Toast.LENGTH_SHORT).show()
                     findNavController().navigateUp()
                 }
                 is Resource.Error -> {
@@ -197,23 +192,19 @@ class CreateParameterFragment : Fragment() {
         sportsMap.clear()
         val sportNames = mutableListOf<String>()
 
-        // Agregar opción vacía
-        sportNames.add("Seleccionar deporte (opcional para globales)")
-        sportsMap["Seleccionar deporte (opcional para globales)"] = 0
+        // Agregar opción "Sin deporte específico" para parámetros personales sin deporte
+        sportNames.add("Sin deporte específico (personal)")
+        sportsMap["Sin deporte específico (personal)"] = 0
 
         sports.forEach { sport ->
-            val displayName = if (sport.isPredefined) {
-                "${sport.name} (Predefinido)"
-            } else {
-                "${sport.name} (Personalizado)"
-            }
+            val displayName = "${sport.name} (${if (sport.isPredefined) "Predefinido" else "Personalizado"})"
             sportNames.add(displayName)
             sportsMap[displayName] = sport.id
         }
 
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sportNames)
         binding.spinnerSports.setAdapter(adapter)
-        binding.spinnerSports.setText("Seleccionar deporte (opcional para globales)", false)
+        binding.spinnerSports.setText("Sin deporte específico (personal)", false)
     }
 
     private fun createParameter() {
@@ -223,8 +214,12 @@ class CreateParameterFragment : Fragment() {
         val parameterType = binding.spinnerParameterType.text.toString().trim()
         val unit = binding.etUnit.text.toString().trim()
         val category = binding.etCategory.text.toString().trim()
-        val isGlobal = binding.switchGlobal.isChecked
-        val sportId = if (isGlobal) null else selectedSportId?.takeIf { it > 0 }
+
+        // Los usuarios solo pueden crear parámetros personales (NO globales)
+        val isGlobal = false
+
+        // Si seleccionó "Sin deporte específico", sportId = null
+        val sportId = selectedSportId?.takeIf { it > 0 }
 
         // Validaciones
         if (name.isEmpty()) {
@@ -234,11 +229,6 @@ class CreateParameterFragment : Fragment() {
 
         if (parameterType.isEmpty()) {
             Toast.makeText(requireContext(), "Seleccione un tipo de parámetro", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (!isGlobal && (selectedSportId == null || selectedSportId == 0L)) {
-            Toast.makeText(requireContext(), "Seleccione un deporte para parámetros no globales", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -255,7 +245,7 @@ class CreateParameterFragment : Fragment() {
             icon = null
         )
 
-        Log.d("CreateParam", "Enviando parámetro: $parameterRequest")
+        Log.d("CreateParam", "Enviando parámetro PERSONAL: $parameterRequest")
         parameterViewModel.createParameter(parameterRequest)
     }
 
