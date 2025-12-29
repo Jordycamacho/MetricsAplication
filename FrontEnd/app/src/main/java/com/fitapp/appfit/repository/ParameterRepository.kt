@@ -1,5 +1,6 @@
 package com.fitapp.appfit.repository
 
+import android.util.Log
 import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
 import com.fitapp.appfit.response.parameter.request.CustomParameterRequest
 import com.fitapp.appfit.response.parameter.response.CustomParameterPageResponse
@@ -78,7 +79,41 @@ class ParameterRepository {
 
     // Tipos
     suspend fun getParameterTypes(): Resource<List<String>> {
-        return handleResponse(parameterService.getParameterTypes())
+        return try {
+            val response = parameterService.getParameterTypes()
+            Log.d("ParameterRepo", "Tipos respuesta: ${response.code()} - ${response.body()}")
+            if (response.isSuccessful) {
+                val body = response.body()
+                body?.let {
+                    // Si viene vacío, usar valores por defecto
+                    if (it.isEmpty()) {
+                        Resource.Success(getDefaultParameterTypes())
+                    } else {
+                        Resource.Success(it)
+                    }
+                } ?: Resource.Success(getDefaultParameterTypes())
+            } else {
+                // Si falla, intentar con valores por defecto
+                Log.w("ParameterRepo", "Error ${response.code()}: ${response.message()}")
+                Resource.Success(getDefaultParameterTypes())
+            }
+        } catch (e: Exception) {
+            Log.e("ParameterRepo", "Exception: ${e.message}")
+            // En caso de error, usar valores por defecto
+            Resource.Success(getDefaultParameterTypes())
+        }
+    }
+
+    private fun getDefaultParameterTypes(): List<String> {
+        return listOf(
+            "NUMBER",
+            "INTEGER",
+            "TEXT",
+            "BOOLEAN",
+            "DURATION",
+            "DISTANCE",
+            "PERCENTAGE"
+        )
     }
 
     // Incrementar uso

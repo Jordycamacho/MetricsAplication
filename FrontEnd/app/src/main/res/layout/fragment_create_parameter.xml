@@ -256,5 +256,16 @@
             android:layout_marginTop="16dp"
             android:visibility="gone" />
 
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_sds"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="..."
+            android:textColor="@color/background_dark"
+            app:backgroundTint="@color/gold_primary"
+            app:cornerRadius="12dp"
+            android:elevation="4dp" />
     </LinearLayout>
 </ScrollView>

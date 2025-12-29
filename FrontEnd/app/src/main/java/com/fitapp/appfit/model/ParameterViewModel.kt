@@ -1,5 +1,6 @@
 package com.fitapp.appfit.model
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -125,8 +126,16 @@ class ParameterViewModel : ViewModel() {
 
     fun getParameterTypes() {
         _parameterTypesState.value = Resource.Loading()
+        Log.d("ParamViewModel", "Solicitando tipos de parámetros...")
         viewModelScope.launch {
-            _parameterTypesState.value = repository.getParameterTypes()
+            try {
+                val result = repository.getParameterTypes()
+                Log.d("ParamViewModel", "Resultado tipos: $result")
+                _parameterTypesState.value = result
+            } catch (e: Exception) {
+                Log.e("ParamViewModel", "Error obteniendo tipos: ${e.message}")
+                _parameterTypesState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
