@@ -12,7 +12,6 @@ public class ExerciseConverter {
         model.setName(entity.getName());
         model.setDescription(entity.getDescription());
         model.setSportId(entity.getSport() != null ? entity.getSport().getId() : null);
-        model.setUserId(entity.getUser() != null ? entity.getUser().getId() : null);
         return model;
     }
 

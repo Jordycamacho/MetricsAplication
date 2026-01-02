@@ -13,7 +13,6 @@ import com.fitapp.backend.infrastructure.persistence.converter.DaysOfWeekConvert
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 import jakarta.persistence.Id;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -25,7 +24,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -62,10 +61,15 @@ public class RoutineEntity {
     @Convert(converter = DaysOfWeekConverter.class)
     @Column(columnDefinition = "TEXT")
     private Set<DayOfWeek> trainingDays = new HashSet<>();
-    
+
+    @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC")
+    private List<RoutineExerciseEntity> exercises = new ArrayList<>();
+
     private String goal;
-    
-    @Min(1) @Max(7)
+
+    @Min(1)
+    @Max(7)
     @Column(name = "sessions_per_week")
     private Integer sessionsPerWeek;
 
@@ -77,7 +81,10 @@ public class RoutineEntity {
     @JoinColumn(name = "sport_id")
     private SportEntity sport;
 
-    @OneToMany(mappedBy = "routine", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-    @OrderColumn(name = "position")
-    private List<RoutineExerciseEntity> exercises = new ArrayList<>();
+    @Column(name = "is_template")
+    private Boolean isTemplate = false;
+
+    @Column(name = "is_public")
+    private Boolean isPublic = false;
+
 }

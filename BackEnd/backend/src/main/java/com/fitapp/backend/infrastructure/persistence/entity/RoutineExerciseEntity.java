@@ -1,52 +1,44 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
-import java.time.Duration;
+import java.util.List;
 
-import jakarta.persistence.Id;
-
-import com.fitapp.backend.application.service.DurationToLongConverter;
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-import lombok.Data;
 
 @Entity
-@Data
 @Table(name = "routine_exercises")
 public class RoutineExerciseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true, updatable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "routine_id", nullable = false)
+    @ManyToOne
     private RoutineEntity routine;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exercise_id")
+    @ManyToOne
     private ExerciseEntity exercise;
 
     @Column(nullable = false)
-    private int sets; 
-    
-    @Column(nullable = false)
-    private int position;
+    private Integer position;
 
-    @Column(name = "target_reps")
-    private String targetReps;
+    // Descanso después del ejercicio
+    private Integer restAfterExercise; // segundos
 
-    @Column(name = "target_weight")
-    private Double targetWeight;
+    // Objetivos generales del ejercicio (opcional)
+    @OneToMany(mappedBy = "routineExercise", cascade = CascadeType.ALL)
+    private List<RoutineExerciseParameterEntity> targetParameters;
 
-    @Convert(converter = DurationToLongConverter.class)
-    @Column(name = "rest_interval")
-    private Duration restInterval;
+    // Sets planificados
+    @OneToMany(mappedBy = "routineExercise", cascade = CascadeType.ALL)
+    @OrderBy("position ASC")
+    private List<RoutineSetTemplateEntity> sets;
 }
