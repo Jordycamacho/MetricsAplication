@@ -1,4 +1,4 @@
-package com.fitapp.backend.infrastructure.config;
+package com.fitapp.backend.infrastructure.config.data;
 
 import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;

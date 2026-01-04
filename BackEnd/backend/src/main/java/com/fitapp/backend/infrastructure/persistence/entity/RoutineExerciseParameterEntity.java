@@ -1,5 +1,6 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -40,6 +41,12 @@ public class RoutineExerciseParameterEntity {
     private String stringValue;
 
     // Rango opcional (ej: 8–12 reps totales)
+    @Column(name = "min_value", columnDefinition = "double precision")
     private Double minValue;
+    
+    @Column(name = "max_value", columnDefinition = "double precision")
     private Double maxValue;
+    
+    @Column(name = "default_value", columnDefinition = "double precision")
+    private Double defaultValue;
 }

@@ -1,5 +1,5 @@
 // com.fitapp.backend.infrastructure.config/SportDataLoader.java
-package com.fitapp.backend.infrastructure.config;
+package com.fitapp.backend.infrastructure.config.data;
 
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;

@@ -41,7 +41,7 @@ public class ExerciseEntity {
     // Múltiples categorías
     @ManyToMany
     @JoinTable(
-        name = "exercise_categories",
+        name = "exercise_category_mapping",
         joinColumns = @JoinColumn(name = "exercise_id"),
         inverseJoinColumns = @JoinColumn(name = "category_id")
     )
