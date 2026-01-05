@@ -14,7 +14,8 @@ public interface ExerciseCategoryUseCase {
     ExerciseCategoryModel createCategory(ExerciseCategoryRequest request, String userEmail);
     ExerciseCategoryModel updateCategory(Long id, ExerciseCategoryRequest request, String userEmail);
     void deleteCategory(Long id, String userEmail);
-    ExerciseCategoryModel getCategoryById(Long id);
+    ExerciseCategoryModel getCategoryById(Long id, String userEmail);
+
     
     // Consultas paginadas
     ExerciseCategoryPageResponse getAllCategoriesPaginated(ExerciseCategoryFilterRequest filterRequest);
