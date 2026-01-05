@@ -112,4 +112,26 @@
             app:argType="long" />
     </fragment>
 
+    <!-- Categorías de Ejercicios -->
+    <fragment
+        android:id="@+id/navigation_exercise_categories"
+        android:name="com.fitapp.appfit.ui.categories.ExerciseCategoriesFragment"
+        android:label="Categorías"
+        tools:layout="@layout/fragment_exercise_categories" />
+
+    <fragment
+        android:id="@+id/navigation_create_category"
+        android:name="com.fitapp.appfit.ui.categories.create.CreateCategoryFragment"
+        android:label="Crear Categoría"
+        tools:layout="@layout/fragment_create_category" />
+
+    <fragment
+        android:id="@+id/navigation_edit_category"
+        android:name="com.fitapp.appfit.ui.categories.create.EditCategoryFragment"
+        android:label="Editar Categoría"
+        tools:layout="@layout/fragment_edit_category">
+        <argument
+            android:name="categoryId"
+            app:argType="long" />
+    </fragment>
 </navigation>

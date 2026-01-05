@@ -54,6 +54,10 @@ class TrainingFragment : Fragment() {
         binding.cardImportExport.setOnClickListener {
             findNavController().navigate(R.id.navigation_import_export)
         }
+
+        binding.cardCategories.setOnClickListener {
+            findNavController().navigate(R.id.navigation_exercise_categories)
+        }
     }
 
     override fun onDestroyView() {

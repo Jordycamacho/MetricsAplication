@@ -32,4 +32,6 @@
     <string name="title_create_sport">Crear Deporte</string>
     <string name="title_create_parameter">Crear Parámetro</string>
     <string name="title_edit_parameter">Editar Parámetro</string>
+    <string name="title_categories">Categorías</string>
+    <string name="categories_description">"Crea y gestiona categorias "</string>
 </resources>
