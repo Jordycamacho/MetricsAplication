@@ -34,4 +34,12 @@
     <string name="title_edit_parameter">Editar Parámetro</string>
     <string name="title_categories">Categorías</string>
     <string name="categories_description">"Crea y gestiona categorias "</string>
+
+    <string name="exercise_name">Nombre del ejercicio</string>
+    <string name="exercise_description">Descripción</string>
+    <string name="select_exercise_type">Seleccionar tipo de ejercicio</string>
+    <string name="select_sport_for_exercise">Seleccionar deporte</string>
+    <string name="create_exercise">Crear ejercicio</string>
+    <string name="edit_exercise">Editar ejercicio</string>
+    <string name="exercise_detail">Detalle del ejercicio</string>
 </resources>
