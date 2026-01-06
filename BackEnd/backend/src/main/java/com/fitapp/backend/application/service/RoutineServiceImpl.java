@@ -1,6 +1,5 @@
 package com.fitapp.backend.application.service;
 
-import com.fitapp.backend.application.dto.exercise.AddExercisesToRoutineRequest;
 import com.fitapp.backend.application.dto.page.PageResponse;
 import com.fitapp.backend.application.dto.routine.request.CreateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.request.RoutineFilterRequest;
@@ -15,10 +14,7 @@ import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
 import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
-import com.fitapp.backend.domain.exception.ExerciseNotFoundException;
 import com.fitapp.backend.domain.exception.RoutineNotFoundException;
-import com.fitapp.backend.domain.model.ExerciseModel;
-import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.domain.model.SportModel;
 import com.fitapp.backend.domain.model.UserModel;
@@ -105,53 +101,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 }
 
                 return mapToResponse(routine, sport);
-        }
-
-        @Override
-        @Transactional
-        @CacheEvict(value = { "routines", "userRoutines" }, key = "#request.routineId")
-        public RoutineResponse addExercisesToRoutine(AddExercisesToRoutineRequest request, String userEmail) {
-                serviceLogger.logExercisesAdditionStart(null, userEmail, request.getExercises().size());
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                RoutineModel routine = routinePersistencePort.findByIdAndUserId(request.getRoutineId(), user.getId())
-                                .orElseThrow(() -> new RoutineNotFoundException(request.getRoutineId()));
-
-                SportModel sport = null;
-                if (routine.getSportId() != null) {
-                        sport = sportPersistencePort.findById(routine.getSportId())
-                                        .orElse(null);
-                }
-
-                List<RoutineExerciseModel> exercises = request.getExercises().stream()
-                                .map(exerciseRequest -> {
-                                        ExerciseModel exercise = exercisePersistencePort
-                                                        .findById(exerciseRequest.getExerciseId())
-                                                        .orElseThrow(() -> new ExerciseNotFoundException(
-                                                                        exerciseRequest.getExerciseId()));
-
-                                        RoutineExerciseModel routineExercise = new RoutineExerciseModel();
-                                        routineExercise.setExerciseId(exercise.getId());
-                                        routineExercise.setSets(exerciseRequest.getSets());
-                                        routineExercise.setTargetReps(
-                                                        exerciseRequest.getTargetReps() != null
-                                                                        ? exerciseRequest.getTargetReps().toString()
-                                                                        : null);
-                                        routineExercise.setTargetWeight(exerciseRequest.getTargetWeight());
-                                        routineExercise.setRestIntervalSeconds(
-                                                        exerciseRequest.getRestIntervalSeconds());
-                                        routineExercise.setId(routine.getId());
-
-                                        return routineExercise;
-                                })
-                                .collect(Collectors.toList());
-
-                routine.getExercises().addAll(exercises);
-
-                RoutineModel updatedRoutine = routinePersistencePort.save(routine);
-                serviceLogger.logExercisesAdditionSuccess(updatedRoutine.getId(), userEmail, exercises.size());
-                return mapToResponse(updatedRoutine, sport);
         }
 
         @Override

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fitapp.backend.application.dto.exercise.AddExercisesToRoutineRequest;
 import com.fitapp.backend.application.dto.page.PageResponse;
 import com.fitapp.backend.application.dto.routine.request.CreateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.request.RoutineFilterRequest;
@@ -120,15 +119,6 @@ public class RoutineController {
         String userEmail = jwt.getClaimAsString("email");
         PageResponse<RoutineSummaryResponse> response = routineUseCase.getUserRoutinesWithFilters(
                 userEmail, filters, page, size);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/exercises")
-    public ResponseEntity<RoutineResponse> addExercisesToRoutine(
-            @Valid @RequestBody AddExercisesToRoutineRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
-        RoutineResponse response = routineUseCase.addExercisesToRoutine(request, userEmail);
         return ResponseEntity.ok(response);
     }
 
