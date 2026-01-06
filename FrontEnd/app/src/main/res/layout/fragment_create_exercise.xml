@@ -72,6 +72,7 @@
 
                 <!-- Nombre -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -91,11 +92,13 @@
                         android:layout_height="wrap_content"
                         android:textColor="@color/text_primary_dark"
                         android:inputType="textCapWords"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:imeOptions="actionNext" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Descripción -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -115,7 +118,8 @@
                         android:layout_height="wrap_content"
                         android:textColor="@color/text_primary_dark"
                         android:inputType="textMultiLine"
-                        android:lines="3" />
+                        android:lines="3"
+                        android:imeOptions="actionNext" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Tipo de ejercicio -->

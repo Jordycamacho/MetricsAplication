@@ -36,13 +36,7 @@ class CreateExerciseFragment : Fragment() {
         private const val TAG = "CreateExerciseFragment"
     }
 
-    // Variables para paginación
-    private var currentParameterPage = 0
-    private var currentCategoryPage = 0
-    private val parameterPageSize = 10
-    private val categoryPageSize = 10
-
-    // Mapas para selección múltiple
+    // Variables para selección
     private val selectedParameterIds = mutableSetOf<Long>()
     private val selectedCategoryIds = mutableSetOf<Long>()
     private var selectedSportId: Long? = null
@@ -105,8 +99,10 @@ class CreateExerciseFragment : Fragment() {
         // Cargar deportes
         sportViewModel.getAllSports()
 
-        // NOTA: No cargamos parámetros ni categorías aquí porque necesitamos un sportId
-        // Se cargarán cuando el usuario seleccione un deporte
+        // Cargar categorías para el spinner (sin filtro)
+        categoryViewModel.searchAllCategories()
+
+        // No cargamos parámetros aquí porque necesitamos un sportId primero
     }
 
     private fun setupObservers() {
@@ -129,32 +125,34 @@ class CreateExerciseFragment : Fragment() {
             }
         })
 
-        // Observar parámetros disponibles (SOLO CUANDO HAY SPORT_ID)
+        // Observar parámetros disponibles - Usando EL MÉTODO CORRECTO
         parameterViewModel.availableParametersState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     resource.data?.let { pageResponse ->
+                        Log.i(TAG, "setupObservers: Parámetros cargados: ${pageResponse.content?.size ?: 0}")
                         pageResponse.content?.let { parameters ->
-                            Log.i(TAG, "setupObservers: Parámetros cargados: ${parameters.size}")
                             updateParametersChips(parameters)
                         }
                     }
                 }
                 is Resource.Error -> {
                     Log.e(TAG, "setupObservers: Error cargando parámetros: ${resource.message}")
-                    // No mostrar toast aquí porque es normal si no hay sportId seleccionado
+                    // No mostrar toast si es la primera vez y no hay sportId
                 }
                 else -> {}
             }
         })
 
-        // Observar categorías para spinner
-        categoryViewModel.categoriesForSpinnerState.observe(viewLifecycleOwner, Observer { resource ->
+        // Observar categorías - Usando EL MÉTODO CORRECTO
+        categoryViewModel.allCategoriesState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
-                    resource.data?.let { categories ->
-                        Log.i(TAG, "setupObservers: Categorías cargadas: ${categories.size}")
-                        updateCategoriesChips(categories)
+                    resource.data?.let { pageResponse ->
+                        Log.i(TAG, "setupObservers: Categorías cargadas: ${pageResponse.content?.size ?: 0}")
+                        pageResponse.content?.let { categories ->
+                            updateCategoriesChips(categories)
+                        }
                     }
                 }
                 is Resource.Error -> {
@@ -191,30 +189,48 @@ class CreateExerciseFragment : Fragment() {
     private fun updateSportsSpinner(sports: List<com.fitapp.appfit.response.sport.response.SportResponse>) {
         Log.d(TAG, "updateSportsSpinner: Actualizando spinner con ${sports.size} deportes")
 
-        val sportNames = mutableListOf<String>()
-        val sportsMap = mutableMapOf<String, Long>()
-
-        sports.forEach { sport ->
-            val displayName = "${sport.name} (${if (sport.isPredefined) "Predefinido" else "Personalizado"})"
-            sportNames.add(displayName)
-            sportsMap[displayName] = sport.id
+        val sportNames = sports.map { sport ->
+            "${sport.name} (${if (sport.isPredefined == true) "Predefinido" else "Personalizado"})"
         }
 
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sportNames)
         binding.spinnerSports.setAdapter(adapter)
 
-        // Listener para cuando se selecciona un deporte
+        // Mapa para obtener el ID desde el nombre mostrado
+        val sportsMap = mutableMapOf<String, Long>()
+        sports.forEachIndexed { index, sport ->
+            sportsMap[sportNames[index]] = sport.id
+        }
+
         binding.spinnerSports.setOnItemClickListener { _, _, position, _ ->
             val selectedItem = binding.spinnerSports.adapter.getItem(position) as String
             selectedSportId = sportsMap[selectedItem]
             Log.d(TAG, "updateSportsSpinner: Deporte seleccionado: $selectedItem -> $selectedSportId")
 
+            // Cuando se selecciona un deporte, cargar los parámetros para ese deporte
+            selectedSportId?.let { sportId ->
+                // CORRECCIÓN: Usar EL MÉTODO CORRECTO del ViewModel
+                val filterRequest = CustomParameterFilterRequest(
+                    sportId = sportId,
+                    isActive = true
+                )
+                parameterViewModel.searchAvailableParameters(sportId, filterRequest)
+            }
         }
 
+        // Seleccionar el primer deporte por defecto si hay
         if (sportNames.isNotEmpty()) {
-            // Seleccionar el primer deporte por defecto
             binding.spinnerSports.setText(sportNames[0], false)
             selectedSportId = sportsMap[sportNames[0]]
+
+            // Cargar parámetros para el deporte por defecto
+            selectedSportId?.let { sportId ->
+                val filterRequest = CustomParameterFilterRequest(
+                    sportId = sportId,
+                    isActive = true
+                )
+                parameterViewModel.searchAvailableParameters(sportId, filterRequest)
+            }
         }
     }
 
@@ -225,7 +241,6 @@ class CreateExerciseFragment : Fragment() {
         binding.chipGroupParameters.removeAllViews()
 
         if (parameters.isEmpty()) {
-            // Mostrar mensaje si no hay parámetros
             val chip = Chip(requireContext()).apply {
                 text = "No hay parámetros disponibles para este deporte"
                 isCheckable = false
@@ -262,7 +277,6 @@ class CreateExerciseFragment : Fragment() {
         binding.chipGroupCategories.removeAllViews()
 
         if (categories.isEmpty()) {
-            // Mostrar mensaje si no hay categorías
             val chip = Chip(requireContext()).apply {
                 text = "No hay categorías disponibles"
                 isCheckable = false
@@ -322,7 +336,7 @@ class CreateExerciseFragment : Fragment() {
             sportId = selectedSportId!!,
             categoryIds = selectedCategoryIds,
             supportedParameterIds = selectedParameterIds,
-            isPublic = false // Por defecto, los ejercicios creados por usuarios son privados
+            isPublic = false
         )
 
         Log.i(TAG, "createExercise: Enviando ejercicio - $exerciseRequest")
