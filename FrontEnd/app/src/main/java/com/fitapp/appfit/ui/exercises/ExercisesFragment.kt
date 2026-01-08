@@ -68,11 +68,11 @@ class ExercisesFragment : Fragment() {
         exerciseAdapter = ExerciseAdapter(
             onItemClick = { exercise ->
                 Log.d(TAG, "setupRecyclerView: Click en ejercicio ${exercise.id}")
-                showExerciseDetail(exercise)
+                navigateToExerciseDetail(exercise)
             },
             onEditClick = { exercise ->
                 Log.d(TAG, "setupRecyclerView: Editar ejercicio ${exercise.id}")
-                editExercise(exercise)
+                navigateToEditExercise(exercise)
             },
             onDeleteClick = { exercise ->
                 Log.d(TAG, "setupRecyclerView: Eliminar ejercicio ${exercise.id}")
@@ -82,13 +82,49 @@ class ExercisesFragment : Fragment() {
                 Log.d(TAG, "setupRecyclerView: Cambiar estado ejercicio ${exercise.id}")
                 toggleExerciseStatus(exercise)
             },
-            isAdminMode = false // Cambiar según permisos del usuario
+            isAdminMode = false
         )
 
         binding.recyclerExercises.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = exerciseAdapter
             setHasFixedSize(true)
+        }
+    }
+
+    private fun navigateToExerciseDetail(exercise: ExerciseResponse) {
+        try {
+            val action = ExercisesFragmentDirections.actionNavigationExercisesToExerciseDetail(
+                exerciseId = exercise.id
+            )
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error usando Safe Args: ${e.message}")
+            val bundle = Bundle().apply {
+                putLong("exerciseId", exercise.id)
+            }
+            findNavController().navigate(
+                R.id.action_navigation_exercises_to_exercise_detail,
+                bundle
+            )
+        }
+    }
+
+    private fun navigateToEditExercise(exercise: ExerciseResponse) {
+        try {
+            val action = ExercisesFragmentDirections.actionNavigationExercisesToEditExercise(
+                exerciseId = exercise.id
+            )
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error usando Safe Args: ${e.message}")
+            val bundle = Bundle().apply {
+                putLong("exerciseId", exercise.id)
+            }
+            findNavController().navigate(
+                R.id.action_navigation_exercises_to_edit_exercise,
+                bundle
+            )
         }
     }
 

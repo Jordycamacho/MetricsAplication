@@ -47,7 +47,7 @@
         android:label="@string/title_sports"
         tools:layout="@layout/fragment_sports" />
 
-    <!-- EJERCICIOS - FUERA DE navigation_edit_category -->
+    <!-- EJERCICIOS -->
     <fragment
         android:id="@+id/navigation_exercises"
         android:name="com.fitapp.appfit.ui.exercises.ExercisesFragment"
@@ -60,11 +60,19 @@
 
         <action
             android:id="@+id/action_navigation_exercises_to_edit_exercise"
-            app:destination="@id/navigation_edit_exercise" />
+            app:destination="@id/navigation_edit_exercise">
+            <argument
+                android:name="exerciseId"
+                app:argType="long" />
+        </action>
 
         <action
             android:id="@+id/action_navigation_exercises_to_exercise_detail"
-            app:destination="@id/navigation_exercise_detail" />
+            app:destination="@id/navigation_exercise_detail">
+            <argument
+                android:name="exerciseId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <!-- Fragmentos relacionados con ejercicios -->
@@ -92,6 +100,13 @@
         <argument
             android:name="exerciseId"
             app:argType="long" />
+        <action
+            android:id="@+id/action_exercise_detail_to_edit_exercise"
+            app:destination="@id/navigation_edit_exercise">
+            <argument
+                android:name="exerciseId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <!-- Nuevas secciones -->
