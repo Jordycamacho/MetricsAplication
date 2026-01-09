@@ -23,6 +23,7 @@ public class RoutineSummaryResponse {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastUsedAt;
     private Set<DayOfWeek> trainingDays;
     private String goal;
     private Integer sessionsPerWeek;

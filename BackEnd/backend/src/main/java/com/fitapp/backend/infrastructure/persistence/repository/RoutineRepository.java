@@ -21,16 +21,16 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, J
 
     long countByUserId(Long userId);
 
-    @EntityGraph(attributePaths = {"sport", "exercises", "exercises.exercise"})
+    @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
     Optional<RoutineEntity> findByIdAndUserId(Long id, Long userId);
 
-    @EntityGraph(attributePaths = {"sport", "exercises", "exercises.exercise"})
+    @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
     Page<RoutineEntity> findByUserId(Long userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"sport", "exercises", "exercises.exercise"})
+    @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
     @Override
     Page<RoutineEntity> findAll(Specification<RoutineEntity> spec, Pageable pageable);
-    
+
     List<RoutineEntity> findByUserIdAndIsActive(Long userId, Boolean isActive);
 
     Page<RoutineEntity> findByUserIdAndIsActive(Long userId, Boolean isActive, Pageable pageable);
@@ -55,5 +55,19 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, J
     int updateActiveStatus(@Param("id") Long id, @Param("userId") Long userId, @Param("isActive") Boolean isActive);
 
     @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.createdAt BETWEEN :startDate AND :endDate")
-    List<RoutineEntity> findByUserIdAndCreatedAtBetween(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    List<RoutineEntity> findByUserIdAndCreatedAtBetween(@Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.lastUsedAt IS NOT NULL ORDER BY r.lastUsedAt DESC")
+    List<RoutineEntity> findLastUsedByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    default List<RoutineEntity> findLastUsedByUserId(Long userId, int limit) {
+        return findLastUsedByUserId(userId, org.springframework.data.domain.PageRequest.of(0, limit));
+    }
+
+    @Modifying
+    @Query("UPDATE RoutineEntity r SET r.lastUsedAt = :lastUsedAt WHERE r.id = :id AND r.user.id = :userId")
+    int updateLastUsedAt(@Param("id") Long id, @Param("userId") Long userId,
+            @Param("lastUsedAt") LocalDateTime lastUsedAt);
+
 }

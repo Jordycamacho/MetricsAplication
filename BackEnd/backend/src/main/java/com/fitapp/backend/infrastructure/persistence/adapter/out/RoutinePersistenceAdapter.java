@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -108,6 +109,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
         existing.setGoal(routine.getGoal());
         existing.setSessionsPerWeek(routine.getSessionsPerWeek() != null ? routine.getSessionsPerWeek() : 3);
         existing.setIsActive(routine.getIsActive());
+        existing.setLastUsedAt(routine.getLastUsedAt());
 
         if (routine.getSportId() != null) {
             SportEntity sport = sportRepository.findById(routine.getSportId())
@@ -139,6 +141,22 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     @Transactional
     public void toggleActiveStatus(Long id, Long userId, boolean isActive) {
         int updated = routineRepository.updateActiveStatus(id, userId, isActive);
+        if (updated == 0) {
+            throw new RuntimeException("Routine not found or not authorized");
+        }
+    }
+
+    @Override
+    public List<RoutineModel> findLastUsedByUserId(Long userId, int limit) {
+        return routineRepository.findLastUsedByUserId(userId, limit).stream()
+                .map(routineConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void updateLastUsedAt(Long id, Long userId, LocalDateTime lastUsedAt) {
+        int updated = routineRepository.updateLastUsedAt(id, userId, lastUsedAt);
         if (updated == 0) {
             throw new RuntimeException("Routine not found or not authorized");
         }

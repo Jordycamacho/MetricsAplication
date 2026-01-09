@@ -31,6 +31,7 @@ public class RoutineResponse {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastUsedAt;
     
     @Builder.Default
     private List<RoutineExerciseResponse> exercises = new ArrayList<>();

@@ -58,6 +58,9 @@ public class RoutineEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "last_used_at")
+    private LocalDateTime lastUsedAt;
+
     @Convert(converter = DaysOfWeekConverter.class)
     @Column(columnDefinition = "TEXT")
     private Set<DayOfWeek> trainingDays = new HashSet<>();

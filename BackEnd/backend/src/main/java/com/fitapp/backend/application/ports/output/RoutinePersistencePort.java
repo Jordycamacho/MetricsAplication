@@ -5,6 +5,7 @@ import com.fitapp.backend.domain.model.RoutineModel;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RoutinePersistencePort {
@@ -16,10 +17,12 @@ public interface RoutinePersistencePort {
     Page<RoutineModel> findByUserIdAndFilters(Long userId, RoutineFilterRequest filters, Pageable pageable);
     List<RoutineModel> findRecentByUserId(Long userId, int limit);
     List<RoutineModel> findActiveRoutinesByUserId(Long userId);
+    List<RoutineModel> findLastUsedByUserId(Long userId, int limit);
     long countByUserId(Long userId);
     
     // Métodos de actualización
     RoutineModel update(RoutineModel routine);
     void deleteByIdAndUserId(Long id, Long userId);
     void toggleActiveStatus(Long id, Long userId, boolean isActive);
+    void updateLastUsedAt(Long id, Long userId, LocalDateTime lastUsedAt);
 }

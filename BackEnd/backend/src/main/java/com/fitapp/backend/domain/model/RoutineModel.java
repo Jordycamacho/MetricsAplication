@@ -15,6 +15,7 @@ public class RoutineModel {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastUsedAt;
     private Long userId;
     private Long sportId;
     private List<RoutineExerciseModel> exercises;

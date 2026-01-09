@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -79,6 +80,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 routine.setTrainingDays(trainingDays);
                 routine.setGoal(request.getGoal());
                 routine.setSessionsPerWeek(request.getSessionsPerWeek());
+                routine.setLastUsedAt(null);
 
                 RoutineModel savedRoutine = routinePersistencePort.save(routine);
                 serviceLogger.logRoutineCreationSuccess(routine.getId(), userEmail);
@@ -264,6 +266,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
                                 .build();
         }
 
+        //==========FALTA CONVERSION COMPLETA A RESPONSE===========
+         
         private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
                 RoutineResponse response = new RoutineResponse();
                 response.setId(routine.getId());
@@ -274,23 +278,12 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 response.setIsActive(routine.getIsActive());
                 response.setCreatedAt(routine.getCreatedAt());
                 response.setUpdatedAt(routine.getUpdatedAt());
+                response.setLastUsedAt(routine.getLastUsedAt());
                 response.setTrainingDays(routine.getTrainingDays());
                 response.setGoal(routine.getGoal());
                 response.setSessionsPerWeek(routine.getSessionsPerWeek());
-                List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
-                                .map(exercise -> {
-                                        RoutineExerciseResponse exerciseResponse = new RoutineExerciseResponse();
-                                        exerciseResponse.setId(exercise.getId());
-                                        exerciseResponse.setExerciseId(exercise.getExerciseId());
-                                        exerciseResponse.setSets(exercise.getSets());
-                                        exerciseResponse.setTargetReps(exercise.getTargetReps());
-                                        exerciseResponse.setTargetWeight(exercise.getTargetWeight());
-                                        exerciseResponse.setRestIntervalSeconds(exercise.getRestIntervalSeconds());
-                                        return exerciseResponse;
-                                })
-                                .collect(Collectors.toList());
 
-                response.setExercises(exerciseResponses);
+                response.setExercises(new ArrayList<>());
                 return response;
         }
 
@@ -327,11 +320,34 @@ public class RoutineServiceImpl implements RoutineUseCase {
                                 .isActive(routine.getIsActive())
                                 .createdAt(routine.getCreatedAt())
                                 .updatedAt(routine.getUpdatedAt())
+                                .lastUsedAt(routine.getLastUsedAt())
                                 .trainingDays(routine.getTrainingDays())
                                 .goal(routine.getGoal())
                                 .sessionsPerWeek(routine.getSessionsPerWeek())
                                 .exerciseCount(exerciseCount)
                                 .build();
+        }
+
+        @Override
+        @Cacheable(value = "lastUsedRoutines", key = "#userEmail + '_' + #limit")
+        public List<RoutineSummaryResponse> getLastUsedRoutines(String userEmail, int limit) {
+                UserModel user = userPersistencePort.findByEmail(userEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                List<RoutineModel> lastUsedRoutines = routinePersistencePort.findLastUsedByUserId(user.getId(), limit);
+
+                return lastUsedRoutines.stream()
+                                .map(this::mapToSummaryResponse)
+                                .collect(Collectors.toList());
+        }
+
+        @Override
+        @Transactional
+        public void markRoutineAsUsed(Long id, String userEmail) {
+                UserModel user = userPersistencePort.findByEmail(userEmail)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
         }
 
 }

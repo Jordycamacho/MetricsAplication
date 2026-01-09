@@ -20,9 +20,13 @@ public interface RoutineUseCase {
     // Listados
     PageResponse<RoutineSummaryResponse> getUserRoutines(String userEmail, int page, int size, String sortBy, String sortDirection);
     PageResponse<RoutineSummaryResponse> getUserRoutinesWithFilters(String userEmail, RoutineFilterRequest filters, int page, int size);
+    List<RoutineSummaryResponse> getLastUsedRoutines(String userEmail, int limit);
     List<RoutineSummaryResponse> getRecentRoutines(String userEmail, int limit);
     List<RoutineSummaryResponse> getActiveRoutines(String userEmail);
     
+    //Actualizacion
+    void markRoutineAsUsed(Long id, String userEmail);
+
     // Estadísticas
     RoutineStatisticsResponse getRoutineStatistics(String userEmail);
     

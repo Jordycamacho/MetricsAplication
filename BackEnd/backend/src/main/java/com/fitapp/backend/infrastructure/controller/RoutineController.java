@@ -171,4 +171,24 @@ public class RoutineController {
         RoutineStatisticsResponse response = routineUseCase.getRoutineStatistics(userEmail);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "Get last used routines", description = "Get recently used routines (based on lastUsedAt)")
+    @GetMapping("/last-used")
+    public ResponseEntity<List<RoutineSummaryResponse>> getLastUsedRoutines(
+            @RequestParam(defaultValue = "3") int limit,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = jwt.getClaimAsString("email");
+        List<RoutineSummaryResponse> response = routineUseCase.getLastUsedRoutines(userEmail, limit);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Mark routine as used", description = "Update the lastUsedAt timestamp for a routine")
+    @PatchMapping("/{id}/mark-as-used")
+    public ResponseEntity<Void> markRoutineAsUsed(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = jwt.getClaimAsString("email");
+        routineUseCase.markRoutineAsUsed(id, userEmail);
+        return ResponseEntity.noContent().build();
+    }
 }
