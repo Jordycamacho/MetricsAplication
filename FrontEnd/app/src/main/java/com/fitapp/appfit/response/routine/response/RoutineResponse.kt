@@ -13,5 +13,6 @@ data class RoutineResponse(
     @SerializedName("sessionsPerWeek") val sessionsPerWeek: Int?,
     @SerializedName("isActive") val isActive: Boolean,
     @SerializedName("createdAt") val createdAt: String?,
-    @SerializedName("updatedAt") val updatedAt: String?
+    @SerializedName("updatedAt") val updatedAt: String?,
+    @SerializedName("lastUsedAt") val lastUsedAt: String?
 )

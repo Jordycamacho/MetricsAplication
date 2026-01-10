@@ -11,6 +11,7 @@ data class RoutineSummaryResponse (
     val isActive: Boolean,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
+    val lastUsedAt: LocalDateTime? = null,
     val trainingDays: Set<String>,
     val goal: String,
     val sessionsPerWeek: Int,

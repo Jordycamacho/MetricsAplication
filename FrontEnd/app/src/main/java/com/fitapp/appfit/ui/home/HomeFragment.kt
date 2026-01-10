@@ -1,3 +1,4 @@
+// com.fitapp.appfit.ui.home/HomeFragment.kt
 package com.fitapp.appfit.ui.home
 
 import android.os.Bundle
@@ -16,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.FragmentHomeBinding
 import com.fitapp.appfit.model.RoutineViewModel
-import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import com.fitapp.appfit.ui.routines.adapter.RoutineAdapter
 import com.fitapp.appfit.utils.Resource
 
@@ -25,6 +25,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val routineViewModel: RoutineViewModel by viewModels()
     private lateinit var recentRoutineAdapter: RoutineAdapter
+    private lateinit var lastUsedRoutineAdapter: RoutineAdapter
 
     companion object {
         private const val TAG = "HomeFragment"
@@ -46,11 +47,12 @@ class HomeFragment : Fragment() {
         setupClickListeners()
         setupObservers()
 
-        loadRecentRoutines()
+        loadLastUsedRoutines() // CAMBIO: Cargar últimas rutinas usadas en lugar de recientes
     }
 
     private fun setupRecyclerView() {
-        recentRoutineAdapter = RoutineAdapter(
+        // Adapter para las últimas rutinas usadas
+        lastUsedRoutineAdapter = RoutineAdapter(
             onItemClick = { routine ->
                 showRoutineDetail(routine)
             },
@@ -64,7 +66,7 @@ class HomeFragment : Fragment() {
 
         binding.recyclerRecentRoutines.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            adapter = recentRoutineAdapter
+            adapter = lastUsedRoutineAdapter
             setHasFixedSize(true)
         }
     }
@@ -80,30 +82,26 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        // Observar lista de rutinas recientes
-        routineViewModel.routinesListState.observe(viewLifecycleOwner, Observer { resource ->
+        routineViewModel.lastUsedRoutinesState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let { pageResponse ->
-                        val routines = pageResponse.content
-                        if (routines.isEmpty()) {
+                    resource.data?.let { lastUsedRoutines ->
+                        if (lastUsedRoutines.isEmpty()) {
                             showEmptyRecentRoutines()
                         } else {
                             showRecentRoutinesList()
-                            val recentRoutines = routines.take(3)
-                            recentRoutineAdapter.submitList(recentRoutines.toList()) // Usa toList()
-                            updateProgressStats(routines)
+                            lastUsedRoutineAdapter.submitList(lastUsedRoutines.toList())
                         }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    val errorMsg = resource.message ?: "Error al cargar rutinas"
+                    val errorMsg = resource.message ?: "Error al cargar últimas rutinas usadas"
                     if (errorMsg.contains("500")) {
                         Log.e(TAG, "Error 500, reintentando en 2 segundos...")
                         Handler(Looper.getMainLooper()).postDelayed({
-                            loadRecentRoutines()
+                            loadLastUsedRoutines()
                         }, 2000)
                     } else {
                         showError(errorMsg)
@@ -120,38 +118,38 @@ class HomeFragment : Fragment() {
         routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
             Log.d(TAG, "🔄 Home: Evento de actualización recibido")
             Handler(Looper.getMainLooper()).postDelayed({
-                loadRecentRoutines()
+                loadLastUsedRoutines()
             }, 500)
         }
     }
 
-    private fun loadRecentRoutines() {
-        Log.d(TAG, "📥 Home: Cargando rutinas recientes...")
-        routineViewModel.getRoutines()
+    private fun loadLastUsedRoutines() {
+        Log.d(TAG, "📥 Home: Cargando últimas rutinas usadas...")
+        routineViewModel.getLastUsedRoutines(3) // Límite de 3 rutinas
     }
 
-    private fun updateProgressStats(routines: List<RoutineSummaryResponse>) {
-        val activeRoutines = routines.count { it.isActive }
-        val totalRoutines = routines.size
+    private fun startWorkout(routine: com.fitapp.appfit.response.routine.response.RoutineSummaryResponse) {
+        // CAMBIO: Marcar rutina como usada al iniciar entrenamiento
+        routineViewModel.markRoutineAsUsed(routine.id)
 
-        binding.textProgress.text = "$activeRoutines de $totalRoutines rutinas activas"
+        // Mostrar mensaje
+        Toast.makeText(
+            requireContext(),
+            "✅ Iniciando entrenamiento: ${routine.name}",
+            Toast.LENGTH_SHORT
+        ).show()
 
-        if (totalRoutines > 0) {
-            val progress = (activeRoutines * 100) / totalRoutines
-            binding.progressBarWeekly.progress = progress
-        }
+        // Aquí puedes agregar la navegación a la pantalla de entrenamiento
+        // findNavController().navigate(R.id.navigation_workout)
     }
 
-    private fun showRoutineDetail(routine: RoutineSummaryResponse) {
+    private fun showRoutineDetail(routine: com.fitapp.appfit.response.routine.response.RoutineSummaryResponse) {
         Toast.makeText(requireContext(), "Ver detalle: ${routine.name}", Toast.LENGTH_SHORT).show()
     }
 
-    private fun editRoutine(routine: RoutineSummaryResponse) {
+    private fun editRoutine(routine: com.fitapp.appfit.response.routine.response.RoutineSummaryResponse) {
         Toast.makeText(requireContext(), "Editar: ${routine.name}", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun startWorkout(routine: RoutineSummaryResponse) {
-        Toast.makeText(requireContext(), "Iniciar entrenamiento: ${routine.name}", Toast.LENGTH_SHORT).show()
+        // Aquí puedes agregar navegación a editar rutina si lo deseas
     }
 
     private fun showLoading() {
@@ -171,7 +169,8 @@ class HomeFragment : Fragment() {
     private fun showEmptyRecentRoutines() {
         binding.recyclerRecentRoutines.visibility = View.GONE
         binding.textEmptyRecentRoutines.visibility = View.VISIBLE
-        binding.textEmptyRecentRoutines.text = "No hay rutinas recientes"
+        // CAMBIO: Mensaje más específico
+        binding.textEmptyRecentRoutines.text = "No hay rutinas usadas recientemente"
     }
 
     private fun showError(message: String) {
@@ -183,7 +182,7 @@ class HomeFragment : Fragment() {
         Log.d(TAG, "🔄 Home reanudado")
         routineViewModel.clearAllUpdateStates()
         Handler(Looper.getMainLooper()).postDelayed({
-            loadRecentRoutines()
+            loadLastUsedRoutines()
         }, 300)
     }
 

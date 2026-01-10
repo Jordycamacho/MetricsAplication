@@ -69,6 +69,16 @@ interface RoutineService {
     @GET("api/routines/statistics")
     suspend fun getRoutineStatistics(): Response<RoutineStatisticsResponse>
 
+    @GET("api/routines/last-used")
+    suspend fun getLastUsedRoutines(
+        @Query("limit") limit: Int = 3
+    ): Response<List<RoutineSummaryResponse>>
+
+    @PATCH("api/routines/{id}/mark-as-used")
+    suspend fun markRoutineAsUsed(
+        @Path("id") id: Long
+    ): Response<Unit>
+
     companion object {
         val instance: RoutineService by lazy {
             ApiClient.instance.create(RoutineService::class.java)

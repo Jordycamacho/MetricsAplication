@@ -234,4 +234,24 @@ class RoutineRepository {
             else -> Resource.Error("Error: ${e.message ?: "Error desconocido"}")
         }
     }
+
+    suspend fun getLastUsedRoutines(limit: Int = 3): Resource<List<RoutineSummaryResponse>> {
+        return try {
+            Log.d(TAG, "Obteniendo últimas rutinas usadas (límite: $limit)")
+            val response = routineService.getLastUsedRoutines(limit)
+            handleResponse(response, "obtener últimas rutinas usadas")
+        } catch (e: Exception) {
+            handleException(e, "obtener últimas rutinas usadas")
+        }
+    }
+
+    suspend fun markRoutineAsUsed(id: Long): Resource<Unit> {
+        return try {
+            Log.d(TAG, "Marcando rutina como usada (ID: $id)")
+            val response = routineService.markRoutineAsUsed(id)
+            handleResponseUnit(response, "marcar rutina como usada")
+        } catch (e: Exception) {
+            handleExceptionUnit(e, "marcar rutina como usada")
+        }
+    }
 }

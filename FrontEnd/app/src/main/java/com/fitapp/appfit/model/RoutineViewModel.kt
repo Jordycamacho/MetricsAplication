@@ -81,6 +81,13 @@ class RoutineViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
+    // Ultimas rutinas usadas
+    private val _lastUsedRoutinesState = MutableLiveData<Resource<List<RoutineSummaryResponse>>>()
+    val lastUsedRoutinesState: LiveData<Resource<List<RoutineSummaryResponse>>> = _lastUsedRoutinesState
+
+    private val _markAsUsedState = MutableLiveData<Resource<Unit>>()
+    val markAsUsedState: LiveData<Resource<Unit>> = _markAsUsedState
+
     // ==================== Métodos públicos ====================
 
     fun triggerRefresh() {
@@ -409,6 +416,54 @@ class RoutineViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Excepción obteniendo estadísticas: ${e.message}", e)
                 _routineStatisticsState.value = Resource.Error("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun getLastUsedRoutines(limit: Int = 3) {
+        _lastUsedRoutinesState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                val result = repository.getLastUsedRoutines(limit)
+                _lastUsedRoutinesState.value = result
+
+                when (result) {
+                    is Resource.Success -> {
+                        Log.d(TAG, "✅ Últimas rutinas usadas obtenidas: ${result.data?.size ?: 0}")
+                    }
+                    is Resource.Error -> {
+                        Log.e(TAG, "❌ Error obteniendo últimas rutinas usadas: ${result.message}")
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Excepción obteniendo últimas rutinas usadas: ${e.message}", e)
+                _lastUsedRoutinesState.value = Resource.Error("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun markRoutineAsUsed(id: Long) {
+        _markAsUsedState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                val result = repository.markRoutineAsUsed(id)
+                _markAsUsedState.value = result
+
+                when (result) {
+                    is Resource.Success -> {
+                        Log.d(TAG, "✅ Rutina marcada como usada: $id")
+                        // Actualizar la rutina localmente si es necesario
+                        notifyAnyUpdate()
+                    }
+                    is Resource.Error -> {
+                        Log.e(TAG, "❌ Error marcando rutina como usada: ${result.message}")
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Excepción marcando rutina como usada: ${e.message}", e)
+                _markAsUsedState.value = Resource.Error("Error: ${e.message}")
             }
         }
     }

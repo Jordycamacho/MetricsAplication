@@ -1,3 +1,4 @@
+// com.fitapp.appfit.ui.routines.adapter/RoutineAdapter.kt
 package com.fitapp.appfit.ui.routines.adapter
 
 import android.view.LayoutInflater
@@ -9,12 +10,16 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class RoutineAdapter(
     private val onItemClick: (RoutineSummaryResponse) -> Unit = {},
     private val onEditClick: (RoutineSummaryResponse) -> Unit = {},
     private val onStartClick: (RoutineSummaryResponse) -> Unit = {}
-) :ListAdapter<RoutineSummaryResponse, RoutineAdapter.RoutineViewHolder>(RoutineDiffCallback()) {
+) : ListAdapter<RoutineSummaryResponse, RoutineAdapter.RoutineViewHolder>(RoutineDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoutineViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -45,7 +50,7 @@ class RoutineAdapter(
 
     inner class RoutineViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvName: TextView = itemView.findViewById(R.id.tv_routine_name)
-        val tvDuration: TextView = itemView.findViewById(R.id.tv_routine_duration)
+        val tvLastUsed: TextView = itemView.findViewById(R.id.tv_last_used) // Nuevo campo
         val tvExerciseCount: TextView = itemView.findViewById(R.id.tv_exercise_count)
         val tvSportName: TextView = itemView.findViewById(R.id.tv_sport_name)
         val tvDescription: TextView = itemView.findViewById(R.id.tv_routine_description)
@@ -58,9 +63,28 @@ class RoutineAdapter(
             tvSportName.text = routine.sportName ?: "Sin deporte"
             tvExerciseCount.text = "${routine.exerciseCount} ejercicios"
 
-            // Calcular duración aproximada (ejemplo: 60 min por rutina)
-            val estimatedMinutes = routine.exerciseCount * 10 // 10 min por ejercicio
-            tvDuration.text = "$estimatedMinutes min"
+            // Mostrar última vez usada
+            routine.lastUsedAt?.let { lastUsedString ->
+                try {
+                    // Parsear la fecha del string
+                    val lastUsed = LocalDateTime.parse(lastUsedString.toString(), DateTimeFormatter.ISO_DATE_TIME)
+                    val now = LocalDateTime.now()
+                    val daysAgo = ChronoUnit.DAYS.between(lastUsed.toLocalDate(), now.toLocalDate())
+
+                    tvLastUsed.text = when {
+                        daysAgo == 0L -> "Usada hoy"
+                        daysAgo == 1L -> "Usada ayer"
+                        daysAgo < 7 -> "Usada hace $daysAgo días"
+                        else -> "Usada el ${lastUsed.format(DateTimeFormatter.ofPattern("dd/MM"))}"
+                    }
+                    tvLastUsed.visibility = View.VISIBLE
+                } catch (e: Exception) {
+                    // Si hay error al parsear, ocultar el campo
+                    tvLastUsed.visibility = View.GONE
+                }
+            } ?: run {
+                tvLastUsed.visibility = View.GONE
+            }
 
             // Cambiar color si está inactiva
             if (!routine.isActive) {

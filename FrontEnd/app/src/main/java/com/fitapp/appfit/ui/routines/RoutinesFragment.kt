@@ -50,11 +50,10 @@ class RoutinesFragment : Fragment() {
         setupNavigationResultListener()
 
         // Cargar rutinas cuando se abre la pantalla
-        loadRoutines()
+        loadRoutines() // CORREGIDO: Esto carga todas las rutinas, no las últimas usadas
     }
 
     private fun setupNavigationResultListener() {
-        // Escuchar resultados de navegación desde edición
         findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>(
             NavigationKeys.ROUTINE_UPDATED
         )?.observe(viewLifecycleOwner) { updated ->
@@ -126,10 +125,13 @@ class RoutinesFragment : Fragment() {
     private fun setupObservers() {
         setupRoutinesListObserver()
         setupUpdateObservers()
+
+        // NO agregues el observador para lastUsedRoutinesState aquí
+        // Solo HomeFragment necesita observar lastUsedRoutinesState
     }
 
     private fun setupRoutinesListObserver() {
-        // Observar lista de rutinas
+        // Observar lista de rutinas (TODAS las rutinas)
         routineViewModel.routinesListState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
@@ -140,13 +142,12 @@ class RoutinesFragment : Fragment() {
                             showEmptyState()
                         } else {
                             showRoutinesList()
-                            routineAdapter.submitList(routinesList.toList()) // Usa toList() para nueva instancia
+                            routineAdapter.submitList(routinesList.toList())
                         }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    // Verifica si es error 500 del servidor
                     val errorMsg = resource.message ?: "Error al cargar rutinas"
                     if (errorMsg.contains("500")) {
                         Log.e(TAG, "Error 500 del servidor, esperando 2 segundos...")
@@ -169,13 +170,11 @@ class RoutinesFragment : Fragment() {
         // Observador ÚNICO para todas las actualizaciones
         routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
             Log.d(TAG, "🔄 Evento de actualización recibido - Recargando lista")
-            // Pequeño delay para evitar conflictos con el servidor
             Handler(Looper.getMainLooper()).postDelayed({
                 loadRoutines()
             }, 500)
         }
 
-        // También observamos refreshTrigger por si acaso
         routineViewModel.refreshTrigger.observe(viewLifecycleOwner) {
             Log.d(TAG, "🔄 Refresh trigger recibido - Recargando lista")
             Handler(Looper.getMainLooper()).postDelayed({
@@ -218,7 +217,17 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
-        Toast.makeText(requireContext(), "Iniciar: ${routine.name}", Toast.LENGTH_SHORT).show()
+        // Marcar rutina como usada
+        routineViewModel.markRoutineAsUsed(routine.id)
+
+        Toast.makeText(
+            requireContext(),
+            "✅ Iniciando entrenamiento: ${routine.name}",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        // Aquí puedes agregar navegación a la pantalla de entrenamiento
+        // findNavController().navigate(R.id.navigation_workout)
     }
 
     private fun showLoading() {
@@ -250,7 +259,6 @@ class RoutinesFragment : Fragment() {
         Log.d(TAG, "🔄 Fragmento reanudado - Limpiando estados y recargando")
         routineViewModel.clearAllUpdateStates()
 
-        // Pequeño delay para evitar conflicto con otras operaciones
         Handler(Looper.getMainLooper()).postDelayed({
             loadRoutines()
         }, 300)
