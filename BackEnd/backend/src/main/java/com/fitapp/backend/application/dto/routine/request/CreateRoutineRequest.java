@@ -30,7 +30,7 @@ public class CreateRoutineRequest {
     
     @JsonProperty("sessionsPerWeek")
     @Min(value = 1, message = "La sesiones por semana no puede ser inferior a 1")
-    @Max(value = 7, message = "La sesiones por semana no puede ser superior a 17")
+    @Max(value = 7, message = "La sesiones por semana no puede ser superior a 7")
     private Integer sessionsPerWeek;
 
     @NotEmpty(message = "dias de entrenamiento son requeridos")
