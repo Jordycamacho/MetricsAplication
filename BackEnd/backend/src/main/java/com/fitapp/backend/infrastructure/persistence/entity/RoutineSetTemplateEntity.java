@@ -8,9 +8,11 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -29,7 +31,8 @@ public class RoutineSetTemplateEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "routine_exercise_id", nullable = false)
     private RoutineExerciseEntity routineExercise;
 
     private Integer position;        // Set visual (1,2,3)
@@ -41,6 +44,6 @@ public class RoutineSetTemplateEntity {
 
     private Integer restAfterSet;     // opcional
 
-    @OneToMany(mappedBy = "set", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "setTemplate", cascade = CascadeType.ALL)
     private List<RoutineSetParameterEntity> parameters;
 }

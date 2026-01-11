@@ -3,6 +3,7 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -21,9 +22,11 @@ public class RoutineSetParameterEntity {
     private Long id;
 
     @ManyToOne
-    private RoutineSetTemplateEntity set;
+    @JoinColumn(name = "set_template_id", nullable = false)
+    private RoutineSetTemplateEntity setTemplate;
 
     @ManyToOne
+    @JoinColumn(name = "parameter_id", nullable = false)
     private CustomParameterEntity parameter;
 
     // Objetivo (no valor real)
