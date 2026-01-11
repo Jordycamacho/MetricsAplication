@@ -290,6 +290,11 @@ public class ExercisePersistenceAdapter implements ExercisePersistencePort {
         return exerciseRepository.existsById(id);
     }
 
+    @Override
+    public Optional<ExerciseEntity> findEntityById(Long id) {
+        return exerciseRepository.findById(id);
+    }
+
     private Specification<ExerciseEntity> buildSpecification(ExerciseFilterRequest filters) {
         return ExerciseSpecification.withFilters(
                 filters.getSearch(),

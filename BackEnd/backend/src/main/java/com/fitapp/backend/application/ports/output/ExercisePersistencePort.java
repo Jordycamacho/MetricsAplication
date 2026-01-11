@@ -1,6 +1,7 @@
 package com.fitapp.backend.application.ports.output;
 
 import com.fitapp.backend.domain.model.ExerciseModel;
+import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.application.dto.exercise.request.ExerciseFilterRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,4 +31,7 @@ public interface ExercisePersistencePort {
     void incrementUsageCount(Long exerciseId);
     void addRating(Long exerciseId, Double rating);
     boolean existsById(Long id);
+    default Optional<ExerciseEntity> findEntityById(Long id) {
+        return Optional.empty();
+    }
 }
