@@ -1,57 +1,64 @@
 package com.fitapp.backend.application.dto.routine.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.util.List;
-
-import jakarta.validation.constraints.NotNull;
 
 @Data
 public class AddExerciseToRoutineRequest {
     
     @NotNull(message = "Exercise ID is required")
+    @JsonProperty("exerciseId")
     private Long exerciseId;
     
-    private Integer sessionNumber = 1; // Sesión a la que pertenece
+    @JsonProperty("sessionNumber")
+    private Integer sessionNumber = 1;
     
-    private String dayOfWeek; // Día específico (opcional)
-
-    private Integer sessionOrder; // Orden dentro de la sesión
+    @JsonProperty("dayOfWeek")
+    private String dayOfWeek;
     
-    private Integer restAfterExercise; // Descanso después del ejercicio
+    @JsonProperty("sessionOrder")
+    private Integer sessionOrder;
     
+    @JsonProperty("restAfterExercise")
+    private Integer restAfterExercise;
+    
+    @JsonProperty("targetParameters")
     private List<ExerciseParameterRequest> targetParameters;
     
+    @JsonProperty("sets")
     private List<SetTemplateRequest> sets;
     
     @Data
     public static class ExerciseParameterRequest {
-        @NotNull private Long parameterId;
-        private Double numericValue;
-        private Integer integerValue;
-        private Long durationValue;
-        private String stringValue;
-        private Double minValue;
-        private Double maxValue;
-        private Double defaultValue;
+        @NotNull @JsonProperty("parameterId") private Long parameterId;
+        @JsonProperty("numericValue") private Double numericValue;
+        @JsonProperty("integerValue") private Integer integerValue;
+        @JsonProperty("durationValue") private Long durationValue;
+        @JsonProperty("stringValue") private String stringValue;
+        @JsonProperty("minValue") private Double minValue;
+        @JsonProperty("maxValue") private Double maxValue;
+        @JsonProperty("defaultValue") private Double defaultValue;
     }
     
     @Data
     public static class SetTemplateRequest {
-        @NotNull private Integer position;
-        private String setType = "NORMAL";
-        private Integer restAfterSet;
-        private Integer subSetNumber;
-        private String groupId;
-        private List<SetParameterRequest> parameters;
+        @NotNull @JsonProperty("position") private Integer position;
+        @JsonProperty("setType") private String setType = "NORMAL";
+        @JsonProperty("restAfterSet") private Integer restAfterSet;
+        @JsonProperty("subSetNumber") private Integer subSetNumber;
+        @JsonProperty("groupId") private String groupId;
+        @JsonProperty("parameters") private List<SetParameterRequest> parameters;
     }
     
     @Data
     public static class SetParameterRequest {
-        @NotNull private Long parameterId;
-        private Double numericValue;
-        private Long durationValue;
-        private Integer integerValue;
-        private Double minValue;
-        private Double maxValue;
+        @NotNull @JsonProperty("parameterId") private Long parameterId;
+        @JsonProperty("numericValue") private Double numericValue;
+        @JsonProperty("durationValue") private Long durationValue;
+        @JsonProperty("integerValue") private Integer integerValue;
+        @JsonProperty("minValue") private Double minValue;
+        @JsonProperty("maxValue") private Double maxValue;
     }
 }

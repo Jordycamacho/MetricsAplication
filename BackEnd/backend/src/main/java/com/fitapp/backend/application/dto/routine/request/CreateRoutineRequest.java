@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,7 +32,6 @@ public class CreateRoutineRequest {
     @Max(value = 7, message = "La sesiones por semana no puede ser superior a 7")
     private Integer sessionsPerWeek;
 
-    @NotEmpty(message = "dias de entrenamiento son requeridos")
     @JsonProperty("trainingDays") 
     private List<String> trainingDays;
     

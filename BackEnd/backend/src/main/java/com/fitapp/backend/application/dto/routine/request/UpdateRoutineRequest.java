@@ -32,5 +32,5 @@ public class UpdateRoutineRequest {
     private Integer sessionsPerWeek;
     
     @JsonProperty("isActive")
-    private Boolean isActive;
+    private Boolean isActive = true;
 }

@@ -15,6 +15,7 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 @NoArgsConstructor
 public class RoutineExerciseResponse {
     private Long id;
+    private Long routineId;
     private Long exerciseId;
     private String exerciseName;
     private Integer position;
@@ -23,8 +24,6 @@ public class RoutineExerciseResponse {
     private Integer sessionOrder;
     private Integer restAfterExercise;
     private Integer sets;
-    private String targetReps;
-    private Double targetWeight;
     private List<RoutineExerciseParameterResponse> targetParameters;
     private List<RoutineSetTemplateResponse> setsTemplate;
 }

@@ -17,6 +17,8 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 public class RoutineSummaryResponse {
     private Long id;
     private String name;
+    private Long userId;
+    private String userName;
     private String description;
     private Long sportId;
     private String sportName;

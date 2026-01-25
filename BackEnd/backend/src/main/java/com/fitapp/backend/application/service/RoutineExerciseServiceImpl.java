@@ -126,7 +126,7 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
         }
         if (request.getDayOfWeek() != null) {
             try {
-                existingExercise.setDayOfWeek(DayOfWeek.valueOf(request.getDayOfWeek().toUpperCase()));
+                existingExercise.setDayOfWeek(DayOfWeek.valueOf(request.getDayOfWeek().name()));
             } catch (IllegalArgumentException e) {
                 log.warn("Día de la semana inválido: {}", request.getDayOfWeek());
             }

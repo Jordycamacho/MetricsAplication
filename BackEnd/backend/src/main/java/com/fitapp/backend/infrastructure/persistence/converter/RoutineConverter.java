@@ -386,9 +386,9 @@ public class RoutineConverter {
         routineExercise.setRestAfterExercise(request.getRestAfterExercise());
 
         // Configurar dayOfWeek si se proporciona
-        if (request.getDayOfWeek() != null && !request.getDayOfWeek().isEmpty()) {
+        if (request.getDayOfWeek() != null && !request.getDayOfWeek().toString().isEmpty()) {
             try {
-                DayOfWeek day = DayOfWeek.valueOf(request.getDayOfWeek().toUpperCase());
+                DayOfWeek day = DayOfWeek.valueOf(request.getDayOfWeek().toString());
                 routineExercise.setDayOfWeek(day);
             } catch (IllegalArgumentException e) {
                 log.warn("Día de la semana inválido: {}", request.getDayOfWeek());
