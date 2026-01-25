@@ -25,10 +25,6 @@ interface RoutineService {
     @DELETE("api/routines/{id}")
     suspend fun deleteRoutine(@Path("id") id: Long): Response<Unit>
 
-    // Gestión de ejercicios
-    @POST("api/routines/exercises")
-    suspend fun addExercisesToRoutine(@Body request: AddExercisesToRoutineRequest): Response<RoutineResponse>
-
     // Listados
     @GET("api/routines")
     suspend fun getRoutines(

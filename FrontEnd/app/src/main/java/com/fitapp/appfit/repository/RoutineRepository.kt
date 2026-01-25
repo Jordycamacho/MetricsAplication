@@ -59,18 +59,6 @@ class RoutineRepository {
         }
     }
 
-    // ==================== Gestión de ejercicios ====================
-
-    suspend fun addExercisesToRoutine(request: AddExercisesToRoutineRequest): Resource<RoutineResponse> {
-        return try {
-            Log.d(TAG, "Agregando ejercicios a rutina")
-            val response = routineService.addExercisesToRoutine(request)
-            handleResponse(response, "agregar ejercicios a rutina")
-        } catch (e: Exception) {
-            handleException(e, "agregar ejercicios a rutina")
-        }
-    }
-
     // ==================== Listados ====================
 
     suspend fun getRoutines(

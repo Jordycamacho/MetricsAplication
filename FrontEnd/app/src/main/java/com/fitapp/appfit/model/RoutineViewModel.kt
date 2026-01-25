@@ -240,33 +240,6 @@ class RoutineViewModel : ViewModel() {
         }
     }
 
-    fun addExercisesToRoutine(routineId: Long, exercises: List<ExerciseRequest>) {
-        _addExercisesState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val request = AddExercisesToRoutineRequest(
-                    routineId = routineId,
-                    exercises = exercises
-                )
-                val result = repository.addExercisesToRoutine(request)
-                _addExercisesState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Ejercicios agregados a rutina: $routineId")
-                        notifyAnyUpdate()
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error agregando ejercicios: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción agregando ejercicios: ${e.message}", e)
-                _addExercisesState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
-    }
 
     fun getRoutines(page: Int = 0, size: Int = 10, sortBy: String = "createdAt", sortDirection: String = "DESC") {
         _isLoading.value = true

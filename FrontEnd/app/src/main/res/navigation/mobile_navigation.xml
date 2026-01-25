@@ -39,6 +39,19 @@
         <action
             android:id="@+id/action_navigation_routines_to_navigation_edit_routine"
             app:destination="@id/navigation_edit_routine" />
+        <action
+            android:id="@+id/action_navigation_routines_to_add_exercises_to_routine"
+            app:destination="@id/navigation_add_exercises_to_routine" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_add_exercises_to_routine"
+        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesToRoutineFragment"
+        android:label="Agregar Ejercicios"
+        tools:layout="@layout/fragment_add_exercises_to_routine">
+        <argument
+            android:name="routineId"
+            app:argType="long" />
     </fragment>
 
     <fragment
@@ -126,9 +139,9 @@
 
     <fragment
         android:id="@+id/navigation_add_exercises"
-        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesFragment"
+        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesToRoutineFragment"
         android:label="@string/title_add_exercises"
-        tools:layout="@layout/fragment_add_exercises" />
+        tools:layout="@layout/fragment_add_exercises_to_routine" />
 
     <fragment
         android:id="@+id/navigation_edit_routine"

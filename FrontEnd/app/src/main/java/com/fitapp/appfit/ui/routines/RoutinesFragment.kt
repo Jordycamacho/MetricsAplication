@@ -48,9 +48,6 @@ class RoutinesFragment : Fragment() {
         setupClickListeners()
         setupObservers()
         setupNavigationResultListener()
-
-        // Cargar rutinas cuando se abre la pantalla
-        loadRoutines() // CORREGIDO: Esto carga todas las rutinas, no las últimas usadas
     }
 
     private fun setupNavigationResultListener() {
@@ -93,6 +90,9 @@ class RoutinesFragment : Fragment() {
             },
             onStartClick = { routine ->
                 startWorkout(routine)
+            },
+            onAddExercisesClick = { routine ->
+                addExercisesToRoutine(routine)
             }
         )
 
@@ -125,9 +125,11 @@ class RoutinesFragment : Fragment() {
     private fun setupObservers() {
         setupRoutinesListObserver()
         setupUpdateObservers()
+    }
 
-        // NO agregues el observador para lastUsedRoutinesState aquí
-        // Solo HomeFragment necesita observar lastUsedRoutinesState
+    private fun addExercisesToRoutine(routine: RoutineSummaryResponse) {
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToAddExercisesToRoutine(routine.id)
+        findNavController().navigate(action)
     }
 
     private fun setupRoutinesListObserver() {
@@ -200,7 +202,8 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun showRoutineDetail(routine: RoutineSummaryResponse) {
-        Toast.makeText(requireContext(), "Ver detalle: ${routine.name}", Toast.LENGTH_SHORT).show()
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToAddExercisesToRoutine(routine.id)
+        findNavController().navigate(action)
     }
 
     private fun editRoutine(routine: RoutineSummaryResponse) {
@@ -217,7 +220,6 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
-        // Marcar rutina como usada
         routineViewModel.markRoutineAsUsed(routine.id)
 
         Toast.makeText(
@@ -226,8 +228,6 @@ class RoutinesFragment : Fragment() {
             Toast.LENGTH_SHORT
         ).show()
 
-        // Aquí puedes agregar navegación a la pantalla de entrenamiento
-        // findNavController().navigate(R.id.navigation_workout)
     }
 
     private fun showLoading() {

@@ -38,6 +38,10 @@ class ExerciseAdapter(
         notifyItemRangeInserted(startPosition, newExercises.size)
     }
 
+    fun getExercises(): List<ExerciseResponse> {
+        return exercises.toList()
+    }
+
     fun clearExercises() {
         Log.d(TAG, "clearExercises: Limpiando lista")
         exercises.clear()

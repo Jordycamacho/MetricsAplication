@@ -1,4 +1,3 @@
-// com.fitapp.appfit.ui.routines.adapter/RoutineAdapter.kt
 package com.fitapp.appfit.ui.routines.adapter
 
 import android.view.LayoutInflater
@@ -10,7 +9,6 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -18,6 +16,7 @@ import java.time.temporal.ChronoUnit
 class RoutineAdapter(
     private val onItemClick: (RoutineSummaryResponse) -> Unit = {},
     private val onEditClick: (RoutineSummaryResponse) -> Unit = {},
+    private val onAddExercisesClick: (RoutineSummaryResponse) -> Unit = {},
     private val onStartClick: (RoutineSummaryResponse) -> Unit = {}
 ) : ListAdapter<RoutineSummaryResponse, RoutineAdapter.RoutineViewHolder>(RoutineDiffCallback()) {
 
@@ -42,6 +41,11 @@ class RoutineAdapter(
         holder.btnStart.setOnClickListener {
             onStartClick(routine)
         }
+
+        holder.btnAddExercises.setOnClickListener {
+            onAddExercisesClick(routine)
+        }
+
     }
 
     fun updateRoutines(newRoutines: List<RoutineSummaryResponse>) {
@@ -56,6 +60,8 @@ class RoutineAdapter(
         val tvDescription: TextView = itemView.findViewById(R.id.tv_routine_description)
         val btnEdit: TextView = itemView.findViewById(R.id.btn_edit)
         val btnStart: TextView = itemView.findViewById(R.id.btn_start_workout)
+
+        val btnAddExercises: TextView = itemView.findViewById(R.id.btn_add_exercises)
 
         fun bind(routine: RoutineSummaryResponse) {
             tvName.text = routine.name
