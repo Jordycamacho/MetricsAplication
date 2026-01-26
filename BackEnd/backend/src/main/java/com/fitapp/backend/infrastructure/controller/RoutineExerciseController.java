@@ -50,7 +50,6 @@ public class RoutineExerciseController {
         RoutineExerciseResponse response = routineExerciseUseCase.addExerciseToRoutine(
                 routineId, request, userEmail);
         
-        // Actualizar lastUsedAt de la rutina
         routineUseCase.markRoutineAsUsed(routineId, userEmail);
         
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -71,7 +70,6 @@ public class RoutineExerciseController {
         RoutineExerciseResponse response = routineExerciseUseCase.updateExerciseInRoutine(
                 routineId, exerciseId, request, userEmail);
         
-        // Actualizar lastUsedAt de la rutina
         routineUseCase.markRoutineAsUsed(routineId, userEmail);
         
         return ResponseEntity.ok(response);
@@ -88,8 +86,7 @@ public class RoutineExerciseController {
         String userEmail = jwt.getClaimAsString("email");
         
         routineExerciseUseCase.removeExerciseFromRoutine(routineId, exerciseId, userEmail);
-        
-        // Actualizar lastUsedAt de la rutina
+
         routineUseCase.markRoutineAsUsed(routineId, userEmail);
         
         return ResponseEntity.noContent().build();
@@ -138,8 +135,6 @@ public class RoutineExerciseController {
         String userEmail = jwt.getClaimAsString("email");
         
         routineExerciseUseCase.reorderExercises(routineId, exerciseIds, userEmail);
-        
-        // Actualizar lastUsedAt de la rutina
         routineUseCase.markRoutineAsUsed(routineId, userEmail);
         
         return ResponseEntity.noContent().build();

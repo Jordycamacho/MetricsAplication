@@ -181,7 +181,7 @@ public class RoutineConverter {
         return model;
     }
 
-    @Transactional
+    //@Transactional
     public RoutineEntity toEntity(RoutineModel domain) {
         log.debug("Convirtiendo RoutineModel a RoutineEntity: {}", domain.getId());
         
@@ -360,13 +360,11 @@ public class RoutineConverter {
         
         log.info("Agregando ejercicio {} a rutina {}", exercise.getId(), routine.getId());
         
-        // Determinar la siguiente posición disponible
         int nextPosition = routine.getExercises().stream()
                 .mapToInt(RoutineExerciseEntity::getPosition)
                 .max()
                 .orElse(0) + 1;
 
-        // Determinar el sessionOrder si no se proporciona
         Integer sessionOrder = request.getSessionOrder();
         if (sessionOrder == null) {
             sessionOrder = routine.getExercises().stream()
@@ -385,7 +383,6 @@ public class RoutineConverter {
         routineExercise.setSessionOrder(sessionOrder);
         routineExercise.setRestAfterExercise(request.getRestAfterExercise());
 
-        // Configurar dayOfWeek si se proporciona
         if (request.getDayOfWeek() != null && !request.getDayOfWeek().toString().isEmpty()) {
             try {
                 DayOfWeek day = DayOfWeek.valueOf(request.getDayOfWeek().toString());
@@ -396,7 +393,6 @@ public class RoutineConverter {
             }
         }
 
-        // Crear parámetros objetivo
         if (request.getTargetParameters() != null && !request.getTargetParameters().isEmpty()) {
             log.debug("Creando {} parámetros objetivo", request.getTargetParameters().size());
             List<RoutineExerciseParameterEntity> targetParams = request.getTargetParameters().stream()
@@ -407,7 +403,6 @@ public class RoutineConverter {
             routineExercise.setTargetParameters(new ArrayList<>());
         }
 
-        // Crear sets
         if (request.getSets() != null && !request.getSets().isEmpty()) {
             log.debug("Creando {} sets", request.getSets().size());
             List<RoutineSetTemplateEntity> sets = request.getSets().stream()
@@ -418,7 +413,6 @@ public class RoutineConverter {
             routineExercise.setSets(new ArrayList<>());
         }
 
-        // Agregar a la rutina
         routine.getExercises().add(routineExercise);
         
         log.info("Ejercicio agregado con éxito. Posición: {}, Sesión: {}", nextPosition, request.getSessionNumber());
