@@ -1,0 +1,57 @@
+package com.fitapp.backend.application.dto.RoutineSetParameter.response;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class RoutineSetParameterResponse {
+    
+    @JsonProperty("id")
+    private Long id;
+    
+    @JsonProperty("setTemplateId")
+    private Long setTemplateId;
+    
+    @JsonProperty("parameterId")
+    private Long parameterId;
+    
+    @JsonProperty("parameterName")
+    private String parameterName;
+    
+    @JsonProperty("parameterType")
+    private String parameterType;
+    
+    @JsonProperty("unit")
+    private String unit;
+    
+    @JsonProperty("numericValue")
+    private Double numericValue;
+    
+    @JsonProperty("durationValue")
+    private Long durationValue;
+    
+    @JsonProperty("integerValue")
+    private Integer integerValue;
+    
+    @JsonProperty("minValue")
+    private Double minValue;
+    
+    @JsonProperty("maxValue")
+    private Double maxValue;
+    
+    @JsonProperty("createdAt")
+    private LocalDateTime createdAt;
+    
+    @JsonProperty("updatedAt")
+    private LocalDateTime updatedAt;
+}

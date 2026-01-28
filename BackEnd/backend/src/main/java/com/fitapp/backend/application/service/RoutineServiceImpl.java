@@ -1,5 +1,7 @@
 package com.fitapp.backend.application.service;
 
+import com.fitapp.backend.application.dto.RoutineSetParameter.response.RoutineSetParameterResponse;
+import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.dto.page.PageResponse;
 import com.fitapp.backend.application.dto.routine.request.CreateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.request.RoutineFilterRequest;
@@ -7,8 +9,6 @@ import com.fitapp.backend.application.dto.routine.request.UpdateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.response.RoutineExerciseParameterResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineExerciseResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineSetParameterResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineStatisticsResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineSummaryResponse;
 import com.fitapp.backend.application.logging.RoutineServiceLogger;

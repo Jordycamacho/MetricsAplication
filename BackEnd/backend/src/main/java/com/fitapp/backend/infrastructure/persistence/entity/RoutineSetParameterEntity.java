@@ -29,7 +29,6 @@ public class RoutineSetParameterEntity {
     @JoinColumn(name = "parameter_id", nullable = false)
     private CustomParameterEntity parameter;
 
-    // Objetivo (no valor real)
     private Double numericValue;
     private Long durationValue;
     private Integer integerValue;

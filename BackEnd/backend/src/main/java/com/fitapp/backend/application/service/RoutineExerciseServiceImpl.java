@@ -10,11 +10,11 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fitapp.backend.application.dto.RoutineSetParameter.response.RoutineSetParameterResponse;
+import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.dto.routine.request.AddExerciseToRoutineRequest;
 import com.fitapp.backend.application.dto.routine.response.RoutineExerciseParameterResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineExerciseResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineSetParameterResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.ports.input.RoutineExerciseUseCase;
 import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutineExercisePersistencePort;

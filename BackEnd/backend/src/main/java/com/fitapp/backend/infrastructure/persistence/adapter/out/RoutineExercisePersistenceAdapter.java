@@ -127,4 +127,11 @@ public class RoutineExercisePersistenceAdapter implements RoutineExercisePersist
             return new ArrayList<>();
         }
     }
+
+    @Override
+    public Optional<RoutineExerciseModel> findById(Long id) {
+        log.debug("Buscando ejercicio de rutina por ID: {}", id);
+        return routineExerciseRepository.findById(id)
+                .map(routineConverter::convertRoutineExercise);
+    }
 }
