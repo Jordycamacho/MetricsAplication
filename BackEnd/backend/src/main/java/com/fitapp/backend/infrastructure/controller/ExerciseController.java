@@ -508,6 +508,6 @@ public class ExerciseController {
     private ExerciseResponse convertToResponse(com.fitapp.backend.domain.model.ExerciseModel model) {
         // Implementación de conversión (similar a la que ya tienes en tu código)
         // ...
-        return new ExerciseResponse(); // Placeholder
+        return new ExerciseResponse();
     }
 }

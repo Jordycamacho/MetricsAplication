@@ -42,10 +42,4 @@ public class RoutineSetTemplateResponse {
     
     @JsonProperty("parameters")
     private List<RoutineSetParameterResponse> parameters;
-    
-    @JsonProperty("createdAt")
-    private LocalDateTime createdAt;
-    
-    @JsonProperty("updatedAt")
-    private LocalDateTime updatedAt;
 }

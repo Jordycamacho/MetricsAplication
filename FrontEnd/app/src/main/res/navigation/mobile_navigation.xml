@@ -122,6 +122,16 @@
         </action>
     </fragment>
 
+    <fragment
+        android:id="@+id/navigation_configure_sets"
+        android:name="com.fitapp.appfit.ui.routines.sets.ConfigureSetsFragment"
+        android:label="Configurar Sets"
+        tools:layout="@layout/fragment_configure_sets">
+        <argument
+            android:name="routineExerciseId"
+            app:argType="long" />
+    </fragment>
+
     <!-- Nuevas secciones -->
 
     <fragment

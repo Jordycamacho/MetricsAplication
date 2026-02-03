@@ -1,5 +1,6 @@
 package com.fitapp.appfit.response.routine.response
 
+import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
 import com.google.gson.annotations.SerializedName
 
 data class RoutineExerciseResponse(
@@ -39,14 +40,4 @@ data class RoutineSetTemplateResponse(
     @SerializedName("setType") val setType: String?,
     @SerializedName("restAfterSet") val restAfterSet: Int?,
     @SerializedName("parameters") val parameters: List<RoutineSetParameterResponse>?
-)
-
-data class RoutineSetParameterResponse(
-    @SerializedName("id") val id: Long,
-    @SerializedName("parameterId") val parameterId: Long,
-    @SerializedName("numericValue") val numericValue: Double?,
-    @SerializedName("durationValue") val durationValue: Long?,
-    @SerializedName("integerValue") val integerValue: Int?,
-    @SerializedName("minValue") val minValue: Double?,
-    @SerializedName("maxValue") val maxValue: Double?
 )
