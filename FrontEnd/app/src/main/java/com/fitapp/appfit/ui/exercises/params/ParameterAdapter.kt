@@ -12,8 +12,9 @@ import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
 class ParameterAdapter(
     private var parameters: List<CustomParameterResponse> = emptyList(),
     private val onItemClick: (CustomParameterResponse) -> Unit,
-    private val onEditClick: (CustomParameterResponse) -> Unit,
-    private val onDeleteClick: (CustomParameterResponse) -> Unit
+    private val onEditClick: (CustomParameterResponse) -> Unit = {},
+    private val onDeleteClick: (CustomParameterResponse) -> Unit = {},
+    private val showActions: Boolean = true
 ) : RecyclerView.Adapter<ParameterAdapter.ParameterViewHolder>() {
 
     inner class ParameterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -43,34 +44,33 @@ class ParameterAdapter(
             // Categoría
             tvCategory.text = parameter.category ?: "Sin categoría"
 
-            // Visibilidad (GLOBAL vs PERSONAL)
+            // Visibilidad
             if (parameter.isGlobal && parameter.ownerId == null) {
-                // Parámetro global por defecto del sistema
-                tvVisibility.text = "🌍 Global (Sistema)"
-                tvVisibility.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
-                tvVisibility.visibility = View.VISIBLE
-
-                // Parámetros globales no se pueden editar/eliminar
-                btnEdit.visibility = View.GONE
-                btnDelete.visibility = View.GONE
+                tvVisibility.text = "Global (Sistema)"
             } else if (parameter.isGlobal) {
-                // Parámetro global creado por admin (raro, pero posible)
-                tvVisibility.text = "🌍 Global (Admin)"
-                tvVisibility.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
-                tvVisibility.visibility = View.VISIBLE
+                tvVisibility.text = "Global"
+            } else {
+                tvVisibility.text = "Personal"
+            }
+
+            // Controlar visibilidad de botones
+            if (showActions) {
+                if (parameter.isGlobal && parameter.ownerId == null) {
+                    btnEdit.visibility = View.GONE
+                    btnDelete.visibility = View.GONE
+                } else if (parameter.isGlobal) {
+                    btnEdit.visibility = View.GONE
+                    btnDelete.visibility = View.GONE
+                } else {
+                    btnEdit.visibility = View.VISIBLE
+                    btnDelete.visibility = View.VISIBLE
+                    btnEdit.setOnClickListener { onEditClick(parameter) }
+                    btnDelete.setOnClickListener { onDeleteClick(parameter) }
+                }
+            } else {
+                // En modo selección, ocultar botones
                 btnEdit.visibility = View.GONE
                 btnDelete.visibility = View.GONE
-            } else {
-                // Parámetro personal del usuario
-                tvVisibility.text = "👤 Personal (Tuyo)"
-                tvVisibility.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
-                tvVisibility.visibility = View.VISIBLE
-
-                // Parámetros personales SI se pueden editar/eliminar
-                btnEdit.visibility = View.VISIBLE
-                btnDelete.visibility = View.VISIBLE
-                btnEdit.setOnClickListener { onEditClick(parameter) }
-                btnDelete.setOnClickListener { onDeleteClick(parameter) }
             }
 
             // Click en toda la tarjeta

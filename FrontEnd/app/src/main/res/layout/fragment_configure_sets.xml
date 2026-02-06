@@ -364,12 +364,93 @@
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
+                    <!-- Sección de Parámetros del Set -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardBackgroundColor="@color/card_dark">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <!-- Header colapsable -->
+                            <LinearLayout
+                                android:id="@+id/layout_parameter_header"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:paddingBottom="12dp">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Parámetros del Set"
+                                    android:textColor="@color/gold_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <ImageView
+                                    android:id="@+id/iv_parameter_arrow"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@drawable/ic_arrow_down"
+                                    app:tint="@color/text_secondary_dark" />
+                            </LinearLayout>
+
+
+
+                            <!-- Parámetros seleccionados -->
+                            <TextView
+                                android:id="@+id/tv_no_selected_parameters"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="No hay parámetros seleccionados"
+                                android:textColor="@color/text_secondary_dark"
+                                android:textSize="14sp"
+                                android:textAlignment="center"
+                                android:padding="16dp" />
+
+                            <LinearLayout
+                                android:id="@+id/layout_selected_parameters"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:visibility="gone">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Parámetros seleccionados:"
+                                    android:textColor="@color/text_primary_dark"
+                                    android:textSize="14sp"
+                                    android:layout_marginBottom="8dp" />
+
+                                <com.google.android.material.chip.ChipGroup
+                                    android:id="@+id/chip_group_selected"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="12dp" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
                     <!-- Botones de acción -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:layout_marginTop="16dp">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_add_set"
@@ -377,22 +458,198 @@
                             android:layout_height="48dp"
                             android:layout_weight="1"
                             android:layout_marginEnd="8dp"
-                            android:text="Agregar Set"
+                            android:text="Crear Set"
                             android:textColor="@color/background_dark"
                             app:backgroundTint="@color/gold_primary"
                             app:cornerRadius="8dp" />
 
                         <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_advanced_params"
-                            android:layout_width="wrap_content"
+                            android:id="@+id/btn_add_to_set"
+                            android:layout_width="0dp"
                             android:layout_height="48dp"
-                            android:text="+ Parámetros"
+                            android:layout_weight="1"
+                            android:text="+ Agregar Parámetros"
                             android:textColor="@color/gold_primary"
                             app:backgroundTint="@android:color/transparent"
                             app:cornerRadius="8dp"
                             app:strokeColor="@color/gold_primary"
                             app:strokeWidth="1dp" />
                     </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Sección para agregar parámetros (inicialmente oculta) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layout_parameter_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/card_dark">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header con botón de cerrar -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Agregar Parámetros al Set"
+                            android:textColor="@color/gold_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageButton
+                            android:id="@+id/btn_close_parameters"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_close"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="@color/text_secondary_dark" />
+                    </LinearLayout>
+
+                    <!-- Buscador de parámetros -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="@color/surface_dark">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="8dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_search"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                app:tint="@color/text_secondary_dark" />
+
+                            <EditText
+                                android:id="@+id/et_parameter_search"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:hint="Buscar parámetros..."
+                                android:textColor="@color/text_primary_dark"
+                                android:textColorHint="@color/text_secondary_dark"
+                                android:background="@null"
+                                android:imeOptions="actionSearch"
+                                android:singleLine="true"
+                                android:maxLines="1" />
+
+                            <ImageButton
+                                android:id="@+id/btn_clear_search"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_close"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                android:visibility="gone"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                app:tint="@color/text_secondary_dark" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Filtros rápidos -->
+                    <com.google.android.material.chip.ChipGroup
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        app:singleSelection="false">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_all"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Todos"
+                            app:chipBackgroundColor="@color/gold_primary"
+                            app:chipStrokeColor="@color/gold_primary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_my"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mis parámetros"
+                            app:chipBackgroundColor="@color/gold_primary"
+                            app:chipStrokeColor="@color/gold_primary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_number"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Numéricos"
+                            app:chipBackgroundColor="@color/gold_primary"
+                            app:chipStrokeColor="@color/gold_primary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_integer"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Enteros"
+                            app:chipBackgroundColor="@color/gold_primary"
+                            app:chipStrokeColor="@color/gold_primary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_duration"
+                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Duración"
+                            app:chipBackgroundColor="@color/gold_primary"
+                            app:chipStrokeColor="@color/gold_primary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <!-- Lista de parámetros -->
+                    <TextView
+                        android:id="@+id/tv_no_parameters"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No hay parámetros disponibles"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="14sp"
+                        android:textAlignment="center"
+                        android:padding="16dp"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_parameters"
+                        android:layout_width="match_parent"
+                        android:layout_height="300dp"
+                        android:layout_marginBottom="12dp" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

@@ -52,6 +52,9 @@
         <argument
             android:name="routineId"
             app:argType="long" />
+        <action
+            android:id="@+id/action_addExercisesToRoutine_to_configureSets"
+            app:destination="@id/navigation_configure_sets" />
     </fragment>
 
     <fragment

@@ -33,12 +33,12 @@ class AddExercisesToRoutineFragment : Fragment() {
     private val routineViewModel: RoutineViewModel by viewModels()
 
     private lateinit var exerciseAdapter: ExerciseAdapter
-    private var selectedExercises = mutableListOf<ExerciseResponse>()
+    private var selectedExercise: ExerciseResponse? = null // 🔥 AHORA ES ÚNICO
     private var routineId: Long = 0
     private var currentSession = 1
     private var currentDay: String? = null
     private var routineDetails: RoutineResponse? = null
-    private var sortedTrainingDays: List<String> = emptyList() // Para almacenar días ordenados
+    private var sortedTrainingDays: List<String> = emptyList()
 
     companion object {
         private const val TAG = "AddExercisesToRoutine"
@@ -76,13 +76,13 @@ class AddExercisesToRoutineFragment : Fragment() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
-        binding.toolbar.title = "Agregar Ejercicios"
+        binding.toolbar.title = "Agregar Ejercicio"
     }
 
     private fun setupRecyclerView() {
         exerciseAdapter = ExerciseAdapter(
             onItemClick = { exercise ->
-                toggleExerciseSelection(exercise)
+                selectExercise(exercise) // 🔥 SELECCIÓN ÚNICA
             },
             onEditClick = {},
             onDeleteClick = { },
@@ -117,19 +117,15 @@ class AddExercisesToRoutineFragment : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 currentSession = position + 1
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Spinner de día - CORREGIDO
         binding.spinnerDay.onItemSelectedListener = object : OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position < sortedTrainingDays.size) {
                     currentDay = sortedTrainingDays[position]
-                    Log.d(TAG, "Día seleccionado: $currentDay")
                 }
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 currentDay = null
             }
@@ -156,32 +152,13 @@ class AddExercisesToRoutineFragment : Fragment() {
             loadExercises()
         }
 
-        binding.chipAll.setOnClickListener {
-            loadExercises()
-        }
-        binding.chipMy.setOnClickListener {
-            loadMyExercises()
-        }
-        binding.chipAvailable.setOnClickListener {
-            loadAvailableExercises()
-        }
+        binding.chipAll.setOnClickListener { loadExercises() }
+        binding.chipMy.setOnClickListener { loadMyExercises() }
+        binding.chipAvailable.setOnClickListener { loadAvailableExercises() }
 
-        binding.btnSelectAll.setOnClickListener {
-            val allExercises = exerciseAdapter.getExercises()
-            selectedExercises.clear()
-            selectedExercises.addAll(allExercises)
-            updateSelectionCount()
-            exerciseAdapter.notifyDataSetChanged()
-        }
-
-        binding.btnClearSelection.setOnClickListener {
-            selectedExercises.clear()
-            updateSelectionCount()
-            exerciseAdapter.notifyDataSetChanged()
-        }
-
-        binding.btnAddExercises.setOnClickListener {
-            addSelectedExercises()
+        // 🔥 NUEVO BOTÓN PARA AGREGAR
+        binding.btnAddExercise.setOnClickListener {
+            addExerciseToRoutine()
         }
     }
 
@@ -190,19 +167,15 @@ class AddExercisesToRoutineFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let { pageResponse ->
-                        pageResponse.content?.let { exercises ->
-                            exerciseAdapter.setExercises(exercises)
-                        }
+                    resource.data?.content?.let { exercises ->
+                        exerciseAdapter.setExercises(exercises)
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
                     Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
-                is Resource.Loading -> {
-                    showLoading()
-                }
+                is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
@@ -218,39 +191,38 @@ class AddExercisesToRoutineFragment : Fragment() {
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "Error cargando rutina: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
-                is Resource.Loading -> {
-                    showLoading()
-                }
+                is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
 
+        // 🔥 OBSERVER PARA AGREGAR EJERCICIO
         routineExerciseViewModel.addExerciseState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "Ejercicios agregados exitosamente", Toast.LENGTH_SHORT).show()
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        findNavController().navigateUp()
-                    }, 500)
+                    resource.data?.let { routineExercise ->
+                        Toast.makeText(requireContext(), "✅ Ejercicio agregado", Toast.LENGTH_SHORT).show()
+
+                        // 🔥 NAVEGAR A CONFIGURAR SETS
+                        val action = AddExercisesToRoutineFragmentDirections
+                            .actionAddExercisesToRoutineToConfigureSets(routineExercise.id)
+                        findNavController().navigate(action)
+                    }
                 }
                 is Resource.Error -> {
                     hideLoading()
                     Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
-                is Resource.Loading -> {
-                    showLoading()
-                }
+                is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
     }
 
     private fun setupRoutineConfiguration(routine: RoutineResponse) {
-        Log.d(TAG, "Configurando rutina: ${routine.name}")
-
         val sessionsPerWeek = routine.sessionsPerWeek ?: 3
         val sessions = (1..sessionsPerWeek).map { "Sesión $it" }
         val sessionAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sessions)
@@ -259,7 +231,6 @@ class AddExercisesToRoutineFragment : Fragment() {
 
         routine.trainingDays?.let { days ->
             if (days.isNotEmpty()) {
-                // Ordenar días de la semana
                 sortedTrainingDays = days.sortedBy { day ->
                     when (day) {
                         "MONDAY" -> 1
@@ -274,22 +245,16 @@ class AddExercisesToRoutineFragment : Fragment() {
                 }
 
                 val dayMap = mapOf(
-                    "MONDAY" to "Lunes",
-                    "TUESDAY" to "Martes",
-                    "WEDNESDAY" to "Miércoles",
-                    "THURSDAY" to "Jueves",
-                    "FRIDAY" to "Viernes",
-                    "SATURDAY" to "Sábado",
-                    "SUNDAY" to "Domingo"
+                    "MONDAY" to "Lunes", "TUESDAY" to "Martes", "WEDNESDAY" to "Miércoles",
+                    "THURSDAY" to "Jueves", "FRIDAY" to "Viernes", "SATURDAY" to "Sábado", "SUNDAY" to "Domingo"
                 )
 
                 val spanishDays = sortedTrainingDays.map { day -> dayMap[day] ?: day }
                 val dayAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, spanishDays)
                 binding.spinnerDay.adapter = dayAdapter
-
                 binding.rbByDay.isEnabled = true
 
-                if (days.size > 0) {
+                if (days.isNotEmpty()) {
                     binding.rbByDay.isChecked = true
                     binding.layoutSession.visibility = View.GONE
                     binding.layoutDay.visibility = View.VISIBLE
@@ -297,29 +262,18 @@ class AddExercisesToRoutineFragment : Fragment() {
             } else {
                 binding.rbByDay.isEnabled = false
                 binding.rbBySession.isChecked = true
-                binding.layoutSession.visibility = View.VISIBLE
-                binding.layoutDay.visibility = View.GONE
             }
-        } ?: run {
-            binding.rbByDay.isEnabled = false
-            binding.rbBySession.isChecked = true
-            binding.layoutSession.visibility = View.VISIBLE
-            binding.layoutDay.visibility = View.GONE
         }
 
         binding.etSessionOrder.setText("1")
         binding.etRestAfter.setText("60")
-
-        Log.d(TAG, "Rutina configurada: $sessionsPerWeek sesiones, días: ${routine.trainingDays?.size ?: 0}")
     }
 
     private fun loadExercises() {
         val searchText = binding.etSearch.text.toString()
         val filterRequest = ExerciseFilterRequest(
             search = if (searchText.isNotEmpty()) searchText else null,
-            page = 0,
-            size = 50,
-            sortBy = "name",
+            page = 0, size = 50, sortBy = "name",
             direction = ExerciseFilterRequest.SortDirection.ASC
         )
         exerciseViewModel.searchExercises(filterRequest)
@@ -327,53 +281,41 @@ class AddExercisesToRoutineFragment : Fragment() {
     }
 
     private fun loadMyExercises() {
-        val searchText = binding.etSearch.text.toString()
         val filterRequest = ExerciseFilterRequest(
-            search = if (searchText.isNotEmpty()) searchText else null,
-            page = 0,
-            size = 50,
-            sortBy = "name",
+            search = binding.etSearch.text.toString().takeIf { it.isNotEmpty() },
+            page = 0, size = 50, sortBy = "name",
             direction = ExerciseFilterRequest.SortDirection.ASC
         )
         exerciseViewModel.searchMyExercises(filterRequest)
     }
 
     private fun loadAvailableExercises() {
-        val searchText = binding.etSearch.text.toString()
         val filterRequest = ExerciseFilterRequest(
-            search = if (searchText.isNotEmpty()) searchText else null,
-            page = 0,
-            size = 50,
-            sortBy = "name",
+            search = binding.etSearch.text.toString().takeIf { it.isNotEmpty() },
+            page = 0, size = 50, sortBy = "name",
             direction = ExerciseFilterRequest.SortDirection.ASC
         )
         exerciseViewModel.searchAvailableExercises(filterRequest)
     }
 
-    private fun toggleExerciseSelection(exercise: ExerciseResponse) {
-        if (selectedExercises.contains(exercise)) {
-            selectedExercises.remove(exercise)
-        } else {
-            selectedExercises.add(exercise)
-        }
-        updateSelectionCount()
+    // 🔥 SELECCIÓN ÚNICA DE EJERCICIO
+    private fun selectExercise(exercise: ExerciseResponse) {
+        selectedExercise = exercise
+        binding.btnAddExercise.visibility = View.VISIBLE
+        binding.btnAddExercise.text = "Agregar: ${exercise.name}"
+        Toast.makeText(requireContext(), "Seleccionado: ${exercise.name}", Toast.LENGTH_SHORT).show()
     }
 
-    private fun updateSelectionCount() {
-        binding.tvSelectedCount.text = selectedExercises.size.toString()
-        binding.btnAddExercises.text = "Agregar (${selectedExercises.size})"
-        binding.btnAddExercises.isEnabled = selectedExercises.isNotEmpty()
-    }
-
-    private fun addSelectedExercises() {
-        if (selectedExercises.isEmpty()) {
-            Toast.makeText(requireContext(), "Selecciona al menos un ejercicio", Toast.LENGTH_SHORT).show()
+    // 🔥 AGREGAR EJERCICIO A LA RUTINA
+    private fun addExerciseToRoutine() {
+        val exercise = selectedExercise
+        if (exercise == null) {
+            Toast.makeText(requireContext(), "Selecciona un ejercicio primero", Toast.LENGTH_SHORT).show()
             return
         }
 
         val sessionOrder = binding.etSessionOrder.text.toString().toIntOrNull() ?: 1
         val restAfterExercise = binding.etRestAfter.text.toString().toIntOrNull() ?: 60
-
         val sessionNumber = if (binding.rbBySession.isChecked) currentSession else null
         val dayOfWeek = if (binding.rbByDay.isChecked) currentDay else null
 
@@ -382,33 +324,28 @@ class AddExercisesToRoutineFragment : Fragment() {
             return
         }
 
-        val exercisesWithRequests = selectedExercises.mapIndexed { index, exercise ->
-            val request = AddExerciseToRoutineRequest(
-                exerciseId = exercise.id,
-                sessionNumber = sessionNumber,
-                dayOfWeek = dayOfWeek,
-                sessionOrder = sessionOrder + index,
-                restAfterExercise = restAfterExercise,
-                targetParameters = null,
-                sets = null
-            )
-            exercise to request
-        }
+        val request = AddExerciseToRoutineRequest(
+            exerciseId = exercise.id,
+            sessionNumber = sessionNumber,
+            dayOfWeek = dayOfWeek,
+            sessionOrder = sessionOrder,
+            restAfterExercise = restAfterExercise,
+            targetParameters = null,
+            sets = null // 🔥 SIN SETS, SE CONFIGURAN DESPUÉS
+        )
 
-        showLoading()
-        Toast.makeText(requireContext(), "Agregando ${selectedExercises.size} ejercicios...", Toast.LENGTH_SHORT).show()
-
-        routineExerciseViewModel.addMultipleExercisesToRoutine(routineId, exercisesWithRequests)
+        Log.d(TAG, "Agregando ejercicio ${exercise.name} a rutina $routineId")
+        routineExerciseViewModel.addExerciseToRoutine(routineId, request)
     }
 
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
-        binding.btnAddExercises.isEnabled = false
+        binding.btnAddExercise.isEnabled = false
     }
 
     private fun hideLoading() {
         binding.progressBar.visibility = View.GONE
-        binding.btnAddExercises.isEnabled = selectedExercises.isNotEmpty()
+        binding.btnAddExercise.isEnabled = true
     }
 
     override fun onDestroyView() {

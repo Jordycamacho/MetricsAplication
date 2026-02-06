@@ -439,7 +439,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Contador de seleccionados -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -451,51 +450,24 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
+                    android:orientation="vertical"
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Seleccionados:"
-                        android:textColor="@color/text_primary_dark"
+                        android:text="Selecciona un ejercicio"
+                        android:textColor="@color/gold_primary"
                         android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
 
                     <TextView
-                        android:id="@+id/tv_selected_count"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/gold_primary"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:layout_marginEnd="16dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_select_all"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:text="TODOS"
-                        android:textSize="12sp"
-                        android:textColor="@color/background_dark"
-                        app:backgroundTint="@color/gold_primary"
-                        app:cornerRadius="18dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_clear_selection"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:text="LIMPIAR"
-                        android:textSize="12sp"
-                        android:textColor="@color/gold_primary"
-                        app:backgroundTint="@android:color/transparent"
-                        app:cornerRadius="18dp"
-                        app:strokeColor="@color/gold_primary"
-                        app:strokeWidth="1dp"
-                        android:layout_marginStart="8dp" />
+                        android:text="Toca un ejercicio para agregarlo a la rutina y luego configura sus sets"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="14sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -520,17 +492,17 @@
 
     <!-- Botón flotante para agregar -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/btn_add_exercises"
+        android:id="@+id/btn_add_exercise"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="50dp"
-        android:text="Agregar (0)"
+        android:text="Siguiente"
         android:icon="@drawable/ic_add"
         app:iconTint="@color/background_dark"
         app:backgroundTint="@color/gold_primary"
         android:elevation="8dp"
-        android:enabled="false" />
+        android:visibility="gone" />
 
     <!-- Progress bar -->
     <ProgressBar

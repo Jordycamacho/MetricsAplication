@@ -7,17 +7,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
-import com.fitapp.appfit.databinding.FragmentConfigureSetsBinding
+import com.fitapp.appfit.databinding.*
+import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.model.RoutineSetTemplateViewModel
+import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
+import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
 import com.fitapp.appfit.response.routine.request.SetParameterRequest
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.response.sets.request.CreateSetTemplateRequest
+import com.fitapp.appfit.response.sets.request.UpdateSetParameterRequest
+import com.fitapp.appfit.response.sets.request.UpdateSetTemplateRequest
+import com.fitapp.appfit.ui.parameters.adapter.ParameterAdapter
 import com.fitapp.appfit.utils.Resource
 import kotlin.properties.Delegates
 
@@ -28,9 +36,12 @@ class ConfigureSetsFragment : Fragment() {
 
     private val args: ConfigureSetsFragmentArgs by navArgs()
     private val setTemplateViewModel: RoutineSetTemplateViewModel by viewModels()
+    private val parameterViewModel: ParameterViewModel by viewModels()
 
     private var routineExerciseId by Delegates.notNull<Long>()
     private var currentSets = mutableListOf<RoutineSetTemplateResponse>()
+    private var selectedSetId: Long? = null // Set seleccionado para agregar parámetros
+    private lateinit var parameterAdapter: ParameterAdapter
 
     companion object {
         private const val TAG = "ConfigureSetsFragment"
@@ -58,9 +69,11 @@ class ConfigureSetsFragment : Fragment() {
 
         setupToolbar()
         setupSpinners()
+        setupRecyclerView()
         setupListeners()
         setupObservers()
         loadExistingSets()
+        setupParameterSearch()
     }
 
     private fun setupToolbar() {
@@ -71,7 +84,6 @@ class ConfigureSetsFragment : Fragment() {
     }
 
     private fun setupSpinners() {
-        // Configurar spinner de tipos de set
         val setTypeAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -80,28 +92,50 @@ class ConfigureSetsFragment : Fragment() {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
         binding.spinnerSetType.adapter = setTypeAdapter
-        binding.spinnerSetType.setSelection(0) // NORMAL por defecto
+        binding.spinnerSetType.setSelection(0)
+    }
+
+    private fun setupRecyclerView() {
+        parameterAdapter = ParameterAdapter(
+            onItemClick = { parameter ->
+                showAddParameterDialog(parameter)
+            },
+            onEditClick = { /* No necesitamos editar aquí */ },
+            onDeleteClick = { /* No necesitamos eliminar aquí */ },
+            showActions = false
+        )
+
+        binding.recyclerParameters.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = parameterAdapter
+        }
     }
 
     private fun setupListeners() {
-        // Botón para agregar set
         binding.btnAddSet.setOnClickListener {
             addSet()
         }
 
-        // Botón para guardar todos los sets
         binding.btnSaveAll.setOnClickListener {
             saveAllSets()
         }
 
-        // Botón para limpiar todos los sets
         binding.btnClearAll.setOnClickListener {
             clearAllSets()
         }
 
-        // Botón para configurar parámetros avanzados
-        binding.btnAdvancedParams.setOnClickListener {
-            showAdvancedParamsDialog()
+        // Botón para agregar parámetros a un set existente
+        binding.btnAddToSet.setOnClickListener {
+            if (selectedSetId == null) {
+                Toast.makeText(requireContext(), "Selecciona un set primero", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            loadAllParameters()
+            binding.layoutParameterSection.visibility = View.VISIBLE
+        }
+
+        binding.btnCloseParameters.setOnClickListener {
+            binding.layoutParameterSection.visibility = View.GONE
         }
     }
 
@@ -114,17 +148,19 @@ class ConfigureSetsFragment : Fragment() {
                     resource.data?.let { setResponse ->
                         currentSets.add(setResponse)
                         updateSetsList()
-                        Toast.makeText(requireContext(), "Set agregado exitosamente", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "✅ Set creado", Toast.LENGTH_SHORT).show()
                         clearForm()
+                        // Seleccionar automáticamente el nuevo set para agregar parámetros
+                        selectedSetId = setResponse.id
+                        loadAllParameters()
+                        binding.layoutParameterSection.visibility = View.VISIBLE
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
-                is Resource.Loading -> {
-                    showLoading()
-                }
+                is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
@@ -138,40 +174,113 @@ class ConfigureSetsFragment : Fragment() {
                         currentSets.clear()
                         currentSets.addAll(sets)
                         updateSetsList()
+                        if (sets.isNotEmpty()) {
+                            // Seleccionar el primer set por defecto
+                            selectedSetId = sets.first().id
+                        }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
                     Log.e(TAG, "Error cargando sets: ${resource.message}")
                 }
-                is Resource.Loading -> {
-                    showLoading()
-                }
+                is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
 
-        // NUEVO: Observar eliminación de sets por ejercicio
+        // Observar eliminación de sets
         setTemplateViewModel.deleteSetTemplatesByExerciseState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
                     currentSets.clear()
                     updateSetsList()
-                    Toast.makeText(requireContext(), "Todos los sets eliminados", Toast.LENGTH_SHORT).show()
-                    setTemplateViewModel.clearDeleteByExerciseState()
+                    selectedSetId = null
+                    binding.layoutParameterSection.visibility = View.GONE
+                    Toast.makeText(requireContext(), "✅ Todos los sets eliminados", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "Error al eliminar sets: ${resource.message}", Toast.LENGTH_SHORT).show()
-                    setTemplateViewModel.clearDeleteByExerciseState()
+                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
-                is Resource.Loading -> {
-                    showLoading()
-                }
+                is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
+
+        // Observar actualización de set (para agregar parámetros)
+        setTemplateViewModel.updateSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    hideLoading()
+                    resource.data?.let { updatedSet ->
+                        // Actualizar la lista de sets
+                        val index = currentSets.indexOfFirst { it.id == updatedSet.id }
+                        if (index != -1) {
+                            currentSets[index] = updatedSet
+                            updateSetsList()
+                        }
+                        Toast.makeText(requireContext(), "✅ Parámetro agregado", Toast.LENGTH_SHORT).show()
+                        binding.layoutParameterSection.visibility = View.GONE
+                    }
+                }
+                is Resource.Error -> {
+                    hideLoading()
+                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                }
+                is Resource.Loading -> showLoading()
+                else -> {}
+            }
+        })
+
+        // Observar parámetros disponibles
+        parameterViewModel.allParametersState.observe(viewLifecycleOwner, Observer { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    hideLoading()
+                    resource.data?.let { pageResponse ->
+                        val parameters = pageResponse.content
+                        if (parameters.isEmpty()) {
+                            binding.tvNoParameters.visibility = View.VISIBLE
+                            binding.recyclerParameters.visibility = View.GONE
+                        } else {
+                            binding.tvNoParameters.visibility = View.GONE
+                            binding.recyclerParameters.visibility = View.VISIBLE
+                            parameterAdapter.updateList(parameters)
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    hideLoading()
+                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                }
+                is Resource.Loading -> showLoading()
+                else -> {}
+            }
+        })
+    }
+
+    private fun setupParameterSearch() {
+        binding.etParameterSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                performParameterSearch()
+                true
+            } else {
+                false
+            }
+        }
+
+        binding.btnClearSearch.setOnClickListener {
+            binding.etParameterSearch.text.clear()
+            loadAllParameters()
+        }
+
+        binding.chipAll.setOnClickListener { loadAllParameters() }
+        binding.chipMy.setOnClickListener { loadMyParameters() }
+        binding.chipNumber.setOnClickListener { loadParametersByType("NUMBER") }
+        binding.chipInteger.setOnClickListener { loadParametersByType("INTEGER") }
+        binding.chipDuration.setOnClickListener { loadParametersByType("DURATION") }
     }
 
     private fun loadExistingSets() {
@@ -185,25 +294,7 @@ class ConfigureSetsFragment : Fragment() {
         val subSetNumber = binding.etSubSetNumber.text.toString().toIntOrNull()
         val groupId = binding.etGroupId.text.toString().takeIf { it.isNotEmpty() }
 
-        // Crear parámetros básicos (repeticiones y peso por ahora)
-        val parameters = mutableListOf<SetParameterRequest>()
-
-        val reps = binding.etReps.text.toString().toIntOrNull()
-        if (reps != null) {
-            parameters.add(SetParameterRequest(
-                parameterId = 1, // ID de repeticiones (ajustar según tu DB)
-                integerValue = reps
-            ))
-        }
-
-        val weight = binding.etWeight.text.toString().toDoubleOrNull()
-        if (weight != null) {
-            parameters.add(SetParameterRequest(
-                parameterId = 2, // ID de peso (ajustar según tu DB)
-                numericValue = weight
-            ))
-        }
-
+        // Crear set básico (sin parámetros iniciales)
         val request = CreateSetTemplateRequest(
             routineExerciseId = routineExerciseId,
             position = position,
@@ -211,11 +302,112 @@ class ConfigureSetsFragment : Fragment() {
             restAfterSet = restAfterSet,
             subSetNumber = subSetNumber,
             groupId = groupId,
-            parameters = if (parameters.isNotEmpty()) parameters else null
+            parameters = null // Sin parámetros iniciales
         )
 
-        Log.d(TAG, "Creando set: posición=$position, tipo=$setType, reps=$reps, weight=$weight")
+        Log.d(TAG, "Creando set básico: posición=$position, tipo=$setType")
         setTemplateViewModel.createSetTemplate(request)
+    }
+
+    private fun showAddParameterDialog(parameter: CustomParameterResponse) {
+        val dialogBinding = DialogAddParameterBinding.inflate(layoutInflater)
+
+        dialogBinding.tvParameterName.text = parameter.displayName ?: parameter.name
+        dialogBinding.tvParameterType.text = "Tipo: ${parameter.parameterType}"
+        if (!parameter.unit.isNullOrEmpty()) {
+            dialogBinding.tvParameterUnit.text = "Unidad: ${parameter.unit}"
+            dialogBinding.tvParameterUnit.visibility = View.VISIBLE
+        }
+
+        // Configurar campos según el tipo de parámetro
+        when (parameter.parameterType) {
+            "NUMBER", "DISTANCE", "PERCENTAGE" -> {
+                dialogBinding.layoutNumericValue.visibility = View.VISIBLE
+            }
+            "INTEGER" -> {
+                dialogBinding.layoutIntegerValue.visibility = View.VISIBLE
+            }
+            "DURATION" -> {
+                dialogBinding.layoutDurationValue.visibility = View.VISIBLE
+            }
+            else -> {
+                dialogBinding.layoutNumericValue.visibility = View.VISIBLE
+                dialogBinding.layoutNumericValue.hint = "Valor"
+            }
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setView(dialogBinding.root)
+            .setTitle("Agregar ${parameter.displayName ?: parameter.name}")
+            .setPositiveButton("Agregar") { dialog, _ ->
+                addParameterToSet(parameter, dialogBinding)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun addParameterToSet(parameter: CustomParameterResponse, binding: DialogAddParameterBinding) {
+        val setId = selectedSetId
+        if (setId == null) {
+            Toast.makeText(requireContext(), "No hay set seleccionado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Obtener el set actual
+        val currentSet = currentSets.find { it.id == setId }
+        if (currentSet == null) {
+            Toast.makeText(requireContext(), "Set no encontrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Crear el nuevo parámetro
+        val newParameter = UpdateSetParameterRequest(
+            id = null, // Nuevo parámetro
+            parameterId = parameter.id,
+            numericValue = when (parameter.parameterType) {
+                "NUMBER", "DISTANCE", "PERCENTAGE" ->
+                    binding.etNumericValue.text.toString().toDoubleOrNull()
+                else -> null
+            },
+            integerValue = when (parameter.parameterType) {
+                "INTEGER" -> binding.etIntegerValue.text.toString().toIntOrNull()
+                else -> null
+            },
+            durationValue = when (parameter.parameterType) {
+                "DURATION" -> binding.etDurationValue.text.toString().toLongOrNull()
+                else -> null
+            },
+            minValue = binding.etMinValue.text.toString().toDoubleOrNull(),
+            maxValue = binding.etMaxValue.text.toString().toDoubleOrNull()
+        )
+
+        // Crear lista actualizada de parámetros
+        val currentParameters = currentSet.parameters?.map { param ->
+            UpdateSetParameterRequest(
+                id = param.id,
+                parameterId = param.parameterId,
+                numericValue = param.numericValue,
+                integerValue = param.integerValue,
+                durationValue = param.durationValue,
+                minValue = param.minValue,
+                maxValue = param.maxValue
+            )
+        }?.toMutableList() ?: mutableListOf()
+
+        currentParameters.add(newParameter)
+
+        // Actualizar el set
+        val updateRequest = UpdateSetTemplateRequest(
+            position = currentSet.position,
+            subSetNumber = currentSet.subSetNumber,
+            groupId = currentSet.groupId,
+            setType = currentSet.setType,
+            restAfterSet = currentSet.restAfterSet,
+            parameters = currentParameters
+        )
+
+        setTemplateViewModel.updateSetTemplate(setId, updateRequest)
     }
 
     private fun saveAllSets() {
@@ -224,49 +416,120 @@ class ConfigureSetsFragment : Fragment() {
             return
         }
 
-        Toast.makeText(requireContext(), "${currentSets.size} sets guardados", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "✅ ${currentSets.size} sets configurados", Toast.LENGTH_SHORT).show()
         findNavController().navigateUp()
     }
 
     private fun clearAllSets() {
-        setTemplateViewModel.deleteSetTemplatesByRoutineExercise(routineExerciseId)
-        // No limpiamos currentSets aquí, lo hacemos en el observer cuando sea exitoso
+        AlertDialog.Builder(requireContext())
+            .setTitle("Eliminar Todos los Sets")
+            .setMessage("¿Estás seguro de que quieres eliminar todos los sets de este ejercicio?")
+            .setPositiveButton("Eliminar") { dialog, _ ->
+                setTemplateViewModel.deleteSetTemplatesByRoutineExercise(routineExerciseId)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
-    private fun showAdvancedParamsDialog() {
-        // Implementar diálogo para parámetros avanzados
-        Toast.makeText(requireContext(), "Parámetros avanzados - Próximamente", Toast.LENGTH_SHORT).show()
+    private fun loadAllParameters() {
+        val searchQuery = binding.etParameterSearch.text.toString().trim()
+        val filterRequest = CustomParameterFilterRequest(
+            search = if (searchQuery.isNotEmpty()) searchQuery else null,
+            page = 0,
+            size = 50,
+            sortBy = "name",
+            direction = "ASC"
+        )
+        parameterViewModel.searchAllParameters(filterRequest)
+    }
+
+    private fun loadMyParameters() {
+        val searchQuery = binding.etParameterSearch.text.toString().trim()
+        val filterRequest = CustomParameterFilterRequest(
+            search = if (searchQuery.isNotEmpty()) searchQuery else null,
+            page = 0,
+            size = 50,
+            sortBy = "name",
+            direction = "ASC",
+            onlyMine = true
+        )
+        parameterViewModel.searchMyParameters(filterRequest)
+    }
+
+    private fun loadParametersByType(type: String) {
+        val searchQuery = binding.etParameterSearch.text.toString().trim()
+        val filterRequest = CustomParameterFilterRequest(
+            search = if (searchQuery.isNotEmpty()) searchQuery else null,
+            page = 0,
+            size = 50,
+            sortBy = "name",
+            direction = "ASC",
+            parameterType = type
+        )
+        parameterViewModel.searchAllParameters(filterRequest)
+    }
+
+    private fun performParameterSearch() {
+        val query = binding.etParameterSearch.text.toString().trim()
+        binding.btnClearSearch.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+        loadAllParameters()
     }
 
     private fun updateSetsList() {
-        val setsText = currentSets.joinToString("\n") { set ->
-            "Set ${set.position}: ${set.setType} (Reps: ${getRepsFromSet(set)}, Peso: ${getWeightFromSet(set)})"
+        if (currentSets.isEmpty()) {
+            binding.tvSetsList.text = "No hay sets configurados"
+            binding.tvSetCount.text = "Sets: 0"
+            return
         }
 
-        binding.tvSetsList.text = if (currentSets.isNotEmpty()) {
-            setsText
-        } else {
-            "No hay sets configurados"
+        val setsText = currentSets.joinToString("\n\n") { set ->
+            val isSelected = set.id == selectedSetId
+            val params = if (set.parameters.isNullOrEmpty()) {
+                "Sin parámetros"
+            } else {
+                set.parameters!!.joinToString(", ") { param ->
+                    "${param.parameterName ?: "Parámetro"}: ${param.numericValue ?: param.integerValue ?: param.durationValue ?: "-"}"
+                }
+            }
+            val prefix = if (isSelected) "▶ " else "○ "
+            "$prefix Set ${set.position}: ${set.setType}\n   $params"
         }
 
+        binding.tvSetsList.text = setsText
         binding.tvSetCount.text = "Sets: ${currentSets.size}"
+
+        // Hacer clickable la lista de sets
+        binding.tvSetsList.setOnClickListener {
+            showSelectSetDialog()
+        }
     }
 
-    private fun getRepsFromSet(set: RoutineSetTemplateResponse): String {
-        return set.parameters?.find { it.parameterName?.contains("rep", ignoreCase = true) == true }
-            ?.integerValue?.toString() ?: "-"
-    }
+    private fun showSelectSetDialog() {
+        if (currentSets.isEmpty()) {
+            Toast.makeText(requireContext(), "No hay sets para seleccionar", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-    private fun getWeightFromSet(set: RoutineSetTemplateResponse): String {
-        return set.parameters?.find { it.parameterName?.contains("peso", ignoreCase = true) == true }
-            ?.numericValue?.toString() ?: "-"
+        val setsArray = currentSets.map { "Set ${it.position}: ${it.setType}" }.toTypedArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Seleccionar Set")
+            .setItems(setsArray) { dialog, which ->
+                selectedSetId = currentSets[which].id
+                updateSetsList()
+                Toast.makeText(requireContext(), "Set ${which + 1} seleccionado", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun clearForm() {
         binding.etSetPosition.text?.clear()
-        binding.etReps.text?.clear()
-        binding.etWeight.text?.clear()
+        binding.etSetPosition.setText("1")
         binding.etRestAfterSet.text?.clear()
+        binding.etRestAfterSet.setText("60")
         binding.etSubSetNumber.text?.clear()
         binding.etGroupId.text?.clear()
         binding.spinnerSetType.setSelection(0)
@@ -275,13 +538,13 @@ class ConfigureSetsFragment : Fragment() {
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
         binding.btnAddSet.isEnabled = false
-        binding.btnClearAll.isEnabled = false
+        binding.btnAddToSet.isEnabled = false
     }
 
     private fun hideLoading() {
         binding.progressBar.visibility = View.GONE
         binding.btnAddSet.isEnabled = true
-        binding.btnClearAll.isEnabled = true
+        binding.btnAddToSet.isEnabled = (selectedSetId != null)
     }
 
     override fun onDestroyView() {

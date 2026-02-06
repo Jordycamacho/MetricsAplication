@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_parameter_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nombre del Parámetro"
+        android:textColor="@color/text_primary_dark"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tv_parameter_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tipo: "
+        android:textColor="@color/text_secondary_dark"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tv_parameter_unit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Unidad: "
+        android:textColor="@color/text_secondary_dark"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone" />
+
+    <!-- Valor numérico -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_numeric_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        app:boxBackgroundMode="outline"
+        app:hintTextColor="@color/text_secondary_dark"
+        app:boxStrokeColor="@color/gold_primary"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_numeric_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Valor numérico"
+            android:textColor="@color/text_primary_dark"
+            android:inputType="numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Valor entero -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_integer_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        app:boxBackgroundMode="outline"
+        app:hintTextColor="@color/text_secondary_dark"
+        app:boxStrokeColor="@color/gold_primary"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_integer_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Valor entero"
+            android:textColor="@color/text_primary_dark"
+            android:inputType="number" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Duración -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_duration_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"
+        app:boxBackgroundMode="outline"
+        app:hintTextColor="@color/text_secondary_dark"
+        app:boxStrokeColor="@color/gold_primary"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_duration_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Duración (segundos)"
+            android:textColor="@color/text_primary_dark"
+            android:inputType="number" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Rango Mínimo (opcional) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_min_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:boxBackgroundMode="outline"
+        app:hintTextColor="@color/text_secondary_dark"
+        app:boxStrokeColor="@color/gold_primary"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_min_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Valor mínimo (opcional)"
+            android:textColor="@color/text_primary_dark"
+            android:inputType="numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Rango Máximo (opcional) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_max_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:boxBackgroundMode="outline"
+        app:hintTextColor="@color/text_secondary_dark"
+        app:boxStrokeColor="@color/gold_primary"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_max_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Valor máximo (opcional)"
+            android:textColor="@color/text_primary_dark"
+            android:inputType="numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>
