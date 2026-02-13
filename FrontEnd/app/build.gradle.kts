@@ -36,6 +36,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -54,6 +55,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation("com.jakewharton.timber:timber:5.0.1")
     implementation(libs.androidx.room.ktx)
 
     // Testing

@@ -8,6 +8,7 @@ import com.fitapp.appfit.response.RegisterRequest
 import com.fitapp.appfit.utils.Resource
 import com.fitapp.appfit.utils.SessionManager
 import retrofit2.Response
+import timber.log.Timber
 
 class AuthRepository {
     private val authService = AuthService.instance
@@ -22,14 +23,17 @@ class AuthRepository {
     }
 
     suspend fun login(email: String, password: String): Resource<AuthResponse> {
+        Timber.i("Intento de login: $email")
         return try {
             val response = authService.login(LoginRequest(email, password))
-            Log.d("AuthRepository", "Response: $response")
-            Log.d("AuthRepository", "Response code: ${response.code()}")
-            Log.d("AuthRepository", "Response body: ${response.body()}")
+            if (response.isSuccessful) {
+                Timber.i("Login exitoso: $email")
+            } else {
+                Timber.w("Login fallido - código ${response.code()}: $email")
+            }
             handleAuthResponse(response)
         } catch (e: Exception) {
-            Log.e("AuthRepository", "Error: ${e.message}", e)
+            Timber.e(e, "Error en login: $email")
             Resource.Error(e.message ?: "Error desconocido")
         }
     }

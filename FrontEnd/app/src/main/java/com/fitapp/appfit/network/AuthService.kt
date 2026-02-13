@@ -2,6 +2,7 @@ package com.fitapp.appfit.network
 
 import com.fitapp.appfit.response.AuthResponse
 import com.fitapp.appfit.response.LoginRequest
+import com.fitapp.appfit.response.RefreshTokenRequest
 import com.fitapp.appfit.response.RegisterRequest
 import retrofit2.Response
 import retrofit2.http.Body
@@ -13,6 +14,9 @@ interface AuthService {
 
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+
+    @POST("api/auth/refresh")
+    suspend fun refreshToken(@Body request: RefreshTokenRequest): Response<AuthResponse>
 
     companion object {
         val instance: AuthService by lazy {

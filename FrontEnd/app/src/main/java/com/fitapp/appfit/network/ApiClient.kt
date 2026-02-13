@@ -8,11 +8,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "http://192.168.1.11:8080/"
+    private const val BASE_URL = "http://192.168.1.14:8080/"
 
     //10.0.2.2
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(TokenInterceptor())
+        .authenticator(TokenAuthenticator())
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })
