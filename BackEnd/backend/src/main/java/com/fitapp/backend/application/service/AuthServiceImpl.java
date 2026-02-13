@@ -1,26 +1,28 @@
 package com.fitapp.backend.application.service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
+import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
 import org.springframework.security.authentication.BadCredentialsException;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
+import com.fitapp.backend.domain.exception.EmailAlreadyExistsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
+import com.fitapp.backend.application.dto.user.UserCreationRequest;
+import com.fitapp.backend.application.dto.Auth.RegisterRequest;
+import com.fitapp.backend.application.ports.input.AuthUseCase;
+import com.fitapp.backend.application.ports.input.UserUseCase;
+import com.fitapp.backend.application.ports.input.JwtService;
 import com.fitapp.backend.application.dto.Auth.AuthResponse;
 import com.fitapp.backend.application.dto.Auth.LoginRequest;
-import com.fitapp.backend.application.dto.Auth.RegisterRequest;
-import com.fitapp.backend.application.dto.user.UserCreationRequest;
-import com.fitapp.backend.application.ports.input.AuthUseCase;
-import com.fitapp.backend.application.ports.input.JwtService;
-import com.fitapp.backend.application.ports.input.UserUseCase;
-import com.fitapp.backend.domain.exception.EmailAlreadyExistsException;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import com.fitapp.backend.domain.model.UserModel;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
-import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
-
+import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import java.time.temporal.ChronoUnit;
+import org.slf4j.LoggerFactory;
+import java.time.Instant;
+import org.slf4j.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -29,15 +31,42 @@ public class AuthServiceImpl implements AuthUseCase {
     private final UserUseCase userUseCase;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtDecoder jwtDecoder;
+    private final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+
+    @Override
+    public AuthResponse refreshAccessToken(String refreshToken) {
+        log.info("Intentando refrescar token");
+        try {
+            Jwt jwt = jwtDecoder.decode(refreshToken);
+            String email = jwt.getSubject();
+
+            UserModel user = userUseCase.findByEmail(email)
+                    .orElseThrow(() -> {
+                        log.warn("Refresh token con email no existente: {}", email);
+                        return new BadCredentialsException("Token inválido");
+                    });
+
+            AuthResponse response = generateAuthResponse(user);
+            log.info("Token refrescado exitosamente para userId: {}", user.getId());
+            return response;
+        } catch (Exception e) {
+            log.error("Fallo al refrescar token: {}", e.getMessage());
+            throw new BadCredentialsException("Token de refresco inválido o expirado");
+        }
+    }
 
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Verificar si el email ya existe
+        log.info("Intento de registro con email: {}", request.getEmail());
+        
         if (userUseCase.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Registro fallido: email ya existe - {}", request.getEmail());
             throw new EmailAlreadyExistsException(request.getEmail());
         }
 
+        log.info("Usuario registrado exitosamente");
         UserCreationRequest userCreationRequest = UserCreationRequest.builder()
                 .email(request.getEmail())
                 .password(request.getPassword())
@@ -55,6 +84,7 @@ public class AuthServiceImpl implements AuthUseCase {
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
+        log.info("Intento de login para email: {}", request.email());
         UserModel userModel = userUseCase.findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
@@ -65,7 +95,8 @@ public class AuthServiceImpl implements AuthUseCase {
         if (!passwordEncoder.matches(request.password(), userModel.getPassword())) {
             throw new BadCredentialsException("Credenciales inválidas");
         }
-
+        
+        log.info("Login exitoso: userId={}, email={}", userModel.getId(), userModel.getEmail());
         userUseCase.updateLastLogin(userModel.getId());
         return generateAuthResponse(userModel);
     }

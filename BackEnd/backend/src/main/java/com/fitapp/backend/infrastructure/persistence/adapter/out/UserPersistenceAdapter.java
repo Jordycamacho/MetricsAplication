@@ -70,7 +70,6 @@ public class UserPersistenceAdapter implements UserPersistencePort {
         entity.setLastLogin(model.getLastLogin());
         entity.setActive(model.isActive());
         entity.setMaxRoutines(model.getMaxRoutines());
-        entity.setUpdatedAt(model.getUpdatedAt());
     }
     
     @Override

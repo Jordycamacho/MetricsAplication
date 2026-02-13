@@ -9,4 +9,5 @@ public interface AuthUseCase {
     AuthResponse register(RegisterRequest request);
     AuthResponse login(LoginRequest request);
     AuthResponse refreshToken(CustomUserDetails userDetails);
+    AuthResponse refreshAccessToken(String refreshToken);
 }

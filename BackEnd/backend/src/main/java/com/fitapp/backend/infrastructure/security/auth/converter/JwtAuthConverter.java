@@ -35,9 +35,6 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
-        user.updateLastLogin();
-        userRepository.save(user);
-
         Collection<GrantedAuthority> authorities = jwtGrantedAuthoritiesConverter.convert(jwt);
 
         if (authorities == null) {

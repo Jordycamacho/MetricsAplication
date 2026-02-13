@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fitapp.backend.application.dto.Auth.AuthResponse;
 import com.fitapp.backend.application.dto.Auth.LoginRequest;
+import com.fitapp.backend.application.dto.Auth.RefreshTokenRequest;
 import com.fitapp.backend.application.dto.Auth.RegisterRequest;
 import com.fitapp.backend.application.dto.user.PasswordUpdateRequest;
 import com.fitapp.backend.application.ports.input.AuthUseCase;
@@ -59,10 +60,8 @@ public class AuthController {
 
     @Operation(summary = "Refrescar token")
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        AuthResponse response = authUseCase.refreshToken(userDetails);
+    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        AuthResponse response = authUseCase.refreshAccessToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
 }

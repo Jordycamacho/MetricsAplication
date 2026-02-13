@@ -2,6 +2,8 @@ package com.fitapp.backend.application.dto.Auth;
 
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
+    @JsonProperty("token")
     private String token;
+    @JsonProperty("refreshToken")
     private String refreshToken;
+    @JsonProperty("expiresAt")
     private Instant expiresAt;
 }
