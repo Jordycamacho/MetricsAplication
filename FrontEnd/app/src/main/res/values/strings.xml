@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AppFit</string>
+    <string name="app_name">J-Fit</string>
     <string name="title_home">Inicio</string>
     <string name="title_training">Entrenar</string>
     <string name="title_metrics">Métricas</string>
