@@ -271,6 +271,41 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                                 routineId, exerciseIds.size());
         }
 
+        @Override
+        @Transactional(readOnly = true)
+        public List<RoutineExerciseResponse> getRoutineExercises(Long routineId, String userEmail) {
+                log.info("Obteniendo todos los ejercicios de la rutina: routineId={}, usuario={}", routineId,
+                                userEmail);
+
+                UserModel user = userPersistencePort.findByEmail(userEmail)
+                                .orElseThrow(() -> {
+                                        log.error("Usuario no encontrado: {}", userEmail);
+                                        return new RuntimeException("User not found");
+                                });
+
+                RoutineModel routine = routinePersistencePort.findByIdAndUserId(routineId, user.getId())
+                                .orElseThrow(() -> {
+                                        log.error("Rutina no encontrada o no pertenece al usuario: routineId={}, userId={}",
+                                                        routineId, user.getId());
+                                        return new RuntimeException("Routine not found");
+                                });
+
+                List<RoutineExerciseModel> exercises = routineExercisePersistencePort.findByRoutineId(routineId);
+                log.debug("Se encontraron {} ejercicios para la rutina {}", exercises.size(), routineId);
+
+                List<RoutineExerciseResponse> response = exercises.stream()
+                                .map(exercise -> {
+                                        ExerciseEntity exerciseEntity = exercisePersistencePort
+                                                        .findEntityById(exercise.getExerciseId())
+                                                        .orElse(null);
+                                        return mapToResponse(exercise, exerciseEntity);
+                                })
+                                .collect(Collectors.toList());
+
+                log.info("Devolviendo {} ejercicios para la rutina {}", response.size(), routineId);
+                return response;
+        }
+
         private RoutineExerciseResponse mapToResponse(RoutineExerciseModel model, ExerciseEntity exerciseEntity) {
                 if (model == null)
                         return null;

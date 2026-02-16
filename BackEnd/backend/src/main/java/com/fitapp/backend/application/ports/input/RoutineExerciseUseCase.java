@@ -12,4 +12,5 @@ public interface RoutineExerciseUseCase {
     List<RoutineExerciseResponse> getExercisesBySession(Long routineId, Integer sessionNumber, String userEmail);
     List<RoutineExerciseResponse> getExercisesByDay(Long routineId, String dayOfWeek, String userEmail);
     void reorderExercises(Long routineId, List<Long> exerciseIds, String userEmail);
+    List<RoutineExerciseResponse> getRoutineExercises(Long routineId, String userEmail);
 }
