@@ -51,6 +51,11 @@ interface RoutineExerciseService {
         @Body exerciseIds: List<Long>
     ): Response<Void>
 
+    @GET("api/routines/{routineId}/exercises")
+    suspend fun getRoutineExercises(
+        @Path("routineId") routineId: Long
+    ): Response<List<RoutineExerciseResponse>>
+
     companion object {
         val instance: RoutineExerciseService by lazy {
             ApiClient.instance.create(RoutineExerciseService::class.java)

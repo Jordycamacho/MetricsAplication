@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.*
 import android.widget.AdapterView.OnItemSelectedListener
 import androidx.fragment.app.Fragment
@@ -139,7 +140,7 @@ class AddExercisesToRoutineFragment : Fragment() {
         }
 
         binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == androidx.appcompat.view.menu.ActionMenuItemView.VISIBLE) {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 loadExercises()
                 true
             } else {

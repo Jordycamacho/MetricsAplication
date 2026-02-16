@@ -40,18 +40,49 @@
             android:id="@+id/action_navigation_routines_to_navigation_edit_routine"
             app:destination="@id/navigation_edit_routine" />
         <action
-            android:id="@+id/action_navigation_routines_to_add_exercises_to_routine"
+            android:id="@+id/action_navigation_routines_to_routine_exercises"
+            app:destination="@id/navigation_routine_exercises" />
+    </fragment>
+
+    <!-- listar ejercicios de la rutina -->
+    <fragment
+        android:id="@+id/navigation_routine_exercises"
+        android:name="com.fitapp.appfit.ui.routines.RoutineExercisesFragment"
+        android:label="Ejercicios de la rutina"
+        tools:layout="@layout/fragment_routine_exercises">
+        <argument
+            android:name="routineId"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_routine_exercises_to_add_exercises"
             app:destination="@id/navigation_add_exercises_to_routine" />
+        <action
+            android:id="@+id/action_routine_exercises_to_edit_exercise"
+            app:destination="@id/navigation_add_exercises_to_routine">
+            <argument
+                android:name="routineId"
+                app:argType="long" />
+            <argument
+                android:name="exerciseId"
+                app:argType="long" />
+        </action>
+        <action
+            android:id="@+id/action_routine_exercises_to_configure_sets"
+            app:destination="@id/navigation_configure_sets" />
     </fragment>
 
     <fragment
         android:id="@+id/navigation_add_exercises_to_routine"
         android:name="com.fitapp.appfit.ui.routines.create.AddExercisesToRoutineFragment"
-        android:label="Agregar Ejercicios"
+        android:label="Agregar Ejercicio"
         tools:layout="@layout/fragment_add_exercises_to_routine">
         <argument
             android:name="routineId"
             app:argType="long" />
+        <argument
+            android:name="exerciseId"
+            app:argType="long"
+            android:defaultValue="-1L" />
         <action
             android:id="@+id/action_addExercisesToRoutine_to_configureSets"
             app:destination="@id/navigation_configure_sets" />

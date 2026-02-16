@@ -10,11 +10,20 @@ import com.fitapp.appfit.service.RoutineExerciseService
 import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 import android.util.Log
+import com.fitapp.appfit.repository.RoutineExerciseRepository
 import com.fitapp.appfit.response.exercise.response.ExerciseResponse
 import kotlinx.coroutines.delay
 
 class RoutineExerciseViewModel : ViewModel() {
 
+    private val repository = RoutineExerciseRepository()
+
+    private val _exercisesState = MutableLiveData<Resource<List<RoutineExerciseResponse>>>()
+    val exercisesState: LiveData<Resource<List<RoutineExerciseResponse>>> = _exercisesState
+
+    private val _deleteState = MutableLiveData<Resource<Unit>?>()
+
+    val deleteState: LiveData<Resource<Unit>?> = _deleteState
     private val _addExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>>()
     val addExerciseState: LiveData<Resource<RoutineExerciseResponse>> get() = _addExerciseState
 
@@ -36,6 +45,14 @@ class RoutineExerciseViewModel : ViewModel() {
     companion object {
         private const val TAG = "AddExercisesToRoutine"
     }
+
+    fun loadRoutineExercises(routineId: Long) {
+        _exercisesState.value = Resource.Loading()
+        viewModelScope.launch {
+            _exercisesState.value = repository.getRoutineExercises(routineId)
+        }
+    }
+
     fun addExerciseToRoutine(routineId: Long, request: AddExerciseToRoutineRequest) {
         viewModelScope.launch {
             _addExerciseState.value = Resource.Loading()
@@ -80,6 +97,17 @@ class RoutineExerciseViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _removeExerciseState.value = Resource.Error(e.message ?: "Error removing exercise")
+            }
+        }
+    }
+
+    fun deleteExercise(routineId: Long, exerciseId: Long) {
+        _deleteState.value = Resource.Loading()
+        viewModelScope.launch {
+            val result = repository.removeExerciseFromRoutine(routineId, exerciseId)
+            _deleteState.value = result
+            if (result is Resource.Success) {
+                loadRoutineExercises(routineId)
             }
         }
     }
@@ -186,5 +214,9 @@ class RoutineExerciseViewModel : ViewModel() {
                 _reorderExercisesState.value = Resource.Error(e.message ?: "Error reordering exercises")
             }
         }
+    }
+
+    fun clearDeleteState() {
+        _deleteState.postValue(null)
     }
 }

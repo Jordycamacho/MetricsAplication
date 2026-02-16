@@ -92,7 +92,8 @@ class RoutinesFragment : Fragment() {
                 startWorkout(routine)
             },
             onAddExercisesClick = { routine ->
-                addExercisesToRoutine(routine)
+                val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
+                findNavController().navigate(action)
             }
         )
 
@@ -128,7 +129,7 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun addExercisesToRoutine(routine: RoutineSummaryResponse) {
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToAddExercisesToRoutine(routine.id)
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
         findNavController().navigate(action)
     }
 
@@ -202,7 +203,7 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun showRoutineDetail(routine: RoutineSummaryResponse) {
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToAddExercisesToRoutine(routine.id)
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
         findNavController().navigate(action)
     }
 
