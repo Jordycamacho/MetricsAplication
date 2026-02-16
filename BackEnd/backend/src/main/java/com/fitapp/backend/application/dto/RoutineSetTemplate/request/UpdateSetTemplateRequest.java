@@ -39,13 +39,27 @@ public class UpdateSetTemplateRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SetParameterRequest {
-        @JsonProperty("id") private Long id;
-        @NotNull @JsonProperty("parameterId") private Long parameterId;
-        @JsonProperty("numericValue") private Double numericValue;
-        @JsonProperty("durationValue") private Long durationValue;
-        @JsonProperty("integerValue") private Integer integerValue;
-        @JsonProperty("minValue") private Double minValue;
-        @JsonProperty("maxValue") private Double maxValue;
+        @JsonProperty("id")
+        private Long id;
+        
+        @NotNull 
+        @JsonProperty("parameterId")
+        private Long parameterId;
+        
+        @JsonProperty("numericValue")
+        private Double numericValue;
+        
+        @JsonProperty("durationValue")
+        private Long durationValue;
+        
+        @JsonProperty("integerValue")
+        private Integer integerValue;
+        
+        @JsonProperty("minValue")
+        private Double minValue;
+        
+        @JsonProperty("maxValue")
+        private Double maxValue;
     }
     
     public void validate() {

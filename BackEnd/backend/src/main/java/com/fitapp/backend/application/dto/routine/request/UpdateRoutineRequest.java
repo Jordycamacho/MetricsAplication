@@ -1,12 +1,10 @@
 package com.fitapp.backend.application.dto.routine.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.validation.constraints.Size;
 
 @Data
@@ -14,9 +12,11 @@ import jakarta.validation.constraints.Size;
 @AllArgsConstructor
 public class UpdateRoutineRequest {
     @Size(max = 100, message = "Routine name cannot exceed 100 characters")
+    @JsonProperty("name")
     private String name;
     
     @Size(max = 500, message = "Description cannot exceed 500 characters")
+    @JsonProperty("description")
     private String description;
     
     @JsonProperty("sportId")
@@ -26,6 +26,7 @@ public class UpdateRoutineRequest {
     private List<String> trainingDays;
     
     @Size(max = 200, message = "Goal cannot exceed 200 characters")
+    @JsonProperty("goal")
     private String goal;
 
     @JsonProperty("sessionsPerWeek")

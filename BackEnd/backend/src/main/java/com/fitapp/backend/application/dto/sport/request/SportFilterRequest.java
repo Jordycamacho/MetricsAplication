@@ -56,7 +56,10 @@ public class SportFilterRequest {
     
     @Data
     public static class SortField {
+        @JsonProperty("field")
         private String field;
+        
+        @JsonProperty("direction")
         private Sort.Direction direction = Sort.Direction.ASC;
     }
 }

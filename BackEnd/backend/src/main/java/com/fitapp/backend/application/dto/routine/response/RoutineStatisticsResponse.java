@@ -1,5 +1,6 @@
 package com.fitapp.backend.application.dto.routine.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoutineStatisticsResponse {
+    @JsonProperty("totalRoutines")
     private long totalRoutines;
+    
+    @JsonProperty("activeRoutines")
     private long activeRoutines;
+    
+    @JsonProperty("inactiveRoutines")
     private long inactiveRoutines;
 }
