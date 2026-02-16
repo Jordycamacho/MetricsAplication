@@ -1,15 +1,17 @@
 package com.fitapp.appfit.response.sets.response
 
+import com.google.gson.annotations.SerializedName
+
 data class RoutineSetParameterResponse(
-    val id: Long,
-    val setTemplateId: Long,
-    val parameterId: Long,
-    val parameterName: String?,
-    val parameterType: String?,
-    val unit: String?,
-    val numericValue: Double?,
-    val durationValue: Long?,
-    val integerValue: Int?,
-    val minValue: Double?,
-    val maxValue: Double?,
+    @SerializedName("id") val id: Long,
+    @SerializedName("setTemplateId") val setTemplateId: Long,
+    @SerializedName("parameterId") val parameterId: Long,
+    @SerializedName("parameterName") val parameterName: String?,
+    @SerializedName("parameterType") val parameterType: String?,
+    @SerializedName("unit") val unit: String?,
+    @SerializedName("numericValue") val numericValue: Double?,
+    @SerializedName("durationValue") val durationValue: Long?,
+    @SerializedName("integerValue") val integerValue: Int?,
+    @SerializedName("minValue") val minValue: Double?,
+    @SerializedName("maxValue") val maxValue: Double?
 )

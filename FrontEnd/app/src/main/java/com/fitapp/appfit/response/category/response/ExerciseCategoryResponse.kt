@@ -16,6 +16,6 @@ data class ExerciseCategoryResponse(
     @SerializedName("sportName") val sportName: String?,
     @SerializedName("parentCategoryId") val parentCategoryId: Long?,
     @SerializedName("usageCount") val usageCount: Int,
-    @SerializedName("createdAt") val createdAt: LocalDateTime?,
-    @SerializedName("updatedAt") val updatedAt: LocalDateTime?
+    @SerializedName("createdAt") val createdAt: String?,
+    @SerializedName("updatedAt") val updatedAt: String?
 )

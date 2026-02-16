@@ -1,3 +1,9 @@
 package com.fitapp.appfit.response
 
-data class RegisterRequest(val email: String, val password: String, val fullName: String)
+import com.google.gson.annotations.SerializedName
+
+data class RegisterRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("fullName") val fullName: String
+)

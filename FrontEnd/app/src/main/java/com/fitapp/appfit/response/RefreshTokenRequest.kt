@@ -1,3 +1,7 @@
 package com.fitapp.appfit.response
 
-data class RefreshTokenRequest(val refreshToken: String)
+import com.google.gson.annotations.SerializedName
+
+data class RefreshTokenRequest(
+    @SerializedName("refreshToken") val refreshToken: String
+)

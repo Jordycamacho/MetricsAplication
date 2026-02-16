@@ -3,11 +3,10 @@ package com.fitapp.appfit.response.routine.request
 import com.google.gson.annotations.SerializedName
 
 data class CreateRoutineRequest(
-    val name: String,
-    val description: String? = null,
-    @SerializedName("sportId")
-    val sportId: Long? = null,
-    val trainingDays: List<String> = emptyList(),
-    val goal: String,
-    val sessionsPerWeek: Int
+    @SerializedName("name") val name: String,
+    @SerializedName("description") val description: String? = null,
+    @SerializedName("sportId") val sportId: Long? = null,
+    @SerializedName("trainingDays") val trainingDays: List<String> = emptyList(),
+    @SerializedName("goal") val goal: String,
+    @SerializedName("sessionsPerWeek") val sessionsPerWeek: Int
 )

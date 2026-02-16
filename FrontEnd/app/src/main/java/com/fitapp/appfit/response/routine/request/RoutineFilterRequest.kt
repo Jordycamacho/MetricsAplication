@@ -1,9 +1,11 @@
 package com.fitapp.appfit.response.routine.request
 
+import com.google.gson.annotations.SerializedName
+
 data class RoutineFilterRequest(
-    val sportId: Long? = null,
-    val name: String? = null,
-    val isActive: Boolean? = null,
-    val sortBy: String = "createdAt",
-    val sortDirection: String = "DESC"
+    @SerializedName("sportId") val sportId: Long? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("isActive") val isActive: Boolean? = null,
+    @SerializedName("sortBy") val sortBy: String = "createdAt",
+    @SerializedName("sortDirection") val sortDirection: String = "DESC"
 )
