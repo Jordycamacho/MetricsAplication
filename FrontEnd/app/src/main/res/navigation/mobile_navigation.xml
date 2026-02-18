@@ -69,6 +69,36 @@
         <action
             android:id="@+id/action_routine_exercises_to_configure_sets"
             app:destination="@id/navigation_configure_sets" />
+        <action
+            android:id="@+id/action_routine_exercises_to_routine_sets"
+            app:destination="@id/navigation_routine_sets" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_routine_sets"
+        android:name="com.fitapp.appfit.ui.routines.sets.RoutineSetsFragment"
+        android:label="Sets del ejercicio"
+        tools:layout="@layout/fragment_routine_sets">
+        <argument
+            android:name="routineExerciseId"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_routine_sets_to_add_edit_set"
+            app:destination="@id/navigation_add_edit_set" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_add_edit_set"
+        android:name="com.fitapp.appfit.ui.routines.sets.AddEditSetFragment"
+        android:label="Nuevo Set"
+        tools:layout="@layout/fragment_add_edit_set">
+        <argument
+            android:name="routineExerciseId"
+            app:argType="long" />
+        <argument
+            android:name="setId"
+            app:argType="long"
+            android:defaultValue="-1L" />
     </fragment>
 
     <fragment

@@ -1,4 +1,4 @@
-package com.fitapp.appfit.ui.routines
+package com.fitapp.appfit.ui.routines.sets
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,28 +12,28 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.fitapp.appfit.databinding.FragmentRoutineExercisesBinding
-import com.fitapp.appfit.model.RoutineExerciseViewModel
-import com.fitapp.appfit.response.routine.response.RoutineExerciseResponse
-import com.fitapp.appfit.ui.routines.adapter.RoutineExerciseAdapter
+import com.fitapp.appfit.databinding.FragmentRoutineSetsBinding
+import com.fitapp.appfit.model.RoutineSetTemplateViewModel
+import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
+import com.fitapp.appfit.ui.routines.adapter.SetTemplateAdapter
 import com.fitapp.appfit.utils.Resource
 
-class RoutineExercisesFragment : Fragment() {
+class RoutineSetsFragment : Fragment() {
 
-    private var _binding: FragmentRoutineExercisesBinding? = null
+    private var _binding: FragmentRoutineSetsBinding? = null
     private val binding get() = _binding!!
 
-    private val args: RoutineExercisesFragmentArgs by navArgs()
-    private val viewModel: RoutineExerciseViewModel by viewModels()
+    private val args: RoutineSetsFragmentArgs by navArgs()
+    private val viewModel: RoutineSetTemplateViewModel by viewModels()
 
-    private lateinit var adapter: RoutineExerciseAdapter
+    private lateinit var adapter: SetTemplateAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentRoutineExercisesBinding.inflate(inflater, container, false)
+        _binding = FragmentRoutineSetsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -45,39 +45,38 @@ class RoutineExercisesFragment : Fragment() {
         setupObservers()
         setupFab()
 
-        viewModel.loadRoutineExercises(args.routineId)
+        viewModel.getSetTemplatesByRoutineExercise(args.routineExerciseId)
     }
 
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
-        binding.toolbar.title = "Ejercicios de la rutina"
+        binding.toolbar.title = "Sets del ejercicio"
     }
 
     private fun setupRecyclerView() {
-        adapter = RoutineExerciseAdapter(
-            onEditClick = { exercise -> editExercise(exercise) },
-            onDeleteClick = { exercise -> confirmDelete(exercise) },
-            onAddSetClick = { exercise -> navigateToConfigureSets(exercise) }
+        adapter = SetTemplateAdapter(
+            onEditClick = { set -> editSet(set) },
+            onDeleteClick = { set -> confirmDelete(set) }
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
     }
 
     private fun setupObservers() {
-        viewModel.exercisesState.observe(viewLifecycleOwner, Observer { resource ->
+        viewModel.getSetTemplatesByExerciseState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let {
-                        if (it.isEmpty()) {
+                    resource.data?.let { sets ->
+                        if (sets.isEmpty()) {
                             binding.tvEmpty.visibility = View.VISIBLE
                             binding.recyclerView.visibility = View.GONE
                         } else {
                             binding.tvEmpty.visibility = View.GONE
                             binding.recyclerView.visibility = View.VISIBLE
-                            adapter.submitList(it)
+                            adapter.submitList(sets)
                         }
                     }
                 }
@@ -90,10 +89,11 @@ class RoutineExercisesFragment : Fragment() {
             }
         })
 
-        viewModel.deleteState.observe(viewLifecycleOwner, Observer { resource ->
+        viewModel.deleteSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
-                    Toast.makeText(requireContext(), "Ejercicio eliminado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Set eliminado", Toast.LENGTH_SHORT).show()
+                    viewModel.getSetTemplatesByRoutineExercise(args.routineExerciseId)
                 }
                 is Resource.Error -> {
                     Toast.makeText(requireContext(), "Error al eliminar: ${resource.message}", Toast.LENGTH_SHORT).show()
@@ -105,37 +105,26 @@ class RoutineExercisesFragment : Fragment() {
     }
 
     private fun setupFab() {
-        binding.fabAddExercise.setOnClickListener {
-            // Navegar a la pantalla para agregar nuevo ejercicio a esta rutina
-            val action = RoutineExercisesFragmentDirections
-                .actionRoutineExercisesToAddExercises(args.routineId)
+        binding.fabAddSet.setOnClickListener {
+            val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(args.routineExerciseId, -1L)
             findNavController().navigate(action)
         }
     }
 
-    private fun editExercise(exercise: RoutineExerciseResponse) {
-        // Aquí deberías navegar a AddExercisesToRoutineFragment en modo edición,
-        // pasando el exerciseId y quizás los datos actuales.
-        // Asumiendo que existe una acción con argumento exerciseId y routineId
-        val action = RoutineExercisesFragmentDirections
-            .actionRoutineExercisesToEditExercise(args.routineId, exercise.id)
+    private fun editSet(set: RoutineSetTemplateResponse) {
+        val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(args.routineExerciseId, set.id)
         findNavController().navigate(action)
     }
 
-    private fun confirmDelete(exercise: RoutineExerciseResponse) {
+    private fun confirmDelete(set: RoutineSetTemplateResponse) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Eliminar ejercicio")
-            .setMessage("¿Estás seguro de eliminar ${exercise.exerciseName} de la rutina?")
+            .setTitle("Eliminar set")
+            .setMessage("¿Estás seguro de eliminar el set ${set.position}?")
             .setPositiveButton("Eliminar") { _, _ ->
-                viewModel.deleteExercise(args.routineId, exercise.id)
+                viewModel.deleteSetTemplate(set.id)
             }
             .setNegativeButton("Cancelar", null)
             .show()
-    }
-
-    private fun navigateToConfigureSets(exercise: RoutineExerciseResponse) {
-        val action = RoutineExercisesFragmentDirections.actionRoutineExercisesToRoutineSets(exercise.id)
-        findNavController().navigate(action)
     }
 
     private fun showLoading() {
