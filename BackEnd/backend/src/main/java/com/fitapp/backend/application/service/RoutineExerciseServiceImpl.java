@@ -378,8 +378,6 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                                                 .numericValue(param.getNumericValue())
                                                 .durationValue(param.getDurationValue())
                                                 .integerValue(param.getIntegerValue())
-                                                .minValue(param.getMinValue())
-                                                .maxValue(param.getMaxValue())
                                                 .build())
                                 .collect(Collectors.toList());
         }

@@ -176,8 +176,6 @@ public class RoutineConverter {
         model.setNumericValue(entity.getNumericValue());
         model.setDurationValue(entity.getDurationValue());
         model.setIntegerValue(entity.getIntegerValue());
-        model.setMinValue(entity.getMinValue());
-        model.setMaxValue(entity.getMaxValue());
         return model;
     }
 
@@ -345,8 +343,6 @@ public class RoutineConverter {
         entity.setNumericValue(model.getNumericValue());
         entity.setDurationValue(model.getDurationValue());
         entity.setIntegerValue(model.getIntegerValue());
-        entity.setMinValue(model.getMinValue());
-        entity.setMaxValue(model.getMaxValue());
         
         return entity;
     }
@@ -491,8 +487,6 @@ public class RoutineConverter {
         entity.setNumericValue(request.getNumericValue());
         entity.setDurationValue(request.getDurationValue());
         entity.setIntegerValue(request.getIntegerValue());
-        entity.setMinValue(request.getMinValue());
-        entity.setMaxValue(request.getMaxValue());
         
         return entity;
     }

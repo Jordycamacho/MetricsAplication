@@ -110,9 +110,8 @@ public class SetConverter {
         entity.setNumericValue(model.getNumericValue());
         entity.setDurationValue(model.getDurationValue());
         entity.setIntegerValue(model.getIntegerValue());
-        entity.setMinValue(model.getMinValue());
-        entity.setMaxValue(model.getMaxValue());
-        
+        entity.setRepetitions(model.getRepetitions());
+
         return entity;
     }
     
@@ -128,11 +127,10 @@ public class SetConverter {
                 .id(entity.getId())
                 .setTemplateId(entity.getSetTemplate() != null ? entity.getSetTemplate().getId() : null)
                 .parameterId(entity.getParameter() != null ? entity.getParameter().getId() : null)
+                .repetitions(entity.getRepetitions())
                 .numericValue(entity.getNumericValue())
                 .durationValue(entity.getDurationValue())
                 .integerValue(entity.getIntegerValue())
-                .minValue(entity.getMinValue())
-                .maxValue(entity.getMaxValue())
                 .build();
     }
     

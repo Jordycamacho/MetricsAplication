@@ -1,5 +1,6 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -29,10 +30,16 @@ public class RoutineSetParameterEntity {
     @JoinColumn(name = "parameter_id", nullable = false)
     private CustomParameterEntity parameter;
 
+    @Column(name = "repetitions")
+    private Integer repetitions;
+
+    @Column(name = "numeric_value")
     private Double numericValue;
+
+    @Column(name = "duration_value")
     private Long durationValue;
+
+    @Column(name = "integer_value")
     private Integer integerValue;
 
-    private Double minValue;
-    private Double maxValue;
 }

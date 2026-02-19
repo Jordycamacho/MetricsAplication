@@ -40,10 +40,7 @@ public class RoutineSetParameterResponse {
     
     @JsonProperty("integerValue")
     private Integer integerValue;
-    
-    @JsonProperty("minValue")
-    private Double minValue;
-    
-    @JsonProperty("maxValue")
-    private Double maxValue;
+
+    @JsonProperty("repetitions")
+    private Integer repetitions;
 }

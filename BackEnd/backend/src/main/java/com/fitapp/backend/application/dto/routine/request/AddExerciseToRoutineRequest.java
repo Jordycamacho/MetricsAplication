@@ -58,7 +58,6 @@ public class AddExerciseToRoutineRequest {
         @JsonProperty("numericValue") private Double numericValue;
         @JsonProperty("durationValue") private Long durationValue;
         @JsonProperty("integerValue") private Integer integerValue;
-        @JsonProperty("minValue") private Double minValue;
-        @JsonProperty("maxValue") private Double maxValue;
+        @JsonProperty("repetitions") private Integer repetitions;
     }
 }

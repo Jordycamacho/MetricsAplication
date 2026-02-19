@@ -53,8 +53,8 @@ public class SetTemplateMapper {
         response.setNumericValue(model.getNumericValue());
         response.setDurationValue(model.getDurationValue());
         response.setIntegerValue(model.getIntegerValue());
-        response.setMinValue(model.getMinValue());
-        response.setMaxValue(model.getMaxValue());
+        response.setRepetitions(model.getRepetitions());
+        
         try {
             var parameter = customParameterPersistencePort.findById(model.getParameterId());
             if (parameter.isPresent()) {
