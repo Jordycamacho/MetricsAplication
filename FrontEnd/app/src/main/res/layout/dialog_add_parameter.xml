@@ -35,7 +35,27 @@
         android:layout_marginBottom="16dp"
         android:visibility="gone" />
 
-    <!-- Valor numérico -->
+    <!-- Repeticiones (siempre visible) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_repetitions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:boxBackgroundMode="outline"
+        app:hintTextColor="@color/text_secondary_dark"
+        app:boxStrokeColor="@color/gold_primary"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_repetitions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Repeticiones (opcional)"
+            android:textColor="@color/text_primary_dark"
+            android:inputType="number" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Valor numérico (según tipo) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_numeric_value"
         android:layout_width="match_parent"
@@ -56,7 +76,6 @@
             android:inputType="numberDecimal" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Valor entero -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_integer_value"
         android:layout_width="match_parent"
@@ -77,7 +96,6 @@
             android:inputType="number" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Duración -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_duration_value"
         android:layout_width="match_parent"
@@ -97,45 +115,4 @@
             android:textColor="@color/text_primary_dark"
             android:inputType="number" />
     </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Rango Mínimo (opcional) -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/layout_min_value"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        app:boxBackgroundMode="outline"
-        app:hintTextColor="@color/text_secondary_dark"
-        app:boxStrokeColor="@color/gold_primary"
-        app:boxStrokeWidth="1dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_min_value"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Valor mínimo (opcional)"
-            android:textColor="@color/text_primary_dark"
-            android:inputType="numberDecimal" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Rango Máximo (opcional) -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/layout_max_value"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        app:boxBackgroundMode="outline"
-        app:hintTextColor="@color/text_secondary_dark"
-        app:boxStrokeColor="@color/gold_primary"
-        app:boxStrokeWidth="1dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_max_value"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Valor máximo (opcional)"
-            android:textColor="@color/text_primary_dark"
-            android:inputType="numberDecimal" />
-    </com.google.android.material.textfield.TextInputLayout>
-
 </LinearLayout>

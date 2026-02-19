@@ -17,7 +17,6 @@ import com.fitapp.appfit.databinding.FragmentExerciseParamsBinding
 import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
 import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
-import com.fitapp.appfit.ui.parameters.adapter.ParameterAdapter
 import com.fitapp.appfit.utils.Resource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 

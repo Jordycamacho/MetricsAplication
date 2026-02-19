@@ -134,7 +134,10 @@ class RoutineExercisesFragment : Fragment() {
     }
 
     private fun navigateToConfigureSets(exercise: RoutineExerciseResponse) {
-        val action = RoutineExercisesFragmentDirections.actionRoutineExercisesToRoutineSets(exercise.id)
+        val action = RoutineExercisesFragmentDirections.actionRoutineExercisesToRoutineSets(
+            routineExerciseId = exercise.id,
+            exerciseId = exercise.exerciseId
+        )
         findNavController().navigate(action)
     }
 

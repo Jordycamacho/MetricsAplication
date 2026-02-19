@@ -106,13 +106,21 @@ class RoutineSetsFragment : Fragment() {
 
     private fun setupFab() {
         binding.fabAddSet.setOnClickListener {
-            val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(args.routineExerciseId, -1L)
+            val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(
+                routineExerciseId = args.routineExerciseId,
+                exerciseId = args.exerciseId,
+                setId = -1L
+            )
             findNavController().navigate(action)
         }
     }
 
     private fun editSet(set: RoutineSetTemplateResponse) {
-        val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(args.routineExerciseId, set.id)
+        val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(
+            routineExerciseId = args.routineExerciseId,
+            exerciseId = args.exerciseId,
+            setId = set.id
+        )
         findNavController().navigate(action)
     }
 

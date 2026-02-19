@@ -13,9 +13,9 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.FragmentAddEditSetBinding
 import com.fitapp.appfit.databinding.DialogAddParameterBinding
+import com.fitapp.appfit.model.ExerciseViewModel
 import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.model.RoutineSetTemplateViewModel
 import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
@@ -24,7 +24,7 @@ import com.fitapp.appfit.response.routine.request.SetParameterRequest
 import com.fitapp.appfit.response.sets.request.CreateSetTemplateRequest
 import com.fitapp.appfit.response.sets.request.UpdateSetParameterRequest
 import com.fitapp.appfit.response.sets.request.UpdateSetTemplateRequest
-import com.fitapp.appfit.ui.parameters.adapter.ParameterAdapter
+import com.fitapp.appfit.ui.exercises.params.ParameterAdapter
 import com.fitapp.appfit.utils.Resource
 import com.google.android.material.chip.Chip
 
@@ -36,9 +36,11 @@ class AddEditSetFragment : Fragment() {
     private val args: AddEditSetFragmentArgs by navArgs()
     private val setTemplateViewModel: RoutineSetTemplateViewModel by viewModels()
     private val parameterViewModel: ParameterViewModel by viewModels()
+    private val exerciseViewModel: ExerciseViewModel by viewModels()
 
-    private var selectedSetId: Long? = null // null si es creación
+    private var selectedSetId: Long? = null
     private lateinit var parameterAdapter: ParameterAdapter
+    private var supportedParameterIds = setOf<Long>()
     private var currentSetParameters = mutableListOf<UpdateSetParameterRequest>()
 
     companion object {
@@ -69,6 +71,7 @@ class AddEditSetFragment : Fragment() {
         setupRecyclerView()
         setupListeners()
         setupObservers()
+        loadSupportedParameters()
 
         if (selectedSetId != null) {
             loadSetForEdit()
@@ -80,6 +83,10 @@ class AddEditSetFragment : Fragment() {
             findNavController().navigateUp()
         }
         binding.toolbar.title = if (selectedSetId == null) "Nuevo Set" else "Editar Set"
+    }
+
+    private fun loadSupportedParameters() {
+        exerciseViewModel.getExerciseById(args.exerciseId)
     }
 
     private fun setupSpinners() {
@@ -99,8 +106,8 @@ class AddEditSetFragment : Fragment() {
             onItemClick = { parameter ->
                 showAddParameterDialog(parameter)
             },
-            onEditClick = { /* No usado aquí */ },
-            onDeleteClick = { /* No usado aquí */ },
+            onEditClick = {},
+            onDeleteClick = {},
             showActions = false
         )
 
@@ -150,45 +157,50 @@ class AddEditSetFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        setTemplateViewModel.getSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
+        exerciseViewModel.exerciseDetailState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    resource.data?.let { exercise ->
+                        supportedParameterIds = exercise.supportedParameterIds ?: emptySet()
+                        loadAllParameters()
+                    }
+                }
+                is Resource.Error -> {
+                    Toast.makeText(requireContext(), "Error al cargar ejercicio: ${resource.message}", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        }
+
+        parameterViewModel.allParametersState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let { set ->
-                        // Rellenar el formulario con los datos del set
-                        binding.etSetPosition.setText(set.position.toString())
-                        val typeIndex = SET_TYPES.indexOf(set.setType)
-                        if (typeIndex >= 0) binding.spinnerSetType.setSelection(typeIndex)
-                        binding.etRestAfterSet.setText(set.restAfterSet?.toString() ?: "")
-                        binding.etSubSetNumber.setText(set.subSetNumber?.toString() ?: "")
-                        binding.etGroupId.setText(set.groupId ?: "")
-
-                        // Cargar parámetros existentes
-                        set.parameters?.let { params ->
-                            currentSetParameters.clear()
-                            currentSetParameters.addAll(params.map { param ->
-                                UpdateSetParameterRequest(
-                                    id = param.id,
-                                    parameterId = param.parameterId,
-                                    numericValue = param.numericValue,
-                                    integerValue = param.integerValue,
-                                    durationValue = param.durationValue,
-                                    minValue = param.minValue,
-                                    maxValue = param.maxValue
-                                )
-                            })
-                            updateParametersChips()
+                    resource.data?.let { pageResponse ->
+                        val allParameters = pageResponse.content
+                        val filtered = if (supportedParameterIds.isNotEmpty()) {
+                            allParameters.filter { supportedParameterIds.contains(it.id) }
+                        } else {
+                            allParameters
+                        }
+                        if (filtered.isEmpty()) {
+                            binding.tvNoParameters.visibility = View.VISIBLE
+                            binding.recyclerParameters.visibility = View.GONE
+                        } else {
+                            binding.tvNoParameters.visibility = View.GONE
+                            binding.recyclerParameters.visibility = View.VISIBLE
+                            parameterAdapter.updateList(filtered)
                         }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "Error cargando set: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> showLoading()
                 else -> {}
             }
-        })
+        }
 
         setTemplateViewModel.createSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
@@ -206,6 +218,7 @@ class AddEditSetFragment : Fragment() {
             }
         })
 
+        // Observar actualización de set
         setTemplateViewModel.updateSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
@@ -222,25 +235,37 @@ class AddEditSetFragment : Fragment() {
             }
         })
 
-        parameterViewModel.allParametersState.observe(viewLifecycleOwner, Observer { resource ->
+        setTemplateViewModel.getSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let { pageResponse ->
-                        val parameters = pageResponse.content
-                        if (parameters.isEmpty()) {
-                            binding.tvNoParameters.visibility = View.VISIBLE
-                            binding.recyclerParameters.visibility = View.GONE
-                        } else {
-                            binding.tvNoParameters.visibility = View.GONE
-                            binding.recyclerParameters.visibility = View.VISIBLE
-                            parameterAdapter.updateList(parameters)
+                    resource.data?.let { set ->
+                        binding.etSetPosition.setText(set.position.toString())
+                        val typeIndex = SET_TYPES.indexOf(set.setType)
+                        if (typeIndex >= 0) binding.spinnerSetType.setSelection(typeIndex)
+                        binding.etRestAfterSet.setText(set.restAfterSet?.toString() ?: "")
+                        binding.etSubSetNumber.setText(set.subSetNumber?.toString() ?: "")
+                        binding.etGroupId.setText(set.groupId ?: "")
+
+                        set.parameters?.let { params ->
+                            currentSetParameters.clear()
+                            currentSetParameters.addAll(params.map { param ->
+                                UpdateSetParameterRequest(
+                                    id = param.id,
+                                    parameterId = param.parameterId,
+                                    repetitions = param.repetitions,
+                                    numericValue = param.numericValue,
+                                    integerValue = param.integerValue,
+                                    durationValue = param.durationValue
+                                )
+                            })
+                            updateParametersChips()
                         }
                     }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error cargando set: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> showLoading()
                 else -> {}
@@ -265,11 +290,10 @@ class AddEditSetFragment : Fragment() {
             val parametersForCreation = currentSetParameters.map { param ->
                 SetParameterRequest(
                     parameterId = param.parameterId,
+                    repetitions = param.repetitions,
                     numericValue = param.numericValue,
                     integerValue = param.integerValue,
-                    durationValue = param.durationValue,
-                    minValue = param.minValue,
-                    maxValue = param.maxValue
+                    durationValue = param.durationValue
                 )
             }
 
@@ -284,7 +308,6 @@ class AddEditSetFragment : Fragment() {
             )
             setTemplateViewModel.createSetTemplate(request)
         } else {
-            // Actualizar set existente
             val request = UpdateSetTemplateRequest(
                 position = position,
                 subSetNumber = subSetNumber,
@@ -306,6 +329,8 @@ class AddEditSetFragment : Fragment() {
             dialogBinding.tvParameterUnit.text = "Unidad: ${parameter.unit}"
             dialogBinding.tvParameterUnit.visibility = View.VISIBLE
         }
+
+        dialogBinding.layoutRepetitions.visibility = View.VISIBLE
 
         when (parameter.parameterType) {
             "NUMBER", "DISTANCE", "PERCENTAGE" -> dialogBinding.layoutNumericValue.visibility = View.VISIBLE
@@ -332,6 +357,7 @@ class AddEditSetFragment : Fragment() {
         val newParameter = UpdateSetParameterRequest(
             id = null,
             parameterId = parameter.id,
+            repetitions = binding.etRepetitions.text.toString().toIntOrNull(),
             numericValue = when (parameter.parameterType) {
                 "NUMBER", "DISTANCE", "PERCENTAGE" -> binding.etNumericValue.text.toString().toDoubleOrNull()
                 else -> null
@@ -343,9 +369,7 @@ class AddEditSetFragment : Fragment() {
             durationValue = when (parameter.parameterType) {
                 "DURATION" -> binding.etDurationValue.text.toString().toLongOrNull()
                 else -> null
-            },
-            minValue = binding.etMinValue.text.toString().toDoubleOrNull(),
-            maxValue = binding.etMaxValue.text.toString().toDoubleOrNull()
+            }
         )
 
         currentSetParameters.add(newParameter)
@@ -353,7 +377,6 @@ class AddEditSetFragment : Fragment() {
         Toast.makeText(requireContext(), "Parámetro agregado", Toast.LENGTH_SHORT).show()
     }
 
-    // 🛠️ CORRECCIÓN: ya no usa layout item_chip, crea los chips programáticamente
     private fun updateParametersChips() {
         binding.chipGroupSelected.removeAllViews()
         if (currentSetParameters.isEmpty()) {
@@ -364,8 +387,8 @@ class AddEditSetFragment : Fragment() {
             binding.layoutSelectedParameters.visibility = View.VISIBLE
             currentSetParameters.forEach { param ->
                 val chip = Chip(requireContext())
-                // Aquí idealmente deberías mostrar el nombre del parámetro, pero por ahora usamos el ID
-                chip.text = "Parámetro ${param.parameterId}"
+                chip.text = "Parámetro ${param.parameterId}" +
+                        if (param.repetitions != null) " (${param.repetitions} reps)" else ""
                 chip.isCloseIconVisible = true
                 chip.setOnCloseIconClickListener {
                     currentSetParameters.remove(param)

@@ -82,6 +82,9 @@
         <argument
             android:name="routineExerciseId"
             app:argType="long" />
+        <argument
+            android:name="exerciseId"
+            app:argType="long" />
         <action
             android:id="@+id/action_routine_sets_to_add_edit_set"
             app:destination="@id/navigation_add_edit_set" />
@@ -94,6 +97,9 @@
         tools:layout="@layout/fragment_add_edit_set">
         <argument
             android:name="routineExerciseId"
+            app:argType="long" />
+        <argument
+            android:name="exerciseId"
             app:argType="long" />
         <argument
             android:name="setId"

@@ -14,18 +14,16 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.*
 import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.model.RoutineSetTemplateViewModel
 import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
 import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
-import com.fitapp.appfit.response.routine.request.SetParameterRequest
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.response.sets.request.CreateSetTemplateRequest
 import com.fitapp.appfit.response.sets.request.UpdateSetParameterRequest
 import com.fitapp.appfit.response.sets.request.UpdateSetTemplateRequest
-import com.fitapp.appfit.ui.parameters.adapter.ParameterAdapter
+import com.fitapp.appfit.ui.exercises.params.ParameterAdapter
 import com.fitapp.appfit.utils.Resource
 import kotlin.properties.Delegates
 
@@ -227,14 +225,13 @@ class ConfigureSetsFragment : Fragment() {
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> showLoading()
                 else -> {}
             }
         })
 
-        // Observar parámetros disponibles
         parameterViewModel.allParametersState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
@@ -354,17 +351,16 @@ class ConfigureSetsFragment : Fragment() {
             return
         }
 
-        // Obtener el set actual
         val currentSet = currentSets.find { it.id == setId }
         if (currentSet == null) {
             Toast.makeText(requireContext(), "Set no encontrado", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Crear el nuevo parámetro
         val newParameter = UpdateSetParameterRequest(
-            id = null, // Nuevo parámetro
+            id = null,
             parameterId = parameter.id,
+            repetitions = binding.etRepetitions.text.toString().toIntOrNull(),  // Si existe en el layout
             numericValue = when (parameter.parameterType) {
                 "NUMBER", "DISTANCE", "PERCENTAGE" ->
                     binding.etNumericValue.text.toString().toDoubleOrNull()
@@ -377,27 +373,22 @@ class ConfigureSetsFragment : Fragment() {
             durationValue = when (parameter.parameterType) {
                 "DURATION" -> binding.etDurationValue.text.toString().toLongOrNull()
                 else -> null
-            },
-            minValue = binding.etMinValue.text.toString().toDoubleOrNull(),
-            maxValue = binding.etMaxValue.text.toString().toDoubleOrNull()
+            }
         )
 
-        // Crear lista actualizada de parámetros
         val currentParameters = currentSet.parameters?.map { param ->
             UpdateSetParameterRequest(
                 id = param.id,
                 parameterId = param.parameterId,
+                repetitions = param.repetitions,
                 numericValue = param.numericValue,
                 integerValue = param.integerValue,
-                durationValue = param.durationValue,
-                minValue = param.minValue,
-                maxValue = param.maxValue
+                durationValue = param.durationValue
             )
         }?.toMutableList() ?: mutableListOf()
 
         currentParameters.add(newParameter)
 
-        // Actualizar el set
         val updateRequest = UpdateSetTemplateRequest(
             position = currentSet.position,
             subSetNumber = currentSet.subSetNumber,

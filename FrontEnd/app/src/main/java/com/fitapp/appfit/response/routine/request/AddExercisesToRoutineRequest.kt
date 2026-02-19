@@ -34,9 +34,8 @@ data class SetTemplateRequest(
 
 data class SetParameterRequest(
     @SerializedName("parameterId") val parameterId: Long,
+    @SerializedName("repetitions") val repetitions: Int? = null,
     @SerializedName("numericValue") val numericValue: Double? = null,
     @SerializedName("durationValue") val durationValue: Long? = null,
-    @SerializedName("integerValue") val integerValue: Int? = null,
-    @SerializedName("minValue") val minValue: Double? = null,
-    @SerializedName("maxValue") val maxValue: Double? = null
+    @SerializedName("integerValue") val integerValue: Int? = null
 )
