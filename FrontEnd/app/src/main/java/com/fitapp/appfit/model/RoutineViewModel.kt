@@ -29,6 +29,9 @@ class RoutineViewModel : ViewModel() {
     private val _anyUpdateEvent = MutableLiveData<Any>()
     val anyUpdateEvent: LiveData<Any> = _anyUpdateEvent
 
+    private val _workoutRoutineState = MutableLiveData<Resource<RoutineResponse>>()
+    val workoutRoutineState: LiveData<Resource<RoutineResponse>> = _workoutRoutineState
+
     companion object {
         private const val TAG = "RoutineViewModel"
     }
@@ -182,8 +185,26 @@ class RoutineViewModel : ViewModel() {
 
                 _routineDetailState.value = result
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo rutina: ${e.message}", e)
+                Log.e(TAG, "Excepción obteniendo rutina: ${e.message}", e)
                 _routineDetailState.value = Resource.Error("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun getRoutineForTraining(id: Long) {
+        _workoutRoutineState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                val result = repository.getRoutineForTraining(id)
+                _workoutRoutineState.value = result
+                if (result is Resource.Success) {
+                    Log.d(TAG, "✅ Rutina de entrenamiento cargada: ${result.data?.name}")
+                } else if (result is Resource.Error) {
+                    Log.e(TAG, "Error cargando rutina: ${result.message}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Excepción: ${e.message}")
+                _workoutRoutineState.value = Resource.Error("Error: ${e.message}")
             }
         }
     }

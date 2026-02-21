@@ -9,7 +9,6 @@ import retrofit2.http.*
 
 interface RoutineService {
 
-    // CRUD básico
     @POST("api/routines/create")
     suspend fun createRoutine(@Body request: CreateRoutineRequest): Response<RoutineResponse>
 
@@ -75,6 +74,9 @@ interface RoutineService {
         @Path("id") id: Long
     ): Response<Unit>
 
+    @GET("api/routines/{id}/for-training")
+    suspend fun getRoutineForTraining(@Path("id") id: Long): Response<RoutineResponse>
+    
     companion object {
         val instance: RoutineService by lazy {
             ApiClient.instance.create(RoutineService::class.java)

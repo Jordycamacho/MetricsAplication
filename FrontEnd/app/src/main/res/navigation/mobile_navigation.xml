@@ -40,6 +40,9 @@
             android:id="@+id/action_navigation_routines_to_navigation_edit_routine"
             app:destination="@id/navigation_edit_routine" />
         <action
+            android:id="@+id/action_navigation_routines_to_navigation_workout"
+            app:destination="@id/navigation_workout" />
+        <action
             android:id="@+id/action_navigation_routines_to_routine_exercises"
             app:destination="@id/navigation_routine_exercises" />
     </fragment>
@@ -72,6 +75,16 @@
         <action
             android:id="@+id/action_routine_exercises_to_routine_sets"
             app:destination="@id/navigation_routine_sets" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_workout"
+        android:name="com.fitapp.appfit.ui.workout.WorkoutFragment"
+        android:label="Entrenamiento"
+        tools:layout="@layout/fragment_workout">
+        <argument
+            android:name="routineId"
+            app:argType="long" />
     </fragment>
 
     <fragment

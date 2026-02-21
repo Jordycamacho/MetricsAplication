@@ -14,5 +14,6 @@ data class RoutineResponse(
     @SerializedName("isActive") val isActive: Boolean,
     @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("updatedAt") val updatedAt: String?,
-    @SerializedName("lastUsedAt") val lastUsedAt: String?
+    @SerializedName("lastUsedAt") val lastUsedAt: String?,
+    @SerializedName("exercises") val exercises: List<RoutineExerciseResponse>?
 )

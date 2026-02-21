@@ -222,12 +222,8 @@ class RoutinesFragment : Fragment() {
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
         routineViewModel.markRoutineAsUsed(routine.id)
-
-        Toast.makeText(
-            requireContext(),
-            "✅ Iniciando entrenamiento: ${routine.name}",
-            Toast.LENGTH_SHORT
-        ).show()
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationWorkout(routine.id)
+        findNavController().navigate(action)
 
     }
 

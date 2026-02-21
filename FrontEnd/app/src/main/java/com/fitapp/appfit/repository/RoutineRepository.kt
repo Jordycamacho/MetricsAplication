@@ -29,6 +29,16 @@ class RoutineRepository {
         }
     }
 
+    suspend fun getRoutineForTraining(id: Long): Resource<RoutineResponse> {
+        return try {
+            Log.d(TAG, "Obteniendo rutina para entrenamiento: $id")
+            val response = routineService.getRoutineForTraining(id)
+            handleResponse(response, "obtener rutina para entrenamiento")
+        } catch (e: Exception) {
+            handleException(e, "obtener rutina para entrenamiento")
+        }
+    }
+
     suspend fun getRoutine(id: Long): Resource<RoutineResponse> {
         return try {
             Log.d(TAG, "Obteniendo rutina con ID: $id")
