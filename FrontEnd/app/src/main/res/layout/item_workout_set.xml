@@ -1,132 +1,77 @@
-<?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/card_set"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp"
     app:cardBackgroundColor="@color/surface_dark">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp">
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
 
-        <!-- Título del set (sin check por ahora) -->
         <TextView
             android:id="@+id/tv_set_title"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Set 1 - NORMAL"
+            android:text="Set 1"
             android:textColor="@color/text_primary_dark"
-            android:textSize="16sp"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginEnd="12dp"/>
 
-        <!-- Repeticiones -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+        <!-- REPS -->
+        <ImageButton
+            android:id="@+id/btn_decrease_reps"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_remove"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gold_primary"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reps:"
-                android:textColor="@color/text_secondary_dark"
-                android:textSize="14sp" />
-
-            <ImageButton
-                android:id="@+id/btn_decrease_reps"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_remove"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                app:tint="@color/gold_primary" />
-
-            <TextView
-                android:id="@+id/tv_reps_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="10"
-                android:textColor="@color/text_primary_dark"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:minWidth="40dp"
-                android:gravity="center" />
-
-            <ImageButton
-                android:id="@+id/btn_increase_reps"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_add"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                app:tint="@color/gold_primary" />
-        </LinearLayout>
-
-        <!-- Peso -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="4dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Peso:"
-                android:textColor="@color/text_secondary_dark"
-                android:textSize="14sp" />
-
-            <ImageButton
-                android:id="@+id/btn_decrease_weight"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_remove"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                app:tint="@color/gold_primary" />
-
-            <TextView
-                android:id="@+id/tv_weight_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="20.0"
-                android:textColor="@color/text_primary_dark"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:minWidth="40dp"
-                android:gravity="center" />
-
-            <ImageButton
-                android:id="@+id/btn_increase_weight"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_add"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                app:tint="@color/gold_primary" />
-        </LinearLayout>
-
-        <!-- Espacio para posible temporizador (opcional) -->
         <TextView
-            android:id="@+id/tv_timer"
-            android:layout_width="match_parent"
+            android:id="@+id/tv_reps_value"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/gold_primary"
-            android:textSize="14sp"
-            android:textStyle="bold"
+            android:text="10"
             android:gravity="center"
-            android:visibility="gone" />
+            android:textColor="@color/text_primary_dark"/>
+
+        <ImageButton
+            android:id="@+id/btn_increase_reps"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_add"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gold_primary"/>
+
+        <!-- PESO -->
+        <ImageButton
+            android:id="@+id/btn_decrease_weight"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_remove"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gold_primary"/>
+
+        <TextView
+            android:id="@+id/tv_weight_value"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:text="20"
+            android:gravity="center"
+            android:textColor="@color/text_primary_dark"/>
+
+        <ImageButton
+            android:id="@+id/btn_increase_weight"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_add"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gold_primary"/>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

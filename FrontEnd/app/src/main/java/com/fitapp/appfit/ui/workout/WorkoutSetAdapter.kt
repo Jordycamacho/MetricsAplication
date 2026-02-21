@@ -20,16 +20,18 @@ class WorkoutSetAdapter(
 
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
-        // Inicializar con valores del servidor
+
         sets.forEach { set ->
             set.parameters?.forEach { param ->
                 when {
-                    param.parameterName?.contains("rep", ignoreCase = true) == true -> {
-                        currentReps[set.id] = param.integerValue ?: 0
+                    param.integerValue != null -> {
+                        currentReps[set.id] = param.integerValue
                     }
-                    param.parameterName?.contains("peso", ignoreCase = true) == true ||
-                            param.parameterName?.contains("weight", ignoreCase = true) == true -> {
-                        currentWeight[set.id] = param.numericValue ?: 0.0
+                    param.numericValue != null -> {
+                        currentWeight[set.id] = param.numericValue
+                    }
+                    param.durationValue != null -> {
+                        currentWeight[set.id] = param.durationValue.toDouble()
                     }
                 }
             }
@@ -56,7 +58,6 @@ class WorkoutSetAdapter(
         private val btnIncreaseReps: ImageButton = itemView.findViewById(R.id.btn_increase_reps)
         private val btnDecreaseWeight: ImageButton = itemView.findViewById(R.id.btn_decrease_weight)
         private val btnIncreaseWeight: ImageButton = itemView.findViewById(R.id.btn_increase_weight)
-        private val tvTimer: TextView = itemView.findViewById(R.id.tv_timer)
 
         fun bind(set: RoutineSetTemplateResponse) {
             val setType = set.setType ?: "NORMAL"
@@ -102,13 +103,5 @@ class WorkoutSetAdapter(
             }
         }
 
-        fun updateTimer(secondsLeft: Long) {
-            tvTimer.text = "⏱️ $secondsLeft"
-            tvTimer.visibility = View.VISIBLE
-        }
-
-        fun hideTimer() {
-            tvTimer.visibility = View.GONE
-        }
     }
 }

@@ -24,7 +24,7 @@ class WorkoutFragment : Fragment() {
     private val args: WorkoutFragmentArgs by navArgs()
     private val viewModel: RoutineViewModel by viewModels()
 
-    private lateinit var adapter: WorkoutExerciseAdapter
+    private lateinit var adapter: WorkoutDayAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,8 +51,7 @@ class WorkoutFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = WorkoutExerciseAdapter { exercise, set, valueType, newValue ->
-            // Aquí puedes manejar el cambio de valor (actualizar UI o enviar a backend)
+        adapter = WorkoutDayAdapter { exercise, set, valueType, newValue ->
             Log.d("Workout", "Ejercicio ${exercise.exerciseName}, Set ${set.position}, $valueType = $newValue")
         }
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())

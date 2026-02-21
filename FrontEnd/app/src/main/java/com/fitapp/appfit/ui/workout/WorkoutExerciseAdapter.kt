@@ -19,6 +19,12 @@ class WorkoutExerciseAdapter(
     private var exercises: List<RoutineExerciseResponse> = emptyList()
     private var expandedPositions = mutableSetOf<Int>()
 
+    fun submitExercises(exercises: List<RoutineExerciseResponse>) {
+        this.exercises = exercises.sortedBy { it.position }
+        expandedPositions.clear()
+        notifyDataSetChanged()
+    }
+
     fun submitRoutine(routine: RoutineResponse) {
         exercises = routine.exercises
             ?.sortedWith(compareBy<RoutineExerciseResponse> {
@@ -26,7 +32,6 @@ class WorkoutExerciseAdapter(
             }.thenBy {
                 it.position
             }) ?: emptyList()
-
         expandedPositions.clear()
         notifyDataSetChanged()
     }
