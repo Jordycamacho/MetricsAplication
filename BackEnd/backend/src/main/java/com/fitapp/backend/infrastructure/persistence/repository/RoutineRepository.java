@@ -1,6 +1,7 @@
 package com.fitapp.backend.infrastructure.persistence.repository;
 
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetParameterEntity;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -19,55 +20,66 @@ import java.util.List;
 @Repository
 public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, JpaSpecificationExecutor<RoutineEntity> {
 
-    long countByUserId(Long userId);
+        long countByUserId(Long userId);
 
-    @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
-    Optional<RoutineEntity> findByIdAndUserId(Long id, Long userId);
+        @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
+        Optional<RoutineEntity> findByIdAndUserId(Long id, Long userId);
 
-    @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
-    Page<RoutineEntity> findByUserId(Long userId, Pageable pageable);
+        @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
+        Page<RoutineEntity> findByUserId(Long userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
-    @Override
-    Page<RoutineEntity> findAll(Specification<RoutineEntity> spec, Pageable pageable);
+        @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
+        @Override
+        Page<RoutineEntity> findAll(Specification<RoutineEntity> spec, Pageable pageable);
 
-    List<RoutineEntity> findByUserIdAndIsActive(Long userId, Boolean isActive);
+        List<RoutineEntity> findByUserIdAndIsActive(Long userId, Boolean isActive);
 
-    Page<RoutineEntity> findByUserIdAndIsActive(Long userId, Boolean isActive, Pageable pageable);
+        Page<RoutineEntity> findByUserIdAndIsActive(Long userId, Boolean isActive, Pageable pageable);
 
-    Page<RoutineEntity> findByUserIdAndSportId(Long userId, Long sportId, Pageable pageable);
+        Page<RoutineEntity> findByUserIdAndSportId(Long userId, Long sportId, Pageable pageable);
 
-    @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId ORDER BY r.createdAt DESC")
-    List<RoutineEntity> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
+        @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId ORDER BY r.createdAt DESC")
+        List<RoutineEntity> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    default List<RoutineEntity> findRecentByUserId(Long userId, int limit) {
-        return findRecentByUserId(userId, org.springframework.data.domain.PageRequest.of(0, limit));
-    }
+        default List<RoutineEntity> findRecentByUserId(Long userId, int limit) {
+                return findRecentByUserId(userId, org.springframework.data.domain.PageRequest.of(0, limit));
+        }
 
-    @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-    Page<RoutineEntity> findByUserIdAndNameContainingIgnoreCase(
-            @Param("userId") Long userId,
-            @Param("name") String name,
-            Pageable pageable);
+        @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+        Page<RoutineEntity> findByUserIdAndNameContainingIgnoreCase(
+                        @Param("userId") Long userId,
+                        @Param("name") String name,
+                        Pageable pageable);
 
-    @Modifying
-    @Query("UPDATE RoutineEntity r SET r.isActive = :isActive WHERE r.id = :id AND r.user.id = :userId")
-    int updateActiveStatus(@Param("id") Long id, @Param("userId") Long userId, @Param("isActive") Boolean isActive);
+        @Modifying
+        @Query("UPDATE RoutineEntity r SET r.isActive = :isActive WHERE r.id = :id AND r.user.id = :userId")
+        int updateActiveStatus(@Param("id") Long id, @Param("userId") Long userId, @Param("isActive") Boolean isActive);
 
-    @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.createdAt BETWEEN :startDate AND :endDate")
-    List<RoutineEntity> findByUserIdAndCreatedAtBetween(@Param("userId") Long userId,
-            @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+        @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.createdAt BETWEEN :startDate AND :endDate")
+        List<RoutineEntity> findByUserIdAndCreatedAtBetween(@Param("userId") Long userId,
+                        @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.lastUsedAt IS NOT NULL ORDER BY r.lastUsedAt DESC")
-    List<RoutineEntity> findLastUsedByUserId(@Param("userId") Long userId, Pageable pageable);
+        @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.lastUsedAt IS NOT NULL ORDER BY r.lastUsedAt DESC")
+        List<RoutineEntity> findLastUsedByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    default List<RoutineEntity> findLastUsedByUserId(Long userId, int limit) {
-        return findLastUsedByUserId(userId, org.springframework.data.domain.PageRequest.of(0, limit));
-    }
+        default List<RoutineEntity> findLastUsedByUserId(Long userId, int limit) {
+                return findLastUsedByUserId(userId, org.springframework.data.domain.PageRequest.of(0, limit));
+        }
 
-    @Modifying
-    @Query("UPDATE RoutineEntity r SET r.lastUsedAt = :lastUsedAt WHERE r.id = :id AND r.user.id = :userId")
-    int updateLastUsedAt(@Param("id") Long id, @Param("userId") Long userId,
-            @Param("lastUsedAt") LocalDateTime lastUsedAt);
+        @Modifying
+        @Query("UPDATE RoutineEntity r SET r.lastUsedAt = :lastUsedAt WHERE r.id = :id AND r.user.id = :userId")
+        int updateLastUsedAt(@Param("id") Long id, @Param("userId") Long userId,
+                        @Param("lastUsedAt") LocalDateTime lastUsedAt);
 
+        @Query("SELECT DISTINCT r FROM RoutineEntity r " +
+                        "LEFT JOIN FETCH r.exercises e " +
+                        "LEFT JOIN FETCH e.sets s " +
+                        "WHERE r.id = :id AND r.user.id = :userId")
+        Optional<RoutineEntity> findRoutineWithExercisesAndSets(
+                        @Param("id") Long id,
+                        @Param("userId") Long userId);
+
+        @Query("SELECT p FROM RoutineSetParameterEntity p " +
+                        "WHERE p.setTemplate.id IN :setIds")
+        List<RoutineSetParameterEntity> findParametersBySetIds(@Param("setIds") List<Long> setIds);
 }

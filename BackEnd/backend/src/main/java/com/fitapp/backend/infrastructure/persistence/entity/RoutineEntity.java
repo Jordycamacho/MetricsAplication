@@ -1,9 +1,7 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -67,7 +65,7 @@ public class RoutineEntity {
 
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
-    private List<RoutineExerciseEntity> exercises = new ArrayList<>();
+    private Set<RoutineExerciseEntity> exercises = new HashSet<>();
 
     private String goal;
 

@@ -23,6 +23,7 @@ public interface RoutineUseCase {
     List<RoutineSummaryResponse> getLastUsedRoutines(String userEmail, int limit);
     List<RoutineSummaryResponse> getRecentRoutines(String userEmail, int limit);
     List<RoutineSummaryResponse> getActiveRoutines(String userEmail);
+    RoutineResponse getRoutineForTraining(Long id, String userEmail);
     
     //Actualizacion
     void markRoutineAsUsed(Long id, String userEmail);

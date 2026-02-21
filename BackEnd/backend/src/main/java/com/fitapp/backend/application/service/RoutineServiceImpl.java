@@ -103,6 +103,30 @@ public class RoutineServiceImpl implements RoutineUseCase {
         }
 
         @Override
+        @Cacheable(value = "routineForTraining", key = "#id + '_' + #userEmail")
+        public RoutineResponse getRoutineForTraining(Long id, String userEmail) {
+                log.info("Obteniendo rutina para entrenamiento: id={}, usuario={}", id, userEmail);
+
+                UserModel user = userPersistencePort.findByEmail(userEmail)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+                RoutineModel routine = routinePersistencePort.findFullRoutineByIdAndUserId(id, user.getId())
+                                .orElseThrow(() -> new RoutineNotFoundException(id));
+
+                SportModel sport = null;
+                if (routine.getSportId() != null) {
+                        sport = sportPersistencePort.findById(routine.getSportId()).orElse(null);
+                }
+
+                RoutineResponse response = mapToResponse(routine, sport);
+
+                routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
+
+                log.info("Rutina para entrenamiento obtenida exitosamente: id={}", id);
+                return response;
+        }
+
+        @Override
         @Cacheable(value = "routines", key = "#id + '_' + #userEmail")
         public RoutineResponse getRoutineById(Long id, String userEmail) {
                 log.debug("Obteniendo rutina por ID: {}, usuario: {}", id, userEmail);

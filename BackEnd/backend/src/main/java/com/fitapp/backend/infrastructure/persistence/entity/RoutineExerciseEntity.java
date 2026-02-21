@@ -1,9 +1,8 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import java.util.List;
-
+import java.util.Objects;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,12 +18,16 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@ToString(exclude = { "routine", "exercise", "targetParameters", "sets" })
 @Entity
 @Table(name = "routine_exercises")
 public class RoutineExerciseEntity {
@@ -33,7 +36,7 @@ public class RoutineExerciseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "routine_id")
     private RoutineEntity routine;
 
@@ -44,26 +47,37 @@ public class RoutineExerciseEntity {
     @Column(nullable = false)
     private Integer position;
 
-    // Para separar por sesión
     @Column(name = "session_number", nullable = false)
-    private Integer sessionNumber = 1; // 1, 2, 3... basado en sessionsPerWeek
+    private Integer sessionNumber = 1;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week")
-    private DayOfWeek dayOfWeek; // Día específico (opcional)
+    private DayOfWeek dayOfWeek;
 
     @Column(name = "session_order")
-    private Integer sessionOrder; // Orden dentro de la sesión
+    private Integer sessionOrder;
 
-    // Descanso después del ejercicio
-    private Integer restAfterExercise; // segundos
+    private Integer restAfterExercise;
 
-    // Objetivos generales del ejercicio (opcional)
     @OneToMany(mappedBy = "routineExercise", cascade = CascadeType.ALL)
     private List<RoutineExerciseParameterEntity> targetParameters;
 
-    // Sets planificados
     @OneToMany(mappedBy = "routineExercise", cascade = CascadeType.ALL)
     @OrderBy("position ASC")
     private List<RoutineSetTemplateEntity> sets;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof RoutineExerciseEntity))
+            return false;
+        RoutineExerciseEntity that = (RoutineExerciseEntity) o;
+        return id != null && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

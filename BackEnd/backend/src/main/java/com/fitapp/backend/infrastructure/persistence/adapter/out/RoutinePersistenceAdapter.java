@@ -5,6 +5,8 @@ import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
 import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.infrastructure.persistence.converter.RoutineConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetParameterEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,34 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     }
 
     @Override
+    public Optional<RoutineModel> findFullRoutineByIdAndUserId(Long id, Long userId) {
+
+        Optional<RoutineEntity> routineOpt = routineRepository.findRoutineWithExercisesAndSets(id, userId);
+
+        if (routineOpt.isEmpty())
+            return Optional.empty();
+
+        RoutineEntity routine = routineOpt.get();
+
+        List<Long> setIds = routine.getExercises().stream()
+                .flatMap(e -> e.getSets().stream())
+                .map(RoutineSetTemplateEntity::getId)
+                .toList();
+
+        if (!setIds.isEmpty()) {
+            List<RoutineSetParameterEntity> parameters = routineRepository.findParametersBySetIds(setIds);
+
+            Map<Long, List<RoutineSetParameterEntity>> grouped = parameters.stream().collect(Collectors.groupingBy(
+                    p -> p.getSetTemplate().getId()));
+
+            routine.getExercises().forEach(
+                    e -> e.getSets().forEach(s -> s.setParameters(grouped.getOrDefault(s.getId(), List.of()))));
+        }
+
+        return Optional.of(routineConverter.toDomain(routine));
+    }
+
+    @Override
     public Optional<RoutineModel> findByIdAndUserId(Long id, Long userId) {
         return routineRepository.findByIdAndUserId(id, userId)
                 .map(routineConverter::toDomain);
@@ -51,6 +82,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
 
     @Override
     public Page<RoutineModel> findByUserIdAndFilters(Long userId, RoutineFilterRequest filters, Pageable pageable) {
+        @SuppressWarnings("removal")
         Specification<RoutineEntity> spec = Specification
                 .where((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
 

@@ -18,6 +18,7 @@ public interface RoutinePersistencePort {
     List<RoutineModel> findRecentByUserId(Long userId, int limit);
     List<RoutineModel> findActiveRoutinesByUserId(Long userId);
     List<RoutineModel> findLastUsedByUserId(Long userId, int limit);
+    Optional<RoutineModel> findFullRoutineByIdAndUserId(Long id, Long userId);
     long countByUserId(Long userId);
     
     // Métodos de actualización

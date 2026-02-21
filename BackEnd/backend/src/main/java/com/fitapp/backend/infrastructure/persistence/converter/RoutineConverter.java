@@ -3,7 +3,9 @@ package com.fitapp.backend.infrastructure.persistence.converter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -217,12 +219,12 @@ public class RoutineConverter {
         // Convertir ejercicios si existen
         if (domain.getExercises() != null && !domain.getExercises().isEmpty()) {
             log.debug("Convirtiendo {} ejercicios del modelo", domain.getExercises().size());
-            List<RoutineExerciseEntity> exerciseEntities = domain.getExercises().stream()
+            Set<RoutineExerciseEntity> exerciseEntities = domain.getExercises().stream()
                     .map(exerciseModel -> convertToRoutineExerciseEntity(exerciseModel, entity))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             entity.setExercises(exerciseEntities);
         } else {
-            entity.setExercises(new ArrayList<>());
+            entity.setExercises(new HashSet<>());
         }
 
         log.info("Conversión a entidad completada para rutina {}", domain.getId());

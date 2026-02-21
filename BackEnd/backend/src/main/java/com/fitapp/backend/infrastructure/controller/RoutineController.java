@@ -91,6 +91,17 @@ public class RoutineController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Obtener rutina para entrenamiento", description = "Devuelve la rutina completa con ejercicios, sets y parámetros, lista para ser ejecutada en un entrenamiento")
+    @GetMapping("/{id}/for-training")
+    public ResponseEntity<RoutineResponse> getRoutineForTraining(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = jwt.getClaimAsString("email");
+        log.info("Petición de rutina para entrenamiento: id={}, usuario={}", id, userEmail);
+        RoutineResponse response = routineUseCase.getRoutineForTraining(id, userEmail);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Get recent routines", description = "Get recently created routines")
     @GetMapping("/recent")
     public ResponseEntity<List<RoutineSummaryResponse>> getRecentRoutines(
