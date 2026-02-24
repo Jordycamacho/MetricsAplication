@@ -14,12 +14,10 @@ public interface CustomParameterPersistencePort {
     List<CustomParameterModel> findAll();
     Page<CustomParameterModel> findAll(Pageable pageable);
     Page<CustomParameterModel> findByFilters(CustomParameterFilterRequest filters, Pageable pageable);
-    Optional<CustomParameterModel> findByNameAndOwnerIdAndSportId(String name, Long ownerId, Long sportId);
+    Optional<CustomParameterModel> findByNameAndOwnerIdAndSportId(String name, Long ownerId);
     Page<CustomParameterModel> findByOwnerId(Long ownerId, Pageable pageable);
-    Page<CustomParameterModel> findBySportId(Long sportId, Pageable pageable);
     Page<CustomParameterModel> findByIsGlobalTrue(Pageable pageable);
-    Page<CustomParameterModel> findAvailableForUser(Long userId, Long sportId, Pageable pageable);
-    List<String> findAllDistinctCategories();
+    Page<CustomParameterModel> findAvailableForUser(Long userId, Pageable pageable);
     List<ParameterType> findAllDistinctParameterTypes();
     CustomParameterModel save(CustomParameterModel parameterModel);
     void delete(Long id);

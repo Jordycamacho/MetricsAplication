@@ -13,6 +13,9 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +37,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "parametersSearch", key = "{#filterRequest, #pageable}")
     public CustomParameterPageResponse getAllParametersPaginated(CustomParameterFilterRequest filterRequest) {
         parameterLogger.logServiceEntry("getAllParametersPaginated", filterRequest);
         
@@ -79,9 +83,9 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional(readOnly = true)
-    public CustomParameterPageResponse getAvailableParametersPaginated(String userEmail, Long sportId, 
+    public CustomParameterPageResponse getAvailableParametersPaginated(String userEmail, 
                                                                       CustomParameterFilterRequest filterRequest) {
-        parameterLogger.logServiceEntry("getAvailableParametersPaginated", userEmail, sportId, filterRequest);
+        parameterLogger.logServiceEntry("getAvailableParametersPaginated", userEmail, filterRequest);
         
         try {
             var user = userPersistencePort.findByEmail(userEmail)
@@ -91,7 +95,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
                     });
             
             Pageable pageable = createPageable(filterRequest);
-            Page<CustomParameterModel> page = parameterPersistencePort.findAvailableForUser(user.getId(), sportId, pageable);
+            Page<CustomParameterModel> page = parameterPersistencePort.findAvailableForUser(user.getId(), pageable);
             
             parameterLogger.logParameterRetrieval(userEmail, page.getNumberOfElements(), "AVAILABLE_PAGINATED");
             
@@ -104,6 +108,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "parametersById", key = "#id")
     public CustomParameterModel getParameterById(Long id) {
         parameterLogger.logServiceEntry("getParameterById", id);
         
@@ -121,6 +126,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional
+    @CacheEvict(value = {"parametersById", "parametersSearch"}, allEntries = true)
     public CustomParameterModel createParameter(CustomParameterRequest request, String userEmail) {
         parameterLogger.logParameterCreationStart(userEmail, request.getName());
         parameterLogger.logServiceEntry("createParameter", request, userEmail);
@@ -134,32 +140,26 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
                         return new RuntimeException("User not found");
                     });
             
-            // Validar unicidad
             boolean exists = parameterPersistencePort
-                    .findByNameAndOwnerIdAndSportId(request.getName(), user.getId(), request.getSportId())
+                    .findByNameAndOwnerIdAndSportId(request.getName(), user.getId())
                     .isPresent();
             
             if (exists) {
-                log.error("DUPLICATE_PARAMETER | name={} | ownerId={} | sportId={}", 
-                         request.getName(), user.getId(), request.getSportId());
+                log.error("DUPLICATE_PARAMETER | name={} | ownerId={}", 
+                         request.getName(), user.getId());
                 throw new RuntimeException("Ya existe un parámetro con este nombre para el usuario y deporte especificados");
             }
             
-            // Validar formato del nombre
             validateParameterName(request.getName());
             
             CustomParameterModel model = new CustomParameterModel();
             model.setName(request.getName());
-            model.setDisplayName(request.getDisplayName() != null ? request.getDisplayName() : request.getName());
             model.setDescription(request.getDescription());
             model.setParameterType(request.getParameterType());
             model.setUnit(request.getUnit());
-            model.setValidationRules(request.getValidationRules());
             model.setIsGlobal(request.getIsGlobal() != null ? request.getIsGlobal() : false);
             model.setIsActive(true);
             model.setOwnerId(user.getId());
-            model.setSportId(request.getSportId());
-            model.setCategory(request.getCategory());
             model.setUsageCount(0);
             
             model.validateFormat();
@@ -179,6 +179,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional
+    @CacheEvict(value = {"parametersById", "parametersSearch"}, allEntries = true)
     public CustomParameterModel updateParameter(Long id, CustomParameterRequest request, String userEmail) {
         parameterLogger.logParameterUpdateStart(id, userEmail);
         parameterLogger.logServiceEntry("updateParameter", id, request, userEmail);
@@ -196,17 +197,15 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
                         return new RuntimeException("Parameter not found");
                     });
             
-            // Verificar permisos
             if (!existing.getOwnerId().equals(user.getId())) {
                 log.error("UNAUTHORIZED_PARAMETER_UPDATE | parameterId={} | requesterId={} | ownerId={}", 
                          id, user.getId(), existing.getOwnerId());
                 throw new RuntimeException("No tiene permisos para actualizar este parámetro");
             }
             
-            // Validar unicidad si cambia el nombre
             if (!existing.getName().equals(request.getName())) {
                 boolean exists = parameterPersistencePort
-                        .findByNameAndOwnerIdAndSportId(request.getName(), user.getId(), request.getSportId())
+                        .findByNameAndOwnerIdAndSportId(request.getName(), user.getId())
                         .isPresent();
                 
                 if (exists) {
@@ -215,15 +214,10 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
                 }
             }
             
-            // Actualizar campos
             existing.setName(request.getName());
-            existing.setDisplayName(request.getDisplayName());
             existing.setDescription(request.getDescription());
             existing.setParameterType(request.getParameterType());
             existing.setUnit(request.getUnit());
-            existing.setValidationRules(request.getValidationRules());
-            existing.setSportId(request.getSportId());
-            existing.setCategory(request.getCategory());
             
             existing.validateFormat();
             existing.logModelData("UPDATING");
@@ -242,6 +236,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional
+    @CacheEvict(value = {"parametersById", "parametersSearch"}, allEntries = true)
     public void deleteParameter(Long id, String userEmail) {
         parameterLogger.logParameterDeletionStart(id, userEmail);
         parameterLogger.logServiceEntry("deleteParameter", id, userEmail);
@@ -259,7 +254,6 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
                         return new RuntimeException("Parameter not found");
                     });
             
-            // Verificar permisos
             if (!existing.getOwnerId().equals(user.getId())) {
                 log.error("UNAUTHORIZED_PARAMETER_DELETION | parameterId={} | requesterId={} | ownerId={}", 
                          id, user.getId(), existing.getOwnerId());
@@ -289,7 +283,6 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
             CustomParameterModel existing = parameterPersistencePort.findById(id)
                     .orElseThrow(() -> new RuntimeException("Parameter not found"));
             
-            // Verificar permisos
             if (!existing.getOwnerId().equals(user.getId())) {
                 throw new RuntimeException("No tiene permisos para modificar este parámetro");
             }
@@ -307,21 +300,7 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     
     @Override
     @Transactional(readOnly = true)
-    public List<String> getAllCategories() {
-        parameterLogger.logServiceEntry("getAllCategories");
-        
-        try {
-            List<String> categories = parameterPersistencePort.findAllDistinctCategories();
-            log.info("RETRIEVED_CATEGORIES | count={}", categories.size());
-            return categories;
-        } catch (Exception e) {
-            parameterLogger.logServiceError("getAllCategories", "Error retrieving categories", e);
-            throw e;
-        }
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
+    @Cacheable(value = "parameterTypes")
     public List<ParameterType> getAllParameterTypes() {
         parameterLogger.logServiceEntry("getAllParameterTypes");
         
@@ -342,10 +321,9 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
         
         try {
             parameterPersistencePort.incrementUsageCount(parameterId);
-            parameterLogger.logParameterUsageIncrement(parameterId, -1); // -1 porque no sabemos el nuevo valor
+            parameterLogger.logParameterUsageIncrement(parameterId, -1);
         } catch (Exception e) {
             parameterLogger.logServiceError("incrementParameterUsage", "Error incrementing usage count", e);
-            // No lanzamos excepción porque no es crítico
         }
     }
     
@@ -390,16 +368,12 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
         CustomParameterResponse response = new CustomParameterResponse();
         response.setId(model.getId());
         response.setName(model.getName());
-        response.setDisplayName(model.getDisplayName());
         response.setDescription(model.getDescription());
         response.setParameterType(model.getParameterType());
         response.setUnit(model.getUnit());
-        response.setValidationRules(model.getValidationRules());
         response.setIsGlobal(model.getIsGlobal());
         response.setIsActive(model.getIsActive());
         response.setOwnerId(model.getOwnerId());
-        response.setSportId(model.getSportId());
-        response.setCategory(model.getCategory());
         response.setCreatedAt(model.getCreatedAt());
         response.setUpdatedAt(model.getUpdatedAt());
         response.setUsageCount(model.getUsageCount());
@@ -412,13 +386,10 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
             throw new RuntimeException("El nombre del parámetro no puede estar vacío");
         }
         
-        // Validar formato camelCase
         if (!name.matches("^[a-z]+([A-Z][a-z]*)*$")) {
             log.warn("PARAMETER_NAME_FORMAT_VALIDATION | name={} | format not camelCase", name);
-            // No lanzamos excepción, solo log, para ser flexibles
         }
         
-        // Validar longitud
         if (name.length() > 100) {
             throw new RuntimeException("El nombre del parámetro no puede exceder 100 caracteres");
         }

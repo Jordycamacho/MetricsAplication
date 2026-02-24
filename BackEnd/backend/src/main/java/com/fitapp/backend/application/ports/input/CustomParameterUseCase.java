@@ -11,13 +11,12 @@ import java.util.List;
 public interface CustomParameterUseCase {
     CustomParameterPageResponse getAllParametersPaginated(CustomParameterFilterRequest filterRequest);
     CustomParameterPageResponse getMyParametersPaginated(String userEmail, CustomParameterFilterRequest filterRequest);
-    CustomParameterPageResponse getAvailableParametersPaginated(String userEmail, Long sportId, CustomParameterFilterRequest filterRequest);
+    CustomParameterPageResponse getAvailableParametersPaginated(String userEmail, CustomParameterFilterRequest filterRequest);
     CustomParameterModel getParameterById(Long id);
     CustomParameterModel createParameter(CustomParameterRequest request, String userEmail);
     CustomParameterModel updateParameter(Long id, CustomParameterRequest request, String userEmail);
     void deleteParameter(Long id, String userEmail);
     void toggleParameterStatus(Long id, String userEmail);
-    List<String> getAllCategories();
     List<ParameterType> getAllParameterTypes();
     void incrementParameterUsage(Long parameterId);
 }

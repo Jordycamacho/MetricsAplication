@@ -16,24 +16,18 @@ public class CustomParameterConverter {
         CustomParameterModel model = new CustomParameterModel();
         model.setId(entity.getId());
         model.setName(entity.getName());
-        model.setDisplayName(entity.getDisplayName());
         model.setDescription(entity.getDescription());
         model.setParameterType(entity.getParameterType());
         model.setUnit(entity.getUnit());
-        model.setValidationRules(entity.getValidationRules());
         model.setIsGlobal(entity.getIsGlobal());
         model.setIsActive(entity.getIsActive());
-        model.setCategory(entity.getCategory());
         model.setCreatedAt(entity.getCreatedAt());
         model.setUpdatedAt(entity.getUpdatedAt());
         model.setUsageCount(entity.getUsageCount());
-        
+        model.setFavorite(entity.isFavorite());
+
         if (entity.getOwner() != null) {
             model.setOwnerId(entity.getOwner().getId());
-        }
-        
-        if (entity.getSport() != null) {
-            model.setSportId(entity.getSport().getId());
         }
         
         model.logModelData("CONVERTED_FROM_ENTITY");
@@ -51,17 +45,15 @@ public class CustomParameterConverter {
         CustomParameterEntity entity = CustomParameterEntity.builder()
                 .id(model.getId())
                 .name(model.getName())
-                .displayName(model.getDisplayName())
                 .description(model.getDescription())
                 .parameterType(model.getParameterType())
                 .unit(model.getUnit())
-                .validationRules(model.getValidationRules())
                 .isGlobal(model.getIsGlobal())
                 .isActive(model.getIsActive())
-                .category(model.getCategory())
                 .createdAt(model.getCreatedAt())
                 .updatedAt(model.getUpdatedAt())
                 .usageCount(model.getUsageCount())
+                .isFavorite(model.isFavorite())
                 .build();
         
         log.debug("CONVERTER_TO_ENTITY_PARAMETER_END | entityId={} | isGlobal={}", 

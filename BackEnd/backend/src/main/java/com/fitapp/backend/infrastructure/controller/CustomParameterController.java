@@ -100,7 +100,7 @@ public class CustomParameterController {
                 request.getRequestURI(), userEmail, sportId);
         
         CustomParameterPageResponse response = customParameterUseCase.getAvailableParametersPaginated(
-                userEmail, sportId, filterRequest);
+                userEmail, filterRequest);
         
         log.info("CONTROLLER_GET_AVAILABLE_PARAMETERS_SUCCESS | user={} | totalElements={}", 
                 userEmail, response.getTotalElements());
@@ -243,24 +243,6 @@ public class CustomParameterController {
         return ResponseEntity.noContent().build();
     }
     
-    @Operation(summary = "Obtener todas las categorías de parámetros")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Categorías obtenidas exitosamente")
-    })
-    @GetMapping("/categories")
-    public ResponseEntity<List<String>> getAllCategories(HttpServletRequest request) {
-        setCorrelationId(request);
-        
-        log.info("CONTROLLER_GET_ALL_CATEGORIES | endpoint={}", request.getRequestURI());
-        
-        List<String> categories = customParameterUseCase.getAllCategories();
-        
-        log.info("CONTROLLER_GET_ALL_CATEGORIES_SUCCESS | count={}", categories.size());
-        clearCorrelationId();
-        
-        return ResponseEntity.ok(categories);
-    }
-    
     @Operation(summary = "Obtener todos los tipos de parámetros")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Tipos obtenidos exitosamente")
@@ -325,19 +307,16 @@ public class CustomParameterController {
         CustomParameterResponse response = new CustomParameterResponse();
         response.setId(model.getId());
         response.setName(model.getName());
-        response.setDisplayName(model.getDisplayName());
         response.setDescription(model.getDescription());
         response.setParameterType(model.getParameterType());
         response.setUnit(model.getUnit());
-        response.setValidationRules(model.getValidationRules());
         response.setIsGlobal(model.getIsGlobal());
         response.setIsActive(model.getIsActive());
         response.setOwnerId(model.getOwnerId());
-        response.setSportId(model.getSportId());
-        response.setCategory(model.getCategory());
         response.setCreatedAt(model.getCreatedAt());
         response.setUpdatedAt(model.getUpdatedAt());
         response.setUsageCount(model.getUsageCount());
+        response.setIsFavorite(model.isFavorite());
         
         return response;
     }

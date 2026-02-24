@@ -58,7 +58,7 @@ public class SetTemplateMapper {
         try {
             var parameter = customParameterPersistencePort.findById(model.getParameterId());
             if (parameter.isPresent()) {
-                response.setParameterName(parameter.get().getDisplayName());
+                //cambiar por unit response.setParameterName(parameter.get().getDisplayName());
                 response.setParameterType(parameter.get().getParameterType() != null ? 
                         parameter.get().getParameterType().name() : null);
                 response.setUnit(parameter.get().getUnit());

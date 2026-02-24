@@ -21,7 +21,11 @@ public class CustomParameterFilterRequest {
     @Schema(description = "Tipo de parámetro")
     @JsonProperty("parameterType")
     private ParameterType parameterType;
-    
+
+    @Schema(description = "Favoritos")
+    @JsonProperty("isFavorite")
+    private Boolean isFavorite;
+
     @Schema(description = "Si es global")
     @JsonProperty("isGlobal")
     private Boolean isGlobal;
@@ -30,25 +34,13 @@ public class CustomParameterFilterRequest {
     @JsonProperty("isActive")
     private Boolean isActive;
     
-    @Schema(description = "ID del deporte")
-    @JsonProperty("sportId")
-    private Long sportId;
-    
     @Schema(description = "ID del dueño")
     @JsonProperty("ownerId")
     private Long ownerId;
     
-    @Schema(description = "Categoría")
-    @JsonProperty("category")
-    private String category;
-    
     @Schema(description = "Solo mis parámetros")
     @JsonProperty("onlyMine")
     private Boolean onlyMine = false;
-    
-    @Schema(description = "Incluir parámetros globales")
-    @JsonProperty("includeGlobal")
-    private Boolean includeGlobal = true;
     
     @Schema(description = "Página solicitada (0-index)", example = "0")
     @JsonProperty("page")

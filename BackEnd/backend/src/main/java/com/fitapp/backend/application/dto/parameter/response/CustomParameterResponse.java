@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Data
 @Schema(description = "Respuesta de parámetro personalizado")
@@ -21,10 +20,6 @@ public class CustomParameterResponse {
     @JsonProperty("name")
     private String name;
     
-    @Schema(description = "Nombre para mostrar")
-    @JsonProperty("displayName")
-    private String displayName;
-    
     @Schema(description = "Descripción")
     @JsonProperty("description")
     private String description;
@@ -36,10 +31,6 @@ public class CustomParameterResponse {
     @Schema(description = "Unidad")
     @JsonProperty("unit")
     private String unit;
-    
-    @Schema(description = "Reglas de validación")
-    @JsonProperty("validationRules")
-    private Map<String, String> validationRules;
     
     @Schema(description = "Si es global")
     @JsonProperty("isGlobal")
@@ -56,19 +47,11 @@ public class CustomParameterResponse {
     @Schema(description = "Nombre del dueño")
     @JsonProperty("ownerName")
     private String ownerName;
-    
-    @Schema(description = "ID del deporte")
-    @JsonProperty("sportId")
-    private Long sportId;
-    
-    @Schema(description = "Nombre del deporte")
-    @JsonProperty("sportName")
-    private String sportName;
-    
-    @Schema(description = "Categoría")
-    @JsonProperty("category")
-    private String category;
-    
+
+    @Schema(description = "Si es favorito")
+    @JsonProperty("isFavorite")
+    private Boolean isFavorite;
+
     @Schema(description = "Fecha de creación")
     @JsonProperty("createdAt")
     private LocalDateTime createdAt;

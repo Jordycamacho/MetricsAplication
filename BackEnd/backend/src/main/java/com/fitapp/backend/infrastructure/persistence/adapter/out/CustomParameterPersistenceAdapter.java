@@ -5,7 +5,6 @@ import com.fitapp.backend.application.ports.output.CustomParameterPersistencePor
 import com.fitapp.backend.domain.model.CustomParameterModel;
 import com.fitapp.backend.infrastructure.persistence.converter.CustomParameterConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
 import com.fitapp.backend.infrastructure.persistence.repository.CustomParameterRepository;
@@ -74,11 +73,11 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
     }
 
     @Override
-    public Optional<CustomParameterModel> findByNameAndOwnerIdAndSportId(String name, Long ownerId, Long sportId) {
-        log.debug("PERSISTENCE_FIND_PARAMETER_BY_NAME | name={} | ownerId={} | sportId={}", 
-                 name, ownerId, sportId);
+    public Optional<CustomParameterModel> findByNameAndOwnerIdAndSportId(String name, Long ownerId) {
+        log.debug("PERSISTENCE_FIND_PARAMETER_BY_NAME | name={} | ownerId={}", 
+                 name, ownerId);
         
-        return customParameterRepository.findByNameAndOwnerIdAndSportId(name, ownerId, sportId)
+        return customParameterRepository.findByNameAndOwnerId(name, ownerId)
                 .map(parameterConverter::toDomain);
     }
 
@@ -91,14 +90,6 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
     }
 
     @Override
-    public Page<CustomParameterModel> findBySportId(Long sportId, Pageable pageable) {
-        log.debug("PERSISTENCE_FIND_PARAMETERS_BY_SPORT | sportId={}", sportId);
-        
-        return customParameterRepository.findBySportId(sportId, pageable)
-                .map(parameterConverter::toDomain);
-    }
-
-    @Override
     public Page<CustomParameterModel> findByIsGlobalTrue(Pageable pageable) {
         log.debug("PERSISTENCE_FIND_GLOBAL_PARAMETERS");
         
@@ -107,18 +98,11 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
     }
 
     @Override
-    public Page<CustomParameterModel> findAvailableForUser(Long userId, Long sportId, Pageable pageable) {
-        log.debug("PERSISTENCE_FIND_AVAILABLE_PARAMETERS_FOR_USER | userId={} | sportId={}", 
-                 userId, sportId);
+    public Page<CustomParameterModel> findAvailableForUser(Long userId, Pageable pageable) {
+        log.debug("PERSISTENCE_FIND_AVAILABLE_PARAMETERS_FOR_USER | userId={}", userId);
         
-        return customParameterRepository.findAvailableForUser(userId, sportId, pageable)
+        return customParameterRepository.findAvailableForUser(userId, pageable)
                 .map(parameterConverter::toDomain);
-    }
-
-    @Override
-    public List<String> findAllDistinctCategories() {
-        log.debug("PERSISTENCE_FIND_ALL_CATEGORIES");
-        return customParameterRepository.findAllDistinctCategories();
     }
 
     @Override
@@ -142,15 +126,6 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
                         return new RuntimeException("User not found");
                     });
             entity.setOwner(user);
-        }
-        
-        if (parameterModel.getSportId() != null) {
-            SportEntity sport = sportRepository.findById(parameterModel.getSportId())
-                    .orElseThrow(() -> {
-                        log.error("SPORT_NOT_FOUND_FOR_PARAMETER | sportId={}", parameterModel.getSportId());
-                        return new RuntimeException("Sport not found");
-                    });
-            entity.setSport(sport);
         }
         
         CustomParameterEntity savedEntity = customParameterRepository.save(entity);
@@ -182,7 +157,6 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
                 String searchPattern = "%" + filters.getSearch().toLowerCase() + "%";
                 predicates.add(criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern),
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("displayName")), searchPattern),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern)
                 ));
             }
@@ -202,19 +176,9 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
                 predicates.add(criteriaBuilder.equal(root.get("isActive"), filters.getIsActive()));
             }
             
-            // Filtro por deporte
-            if (filters.getSportId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("sport").get("id"), filters.getSportId()));
-            }
-            
             // Filtro por dueño
             if (filters.getOwnerId() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("owner").get("id"), filters.getOwnerId()));
-            }
-            
-            // Filtro por categoría
-            if (filters.getCategory() != null && !filters.getCategory().isEmpty()) {
-                predicates.add(criteriaBuilder.equal(root.get("category"), filters.getCategory()));
             }
             
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

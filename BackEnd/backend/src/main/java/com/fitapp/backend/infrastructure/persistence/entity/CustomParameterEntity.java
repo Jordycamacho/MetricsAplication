@@ -1,6 +1,5 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
-import com.fitapp.backend.infrastructure.config.StringMapConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
 
 import jakarta.persistence.*;
@@ -11,8 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Entity
 @Getter
@@ -23,8 +20,8 @@ import java.util.Map;
 @Table(name = "custom_parameters", 
        uniqueConstraints = {
            @UniqueConstraint(
-               name = "uk_parameter_name_owner_sport",
-               columnNames = {"name", "owner_id", "sport_id"}
+               name = "uk_parameter_name_owner",
+               columnNames = {"name", "owner_id"}
            )
        })
 @Slf4j
@@ -38,9 +35,6 @@ public class CustomParameterEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
     
-    @Column(name = "display_name", length = 100)
-    private String displayName;
-    
     @Column(name = "description", length = 500)
     private String description;
     
@@ -50,11 +44,6 @@ public class CustomParameterEntity {
     
     @Column(name = "unit", length = 20)
     private String unit;
-    
-    @Convert(converter = StringMapConverter.class)
-    @Column(name = "validation_rules", columnDefinition = "TEXT")
-    @Builder.Default
-    private Map<String, String> validationRules = new HashMap<>();
     
     @Column(name = "is_global", nullable = false)
     @Builder.Default
@@ -67,13 +56,10 @@ public class CustomParameterEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = true)
     private UserEntity owner;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sport_id")
-    private SportEntity sport;
-    
-    @Column(name = "category", length = 50)
-    private String category;
+
+    @Column(name = "is_favorite", nullable = false)
+    @Builder.Default
+    private boolean isFavorite = false;
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -102,15 +88,10 @@ public class CustomParameterEntity {
     }
     
     private void logDataFormat() {
-        // Validar formato del nombre
         if (name != null && !name.matches("^[a-z]+([A-Z][a-z]*)*$")) {
             log.warn("PARAMETER_NAME_FORMAT | name={} | format may cause frontend issues", name);
         }
         
-        // Log de validaciones
-        if (validationRules != null && !validationRules.isEmpty()) {
-            log.debug("PARAMETER_VALIDATION_RULES | rules={}", validationRules);
-        }
     }
     
     public void incrementUsage() {

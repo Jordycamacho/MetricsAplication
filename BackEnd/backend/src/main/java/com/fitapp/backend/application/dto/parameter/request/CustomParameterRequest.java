@@ -9,8 +9,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-
 @Data
 @Slf4j
 @Schema(description = "Request para crear o actualizar un parámetro personalizado")
@@ -21,10 +19,6 @@ public class CustomParameterRequest {
             example = "maxWeight", required = true)
     @JsonProperty("name")
     private String name;
-    
-    @Schema(description = "Nombre para mostrar", example = "Peso Máximo")
-    @JsonProperty("displayName")
-    private String displayName;
     
     @Schema(description = "Descripción del parámetro", 
             example = "Peso máximo levantado en una repetición")
@@ -40,30 +34,18 @@ public class CustomParameterRequest {
     @JsonProperty("unit")
     private String unit;
     
-    @Schema(description = "Reglas de validación")
-    @JsonProperty("validationRules")
-    private Map<String, String> validationRules;
-    
     @Schema(description = "Si es un parámetro global", example = "false")
     @JsonProperty("isGlobal")
     private Boolean isGlobal = false;
-    
-    @Schema(description = "ID del deporte asociado")
-    @JsonProperty("sportId")
-    private Long sportId;
-    
-    @Schema(description = "Categoría del parámetro", example = "strength")
-    @JsonProperty("category")
-    private String category;
-    
-    @Schema(description = "Icono", example = "fa-weight")
-    @JsonProperty("icon")
-    private String icon;
-    
+
+    @Schema(description = "Si es favorito", example = "false")
+    @JsonProperty("isFavorite")
+    private Boolean isFavorite = false;
+
     public void logRequestData() {
-        log.info("PARAMETER_REQUEST_RECEIVED | name={} | type={} | isGlobal={} | sportId={}", 
-                name, parameterType, isGlobal, sportId);
-        log.debug("PARAMETER_REQUEST_DETAILS | displayName={} | unit={} | category={}", 
-                displayName, unit, category);
+        log.info("PARAMETER_REQUEST_RECEIVED | name={} | type={} | isGlobal={}", 
+                name, parameterType, isGlobal);
+        log.debug("PARAMETER_REQUEST_DETAILS | displayName={} | unit={}", 
+                unit);
     }
 }
