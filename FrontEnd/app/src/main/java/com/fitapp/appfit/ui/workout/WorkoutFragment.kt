@@ -37,18 +37,12 @@ class WorkoutFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupToolbar()
         setupRecyclerView()
         observeData()
         loadRoutine()
     }
 
-    private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
-    }
+
 
     private fun setupRecyclerView() {
         adapter = WorkoutDayAdapter { exercise, set, valueType, newValue ->
@@ -65,7 +59,6 @@ class WorkoutFragment : Fragment() {
                 is Resource.Success -> {
                     hideLoading()
                     resource.data?.let { routine ->
-                        binding.toolbar.title = routine.name
                         adapter.submitRoutine(routine)
                     }
                 }
