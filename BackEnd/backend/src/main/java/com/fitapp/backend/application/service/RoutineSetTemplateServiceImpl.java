@@ -446,6 +446,7 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
         model.setNumericValue(request.getNumericValue());
         model.setDurationValue(request.getDurationValue());
         model.setIntegerValue(request.getIntegerValue());
+        model.setRepetitions(request.getRepetitions());
 
         model.validate();
         model.logModelData("CREATING");
@@ -505,7 +506,7 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
         model.setNumericValue(request.getNumericValue());
         model.setDurationValue(request.getDurationValue());
         model.setIntegerValue(request.getIntegerValue());
-
+        model.setRepetitions(request.getRepetitions());
         model.validate();
         model.logModelData("CREATING_FROM_UPDATE");
 
@@ -519,7 +520,8 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
         existingParam.setNumericValue(request.getNumericValue());
         existingParam.setDurationValue(request.getDurationValue());
         existingParam.setIntegerValue(request.getIntegerValue());
-
+        existingParam.setRepetitions(request.getRepetitions());
+        
         existingParam.validate();
         existingParam.logModelData("UPDATING");
     }

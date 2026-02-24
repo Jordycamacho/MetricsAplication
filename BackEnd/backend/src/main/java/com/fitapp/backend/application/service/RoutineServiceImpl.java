@@ -470,6 +470,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
                                                         .numericValue(param.getNumericValue())
                                                         .durationValue(param.getDurationValue())
                                                         .integerValue(param.getIntegerValue())
+                                                        .repetitions(param.getRepetitions())
                                                         .build();
                                 })
                                 .collect(Collectors.toList());
