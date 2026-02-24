@@ -21,35 +21,26 @@ class WorkoutSetAdapter(
 
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
-
         currentReps.clear()
         currentParam.clear()
         paramLabel.clear()
 
         sets.forEach { set ->
-            android.util.Log.d("SET_DEBUG", "Set id=${set.id} pos=${set.position}")
-            val repsValue = set.parameters
-                ?.firstOrNull { it.repetitions != null }
-                ?.repetitions
-                ?: set.parameters
-                    ?.firstOrNull { it.parameterName?.lowercase()?.contains("rep") == true }
-                    ?.let { it.integerValue ?: it.numericValue?.toInt() }
+            val params = set.parameters ?: emptyList()
 
-            currentReps[set.id] = repsValue ?: 10
-
-            // PARÁMETRO SECUNDARIO
-            val paramEntry = set.parameters?.firstOrNull { param ->
-                android.util.Log.d("SET_DEBUG", "  param: name=${param.parameterName} " +
-                        "repetitions=${param.repetitions} integerValue=${param.integerValue} " +
-                        "numericValue=${param.numericValue} unit=${param.unit}")
-                param.repetitions == null &&
-                        param.parameterName?.lowercase()?.contains("rep") != true
+            val repsParam = params.firstOrNull { it.repetitions != null }
+            if (repsParam != null) {
+                currentReps[set.id] = repsParam.repetitions!!
             }
-            currentParam[set.id] = paramEntry?.numericValue
-                ?: paramEntry?.integerValue?.toDouble()
+
+            val weightParam = params.firstOrNull {
+                it.integerValue != null || it.numericValue != null
+            }
+            currentParam[set.id] = weightParam?.numericValue
+                ?: weightParam?.integerValue?.toDouble()
                         ?: 0.0
-            paramLabel[set.id] = paramEntry?.unit
-                ?: paramEntry?.parameterName
+            paramLabel[set.id] = weightParam?.unit
+                ?: weightParam?.parameterName
                         ?: "KG"
         }
         notifyDataSetChanged()
@@ -117,13 +108,25 @@ class WorkoutSetAdapter(
 
             tvSetTitle.text = "Serie ${set.position}  ·  ${set.setType ?: "NORMAL"}"
 
-            val reps = currentReps[set.id] ?: 10
             val weight = currentParam[set.id] ?: 0.0
             val unit = paramLabel[set.id] ?: "KG"
 
-            tvRepsValue.text = reps.toString()
             tvWeightValue.text = formatValue(weight)
             tvWeightUnit.text = unit
+
+            // Reps: mostrar solo si existe en el mapa (significa que vino del backend)
+            val repsContainer = itemView.findViewById<View>(R.id.layout_reps_container)
+            val divider = itemView.findViewById<View>(R.id.view_divider)
+            val hasReps = currentReps.containsKey(set.id)
+
+            if (hasReps) {
+                repsContainer?.visibility = View.VISIBLE
+                divider?.visibility = View.VISIBLE
+                tvRepsValue.text = currentReps[set.id].toString()
+            } else {
+                repsContainer?.visibility = View.GONE
+                divider?.visibility = View.GONE
+            }
 
             restSeconds = set.restAfterSet ?: 0
             updateTimerLabel()

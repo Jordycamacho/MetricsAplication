@@ -36,6 +36,7 @@
 
             <!-- Bloque REPS -->
             <LinearLayout
+                android:id="@+id/layout_reps_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -85,6 +86,15 @@
                         app:tint="@color/gold_primary"/>
                 </LinearLayout>
             </LinearLayout>
+
+            <!-- Divisor con id para ocultar -->
+            <View
+                android:id="@+id/view_divider"
+                android:layout_width="1dp"
+                android:layout_height="40dp"
+                android:background="@color/text_secondary_dark"
+                android:alpha="0.3"
+                android:layout_marginHorizontal="8dp"/>
 
             <!-- Divisor -->
             <View
