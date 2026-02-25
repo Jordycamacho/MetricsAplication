@@ -19,4 +19,5 @@ public interface CustomParameterUseCase {
     void toggleParameterStatus(Long id, String userEmail);
     List<ParameterType> getAllParameterTypes();
     void incrementParameterUsage(Long parameterId);
+    void toggleFavorite(Long id, String userEmail);
 }
