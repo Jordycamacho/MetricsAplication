@@ -15,37 +15,24 @@ import kotlinx.coroutines.launch
 
 class ParameterViewModel : ViewModel() {
     private val repository = ParameterRepository()
-
-    // Estados para listas paginadas
     private val _allParametersState = MutableLiveData<Resource<CustomParameterPageResponse>?>()
     val allParametersState: LiveData<Resource<CustomParameterPageResponse>?> = _allParametersState
-
     private val _myParametersState = MutableLiveData<Resource<CustomParameterPageResponse>?>()
     val myParametersState: LiveData<Resource<CustomParameterPageResponse>?> = _myParametersState
-
     private val _availableParametersState = MutableLiveData<Resource<CustomParameterPageResponse>?>()
     val availableParametersState: LiveData<Resource<CustomParameterPageResponse>?> = _availableParametersState
-
-    // Estados para operaciones CRUD
     private val _parameterDetailState = MutableLiveData<Resource<CustomParameterResponse>?>()
     val parameterDetailState: LiveData<Resource<CustomParameterResponse>?> = _parameterDetailState
-
     private val _createParameterState = MutableLiveData<Resource<CustomParameterResponse>?>()
     val createParameterState: LiveData<Resource<CustomParameterResponse>?> = _createParameterState
-
     private val _updateParameterState = MutableLiveData<Resource<CustomParameterResponse>?>()
     val updateParameterState: LiveData<Resource<CustomParameterResponse>?> = _updateParameterState
-
     private val _deleteParameterState = MutableLiveData<Resource<Unit>?>()
     val deleteParameterState: LiveData<Resource<Unit>?> = _deleteParameterState
-
     private val _toggleParameterState = MutableLiveData<Resource<Unit>?>()
     val toggleParameterState: LiveData<Resource<Unit>?> = _toggleParameterState
-
-    // Estados para listas simples
     private val _categoriesState = MutableLiveData<Resource<List<String>>?>()
     val categoriesState: LiveData<Resource<List<String>>?> = _categoriesState
-
     private val _parameterTypesState = MutableLiveData<Resource<List<String>>?>()
     val parameterTypesState: LiveData<Resource<List<String>>?> = _parameterTypesState
 

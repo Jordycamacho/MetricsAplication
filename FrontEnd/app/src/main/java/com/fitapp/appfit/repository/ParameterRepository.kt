@@ -11,17 +11,14 @@ import com.fitapp.appfit.utils.Resource
 class ParameterRepository {
     private val parameterService = ParameterService.instance
 
-    // Búsqueda general
     suspend fun searchParameters(filterRequest: CustomParameterFilterRequest): Resource<CustomParameterPageResponse> {
         return handleResponse(parameterService.searchParameters(filterRequest))
     }
 
-    // Mis parámetros
     suspend fun searchMyParameters(filterRequest: CustomParameterFilterRequest): Resource<CustomParameterPageResponse> {
         return handleResponse(parameterService.searchMyParameters(filterRequest))
     }
 
-    // Parámetros disponibles para un deporte
     suspend fun searchAvailableParameters(
         sportId: Long,
         filterRequest: CustomParameterFilterRequest
@@ -29,22 +26,18 @@ class ParameterRepository {
         return handleResponse(parameterService.searchAvailableParameters(sportId, filterRequest))
     }
 
-    // Obtener por ID
     suspend fun getParameterById(id: Long): Resource<CustomParameterResponse> {
         return handleResponse(parameterService.getParameterById(id))
     }
 
-    // Crear
     suspend fun createParameter(parameterRequest: CustomParameterRequest): Resource<CustomParameterResponse> {
         return handleResponse(parameterService.createParameter(parameterRequest))
     }
 
-    // Actualizar
     suspend fun updateParameter(id: Long, parameterRequest: CustomParameterRequest): Resource<CustomParameterResponse> {
         return handleResponse(parameterService.updateParameter(id, parameterRequest))
     }
 
-    // Eliminar
     suspend fun deleteParameter(id: Long): Resource<Unit> {
         return try {
             val response = parameterService.deleteParameter(id)
@@ -58,7 +51,6 @@ class ParameterRepository {
         }
     }
 
-    // Activar/desactivar
     suspend fun toggleParameterStatus(id: Long): Resource<Unit> {
         return try {
             val response = parameterService.toggleParameterStatus(id)
@@ -72,12 +64,10 @@ class ParameterRepository {
         }
     }
 
-    // Categorías
     suspend fun getCategories(): Resource<List<String>> {
         return handleResponse(parameterService.getCategories())
     }
 
-    // Tipos
     suspend fun getParameterTypes(): Resource<List<String>> {
         return try {
             val response = parameterService.getParameterTypes()
@@ -93,13 +83,11 @@ class ParameterRepository {
                     }
                 } ?: Resource.Success(getDefaultParameterTypes())
             } else {
-                // Si falla, intentar con valores por defecto
                 Log.w("ParameterRepo", "Error ${response.code()}: ${response.message()}")
                 Resource.Success(getDefaultParameterTypes())
             }
         } catch (e: Exception) {
             Log.e("ParameterRepo", "Exception: ${e.message}")
-            // En caso de error, usar valores por defecto
             Resource.Success(getDefaultParameterTypes())
         }
     }
@@ -116,7 +104,6 @@ class ParameterRepository {
         )
     }
 
-    // Incrementar uso
     suspend fun incrementParameterUsage(id: Long): Resource<Unit> {
         return try {
             val response = parameterService.incrementParameterUsage(id)

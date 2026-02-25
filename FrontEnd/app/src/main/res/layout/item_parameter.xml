@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@color/card_dark">
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="#1E1E1E"
+    app:strokeColor="#2A2A2A"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,122 +18,113 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Fila superior: Nombre y Tipo -->
+        <!-- Fila superior: Nombre + Badge tipo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="6dp">
 
-            <TextView
-                android:id="@+id/tv_parameter_name"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Nombre del Parámetro"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary_dark" />
+                android:orientation="vertical">
 
+                <TextView
+                    android:id="@+id/tv_parameter_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre del Parámetro"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:letterSpacing="0.01" />
+
+                <TextView
+                    android:id="@+id/tv_parameter_unit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="(kg)"
+                    android:textSize="12sp"
+                    android:textColor="#78703F"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Badge tipo -->
             <TextView
                 android:id="@+id/tv_parameter_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TIPO"
-                android:textSize="12sp"
-                android:paddingHorizontal="8dp"
+                android:text="NUMBER"
+                android:textSize="10sp"
+                android:textColor="#121212"
+                android:textStyle="bold"
+                android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:background="@drawable/ic_arrow_right"
-                android:textColor="@color/white"
-                android:textStyle="bold" />
+                android:background="@drawable/badge_predefined"
+                android:letterSpacing="0.05" />
+
         </LinearLayout>
 
-        <!-- Fila media: Unidad y Categoría -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
-
-            <TextView
-                android:id="@+id/tv_parameter_unit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="(kg)"
-                android:textSize="14sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="12dp"
-                android:background="@color/divider_dark"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp" />
-
-            <TextView
-                android:id="@+id/tv_parameter_category"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Categoría"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary_dark" />
-        </LinearLayout>
-
-        <!-- Fila de visibilidad -->
-        <TextView
-            android:id="@+id/tv_parameter_visibility"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="👤 Personal"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp" />
-
-        <!-- Separador -->
+        <!-- Separador sutil -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/divider_dark"
-            android:layout_marginBottom="12dp" />
+            android:background="#252525"
+            android:layout_marginBottom="10dp" />
 
-        <!-- Fila inferior: Botones de acción (solo para parámetros personales) -->
+        <!-- Fila inferior: Visibilidad + Botones -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="end">
+            android:gravity="center_vertical">
 
+            <!-- Badge visibilidad -->
+            <TextView
+                android:id="@+id/tv_parameter_visibility"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Personal"
+                android:textSize="11sp"
+                android:textColor="#B3B3B3"
+                android:drawablePadding="4dp"
+                android:layout_weight="1" />
+
+            <!-- Botones solo para personales -->
             <TextView
                 android:id="@+id/btn_edit_parameter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="EDITAR"
-                android:textSize="14sp"
-                android:textColor="@color/gold_primary"
+                android:text="Editar"
+                android:textSize="12sp"
+                android:textColor="#78703F"
                 android:textStyle="bold"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/button_edit_background" />
+                android:paddingVertical="6dp"
+                android:paddingHorizontal="14dp"
+                android:background="@drawable/button_edit_background"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/btn_delete_parameter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ELIMINAR"
-                android:textSize="14sp"
-                android:textColor="@color/red"
+                android:text="Eliminar"
+                android:textSize="12sp"
+                android:textColor="#E41D1D"
                 android:textStyle="bold"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="16dp"
+                android:paddingVertical="6dp"
+                android:paddingHorizontal="14dp"
                 android:background="@drawable/button_delete_background"
-                android:layout_marginStart="8dp" />
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

@@ -1,5 +1,6 @@
 package com.fitapp.appfit.ui.exercises.params
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,74 +21,66 @@ class ParameterAdapter(
         private val tvName: TextView = itemView.findViewById(R.id.tv_parameter_name)
         private val tvType: TextView = itemView.findViewById(R.id.tv_parameter_type)
         private val tvUnit: TextView = itemView.findViewById(R.id.tv_parameter_unit)
-        private val tvCategory: TextView = itemView.findViewById(R.id.tv_parameter_category)
         private val tvVisibility: TextView = itemView.findViewById(R.id.tv_parameter_visibility)
         private val btnEdit: View = itemView.findViewById(R.id.btn_edit_parameter)
         private val btnDelete: View = itemView.findViewById(R.id.btn_delete_parameter)
 
         fun bind(parameter: CustomParameterResponse) {
-            // Nombre
-            tvName.text = parameter.displayName ?: parameter.name
+            tvName.text = parameter.name
+            tvType.text = getTypeLabel(parameter.parameterType)
 
-            // Tipo
-            tvType.text = parameter.parameterType.replaceFirstChar { it.uppercase() }
-
-            // Unidad
             if (!parameter.unit.isNullOrEmpty()) {
-                tvUnit.text = "(${parameter.unit})"
+                tvUnit.text = parameter.unit
                 tvUnit.visibility = View.VISIBLE
             } else {
                 tvUnit.visibility = View.GONE
             }
 
-            // Categoría
-            tvCategory.text = parameter.category ?: "Sin categoría"
-
-            // Visibilidad
-            if (parameter.isGlobal && parameter.ownerId == null) {
-                tvVisibility.text = "Global (Sistema)"
-            } else if (parameter.isGlobal) {
-                tvVisibility.text = "Global"
-            } else {
-                tvVisibility.text = "Personal"
-            }
-
-            // Controlar visibilidad de botones
-            if (showActions) {
-                if (parameter.isGlobal && parameter.ownerId == null) {
-                    btnEdit.visibility = View.GONE
-                    btnDelete.visibility = View.GONE
-                } else if (parameter.isGlobal) {
-                    btnEdit.visibility = View.GONE
-                    btnDelete.visibility = View.GONE
-                } else {
-                    btnEdit.visibility = View.VISIBLE
-                    btnDelete.visibility = View.VISIBLE
-                    btnEdit.setOnClickListener { onEditClick(parameter) }
-                    btnDelete.setOnClickListener { onDeleteClick(parameter) }
+            when {
+                parameter.isGlobal && parameter.ownerId == null -> {
+                    tvVisibility.text = "Sistema"
+                    tvVisibility.setTextColor(Color.parseColor("#666666"))
                 }
-            } else {
-                // En modo selección, ocultar botones
-                btnEdit.visibility = View.GONE
-                btnDelete.visibility = View.GONE
+                parameter.isGlobal -> {
+                    tvVisibility.text = "Global"
+                    tvVisibility.setTextColor(Color.parseColor("#78703F"))
+                }
+                else -> {
+                    tvVisibility.text = "Personal"
+                    tvVisibility.setTextColor(Color.parseColor("#B3B3B3"))
+                }
             }
 
-            // Click en toda la tarjeta
-            itemView.setOnClickListener {
-                onItemClick(parameter)
+            val isEditable = showActions && !parameter.isGlobal
+            btnEdit.visibility = if (isEditable) View.VISIBLE else View.GONE
+            btnDelete.visibility = if (isEditable) View.VISIBLE else View.GONE
+
+            if (isEditable) {
+                btnEdit.setOnClickListener { onEditClick(parameter) }
+                btnDelete.setOnClickListener { onDeleteClick(parameter) }
             }
+
+            itemView.setOnClickListener { onItemClick(parameter) }
+        }
+
+        private fun getTypeLabel(type: String): String = when (type.uppercase()) {
+            "NUMBER" -> "Número"
+            "INTEGER" -> "Entero"
+            "TEXT" -> "Texto"
+            "BOOLEAN" -> "Sí/No"
+            "DURATION" -> "Tiempo"
+            "DISTANCE" -> "Distancia"
+            "PERCENTAGE" -> "Porcentaje"
+            else -> type
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ParameterViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_parameter, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_parameter, parent, false)
         return ParameterViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ParameterViewHolder, position: Int) {
-        holder.bind(parameters[position])
-    }
+    override fun onBindViewHolder(holder: ParameterViewHolder, position: Int) = holder.bind(parameters[position])
 
     override fun getItemCount(): Int = parameters.size
 

@@ -13,9 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.databinding.FragmentCreateParameterBinding
 import com.fitapp.appfit.model.ParameterViewModel
-import com.fitapp.appfit.model.SportViewModel
 import com.fitapp.appfit.response.parameter.request.CustomParameterRequest
-import com.fitapp.appfit.response.sport.response.SportResponse
 import com.fitapp.appfit.utils.Resource
 
 class CreateParameterFragment : Fragment() {
@@ -23,11 +21,7 @@ class CreateParameterFragment : Fragment() {
     private var _binding: FragmentCreateParameterBinding? = null
     private val binding get() = _binding!!
     private val parameterViewModel: ParameterViewModel by viewModels()
-    private val sportViewModel: SportViewModel by viewModels()
-
     private val parameterTypes = mutableListOf<String>()
-    private val sportsMap = mutableMapOf<String, Long>()
-    private var selectedSportId: Long? = null
     private var selectedParameterType: String? = null
 
     override fun onCreateView(
@@ -56,11 +50,9 @@ class CreateParameterFragment : Fragment() {
     }
 
     private fun setupForm() {
-        // Inicializar el AutoCompleteTextView con un adaptador vacío
         val typeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, arrayOf("Cargando tipos..."))
         binding.spinnerParameterType.setAdapter(typeAdapter)
 
-        // Configurar listener para cuando se selecciona un tipo
         binding.spinnerParameterType.setOnItemClickListener { _, _, position, _ ->
             if (position >= 0 && position < parameterTypes.size) {
                 selectedParameterType = parameterTypes[position]
@@ -68,27 +60,14 @@ class CreateParameterFragment : Fragment() {
             }
         }
 
-        // Configurar AutoCompleteTextView para deportes
-        val sportAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, emptyList<String>())
-        binding.spinnerSports.setAdapter(sportAdapter)
-
-        // Botón de guardar
         binding.btnSave.setOnClickListener {
             createParameter()
-        }
-
-        // Listener para cuando se selecciona un deporte
-        binding.spinnerSports.setOnItemClickListener { _, _, position, _ ->
-            val selectedItem = binding.spinnerSports.adapter.getItem(position) as String
-            selectedSportId = sportsMap[selectedItem]
-            Log.d("CreateParam", "Deporte seleccionado: $selectedItem -> $selectedSportId")
         }
     }
 
     private fun loadInitialData() {
         Log.d("CreateParam", "Cargando datos iniciales...")
         parameterViewModel.getParameterTypes()
-        sportViewModel.getAllSports()
     }
 
     private fun setupObservers() {
@@ -100,7 +79,6 @@ class CreateParameterFragment : Fragment() {
                         Log.d("CreateParam", "Tipos recibidos: ${types.size} - $types")
                         updateParameterTypesSpinner(types)
 
-                        // Mostrar Toast solo en desarrollo
                         Toast.makeText(requireContext(), "Tipos cargados: ${types.size}", Toast.LENGTH_SHORT).show()
                     } ?: run {
                         Log.w("CreateParam", "Tipos recibidos nulos")
@@ -113,23 +91,8 @@ class CreateParameterFragment : Fragment() {
                     loadDefaultParameterTypes()
                 }
                 else -> {
-                    // Loading state
                     binding.progressBar.visibility = View.VISIBLE
                 }
-            }
-        })
-
-        sportViewModel.allSportsState.observe(viewLifecycleOwner, Observer { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    resource.data?.let { sports ->
-                        updateSportsSpinner(sports)
-                    }
-                }
-                is Resource.Error -> {
-                    Toast.makeText(requireContext(), "Error al cargar deportes: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
             }
         })
 
@@ -142,7 +105,7 @@ class CreateParameterFragment : Fragment() {
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> {
                     showLoading()
@@ -163,7 +126,6 @@ class CreateParameterFragment : Fragment() {
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types)
         binding.spinnerParameterType.setAdapter(adapter)
 
-        // Si hay tipos, seleccionar el primero
         if (types.isNotEmpty()) {
             selectedParameterType = types[0]
             binding.spinnerParameterType.setText(selectedParameterType, false)
@@ -188,40 +150,14 @@ class CreateParameterFragment : Fragment() {
         Toast.makeText(requireContext(), "Usando tipos predeterminados", Toast.LENGTH_SHORT).show()
     }
 
-    private fun updateSportsSpinner(sports: List<SportResponse>) {
-        sportsMap.clear()
-        val sportNames = mutableListOf<String>()
-
-        // Agregar opción "Sin deporte específico" para parámetros personales sin deporte
-        sportNames.add("Sin deporte específico (personal)")
-        sportsMap["Sin deporte específico (personal)"] = 0
-
-        sports.forEach { sport ->
-            val displayName = "${sport.name} (${if (sport.isPredefined) "Predefinido" else "Personalizado"})"
-            sportNames.add(displayName)
-            sportsMap[displayName] = sport.id
-        }
-
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sportNames)
-        binding.spinnerSports.setAdapter(adapter)
-        binding.spinnerSports.setText("Sin deporte específico (personal)", false)
-    }
-
     private fun createParameter() {
         val name = binding.etName.text.toString().trim()
-        val displayName = binding.etDisplayName.text.toString().trim()
         val description = binding.etDescription.text.toString().trim()
         val parameterType = binding.spinnerParameterType.text.toString().trim()
         val unit = binding.etUnit.text.toString().trim()
-        val category = binding.etCategory.text.toString().trim()
 
-        // Los usuarios solo pueden crear parámetros personales (NO globales)
         val isGlobal = false
 
-        // Si seleccionó "Sin deporte específico", sportId = null
-        val sportId = selectedSportId?.takeIf { it > 0 }
-
-        // Validaciones
         if (name.isEmpty()) {
             binding.etName.error = "El nombre es requerido"
             return
@@ -234,15 +170,10 @@ class CreateParameterFragment : Fragment() {
 
         val parameterRequest = CustomParameterRequest(
             name = name,
-            displayName = if (displayName.isEmpty()) null else displayName,
             description = if (description.isEmpty()) null else description,
             parameterType = parameterType,
             unit = if (unit.isEmpty()) null else unit,
-            validationRules = null,
-            isGlobal = isGlobal,
-            sportId = sportId,
-            category = if (category.isEmpty()) null else category,
-            icon = null
+            isGlobal = false
         )
 
         Log.d("CreateParam", "Enviando parámetro PERSONAL: $parameterRequest")

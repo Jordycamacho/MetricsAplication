@@ -20,50 +20,36 @@ import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
 import com.fitapp.appfit.utils.Resource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-class ExerciseParamsFragment: Fragment() {
+class ExerciseParamsFragment : Fragment() {
     private var _binding: FragmentExerciseParamsBinding? = null
     private val binding get() = _binding!!
     private val parameterViewModel: ParameterViewModel by viewModels()
     private lateinit var parameterAdapter: ParameterAdapter
 
-    // Filtro actual
-    private var currentFilter = "all" // "all", "my", "available"
-    private var currentSportId: Long? = null
+    // Estado del filtro
+    private var onlyMine = false
+    private var selectedType: String? = null  // null = todos los tipos
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentExerciseParamsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
-        setupClickListeners()
+        setupFilterListeners()
         setupObservers()
         setupSearchListener()
-
-        // Cargar parámetros iniciales
         loadParameters()
     }
 
     private fun setupRecyclerView() {
         parameterAdapter = ParameterAdapter(
-            onItemClick = { parameter ->
-                showParameterDetail(parameter)
-            },
-            onEditClick = { parameter ->
-                editParameter(parameter)
-            },
-            onDeleteClick = { parameter ->
-                showDeleteConfirmation(parameter)
-            }
+            onItemClick = { parameter -> showParameterDetail(parameter) },
+            onEditClick = { parameter -> editParameter(parameter) },
+            onDeleteClick = { parameter -> showDeleteConfirmation(parameter) }
         )
-
         binding.recyclerParameters.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = parameterAdapter
@@ -71,200 +57,143 @@ class ExerciseParamsFragment: Fragment() {
         }
     }
 
-    private fun setupClickListeners() {
-        // Botón flotante para crear parámetro
+    private fun setupFilterListeners() {
+        // Filtro principal: Todos / Mis parámetros
+        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { onlyMine = false; loadParameters() }
+        }
+        binding.chipMy.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { onlyMine = true; loadParameters() }
+        }
+
+        // Filtro por tipo
+        binding.chipTypeAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = null; loadParameters() }
+        }
+        binding.chipTypeNumber.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "NUMBER"; loadParameters() }
+        }
+        binding.chipTypeInteger.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "INTEGER"; loadParameters() }
+        }
+        binding.chipTypeText.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "TEXT"; loadParameters() }
+        }
+        binding.chipTypeBoolean.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "BOOLEAN"; loadParameters() }
+        }
+        binding.chipTypeDuration.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "DURATION"; loadParameters() }
+        }
+        binding.chipTypeDistance.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "DISTANCE"; loadParameters() }
+        }
+        binding.chipTypePercentage.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) { selectedType = "PERCENTAGE"; loadParameters() }
+        }
+
         binding.fabCreateParameter.setOnClickListener {
-            navigateToCreateParameter()
-        }
-
-        // Filtros
-        binding.chipAll.setOnClickListener {
-            currentFilter = "all"
-            binding.chipAll.isChecked = true
-            binding.chipMy.isChecked = false
-            binding.chipAvailable.isChecked = false
-            loadParameters()
-        }
-
-        binding.chipMy.setOnClickListener {
-            currentFilter = "my"
-            binding.chipAll.isChecked = false
-            binding.chipMy.isChecked = true
-            binding.chipAvailable.isChecked = false
-            loadParameters()
-        }
-
-        binding.chipAvailable.setOnClickListener {
-            currentFilter = "available"
-            binding.chipAll.isChecked = false
-            binding.chipMy.isChecked = false
-            binding.chipAvailable.isChecked = true
-
-            // Aquí podrías mostrar un diálogo para seleccionar deporte
-            // Por ahora cargamos sin deporte (se cargará empty)
-            currentSportId = null
-            loadParameters()
+            findNavController().navigate(R.id.navigation_create_parameter)
         }
     }
 
     private fun setupSearchListener() {
         binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                performSearch()
-                true
-            } else {
-                false
-            }
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) { loadParameters(); true } else false
         }
     }
 
     private fun setupObservers() {
-        // Observar todos los parámetros
         parameterViewModel.allParametersState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleParametersResponse(it, "No hay parámetros disponibles")
-            }
+            resource?.let { handleParametersResponse(it, "No hay parámetros disponibles") }
         })
-
-        // Observar mis parámetros
         parameterViewModel.myParametersState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleParametersResponse(it, "No has creado parámetros personalizados")
-            }
+            resource?.let { handleParametersResponse(it, "Aún no has creado parámetros personales") }
         })
-
-        // Observar parámetros disponibles
-        parameterViewModel.availableParametersState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleParametersResponse(it, "No hay parámetros disponibles para este deporte")
-            }
-        })
-
-        // Observar estado de eliminación
         parameterViewModel.deleteParameterState.observe(viewLifecycleOwner, Observer { resource ->
             resource?.let {
                 when (it) {
                     is Resource.Success -> {
-                        Toast.makeText(requireContext(), "✅ Parámetro eliminado", Toast.LENGTH_SHORT).show()
-                        loadParameters() // Recargar lista
+                        Toast.makeText(requireContext(), "Parámetro eliminado", Toast.LENGTH_SHORT).show()
+                        loadParameters()
                     }
-                    is Resource.Error -> {
-                        Toast.makeText(requireContext(), "❌ Error: ${it.message}", Toast.LENGTH_SHORT).show()
-                    }
+                    is Resource.Error -> Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
                     else -> {}
                 }
             }
         })
     }
 
-    private fun handleParametersResponse(resource: Resource<com.fitapp.appfit.response.parameter.response.CustomParameterPageResponse>, emptyMessage: String) {
+    private fun handleParametersResponse(
+        resource: Resource<com.fitapp.appfit.response.parameter.response.CustomParameterPageResponse>,
+        emptyMessage: String
+    ) {
         when (resource) {
             is Resource.Success -> {
                 hideLoading()
-                resource.data?.let { pageResponse ->
-                    val parameters = pageResponse.content
-                    if (parameters.isEmpty()) {
-                        showEmptyState(emptyMessage)
-                    } else {
-                        showParametersList()
-                        parameterAdapter.updateList(parameters)
-                    }
-                }
+                val parameters = resource.data?.content ?: emptyList()
+                if (parameters.isEmpty()) showEmptyState(emptyMessage)
+                else { showParametersList(); parameterAdapter.updateList(parameters) }
             }
             is Resource.Error -> {
                 hideLoading()
-                showError(resource.message ?: "Error al cargar parámetros")
                 showEmptyState("Error al cargar")
+                Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
             }
-            is Resource.Loading -> {
-                showLoading()
-            }
+            is Resource.Loading -> showLoading()
         }
     }
 
     private fun loadParameters() {
-        val searchQuery = binding.etSearch.text.toString().trim()
-
-        // Crear filtro con búsqueda si existe
         val filterRequest = CustomParameterFilterRequest(
-            search = searchQuery,
+            search = binding.etSearch.text.toString().trim().ifEmpty { null },
+            parameterType = selectedType,
+            onlyMine = onlyMine,
             page = 0,
             size = 20,
-            sortBy = "name",  // CORREGIDO: era "sort" ahora es "sortBy"
+            sortBy = "name",
             direction = "ASC"
         )
 
-        when (currentFilter) {
-            "all" -> {
-                parameterViewModel.searchAllParameters(filterRequest)
-            }
-            "my" -> {
-                // Para "mis parámetros", usar onlyMine = true
-                val myFilter = filterRequest.copy(onlyMine = true)
-                parameterViewModel.searchMyParameters(myFilter)
-            }
-            "available" -> {
-                currentSportId?.let { sportId ->
-                    val sportFilter = filterRequest.copy(sportId = sportId)
-                    parameterViewModel.searchAvailableParameters(sportId, sportFilter)
-                } ?: run {
-                    // Para parámetros disponibles sin deporte específico
-                    parameterViewModel.searchAllParameters(filterRequest)
-                }
-            }
+        if (onlyMine) {
+            parameterViewModel.searchMyParameters(filterRequest)
+        } else {
+            parameterViewModel.searchAllParameters(filterRequest)
         }
-    }
-
-    private fun performSearch() {
-        loadParameters()
-    }
-
-    private fun navigateToCreateParameter() {
-        findNavController().navigate(R.id.navigation_create_parameter)
     }
 
     private fun showParameterDetail(parameter: CustomParameterResponse) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(parameter.displayName ?: parameter.name)
-            .setMessage(
-                """
-                Tipo: ${parameter.parameterType}
-                Unidad: ${parameter.unit ?: "No especificada"}
-                Categoría: ${parameter.category ?: "Sin categoría"}
-                Global: ${if (parameter.isGlobal) "Sí" else "No"}
-                Activo: ${if (parameter.isActive) "Sí" else "No"}
-                Deporte: ${parameter.sportName ?: "Todos"}
-                Creado por: ${parameter.ownerName ?: "Desconocido"}
-                Usos: ${parameter.usageCount}
-                """.trimIndent()
-            )
-            .setPositiveButton("Aceptar", null)
+            .setTitle(parameter.name)
+            .setMessage(buildString {
+                append("Tipo: ${parameter.parameterType}\n")
+                if (!parameter.unit.isNullOrEmpty()) append("Unidad: ${parameter.unit}\n")
+                append("Visibilidad: ${if (parameter.isGlobal) "Global" else "Personal"}\n")
+                append("Estado: ${if (parameter.isActive) "Activo" else "Inactivo"}\n")
+                if (!parameter.ownerName.isNullOrEmpty()) append("Creado por: ${parameter.ownerName}\n")
+                append("Usos: ${parameter.usageCount}")
+            })
+            .setPositiveButton("Cerrar", null)
             .show()
     }
 
     private fun editParameter(parameter: CustomParameterResponse) {
         if (parameter.isGlobal && parameter.ownerId == null) {
-            Toast.makeText(requireContext(), "No se puede editar un parámetro por defecto", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "No se puede editar un parámetro del sistema", Toast.LENGTH_SHORT).show()
             return
         }
-        val bundle = bundleOf("parameterId" to parameter.id)
-        findNavController().navigate(R.id.navigation_edit_parameter, bundle)
+        findNavController().navigate(R.id.navigation_edit_parameter, bundleOf("parameterId" to parameter.id))
     }
 
-    // En el método showDeleteConfirmation():
     private fun showDeleteConfirmation(parameter: CustomParameterResponse) {
         if (parameter.isGlobal && parameter.ownerId == null) {
-            Toast.makeText(requireContext(), "No se puede eliminar un parámetro por defecto", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "No se puede eliminar un parámetro del sistema", Toast.LENGTH_SHORT).show()
             return
         }
-
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Eliminar Parámetro")
-            .setMessage("¿Estás seguro de que quieres eliminar '${parameter.displayName ?: parameter.name}'?\n\nEsta acción no se puede deshacer.")
-            .setPositiveButton("Eliminar") { dialog, _ ->
-                parameterViewModel.deleteParameter(parameter.id)
-                dialog.dismiss()
-            }
+            .setTitle("Eliminar parámetro")
+            .setMessage("¿Eliminar '${parameter.name}'? Esta acción no se puede deshacer.")
+            .setPositiveButton("Eliminar") { _, _ -> parameterViewModel.deleteParameter(parameter.id) }
             .setNegativeButton("Cancelar", null)
             .show()
     }
@@ -275,9 +204,7 @@ class ExerciseParamsFragment: Fragment() {
         binding.layoutEmptyState.visibility = View.GONE
     }
 
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-    }
+    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
 
     private fun showParametersList() {
         binding.recyclerParameters.visibility = View.VISIBLE
@@ -290,17 +217,7 @@ class ExerciseParamsFragment: Fragment() {
         binding.tvEmptyState.text = message
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), "❌ $message", Toast.LENGTH_LONG).show()
-    }
+    override fun onResume() { super.onResume(); loadParameters() }
 
-    override fun onResume() {
-        super.onResume()
-        loadParameters()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
+    override fun onDestroyView() { super.onDestroyView(); _binding = null }
 }
