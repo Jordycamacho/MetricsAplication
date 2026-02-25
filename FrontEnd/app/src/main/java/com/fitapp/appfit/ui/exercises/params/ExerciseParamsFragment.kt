@@ -1,6 +1,5 @@
 package com.fitapp.appfit.ui.exercises.params
 
-import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,8 +7,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
@@ -18,7 +17,6 @@ import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.response.parameter.request.CustomParameterFilterRequest
 import com.fitapp.appfit.response.parameter.response.CustomParameterResponse
 import com.fitapp.appfit.utils.Resource
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class ExerciseParamsFragment : Fragment() {
     private var _binding: FragmentExerciseParamsBinding? = null
@@ -26,9 +24,9 @@ class ExerciseParamsFragment : Fragment() {
     private val parameterViewModel: ParameterViewModel by viewModels()
     private lateinit var parameterAdapter: ParameterAdapter
 
-    // Estado del filtro
     private var onlyMine = false
-    private var selectedType: String? = null  // null = todos los tipos
+    private var selectedType: String? = null
+    private var isUpdatingChips = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentExerciseParamsBinding.inflate(inflater, container, false)
@@ -58,42 +56,39 @@ class ExerciseParamsFragment : Fragment() {
     }
 
     private fun setupFilterListeners() {
-        // Filtro principal: Todos / Mis parámetros
-        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { onlyMine = false; loadParameters() }
-        }
-        binding.chipMy.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { onlyMine = true; loadParameters() }
-        }
-
-        // Filtro por tipo
-        binding.chipTypeAll.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = null; loadParameters() }
-        }
-        binding.chipTypeNumber.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "NUMBER"; loadParameters() }
-        }
-        binding.chipTypeInteger.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "INTEGER"; loadParameters() }
-        }
-        binding.chipTypeText.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "TEXT"; loadParameters() }
-        }
-        binding.chipTypeBoolean.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "BOOLEAN"; loadParameters() }
-        }
-        binding.chipTypeDuration.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "DURATION"; loadParameters() }
-        }
-        binding.chipTypeDistance.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "DISTANCE"; loadParameters() }
-        }
-        binding.chipTypePercentage.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) { selectedType = "PERCENTAGE"; loadParameters() }
-        }
-
         binding.fabCreateParameter.setOnClickListener {
             findNavController().navigate(R.id.navigation_create_parameter)
+        }
+
+        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { onlyMine = false; loadParameters() }
+        }
+        binding.chipMy.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { onlyMine = true; loadParameters() }
+        }
+        binding.chipTypeAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = null; loadParameters() }
+        }
+        binding.chipTypeNumber.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "NUMBER"; loadParameters() }
+        }
+        binding.chipTypeInteger.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "INTEGER"; loadParameters() }
+        }
+        binding.chipTypeText.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "TEXT"; loadParameters() }
+        }
+        binding.chipTypeBoolean.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "BOOLEAN"; loadParameters() }
+        }
+        binding.chipTypeDuration.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "DURATION"; loadParameters() }
+        }
+        binding.chipTypeDistance.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "DISTANCE"; loadParameters() }
+        }
+        binding.chipTypePercentage.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { selectedType = "PERCENTAGE"; loadParameters() }
         }
     }
 
@@ -104,24 +99,21 @@ class ExerciseParamsFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        parameterViewModel.allParametersState.observe(viewLifecycleOwner, Observer { resource ->
+        parameterViewModel.allParametersState.observe(viewLifecycleOwner) { resource ->
             resource?.let { handleParametersResponse(it, "No hay parámetros disponibles") }
-        })
-        parameterViewModel.myParametersState.observe(viewLifecycleOwner, Observer { resource ->
+        }
+        parameterViewModel.myParametersState.observe(viewLifecycleOwner) { resource ->
             resource?.let { handleParametersResponse(it, "Aún no has creado parámetros personales") }
-        })
-        parameterViewModel.deleteParameterState.observe(viewLifecycleOwner, Observer { resource ->
+        }
+        parameterViewModel.deleteParameterState.observe(viewLifecycleOwner) { resource ->
             resource?.let {
                 when (it) {
-                    is Resource.Success -> {
-                        Toast.makeText(requireContext(), "Parámetro eliminado", Toast.LENGTH_SHORT).show()
-                        loadParameters()
-                    }
+                    is Resource.Success -> { Toast.makeText(requireContext(), "Parámetro eliminado", Toast.LENGTH_SHORT).show(); loadParameters() }
                     is Resource.Error -> Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
                     else -> {}
                 }
             }
-        })
+        }
     }
 
     private fun handleParametersResponse(
@@ -150,31 +142,17 @@ class ExerciseParamsFragment : Fragment() {
             parameterType = selectedType,
             onlyMine = onlyMine,
             page = 0,
-            size = 20,
+            size = 50,
             sortBy = "name",
             direction = "ASC"
         )
-
-        if (onlyMine) {
-            parameterViewModel.searchMyParameters(filterRequest)
-        } else {
-            parameterViewModel.searchAllParameters(filterRequest)
-        }
+        if (onlyMine) parameterViewModel.searchMyParameters(filterRequest)
+        else parameterViewModel.searchAllParameters(filterRequest)
     }
 
     private fun showParameterDetail(parameter: CustomParameterResponse) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(parameter.name)
-            .setMessage(buildString {
-                append("Tipo: ${parameter.parameterType}\n")
-                if (!parameter.unit.isNullOrEmpty()) append("Unidad: ${parameter.unit}\n")
-                append("Visibilidad: ${if (parameter.isGlobal) "Global" else "Personal"}\n")
-                append("Estado: ${if (parameter.isActive) "Activo" else "Inactivo"}\n")
-                if (!parameter.ownerName.isNullOrEmpty()) append("Creado por: ${parameter.ownerName}\n")
-                append("Usos: ${parameter.usageCount}")
-            })
-            .setPositiveButton("Cerrar", null)
-            .show()
+        ParameterDetailBottomSheet.newInstance(parameter)
+            .show(parentFragmentManager, "parameter_detail")
     }
 
     private fun editParameter(parameter: CustomParameterResponse) {
@@ -190,7 +168,7 @@ class ExerciseParamsFragment : Fragment() {
             Toast.makeText(requireContext(), "No se puede eliminar un parámetro del sistema", Toast.LENGTH_SHORT).show()
             return
         }
-        MaterialAlertDialogBuilder(requireContext())
+        android.app.AlertDialog.Builder(requireContext())
             .setTitle("Eliminar parámetro")
             .setMessage("¿Eliminar '${parameter.name}'? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ -> parameterViewModel.deleteParameter(parameter.id) }
@@ -218,6 +196,5 @@ class ExerciseParamsFragment : Fragment() {
     }
 
     override fun onResume() { super.onResume(); loadParameters() }
-
     override fun onDestroyView() { super.onDestroyView(); _binding = null }
 }

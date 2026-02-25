@@ -58,7 +58,6 @@
                     android:paddingVertical="12dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Filtro Todos / Mis parámetros -->
             <com.google.android.material.chip.ChipGroup
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -83,7 +82,7 @@
 
             </com.google.android.material.chip.ChipGroup>
 
-            <!-- Filtro por tipo -->
+            <!-- Filtro por tipo scrolleable -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -101,7 +100,7 @@
                         style="@style/FilterChip"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
-                        android:text="Todos los tipos"
+                        android:text="Todos"
                         android:textSize="12sp"
                         android:checked="true" />
 
@@ -186,7 +185,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingTop="8dp"
-            android:paddingBottom="8dp"
+            android:paddingBottom="80dp"
             android:clipToPadding="false"
             android:overScrollMode="never" />
 
@@ -204,7 +203,7 @@
                 android:text="○"
                 android:textColor="#333333"
                 android:textSize="48sp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="12dp" />
 
             <TextView
                 android:id="@+id/tv_empty_state"
@@ -224,7 +223,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="80dp"
         android:contentDescription="Crear parámetro"
         app:backgroundTint="#78703F"
         app:tint="#121212"
