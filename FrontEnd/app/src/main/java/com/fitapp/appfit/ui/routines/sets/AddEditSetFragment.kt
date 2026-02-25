@@ -323,7 +323,7 @@ class AddEditSetFragment : Fragment() {
     private fun showAddParameterDialog(parameter: CustomParameterResponse) {
         val dialogBinding = DialogAddParameterBinding.inflate(layoutInflater)
 
-        dialogBinding.tvParameterName.text = parameter.displayName ?: parameter.name
+        dialogBinding.tvParameterName.text = parameter.unit ?: parameter.name
         dialogBinding.tvParameterType.text = "Tipo: ${parameter.parameterType}"
         if (!parameter.unit.isNullOrEmpty()) {
             dialogBinding.tvParameterUnit.text = "Unidad: ${parameter.unit}"
@@ -344,7 +344,7 @@ class AddEditSetFragment : Fragment() {
 
         AlertDialog.Builder(requireContext())
             .setView(dialogBinding.root)
-            .setTitle("Agregar ${parameter.displayName ?: parameter.name}")
+            .setTitle("Agregar ${parameter.unit ?: parameter.name}")
             .setPositiveButton("Agregar") { dialog, _ ->
                 addParameterToSet(parameter, dialogBinding)
                 dialog.dismiss()

@@ -196,11 +196,11 @@ class ConfigureSetsFragment : Fragment() {
                     updateSetsList()
                     selectedSetId = null
                     binding.layoutParameterSection.visibility = View.GONE
-                    Toast.makeText(requireContext(), "✅ Todos los sets eliminados", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Todos los sets eliminados", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Loading -> showLoading()
                 else -> {}
@@ -291,7 +291,6 @@ class ConfigureSetsFragment : Fragment() {
         val subSetNumber = binding.etSubSetNumber.text.toString().toIntOrNull()
         val groupId = binding.etGroupId.text.toString().takeIf { it.isNotEmpty() }
 
-        // Crear set básico (sin parámetros iniciales)
         val request = CreateSetTemplateRequest(
             routineExerciseId = routineExerciseId,
             position = position,
@@ -299,7 +298,7 @@ class ConfigureSetsFragment : Fragment() {
             restAfterSet = restAfterSet,
             subSetNumber = subSetNumber,
             groupId = groupId,
-            parameters = null // Sin parámetros iniciales
+            parameters = null
         )
 
         Log.d(TAG, "Creando set básico: posición=$position, tipo=$setType")
@@ -309,7 +308,7 @@ class ConfigureSetsFragment : Fragment() {
     private fun showAddParameterDialog(parameter: CustomParameterResponse) {
         val dialogBinding = DialogAddParameterBinding.inflate(layoutInflater)
 
-        dialogBinding.tvParameterName.text = parameter.displayName ?: parameter.name
+        dialogBinding.tvParameterName.text = parameter.unit ?: parameter.name
         dialogBinding.tvParameterType.text = "Tipo: ${parameter.parameterType}"
         if (!parameter.unit.isNullOrEmpty()) {
             dialogBinding.tvParameterUnit.text = "Unidad: ${parameter.unit}"
@@ -335,7 +334,7 @@ class ConfigureSetsFragment : Fragment() {
 
         AlertDialog.Builder(requireContext())
             .setView(dialogBinding.root)
-            .setTitle("Agregar ${parameter.displayName ?: parameter.name}")
+            .setTitle("Agregar ${parameter.unit ?: parameter.name}")
             .setPositiveButton("Agregar") { dialog, _ ->
                 addParameterToSet(parameter, dialogBinding)
                 dialog.dismiss()
@@ -360,7 +359,7 @@ class ConfigureSetsFragment : Fragment() {
         val newParameter = UpdateSetParameterRequest(
             id = null,
             parameterId = parameter.id,
-            repetitions = binding.etRepetitions.text.toString().toIntOrNull(),  // Si existe en el layout
+            repetitions = binding.etRepetitions.text.toString().toIntOrNull(),
             numericValue = when (parameter.parameterType) {
                 "NUMBER", "DISTANCE", "PERCENTAGE" ->
                     binding.etNumericValue.text.toString().toDoubleOrNull()
