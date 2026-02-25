@@ -6,130 +6,187 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.FragmentHomeBinding
 import com.fitapp.appfit.model.RoutineViewModel
+import com.fitapp.appfit.response.routine.response.RoutineStatisticsResponse
+import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import com.fitapp.appfit.ui.routines.adapter.RoutineAdapter
 import com.fitapp.appfit.utils.Resource
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HomeFragment : Fragment() {
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val routineViewModel: RoutineViewModel by viewModels()
-    private lateinit var lastUsedRoutineAdapter: RoutineAdapter
+    private lateinit var routineAdapter: RoutineAdapter
 
-    companion object {
-        private const val TAG = "HomeFragment"
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        setupHeader()
         setupRecyclerView()
         setupClickListeners()
         setupObservers()
-        loadLastUsedRoutines()
+        loadData()
+    }
+
+    private fun setupHeader() {
+        // Saludo según hora del día
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        binding.tvGreeting.text = when {
+            hour < 12 -> "Buenos días"
+            hour < 19 -> "Buenas tardes"
+            else -> "Buenas noches"
+        }
+
+        // Fecha formateada: "Lunes, 24 de febrero"
+        val dateFormat = SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "ES"))
+        val dateStr = dateFormat.format(Date())
+        // Primera letra en mayúscula
+        binding.tvDate.text = dateStr.replaceFirstChar { it.uppercase() }
     }
 
     private fun setupRecyclerView() {
-        lastUsedRoutineAdapter = RoutineAdapter(
-            onItemClick = { routine -> showRoutineDetail(routine) },
-            onEditClick = { routine -> editRoutine(routine) },
+        routineAdapter = RoutineAdapter(
+            onItemClick = { routine -> navigateToRoutineDetail(routine) },
+            onEditClick = { routine -> navigateToEditRoutine(routine) },
             onStartClick = { routine -> startWorkout(routine) }
         )
         binding.recyclerRecentRoutines.apply {
-            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            adapter = lastUsedRoutineAdapter
-            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = routineAdapter
+            setHasFixedSize(false)
         }
     }
 
     private fun setupClickListeners() {
-        binding.cardCreateRoutine.setOnClickListener {
+        binding.fabCreateRoutine.setOnClickListener {
             findNavController().navigate(R.id.navigation_create_routine)
         }
-        binding.textViewSeeAll.setOnClickListener {
+
+        binding.tvSeeAll.setOnClickListener {
             findNavController().navigate(R.id.navigation_routines)
         }
     }
 
     private fun setupObservers() {
-        routineViewModel.lastUsedRoutinesState.observe(viewLifecycleOwner, Observer { resource ->
+        // Estadísticas
+        routineViewModel.routineStatisticsState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
+                is Resource.Success -> resource.data?.let { updateStats(it) }
+                is Resource.Error -> showStatsError()
+                else -> {}
+            }
+        }
+
+        // Rutinas recientes
+        routineViewModel.lastUsedRoutinesState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Loading -> showRoutinesLoading()
                 is Resource.Success -> {
-                    hideLoading()
-                    resource.data?.let { routines ->
-                        if (routines.isEmpty()) showEmptyRecentRoutines()
-                        else { showRecentRoutinesList(); lastUsedRoutineAdapter.submitList(routines.toList()) }
-                    }
+                    hideRoutinesLoading()
+                    val routines = resource.data ?: emptyList()
+                    if (routines.isEmpty()) showEmptyRoutines()
+                    else showRoutines(routines)
                 }
                 is Resource.Error -> {
-                    hideLoading()
-                    val errorMsg = resource.message ?: "Error al cargar rutinas"
-                    if (errorMsg.contains("500")) {
-                        Handler(Looper.getMainLooper()).postDelayed({ loadLastUsedRoutines() }, 2000)
-                    } else {
-                        showEmptyRecentRoutines()
-                    }
+                    hideRoutinesLoading()
+                    showEmptyRoutines()
                 }
-                is Resource.Loading -> showLoading()
+                else -> {}
             }
-        })
+        }
 
+        // Recargar si hubo cambios en otras pantallas
         routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
-            Handler(Looper.getMainLooper()).postDelayed({ loadLastUsedRoutines() }, 500)
+            Handler(Looper.getMainLooper()).postDelayed({ loadData() }, 400)
         }
     }
 
-    private fun loadLastUsedRoutines() {
+    private fun loadData() {
+        routineViewModel.getRoutineStatistics()
         routineViewModel.getLastUsedRoutines(3)
     }
 
-    private fun startWorkout(routine: com.fitapp.appfit.response.routine.response.RoutineSummaryResponse) {
-        routineViewModel.markRoutineAsUsed(routine.id)
-        Toast.makeText(requireContext(), "Iniciando: ${routine.name}", Toast.LENGTH_SHORT).show()
+    // ==================== Stats ====================
+
+    private fun updateStats(stats: RoutineStatisticsResponse) {
+        binding.tvStatTotal.text = stats.totalRoutines.toString()
+        binding.tvStatActive.text = stats.activeRoutines.toString()
+        binding.tvStatInactive.text = stats.inactiveRoutines.toString()
     }
 
-    private fun showRoutineDetail(routine: com.fitapp.appfit.response.routine.response.RoutineSummaryResponse) {
-        Toast.makeText(requireContext(), routine.name, Toast.LENGTH_SHORT).show()
+    private fun showStatsError() {
+        binding.tvStatTotal.text = "—"
+        binding.tvStatActive.text = "—"
+        binding.tvStatInactive.text = "—"
     }
 
-    private fun editRoutine(routine: com.fitapp.appfit.response.routine.response.RoutineSummaryResponse) {
-        Toast.makeText(requireContext(), "Editar: ${routine.name}", Toast.LENGTH_SHORT).show()
-    }
+    // ==================== Rutinas ====================
 
-    private fun showLoading() {
+    private fun showRoutinesLoading() {
         binding.progressBar.visibility = View.VISIBLE
         binding.recyclerRecentRoutines.visibility = View.GONE
+        binding.layoutEmptyRoutines.visibility = View.GONE
     }
 
-    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
+    private fun hideRoutinesLoading() {
+        binding.progressBar.visibility = View.GONE
+    }
 
-    private fun showRecentRoutinesList() {
+    private fun showRoutines(routines: List<RoutineSummaryResponse>) {
         binding.recyclerRecentRoutines.visibility = View.VISIBLE
-        binding.textEmptyRecentRoutines.visibility = View.GONE
+        binding.layoutEmptyRoutines.visibility = View.GONE
+        routineAdapter.submitList(routines)
     }
 
-    private fun showEmptyRecentRoutines() {
+    private fun showEmptyRoutines() {
         binding.recyclerRecentRoutines.visibility = View.GONE
-        binding.textEmptyRecentRoutines.visibility = View.VISIBLE
+        binding.layoutEmptyRoutines.visibility = View.VISIBLE
     }
+
+    // ==================== Navegación ====================
+
+    private fun startWorkout(routine: RoutineSummaryResponse) {
+        routineViewModel.markRoutineAsUsed(routine.id)
+        // TODO: navegar a pantalla de entrenamiento cuando exista
+    }
+
+    private fun navigateToRoutineDetail(routine: RoutineSummaryResponse) {
+        // TODO: navegar a detalle cuando exista
+    }
+
+    private fun navigateToEditRoutine(routine: RoutineSummaryResponse) {
+        // TODO: navegar a editar cuando exista
+    }
+
+    // ==================== Lifecycle ====================
 
     override fun onResume() {
         super.onResume()
         routineViewModel.clearAllUpdateStates()
-        Handler(Looper.getMainLooper()).postDelayed({ loadLastUsedRoutines() }, 300)
+        loadData()
     }
 
-    override fun onDestroyView() { super.onDestroyView(); _binding = null }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

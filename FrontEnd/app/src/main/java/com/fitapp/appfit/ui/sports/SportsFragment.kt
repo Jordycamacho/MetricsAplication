@@ -5,18 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.fitapp.appfit.R
-import com.fitapp.appfit.databinding.FragmentSportsBinding
 import com.fitapp.appfit.databinding.DialogCreateSportBinding
+import com.fitapp.appfit.databinding.FragmentSportsBinding
 import com.fitapp.appfit.model.SportViewModel
 import com.fitapp.appfit.response.sport.response.SportResponse
-import com.fitapp.appfit.ui.sports.adapter.SportAdapter
 import com.fitapp.appfit.utils.Resource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -27,8 +23,8 @@ class SportsFragment : Fragment() {
     private val sportViewModel: SportViewModel by viewModels()
     private lateinit var sportAdapter: SportAdapter
 
-    // Estado actual del filtro
-    private var currentFilter = "all" // "all", "predefined", "custom"
+    private var currentFilter = "all"
+    private var isUpdatingChips = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,31 +37,19 @@ class SportsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
-        setupClickListeners()
+        setupChipListeners()
         setupObservers()
         setupSearchListener()
-
-        // Seleccionar chip por defecto
-        binding.chipAll.isChecked = true
-
-        // Cargar deportes al abrir la pantalla
+        binding.fabCreateSport.setOnClickListener { showCreateSportDialog() }
         loadSports()
     }
 
     private fun setupRecyclerView() {
         sportAdapter = SportAdapter(
-            onItemClick = { sport ->
-                // Ahora no mostramos diálogo, puedes usar esto para navegar a otra pantalla
-                // o mostrar opciones de acción
-                showSportOptions(sport)
-            },
-            onDeleteClick = { sport ->
-                showDeleteConfirmation(sport)
-            }
+            onItemClick = { sport -> showSportDetail(sport) },
+            onDeleteClick = { sport -> showDeleteConfirmation(sport) }
         )
-
         binding.recyclerSports.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = sportAdapter
@@ -74,205 +58,134 @@ class SportsFragment : Fragment() {
         }
     }
 
-
-
-    private fun setupClickListeners() {
-        // Botón flotante para crear deporte
-        binding.fabCreateSport.setOnClickListener {
-            navigateToCreateSport()
+    private fun setupChipListeners() {
+        // Mismo fix que en ExerciseParamsFragment: solo reaccionar cuando isChecked = true
+        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { currentFilter = "all"; loadSports() }
         }
-
-        // Chips de filtro
-        binding.chipAll.setOnClickListener {
-            currentFilter = "all"
-            binding.chipAll.isChecked = true
-            binding.chipPredefined.isChecked = false
-            binding.chipCustom.isChecked = false
-            loadSports()
+        binding.chipPredefined.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { currentFilter = "predefined"; loadPredefinedSports() }
         }
-
-        binding.chipPredefined.setOnClickListener {
-            currentFilter = "predefined"
-            binding.chipAll.isChecked = false
-            binding.chipPredefined.isChecked = true
-            binding.chipCustom.isChecked = false
-            loadPredefinedSports()
-        }
-
-        binding.chipCustom.setOnClickListener {
-            currentFilter = "custom"
-            binding.chipAll.isChecked = false
-            binding.chipPredefined.isChecked = false
-            binding.chipCustom.isChecked = true
-            loadUserSports()
+        binding.chipCustom.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { currentFilter = "custom"; loadUserSports() }
         }
     }
 
     private fun setupSearchListener() {
         binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                performSearch()
-                true
-            } else {
-                false
-            }
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) { performSearch(); true } else false
         }
     }
 
     private fun setupObservers() {
-        // Observar lista de deportes según filtro actual
-        sportViewModel.sportsState.observe(viewLifecycleOwner, Observer { resource ->
+        sportViewModel.sportsState.observe(viewLifecycleOwner) { resource ->
             handleSportsResponse(resource, "No hay deportes disponibles")
-        })
-
-        sportViewModel.predefinedSportsState.observe(viewLifecycleOwner, Observer { resource ->
+        }
+        sportViewModel.predefinedSportsState.observe(viewLifecycleOwner) { resource ->
             handleSportsResponse(resource, "No hay deportes predefinidos")
-        })
+        }
+        sportViewModel.userSportsState.observe(viewLifecycleOwner) { resource ->
+            handleSportsResponse(resource, "Aún no has creado deportes personalizados")
+        }
 
-        sportViewModel.userSportsState.observe(viewLifecycleOwner, Observer { resource ->
-            handleSportsResponse(resource, "No has creado deportes personalizados")
-        })
-
-        // Observar estado de eliminación
-        sportViewModel.deleteSportState.observe(viewLifecycleOwner, Observer { resource ->
+        sportViewModel.deleteSportState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Success -> {
-                    Toast.makeText(requireContext(), "✅ Deporte eliminado", Toast.LENGTH_SHORT).show()
-                    // Recargar según filtro actual
-                    when (currentFilter) {
-                        "all" -> loadSports()
-                        "predefined" -> loadPredefinedSports()
-                        "custom" -> loadUserSports()
-                    }
+                    Toast.makeText(requireContext(), "Deporte eliminado", Toast.LENGTH_SHORT).show()
+                    reloadCurrentFilter()
                 }
-                is Resource.Error -> {
-                    Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
+                is Resource.Error -> Toast.makeText(requireContext(), resource.message ?: "Error al eliminar", Toast.LENGTH_SHORT).show()
                 else -> {}
             }
-        })
+        }
 
-        // Observar estado de creación
-        sportViewModel.createSportState.observe(viewLifecycleOwner, Observer { resource ->
+        sportViewModel.createSportState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Success -> {
-                    Toast.makeText(requireContext(), "✅ Deporte creado", Toast.LENGTH_SHORT).show()
-                    loadUserSports() // Recargar mis deportes
-                    binding.chipCustom.isChecked = true
-                    binding.chipAll.isChecked = false
-                    binding.chipPredefined.isChecked = false
+                    Toast.makeText(requireContext(), "Deporte creado", Toast.LENGTH_SHORT).show()
+                    // Cambiar a "Mis deportes" sin disparar doble carga
+                    isUpdatingChips = true
                     currentFilter = "custom"
+                    isUpdatingChips = false
+                    loadUserSports()
                 }
-                is Resource.Error -> {
-                    Toast.makeText(requireContext(), "❌ Error al crear: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                is Resource.Loading -> {
-                    // Mostrar loading si quieres
-                }
+                is Resource.Error -> Toast.makeText(requireContext(), resource.message ?: "Error al crear", Toast.LENGTH_SHORT).show()
+                is Resource.Loading -> {}
                 else -> {}
             }
-        })
+        }
     }
 
     private fun handleSportsResponse(resource: Resource<List<SportResponse>>, emptyMessage: String) {
         when (resource) {
             is Resource.Success -> {
                 hideLoading()
-                resource.data?.let { sports ->
-                    if (sports.isEmpty()) {
-                        showEmptyState(emptyMessage)
-                    } else {
-                        showSportsList()
-                        sportAdapter.updateList(sports)
-                    }
-                }
+                val sports = resource.data ?: emptyList()
+                if (sports.isEmpty()) showEmptyState(emptyMessage)
+                else { showSportsList(); sportAdapter.updateList(sports) }
             }
             is Resource.Error -> {
                 hideLoading()
-                showError(resource.message ?: "Error al cargar deportes")
                 showEmptyState("Error al cargar")
+                Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
             }
-            is Resource.Loading -> {
-                showLoading()
-            }
+            is Resource.Loading -> showLoading()
         }
     }
 
-    private fun loadSports() {
-        sportViewModel.getSports()
-    }
+    private fun loadSports() { sportViewModel.getSports() }
+    private fun loadPredefinedSports() { sportViewModel.getPredefinedSports() }
+    private fun loadUserSports() { sportViewModel.getUserSports() }
 
-    private fun loadPredefinedSports() {
-        sportViewModel.getPredefinedSports()
-    }
-
-    private fun loadUserSports() {
-        sportViewModel.getUserSports()
+    private fun reloadCurrentFilter() {
+        when (currentFilter) {
+            "all" -> loadSports()
+            "predefined" -> loadPredefinedSports()
+            "custom" -> loadUserSports()
+        }
     }
 
     private fun performSearch() {
         val query = binding.etSearch.text.toString().trim()
         if (query.isNotEmpty()) {
-            Toast.makeText(requireContext(), "Buscando: $query", Toast.LENGTH_SHORT).show()
-            // Aquí implementarías la búsqueda real
+            // TODO: implementar búsqueda real cuando el backend la soporte
         }
     }
 
-    private fun navigateToCreateSport() {
-        // Crear diálogo simple para crear deporte
-        showCreateSportDialog()
+    private fun showSportDetail(sport: SportResponse) {
+        // Predefinidos y personalizados: por ahora sin acción adicional
+        // TODO: navegar a detalle o mostrar BottomSheet si se necesita
     }
 
     private fun showCreateSportDialog() {
-        val view = layoutInflater.inflate(R.layout.dialog_create_sport, null)
-        val etName = view.findViewById<EditText>(R.id.et_sport_name)
-        val etCategory = view.findViewById<EditText>(R.id.et_sport_category)
+        val dialogBinding = DialogCreateSportBinding.inflate(layoutInflater)
 
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Crear Deporte Personalizado")
-            .setView(view)
-            .setPositiveButton("Crear") { dialogInterface, _ ->
-                val name = etName.text.toString().trim()
-                val category = etCategory.text.toString().trim()
-
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Nuevo deporte")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Crear") { dialog, _ ->
+                val name = dialogBinding.etSportName.text.toString().trim()
+                val category = dialogBinding.etSportCategory.text.toString().trim()
                 if (name.isEmpty()) {
                     Toast.makeText(requireContext(), "El nombre es obligatorio", Toast.LENGTH_SHORT).show()
                 } else {
                     sportViewModel.createCustomSport(name, category, emptyMap())
-                    dialogInterface.dismiss()
+                    dialog.dismiss()
                 }
             }
-            .setNegativeButton("Cancelar") { dialogInterface, _ ->
-                dialogInterface.dismiss()
-            }
-            .create()
-
-        dialog.show()
-    }
-
-    private fun showSportOptions(sport: SportResponse) {
-        // Aquí podrías mostrar un menú de opciones si quieres
-        // Por ahora, solo mostramos un toast para indicar que se seleccionó
-        if (sport.isPredefined) {
-            Toast.makeText(requireContext(), "Deporte predefinido: ${sport.name}", Toast.LENGTH_SHORT).show()
-        } else {
-            // Para deportes personalizados, podrías mostrar opciones de edición
-            Toast.makeText(requireContext(), "Tu deporte: ${sport.name}", Toast.LENGTH_SHORT).show()
-        }
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     private fun showDeleteConfirmation(sport: SportResponse) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Eliminar Deporte")
-            .setMessage("¿Estás seguro de que quieres eliminar '${sport.name}'?\n\nEsta acción no se puede deshacer.")
+            .setTitle("Eliminar deporte")
+            .setMessage("¿Eliminar '${sport.name}'? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { dialog, _ ->
                 sportViewModel.deleteCustomSport(sport.id)
                 dialog.dismiss()
             }
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .setCancelable(true)
+            .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
             .show()
     }
 
@@ -282,9 +195,7 @@ class SportsFragment : Fragment() {
         binding.layoutEmptyState.visibility = View.GONE
     }
 
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-    }
+    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
 
     private fun showSportsList() {
         binding.recyclerSports.visibility = View.VISIBLE
@@ -297,18 +208,9 @@ class SportsFragment : Fragment() {
         binding.tvEmptyState.text = message
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), "❌ $message", Toast.LENGTH_LONG).show()
-    }
-
     override fun onResume() {
         super.onResume()
-        // Recargar datos cuando se vuelve a la pantalla
-        when (currentFilter) {
-            "all" -> loadSports()
-            "predefined" -> loadPredefinedSports()
-            "custom" -> loadUserSports()
-        }
+        reloadCurrentFilter()
     }
 
     override fun onDestroyView() {

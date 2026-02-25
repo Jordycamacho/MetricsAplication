@@ -1,175 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:fitsSystemWindows="true">
+    android:background="@color/background_dark">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingBottom="80dp"> <!-- ADDED: Padding para el bottom navigation -->
+        android:orientation="vertical">
 
-        <!-- Barra de herramientas -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="16dp"
+            android:orientation="vertical"
             android:background="@color/surface_dark"
-            android:elevation="4dp">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp">
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="Deportes"
-                android:textSize="24sp"
+                android:textColor="@color/text_primary_dark"
+                android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary_dark" />
+                android:layout_marginBottom="12dp" />
 
-            <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-                android:id="@+id/fab_create_sport"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nuevo"
-                android:icon="@drawable/ic_add"
-                app:iconTint="@color/background_dark"
-                app:backgroundTint="@color/gold_primary"
-                app:cornerRadius="20dp"
-                android:elevation="8dp" />
-        </LinearLayout>
-
-        <!-- Filtros rápidos -->
-        <com.google.android.material.chip.ChipGroup
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp"
-            app:singleSelection="true">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_all"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Todos"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/gold_primary"
-                app:chipStrokeColor="@color/gold_primary"
-                app:chipStrokeWidth="1dp" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_predefined"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Predefinidos"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/gold_primary"
-                app:chipStrokeColor="@color/gold_primary"
-                app:chipStrokeWidth="1dp" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_custom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mis Deportes"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/gold_primary"
-                app:chipStrokeColor="@color/gold_primary"
-                app:chipStrokeWidth="1dp" />
-
-        </com.google.android.material.chip.ChipGroup>
-
-        <!-- Barra de búsqueda -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
+            <!-- Búsqueda -->
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="12dp">
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="#121212"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                app:startIconDrawable="@android:drawable/ic_menu_search"
+                app:startIconTint="@color/gold_primary"
+                android:hint="Buscar deportes..."
+                app:hintTextColor="#666666"
+                android:layout_marginBottom="12dp">
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_search"
-                    android:layout_marginEnd="8dp" />
-
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_search"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="Buscar deportes..."
                     android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark"
-                    android:background="@android:color/transparent"
+                    android:textColorHint="#666666"
+                    android:inputType="text"
                     android:imeOptions="actionSearch"
-                    android:inputType="text" />
+                    android:paddingVertical="12dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <!-- Chips filtro -->
+            <com.google.android.material.chip.ChipGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:selectionRequired="true">
 
-        <!-- Lista de deportes -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_all"
+                    style="@style/FilterChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Todos"
+                    android:checked="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_predefined"
+                    style="@style/FilterChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Predefinidos" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_custom"
+                    style="@style/FilterChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Mis deportes" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/gold_primary"
+            android:alpha="0.3" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"
+            android:indeterminateTint="@color/gold_primary"
+            android:visibility="gone" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_sports"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:paddingHorizontal="8dp"
+            android:layout_height="match_parent"
+            android:paddingTop="8dp"
+            android:paddingBottom="80dp"
             android:clipToPadding="false"
-            android:scrollbars="vertical" />
+            android:overScrollMode="never" />
 
-        <!-- Estado vacío -->
         <LinearLayout
             android:id="@+id/layout_empty_state"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="32dp"
             android:visibility="gone">
 
-            <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/ic_empty_routines"
-                android:layout_marginBottom="16dp"
-                app:tint="@color/text_secondary_dark" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="○"
+                android:textColor="#333333"
+                android:textSize="48sp"
+                android:layout_marginBottom="12dp" />
 
             <TextView
                 android:id="@+id/tv_empty_state"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="No hay deportes disponibles"
-                android:textAlignment="center"
                 android:textColor="@color/text_secondary_dark"
-                android:textSize="18sp"
-                android:layout_marginBottom="8dp" />
+                android:textSize="15sp"
+                android:gravity="center" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Haz clic en '+' para crear uno nuevo"
-                android:textAlignment="center"
-                android:textColor="@color/text_secondary_dark"
-                android:textSize="14sp" />
+                android:text="Crea uno con el botón +"
+                android:textColor="#444444"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
+
         </LinearLayout>
 
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
     </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_create_sport"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="80dp"
+        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="Crear deporte"
+        app:backgroundTint="@color/gold_primary"
+        app:tint="#121212"
+        app:elevation="8dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
