@@ -28,32 +28,23 @@ class RegisterActivity : AppCompatActivity() {
         setupObservers()
 
         binding.btnRegister.setOnClickListener {
-            val email = binding.etEmail.text.toString()
+            val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString()
-            val fullName = binding.etFullName.text.toString()
-
+            val fullName = binding.etFullName.text.toString().trim()
             if (validateInput(email, password, fullName)) {
                 viewModel.register(email, password, fullName)
             }
         }
 
-        binding.tvLogin.setOnClickListener {
-            finish()
-        }
+        binding.tvLogin.setOnClickListener { finish() }
     }
 
     private fun setupObservers() {
         viewModel.registerState.observe(this) { resource ->
             when (resource) {
                 is Resource.Loading -> showLoading(true)
-                is Resource.Success -> {
-                    showLoading(false)
-                    showSuccessAndNavigate()
-                }
-                is Resource.Error -> {
-                    showLoading(false)
-                    showError(resource.message ?: "Error en registro")
-                }
+                is Resource.Success -> { showLoading(false); showSuccessAndNavigate() }
+                is Resource.Error -> { showLoading(false); showError(resource.message ?: "Error en registro") }
             }
         }
     }
@@ -68,7 +59,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun showSuccessAndNavigate() {
-        Snackbar.make(binding.root, "¡Registro exitoso!", Snackbar.LENGTH_SHORT).show()
+        Snackbar.make(binding.root, "¡Cuenta creada con éxito!", Snackbar.LENGTH_SHORT).show()
         Handler(Looper.getMainLooper()).postDelayed({
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -77,22 +68,9 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun validateInput(email: String, password: String, fullName: String): Boolean {
         var isValid = true
-
-        if (fullName.isBlank()) {
-            binding.etFullName.error = "Ingresa tu nombre"
-            isValid = false
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.etEmail.error = "Email inválido"
-            isValid = false
-        }
-
-        if (password.length < 6) {
-            binding.etPassword.error = "Mínimo 6 caracteres"
-            isValid = false
-        }
-
+        if (fullName.isBlank()) { binding.etFullName.error = "Ingresa tu nombre"; isValid = false }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { binding.etEmail.error = "Email inválido"; isValid = false }
+        if (password.length < 6) { binding.etPassword.error = "Mínimo 6 caracteres"; isValid = false }
         return isValid
     }
 }

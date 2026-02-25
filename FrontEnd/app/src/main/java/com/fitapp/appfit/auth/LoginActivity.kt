@@ -2,15 +2,15 @@ package com.fitapp.appfit.auth
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Patterns
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.fitapp.appfit.MainActivity
 import com.fitapp.appfit.databinding.ActivityLoginBinding
 import com.fitapp.appfit.utils.Resource
-import com.fitapp.appfit.utils.SessionManager
 import com.google.android.material.snackbar.Snackbar
+import android.util.Patterns
+import com.fitapp.appfit.utils.SessionManager
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -21,20 +21,18 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inicializar SessionManager
         SessionManager.initialize(applicationContext)
 
-        // Verificar si ya hay una sesión activa
         if (SessionManager.isTokenValid()) {
             navigateToMain()
+            return
         }
 
         setupObservers()
 
         binding.btnLogin.setOnClickListener {
-            val email = binding.etEmail.text.toString()
+            val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString()
-
             if (validateInput(email, password)) {
                 viewModel.login(email, password)
             }
@@ -49,14 +47,8 @@ class LoginActivity : AppCompatActivity() {
         viewModel.loginState.observe(this) { resource ->
             when (resource) {
                 is Resource.Loading -> showLoading(true)
-                is Resource.Success -> {
-                    showLoading(false)
-                    navigateToMain()
-                }
-                is Resource.Error -> {
-                    showLoading(false)
-                    showError(resource.message ?: "Error en inicio de sesión")
-                }
+                is Resource.Success -> { showLoading(false); navigateToMain() }
+                is Resource.Error -> { showLoading(false); showError(resource.message ?: "Error en inicio de sesión") }
             }
         }
     }
@@ -72,17 +64,14 @@ class LoginActivity : AppCompatActivity() {
 
     private fun validateInput(email: String, password: String): Boolean {
         var isValid = true
-
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             binding.etEmail.error = "Email inválido"
             isValid = false
         }
-
         if (password.length < 6) {
             binding.etPassword.error = "Mínimo 6 caracteres"
             isValid = false
         }
-
         return isValid
     }
 
