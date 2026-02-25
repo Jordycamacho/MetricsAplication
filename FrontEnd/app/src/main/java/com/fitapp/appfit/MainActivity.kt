@@ -6,8 +6,6 @@ import androidx.activity.viewModels
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.fitapp.appfit.auth.AuthViewModel
 import com.fitapp.appfit.auth.LoginActivity
@@ -27,15 +25,6 @@ class MainActivity : AppCompatActivity() {
         val navView: BottomNavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
 
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_home,
-                R.id.navigation_routines,
-                R.id.navigation_exercises,
-                R.id.navigation_profile
-            )
-        )
-
         viewModel.logoutEvent.observe(this) { logout ->
             if (logout) {
                 startActivity(Intent(this, LoginActivity::class.java))
@@ -43,7 +32,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
 }

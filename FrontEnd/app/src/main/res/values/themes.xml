@@ -1,6 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Tema base de la aplicación -->
-    <style name="Theme.AppFit" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.AppFit" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/gold_primary</item>
         <item name="colorPrimaryVariant">@color/gold_secondary</item>
         <item name="colorOnPrimary">@color/background_dark</item>
@@ -9,23 +8,20 @@
         <item name="colorOnSecondary">@color/background_dark</item>
         <item name="android:windowBackground">@color/background_dark</item>
         <item name="android:statusBarColor">@color/background_dark</item>
-        <item name="android:navigationBarColor">@color/background_dark</item>
+        <item name="android:navigationBarColor">@color/surface_dark</item>
     </style>
 
-    <!-- Tema sin ActionBar -->
     <style name="Theme.AppFit.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- Tema para CardView -->
     <style name="CardView.AppFit" parent="CardView">
         <item name="cardBackgroundColor">@color/card_dark</item>
         <item name="cardCornerRadius">16dp</item>
-        <item name="cardElevation">8dp</item>
+        <item name="cardElevation">0dp</item>
     </style>
 
-    <!-- Estilos para chips de filtro -->
     <style name="FilterChip" parent="Widget.MaterialComponents.Chip.Choice">
         <item name="chipBackgroundColor">@color/card_dark</item>
         <item name="chipStrokeColor">@color/gold_primary</item>
@@ -37,7 +33,6 @@
         <item name="chipCornerRadius">16dp</item>
     </style>
 
-    <!-- Estilo para botón dorado -->
     <style name="GoldButton" parent="Widget.MaterialComponents.Button">
         <item name="android:backgroundTint">@color/gold_primary</item>
         <item name="android:textColor">@color/background_dark</item>
@@ -46,7 +41,6 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- Estilo para botón con borde -->
     <style name="OutlineButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:textColor">@color/gold_primary</item>
         <item name="android:backgroundTint">@android:color/transparent</item>
@@ -54,5 +48,11 @@
         <item name="strokeWidth">1dp</item>
         <item name="cornerRadius">12dp</item>
         <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/text_primary_dark</item>
+        <item name="buttonBarPositiveButtonStyle">@style/GoldButton</item>
     </style>
 </resources>

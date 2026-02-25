@@ -1,214 +1,218 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:background="@color/background_dark">
 
+    <!-- Header fijo -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
-        tools:ignore="ExtraText">
+        android:background="@color/surface_dark"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="16dp">
 
-        <!-- Encabezado con saludo -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="¡Bienvenido!"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary_dark"
+            android:letterSpacing="0.01" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Continúa tu progreso"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary_dark"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+
+    <!-- Línea dorada -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/gold_primary"
+        android:alpha="0.4" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:fillViewport="false">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="28dp">
+            android:padding="20dp"
+            android:paddingBottom="24dp">
 
-            <TextView
+            <!-- Card: Nueva rutina -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_create_routine"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="¡Bienvenido de vuelta!"
-                android:textSize="26sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:letterSpacing="0.02" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Continúa tu progreso fitness"
-                android:textSize="16sp"
-                android:textColor="@color/text_secondary_dark"
-                android:layout_marginTop="6dp" />
-        </LinearLayout>
-
-        <!-- Tarjeta de Progreso Semanal -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            style="@style/CardView.AppFit">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="📊 Progreso Semanal"
-                    android:textSize="18sp"
-                    android:textColor="@color/gold_primary"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:gravity="center_vertical"
+                    android:padding="20dp">
 
-                    <TextView
-                        android:id="@+id/textProgress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 de 0 rutinas activas"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_secondary_dark" />
+                    <!-- Icono círculo dorado -->
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_circle_button"
+                        android:gravity="center"
+                        android:layout_marginEnd="16dp">
 
-                    <TextView
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="+"
+                            android:textColor="#121212"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="66%"
-                        android:textSize="14sp"
-                        android:textColor="@color/gold_primary"
-                        android:textStyle="bold"
-                        android:gravity="end" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nueva rutina"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary_dark" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Crea un entrenamiento personalizado"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary_dark"
+                            android:layout_marginTop="3dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="›"
+                        android:textSize="24sp"
+                        android:textColor="@color/gold_primary" />
+
                 </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                <ProgressBar
-                    android:id="@+id/progressBarWeekly"
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="10dp"
-                    android:progress="66"
-                    android:max="100"
-                    android:progressTint="@color/gold_primary"
-                    android:progressBackgroundTint="@color/progress_background_dark" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="¡Excelente progreso! Solo 2 entrenamientos más para completar tu meta semanal."
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary_dark"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingMultiplier="1.2" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Botón de Nueva Rutina -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_create_routine"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            style="@style/CardView.AppFit"
-            android:foreground="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
-
+            <!-- Sección rutinas recientes -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
-                android:gravity="center">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:src="@drawable/logo_app"
-                    android:scaleType="centerInside"
-                    app:tint="@color/gold_primary" />
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="20dp"
+                    android:background="@color/gold_primary"
+                    android:layout_marginEnd="10dp" />
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="➕ Nueva Rutina"
-                    android:textSize="17sp"
-                    android:textColor="@color/gold_primary"
+                    android:layout_weight="1"
+                    android:text="Rutinas recientes"
+                    android:textSize="18sp"
                     android:textStyle="bold"
-                    android:gravity="center"
-                    android:layout_marginTop="16dp" />
+                    android:textColor="@color/text_primary_dark" />
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/textViewSeeAll"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Crear una nueva rutina de entrenamiento personalizada"
+                    android:text="Ver todas"
                     android:textSize="13sp"
-                    android:textColor="@color/text_secondary_dark"
-                    android:gravity="center"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingMultiplier="1.1" />
+                    android:textColor="@color/gold_primary"
+                    android:padding="8dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-        <!-- Sección de Rutinas Recientes -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="💪 Rutinas Recientes"
-                android:textSize="20sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/textViewSeeAll"
+            <!-- Loading -->
+            <ProgressBar
+                android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ver todas"
-                android:textSize="14sp"
-                android:textColor="@color/gold_primary"
-                android:padding="8dp"
-                android:clickable="true"
-                android:focusable="true" />
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"
+                android:indeterminateTint="@color/gold_primary"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Mensaje vacío -->
+            <LinearLayout
+                android:id="@+id/textEmptyRecentRoutines"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Aún no hay rutinas recientes"
+                    android:textColor="@color/text_secondary_dark"
+                    android:textSize="14sp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Crea tu primera rutina arriba"
+                    android:textColor="#444444"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- RecyclerView rutinas recientes (horizontal) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_recent_routines"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="0dp"
+                android:clipToPadding="false"
+                android:overScrollMode="never" />
+
         </LinearLayout>
+    </ScrollView>
 
-        <!-- ProgressBar para carga -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Mensaje cuando no hay rutinas -->
-        <TextView
-            android:id="@+id/textEmptyRecentRoutines"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="No hay rutinas recientes"
-            android:textColor="@color/text_secondary_dark"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:visibility="gone"
-            android:layout_marginBottom="16dp" />
-
-        <!-- RecyclerView para rutinas recientes -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_recent_routines"
-            android:layout_width="match_parent"
-            android:layout_height="280dp"
-            android:layout_marginBottom="24dp" />
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>
