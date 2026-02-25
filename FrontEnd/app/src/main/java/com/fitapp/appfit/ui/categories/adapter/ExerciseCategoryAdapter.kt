@@ -68,7 +68,6 @@ class ExerciseCategoryAdapter(
 
                 // También podemos cambiar el estilo de la tarjeta para predefinidas
                 itemView.alpha = 0.9f
-                itemView.findViewById<View>(R.id.indicator_predefined)?.visibility = View.VISIBLE
             } else {
                 // Categorías personales - MOSTRAR botones de acción
                 layoutActions.visibility = View.VISIBLE
@@ -76,7 +75,6 @@ class ExerciseCategoryAdapter(
                 btnDelete.setOnClickListener { onDeleteClick(category) }
 
                 itemView.alpha = 1f
-                itemView.findViewById<View>(R.id.indicator_predefined)?.visibility = View.GONE
             }
 
             // Click en toda la tarjeta (para ambos tipos)

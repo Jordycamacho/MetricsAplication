@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="4dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@color/card_dark">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="@color/card_dark"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#2A2A2A"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,13 +18,13 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Fila superior: Nombre y tipo -->
+        <!-- Nombre + badge tipo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="4dp">
 
             <TextView
                 android:id="@+id/tv_exercise_name"
@@ -30,7 +32,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Nombre del Ejercicio"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary_dark"
                 android:maxLines="1"
@@ -41,48 +43,38 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="TIPO"
-                android:textSize="12sp"
-                android:paddingHorizontal="8dp"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#121212"
+                android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:background="@drawable/badge_predefined"
-                android:textColor="@color/white"
-                android:textStyle="bold" />
+                android:letterSpacing="0.05" />
+
         </LinearLayout>
 
-        <!-- Descripción -->
-        <TextView
-            android:id="@+id/tv_exercise_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Descripción del ejercicio..."
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary_dark"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Fila media: Deporte y creador -->
+        <!-- Deporte · Creador -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
 
             <TextView
                 android:id="@+id/tv_exercise_sport"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Deporte"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textColor="@color/gold_primary"
                 android:textStyle="bold" />
 
             <View
                 android:layout_width="1dp"
-                android:layout_height="12dp"
+                android:layout_height="10dp"
                 android:background="@color/divider_dark"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp" />
+                android:layout_marginHorizontal="8dp" />
 
             <TextView
                 android:id="@+id/tv_exercise_created_by"
@@ -90,101 +82,158 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Creado por"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textColor="@color/text_secondary_dark"
                 android:maxLines="1"
                 android:ellipsize="end" />
+
         </LinearLayout>
 
-        <!-- Categorías -->
+        <!-- Descripción -->
+        <TextView
+            android:id="@+id/tv_exercise_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descripción del ejercicio"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary_dark"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Categorías y parámetros -->
         <TextView
             android:id="@+id/tv_exercise_categories"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Categorías: "
-            android:textSize="13sp"
+            android:text="Categorías: —"
+            android:textSize="12sp"
             android:textColor="@color/text_secondary_dark"
             android:maxLines="1"
             android:ellipsize="end"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="2dp" />
 
-        <!-- Parámetros -->
         <TextView
             android:id="@+id/tv_exercise_parameters"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Parámetros: "
-            android:textSize="13sp"
+            android:text="Parámetros: —"
+            android:textSize="12sp"
             android:textColor="@color/text_secondary_dark"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="10dp" />
 
-        <!-- Fila de visibilidad y estado -->
+        <!-- Separador -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#252525"
+            android:layout_marginBottom="10dp" />
+
+        <!-- Fila inferior: badges + contadores + botones -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:gravity="center_vertical">
 
+            <!-- Visibilidad -->
             <TextView
                 android:id="@+id/tv_exercise_visibility"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="👤 PERSONAL"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:background="@drawable/badge_custom"
-                android:textColor="@color/white" />
+                android:text="Personal"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary_dark" />
 
+            <View
+                android:layout_width="1dp"
+                android:layout_height="10dp"
+                android:background="@color/divider_dark"
+                android:layout_marginHorizontal="8dp" />
+
+            <!-- Estado -->
             <TextView
                 android:id="@+id/tv_exercise_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ ACTIVO"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:background="@drawable/badge_active"
-                android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
+                android:text="Activo"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary_dark" />
 
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="10dp"
+                android:background="@color/divider_dark"
+                android:layout_marginHorizontal="8dp" />
 
-            <!-- Estadísticas -->
             <TextView
                 android:id="@+id/tv_exercise_usage_count"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 usos"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary_dark" />
+
+            <!-- Botones -->
+            <TextView
+                android:id="@+id/btn_toggle_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Usado 0 veces"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark"
-                android:layout_marginStart="8dp" />
+                android:text="Pausar"
+                android:textSize="11sp"
+                android:textColor="@color/gold_primary"
+                android:textStyle="bold"
+                android:paddingVertical="5dp"
+                android:paddingHorizontal="12dp"
+                android:background="@drawable/button_edit_background" />
+
+            <TextView
+                android:id="@+id/btn_edit_exercise"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar"
+                android:textSize="11sp"
+                android:textColor="@color/gold_primary"
+                android:textStyle="bold"
+                android:paddingVertical="5dp"
+                android:paddingHorizontal="12dp"
+                android:background="@drawable/button_edit_background"
+                android:layout_marginStart="6dp" />
+
+            <TextView
+                android:id="@+id/btn_delete_exercise"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Eliminar"
+                android:textSize="11sp"
+                android:textColor="@color/red"
+                android:textStyle="bold"
+                android:paddingVertical="5dp"
+                android:paddingHorizontal="12dp"
+                android:background="@drawable/button_delete_background"
+                android:layout_marginStart="6dp" />
 
         </LinearLayout>
 
-        <!-- Fila de rating y última vez -->
+        <!-- Fila rating + última vez (secundaria, discreta) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:layout_marginTop="8dp">
 
             <TextView
                 android:id="@+id/tv_exercise_rating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⭐ 0.0"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark" />
+                android:text="0.0 valoración"
+                android:textSize="11sp"
+                android:textColor="#555555" />
 
-            <Space
+            <View
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
@@ -193,83 +242,27 @@
                 android:id="@+id/tv_exercise_last_used"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Último uso: nunca"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark" />
-        </LinearLayout>
+                android:text="Nunca usado"
+                android:textSize="11sp"
+                android:textColor="#555555" />
 
-        <!-- Separador -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/divider_dark"
-            android:layout_marginBottom="12dp" />
-
-        <!-- Fila inferior: Botones de acción -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/btn_toggle_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DESACTIVAR"
-                android:textSize="14sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/button_secondary_background" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
+            <!-- Botón hacer público (oculto por defecto) -->
             <TextView
                 android:id="@+id/btn_make_public"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="HACER PÚBLICO"
-                android:textSize="14sp"
+                android:text="Hacer público"
+                android:textSize="11sp"
                 android:textColor="@color/gold_primary"
                 android:textStyle="bold"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/button_secondary_background"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/btn_edit_exercise"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="EDITAR"
-                android:textSize="14sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="16dp"
+                android:paddingVertical="5dp"
+                android:paddingHorizontal="12dp"
                 android:background="@drawable/button_edit_background"
-                android:layout_marginStart="8dp" />
-
-            <TextView
-                android:id="@+id/btn_delete_exercise"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ELIMINAR"
-                android:textSize="14sp"
-                android:textColor="@color/red"
-                android:textStyle="bold"
-                android:paddingVertical="8dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/button_delete_background"
-                android:layout_marginStart="8dp" />
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>
