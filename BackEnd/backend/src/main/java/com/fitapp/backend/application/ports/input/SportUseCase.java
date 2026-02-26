@@ -13,7 +13,6 @@ public interface SportUseCase {
     SportPageResponse getUserSportsPaginated(String userEmail, SportFilterRequest filterRequest);
     List<SportModel> getPredefinedSports();
     List<SportModel> getUserSports(String userEmail);
-    List<String> getAllCategories();
     SportModel createCustomSport(SportRequest sportRequest, String userEmail);
     void deleteCustomSport(Long sportId, String userEmail);
 }

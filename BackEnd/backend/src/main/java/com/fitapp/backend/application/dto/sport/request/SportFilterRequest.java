@@ -18,10 +18,6 @@ public class SportFilterRequest {
     @JsonProperty("search")
     private String search;
     
-    @Schema(description = "Categoría específica", example = "cardio")
-    @JsonProperty("category")
-    private String category;
-    
     @Schema(description = "Si es predefinido o no")
     @JsonProperty("isPredefined")
     private Boolean isPredefined;

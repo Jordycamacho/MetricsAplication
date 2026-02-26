@@ -32,9 +32,6 @@ public class SportEntity {
     @Column(columnDefinition = "TEXT", name = "parameter_template")
     private Map<String, String> parameterTemplate = new HashMap<>();
 
-    @Column(name = "category")
-    private String category;
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
@@ -44,8 +41,8 @@ public class SportEntity {
     public void logDataFormat() {
         log.debug("SPORT_ENTITY_DATA | id={} | name={} | sourceType={} | isPredefined={}",
                 id, name, sourceType, isPredefined);
-        log.debug("SPORT_ENTITY_PARAMETERS | templateKeys={} | category={}",
-                parameterTemplate != null ? parameterTemplate.keySet().size() : 0, category);
+        log.debug("SPORT_ENTITY_PARAMETERS | templateKeys={}",
+                parameterTemplate != null ? parameterTemplate.keySet().size() : 0);
 
         if (name != null && !name.matches("^[a-zA-Z0-9\\s]+$")) {
             log.warn("SPORT_NAME_FORMAT_WARNING | name contains special characters");

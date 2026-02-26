@@ -17,11 +17,10 @@ public class SportModel {
     private SportSourceType sourceType;
     private Long createdBy;
     private Map<String, String> parameterTemplate;
-    private String category;
 
     public void logModelData(String operation) {
-        log.info("SPORT_MODEL_{} | id={} | name={} | sourceType={} | isPredefined={} | category={}", 
-                operation.toUpperCase(), id, name, sourceType, isPredefined, category);
+        log.info("SPORT_MODEL_{} | id={} | name={} | sourceType={} | isPredefined={}", 
+                operation.toUpperCase(), id, name, sourceType, isPredefined);
         if (parameterTemplate != null && !parameterTemplate.isEmpty()) {
             log.debug("SPORT_MODEL_PARAMETERS | template={}", parameterTemplate);
         }

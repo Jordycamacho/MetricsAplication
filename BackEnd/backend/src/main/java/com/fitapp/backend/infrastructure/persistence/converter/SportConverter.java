@@ -28,7 +28,6 @@ public class SportConverter {
         }
         
         model.setParameterTemplate(entity.getParameterTemplate());
-        model.setCategory(entity.getCategory());
         
         model.logModelData("CONVERTED_FROM_ENTITY");
         log.debug("CONVERTER_TO_DOMAIN_END | modelId={}", model.getId());
@@ -48,7 +47,6 @@ public class SportConverter {
         entity.setIsPredefined(model.getIsPredefined());
         entity.setSourceType(model.getSourceType());
         entity.setParameterTemplate(model.getParameterTemplate());
-        entity.setCategory(model.getCategory());
         
         log.debug("CONVERTER_TO_ENTITY_END | entityId={} | sourceType={}", 
                  entity.getId(), entity.getSourceType());

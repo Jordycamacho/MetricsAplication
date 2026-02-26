@@ -1,4 +1,3 @@
-// com.fitapp.backend.infrastructure.persistence.specification/SportSpecification.java
 package com.fitapp.backend.infrastructure.persistence.specification;
 
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
@@ -14,7 +13,6 @@ public class SportSpecification {
     
     public static Specification<SportEntity> withFilters(
             String search, 
-            String category, 
             Boolean isPredefined, 
             SportSourceType sourceType,
             Long createdBy) {
@@ -22,7 +20,6 @@ public class SportSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             
-            // Búsqueda por texto en nombre
             if (StringUtils.hasText(search)) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 predicates.add(criteriaBuilder.like(
@@ -31,15 +28,6 @@ public class SportSpecification {
                 ));
             }
             
-            // Filtro por categoría
-            if (StringUtils.hasText(category)) {
-                predicates.add(criteriaBuilder.equal(
-                    root.get("category"), 
-                    category
-                ));
-            }
-            
-            // Filtro por predefinido
             if (isPredefined != null) {
                 predicates.add(criteriaBuilder.equal(
                     root.get("isPredefined"), 
@@ -47,7 +35,6 @@ public class SportSpecification {
                 ));
             }
             
-            // Filtro por tipo de origen
             if (sourceType != null) {
                 predicates.add(criteriaBuilder.equal(
                     root.get("sourceType"), 
@@ -55,7 +42,6 @@ public class SportSpecification {
                 ));
             }
             
-            // Filtro por creador
             if (createdBy != null) {
                 predicates.add(criteriaBuilder.equal(
                     root.get("createdBy").get("id"), 
@@ -75,8 +61,7 @@ public class SportSpecification {
             
             String searchPattern = "%" + search.toLowerCase() + "%";
             return criteriaBuilder.or(
-                criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern),
-                criteriaBuilder.like(criteriaBuilder.lower(root.get("category")), searchPattern)
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern)
             );
         };
     }

@@ -1,4 +1,3 @@
-// com.fitapp.backend.infrastructure.persistence.adapter.out/SportPersistenceAdapter.java
 package com.fitapp.backend.infrastructure.persistence.adapter.out;
 
 import com.fitapp.backend.application.dto.sport.request.SportFilterRequest;
@@ -14,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -57,12 +55,11 @@ public class SportPersistenceAdapter implements SportPersistencePort {
 
     @Override
     public Page<SportModel> findByFilters(SportFilterRequest filters, Pageable pageable) {
-        log.info("PERSISTENCE_FIND_BY_FILTERS | search={} | category={} | sourceType={} | page={}", 
-                filters.getSearch(), filters.getCategory(), filters.getSourceType(), pageable.getPageNumber());
+        log.info("PERSISTENCE_FIND_BY_FILTERS | search={} | sourceType={} | page={}", 
+                filters.getSearch(), filters.getSourceType(), pageable.getPageNumber());
         
         Specification<SportEntity> spec = SportSpecification.withFilters(
             filters.getSearch(),
-            filters.getCategory(),
             filters.getIsPredefined(),
             filters.getSourceType(),
             filters.getCreatedBy()
@@ -77,10 +74,10 @@ public class SportPersistenceAdapter implements SportPersistencePort {
     }
 
     @Override
-    public Page<SportModel> searchSports(String search, String category, Pageable pageable) {
-        log.debug("PERSISTENCE_SEARCH_SPORTS | search={} | category={}", search, category);
+    public Page<SportModel> searchSports(String search, Pageable pageable) {
+        log.debug("PERSISTENCE_SEARCH_SPORTS | search={}", search);
         
-        return sportRepository.searchSports(search, category, pageable)
+        return sportRepository.searchSports(search, pageable)
                 .map(sportConverter::toDomain);
     }
 
@@ -117,12 +114,6 @@ public class SportPersistenceAdapter implements SportPersistencePort {
     }
 
     @Override
-    public List<String> findAllDistinctCategories() {
-        log.debug("PERSISTENCE_FIND_ALL_CATEGORIES");
-        return sportRepository.findAllDistinctCategories();
-    }
-
-    @Override
     public SportModel save(SportModel sportModel) {
         log.debug("PERSISTENCE_SAVE | sportName={} | sourceType={}", 
                  sportModel.getName(), sportModel.getSourceType());
@@ -148,4 +139,6 @@ public class SportPersistenceAdapter implements SportPersistencePort {
         sportRepository.deleteById(id);
         log.info("PERSISTENCE_DELETE_SUCCESS | sportId={}", id);
     }
+
+
 }

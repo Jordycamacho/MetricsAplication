@@ -163,9 +163,8 @@ public class SportController {
             HttpServletRequest request) {
         setCorrelationId(request);
 
-        log.info("CONTROLLER_SEARCH_SPORTS | endpoint={} | search={} | category={} | page={}",
-                request.getRequestURI(), filterRequest.getSearch(), filterRequest.getCategory(),
-                filterRequest.getPage());
+        log.info("CONTROLLER_SEARCH_SPORTS | endpoint={} | search={} | page={}",
+                request.getRequestURI(), filterRequest.getSearch(), filterRequest.getPage());
 
         SportPageResponse response = sportService.getAllSportsPaginated(filterRequest);
 
@@ -224,25 +223,6 @@ public class SportController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Obtener todas las categorías disponibles")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Categorías obtenidas exitosamente"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
-    @GetMapping("/categories")
-    public ResponseEntity<List<String>> getAllCategories(HttpServletRequest request) {
-        setCorrelationId(request);
-
-        log.info("CONTROLLER_GET_ALL_CATEGORIES | endpoint={}", request.getRequestURI());
-
-        List<String> categories = sportService.getAllCategories();
-
-        log.info("CONTROLLER_GET_ALL_CATEGORIES_SUCCESS | count={}", categories.size());
-
-        clearCorrelationId();
-        return ResponseEntity.ok(categories);
-    }
-
     @Operation(summary = "Búsqueda rápida de deportes (GET con parámetros)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Deportes obtenidos exitosamente"),
@@ -251,7 +231,6 @@ public class SportController {
     @GetMapping("/quick-search")
     public ResponseEntity<SportPageResponse> quickSearch(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sortBy,
@@ -260,11 +239,10 @@ public class SportController {
         setCorrelationId(request);
 
         log.info("CONTROLLER_QUICK_SEARCH | endpoint={} | search={} | category={} | page={}",
-                request.getRequestURI(), search, category, page);
+                request.getRequestURI(), search, page);
 
         SportFilterRequest filterRequest = new SportFilterRequest();
         filterRequest.setSearch(search);
-        filterRequest.setCategory(category);
         filterRequest.setPage(page);
         filterRequest.setSize(size);
         filterRequest.setSortBy(sortBy);
@@ -291,7 +269,6 @@ public class SportController {
         response.setIsPredefined(model.getIsPredefined());
         response.setSourceType(model.getSourceType());
         response.setParameterTemplate(model.getParameterTemplate());
-        response.setCategory(model.getCategory());
         return response;
     }
 
@@ -309,10 +286,9 @@ public class SportController {
     }
 
     private void logRequestData(SportRequest request, HttpServletRequest httpRequest) {
-        log.debug("REQUEST_BODY_DATA | name={} | category={} | sourceType={}",
-                request.getName(), request.getCategory(), request.getSourceType());
+        log.debug("REQUEST_BODY_DATA | name={} | sourceType={}",
+                request.getName(), request.getSourceType());
 
-        // Verificar formato de la petición
         String contentType = httpRequest.getContentType();
         log.debug("REQUEST_FORMAT | contentType={} | method={}",
                 contentType, httpRequest.getMethod());

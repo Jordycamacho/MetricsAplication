@@ -18,10 +18,6 @@ public class SportResponse {
     @JsonProperty("name")
     private String name;
     
-    @Schema(description = "Categoría del deporte")
-    @JsonProperty("category")
-    private String category;
-    
     @Schema(description = "Indica si es predefinido")
     @JsonProperty("isPredefined")
     private Boolean isPredefined;

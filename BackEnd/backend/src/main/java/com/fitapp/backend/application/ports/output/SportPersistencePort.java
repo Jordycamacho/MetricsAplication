@@ -12,12 +12,11 @@ public interface SportPersistencePort {
     List<SportModel> findAll();
     Page<SportModel> findAll(Pageable pageable);
     Page<SportModel> findByFilters(SportFilterRequest filters, Pageable pageable);
-    Page<SportModel> searchSports(String search, String category, Pageable pageable);
+    Page<SportModel> searchSports(String search, Pageable pageable);
     List<SportModel> findByIsPredefinedTrue();
     Page<SportModel> findPredefinedWithSearch(String search, Pageable pageable);
     List<SportModel> findByCreatedBy(Long userId);
     Page<SportModel> findByUserWithSearch(Long userId, String search, Pageable pageable);
-    List<String> findAllDistinctCategories();
     SportModel save(SportModel sportModel);
     void delete(Long id);
 }

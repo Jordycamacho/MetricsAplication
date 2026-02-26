@@ -22,17 +22,13 @@ public class SportRequest {
     @JsonProperty("parameterTemplate")
     private Map<String, String> parameterTemplate;
     
-    @Schema(description = "Categoría del deporte", example = "Team Sports")
-    @JsonProperty("category")
-    private String category;
-    
     @Schema(description = "Tipo de origen del deporte", example = "USER_CREATED")
     @JsonProperty("sourceType")
     private SportSourceType sourceType = SportSourceType.USER_CREATED;
     
     public void logRequestData() {
-        log.info("SPORT_REQUEST_RECEIVED | name={} | category={} | sourceType={}", 
-                name, category, sourceType);
+        log.info("SPORT_REQUEST_RECEIVED | name={} | sourceType={}", 
+                name, sourceType);
         if (parameterTemplate != null) {
             log.debug("SPORT_REQUEST_PARAMETERS | templateSize={} | template={}", 
                     parameterTemplate.size(), parameterTemplate);

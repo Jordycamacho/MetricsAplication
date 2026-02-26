@@ -1,4 +1,3 @@
-// com.fitapp.backend.application.service/SportServiceImpl.java
 package com.fitapp.backend.application.service;
 
 import com.fitapp.backend.application.dto.sport.request.SportFilterRequest;
@@ -9,11 +8,19 @@ import com.fitapp.backend.application.logging.SportServiceLogger;
 import com.fitapp.backend.application.ports.input.SportUseCase;
 import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
+import com.fitapp.backend.domain.exception.PredefinedSportException;
+import com.fitapp.backend.domain.exception.SportNotFoundException;
+import com.fitapp.backend.domain.exception.SportOwnershipException;
+import com.fitapp.backend.domain.exception.UserNotFoundException;
 import com.fitapp.backend.domain.model.SportModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -75,18 +82,13 @@ public class SportServiceImpl implements SportUseCase {
     }
 
     @Override
+    @Cacheable(value = "predefined-sports", key = "'all'")
     @Transactional(readOnly = true)
     public List<SportModel> getPredefinedSports() {
-        sportLogger.logServiceEntry("getPredefinedSports");
-        try {
-            List<SportModel> sports = sportPersistencePort.findByIsPredefinedTrue();
-            sportLogger.logSportRetrieval("SYSTEM", sports.size(), "PREDEFINED");
-            sportLogger.logServiceExit("getPredefinedSports", sports.size() + " predefined sports");
-            return sports;
-        } catch (Exception e) {
-            sportLogger.logServiceError("getPredefinedSports", "Error retrieving predefined sports", e);
-            throw e;
-        }
+        log.debug("CACHE_MISS | predefined-sports");
+        List<SportModel> sports = sportPersistencePort.findByIsPredefinedTrue();
+        log.info("PREDEFINED_SPORTS_LOADED | count={}", sports.size());
+        return sports;
     }
 
     @Override
@@ -149,135 +151,65 @@ public class SportServiceImpl implements SportUseCase {
     }
 
     @Override
+    @Cacheable(value = "user-sports", key = "#userEmail")
     @Transactional(readOnly = true)
     public List<SportModel> getUserSports(String userEmail) {
-        sportLogger.logServiceEntry("getUserSports", userEmail);
-        try {
-            var user = userPersistencePort.findByEmail(userEmail)
-                    .orElseThrow(() -> {
-                        log.error("USER_NOT_FOUND | email={}", userEmail);
-                        return new RuntimeException("User not found: " + userEmail);
-                    });
-
-            log.debug("USER_RETRIEVED | userId={} | email={}", user.getId(), userEmail);
-            List<SportModel> sports = sportPersistencePort.findByCreatedBy(user.getId());
-
-            sportLogger.logSportRetrieval(userEmail, sports.size(), "USER_CREATED");
-            sportLogger.logServiceExit("getUserSports", sports.size() + " user sports");
-
-            return sports;
-        } catch (Exception e) {
-            sportLogger.logServiceError("getUserSports", "Error retrieving user sports for: " + userEmail, e);
-            throw e;
-        }
+        log.debug("CACHE_MISS | user-sports | user={}", userEmail);
+        var user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
+        return sportPersistencePort.findByCreatedBy(user.getId());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<String> getAllCategories() {
-        sportLogger.logServiceEntry("getAllCategories");
-        try {
-            List<String> categories = sportPersistencePort.findAllDistinctCategories();
-            sportLogger.logServiceExit("getAllCategories", categories.size() + " categories found");
-            return categories;
-        } catch (Exception e) {
-            sportLogger.logServiceError("getAllCategories", "Error retrieving categories", e);
-            throw e;
-        }
-    }
-
-    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user-sports", key = "#userEmail"),
+            @CacheEvict(value = "predefined-sports", key = "'all'", condition = "false")
+    })
     @Transactional
     public SportModel createCustomSport(SportRequest sportRequest, String userEmail) {
-        sportLogger.logSportCreationStart(userEmail, sportRequest.getName(), sportRequest.getSourceType());
-        sportLogger.logServiceEntry("createCustomSport", sportRequest.getName(), userEmail);
+        log.info("SPORT_CREATION_START | user={} | name={}", userEmail, sportRequest.getName());
+        var user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
 
-        try {
-            sportRequest.logRequestData();
+        SportModel model = new SportModel();
+        model.setName(sportRequest.getName());
+        model.setParameterTemplate(sportRequest.getParameterTemplate());
+        model.setIsPredefined(false);
+        model.setSourceType(sportRequest.getSourceType() != null
+                ? sportRequest.getSourceType()
+                : SportSourceType.USER_CREATED);
+        model.setCreatedBy(user.getId());
 
-            var user = userPersistencePort.findByEmail(userEmail)
-                    .orElseThrow(() -> {
-                        log.error("USER_NOT_FOUND_FOR_SPORT_CREATION | email={}", userEmail);
-                        return new RuntimeException("Usuario no encontrado: " + userEmail);
-                    });
-
-            log.debug("USER_FOUND_FOR_SPORT | userId={} | email={}", user.getId(), userEmail);
-
-            SportModel sportModel = new SportModel();
-            sportModel.setName(sportRequest.getName());
-            sportModel.setParameterTemplate(sportRequest.getParameterTemplate());
-            sportModel.setCategory(sportRequest.getCategory());
-            sportModel.setIsPredefined(false);
-            sportModel.setSourceType(
-                    sportRequest.getSourceType() != null ? sportRequest.getSourceType() : SportSourceType.USER_CREATED);
-            sportModel.setCreatedBy(user.getId());
-
-            sportModel.logModelData("CREATING");
-
-            logDataFormatDetails(sportModel);
-
-            SportModel savedSport = sportPersistencePort.save(sportModel);
-
-            sportLogger.logSportCreationSuccess(savedSport.getId(), userEmail, savedSport.getSourceType());
-            sportLogger.logServiceExit("createCustomSport", savedSport.getId());
-
-            return savedSport;
-        } catch (Exception e) {
-            sportLogger.logServiceError("createCustomSport",
-                    "Error creating sport: " + sportRequest.getName(), e);
-            throw e;
-        }
+        SportModel saved = sportPersistencePort.save(model);
+        log.info("SPORT_CREATION_SUCCESS | sportId={} | user={}", saved.getId(), userEmail);
+        return saved;
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "sport-by-id", key = "#sportId"),
+            @CacheEvict(value = "user-sports", allEntries = true)
+    })
     @Transactional
     public void deleteCustomSport(Long sportId, String userEmail) {
-        sportLogger.logSportDeletionStart(sportId, userEmail);
-        sportLogger.logServiceEntry("deleteCustomSport", sportId, userEmail);
+        log.info("SPORT_DELETE_START | sportId={} | user={}", sportId, userEmail);
+        var user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
 
-        try {
-            var user = userPersistencePort.findByEmail(userEmail)
-                    .orElseThrow(() -> {
-                        log.error("USER_NOT_FOUND_FOR_DELETION | email={}", userEmail);
-                        return new RuntimeException("User not found: " + userEmail);
-                    });
+        var sport = sportPersistencePort.findById(sportId)
+                .orElseThrow(() -> new SportNotFoundException(sportId));
 
-            log.debug("USER_FOUND_FOR_DELETION | userId={}", user.getId());
+        if (sport.getIsPredefined())
+            throw new PredefinedSportException();
 
-            var sport = sportPersistencePort.findById(sportId)
-                    .orElseThrow(() -> {
-                        log.error("SPORT_NOT_FOUND_FOR_DELETION | sportId={}", sportId);
-                        return new RuntimeException("Sport not found: " + sportId);
-                    });
+        if (!sport.getCreatedBy().equals(user.getId()))
+            throw new SportOwnershipException(sportId);
 
-            log.debug("SPORT_FOUND_FOR_DELETION | sportId={} | sourceType={} | createdBy={}",
-                    sportId, sport.getSourceType(), sport.getCreatedBy());
-
-            if (sport.getIsPredefined()) {
-                log.error("DELETE_PREDEFINED_SPORT_ATTEMPT | sportId={} | user={}", sportId, userEmail);
-                throw new RuntimeException("Cannot delete predefined sports");
-            }
-
-            if (!sport.getCreatedBy().equals(user.getId())) {
-                log.error("UNAUTHORIZED_SPORT_DELETION | sportId={} | requester={} | owner={}",
-                        sportId, user.getId(), sport.getCreatedBy());
-                throw new RuntimeException("Cannot delete other users' sports");
-            }
-
-            sportPersistencePort.delete(sportId);
-
-            sportLogger.logSportDeletionSuccess(sportId, userEmail);
-            sportLogger.logServiceExit("deleteCustomSport", "Sport deleted successfully");
-
-        } catch (Exception e) {
-            sportLogger.logServiceError("deleteCustomSport",
-                    "Error deleting sport: " + sportId, e);
-            throw e;
-        }
+        sportPersistencePort.delete(sportId);
+        log.info("SPORT_DELETE_SUCCESS | sportId={} | user={}", sportId, userEmail);
     }
 
     private Pageable createPageable(SportFilterRequest filterRequest) {
-        // Si hay múltiples campos de ordenamiento
         if (filterRequest.getSortFields() != null && !filterRequest.getSortFields().isEmpty()) {
             List<Sort.Order> orders = filterRequest.getSortFields().stream()
                     .map(field -> new Sort.Order(field.getDirection(), field.getField()))
@@ -289,7 +221,6 @@ public class SportServiceImpl implements SportUseCase {
                     Sort.by(orders));
         }
 
-        // Ordenamiento simple por un campo
         return PageRequest.of(
                 filterRequest.getPage(),
                 filterRequest.getSize(),
@@ -321,7 +252,6 @@ public class SportServiceImpl implements SportUseCase {
         response.setIsPredefined(model.getIsPredefined());
         response.setSourceType(model.getSourceType());
         response.setParameterTemplate(model.getParameterTemplate());
-        response.setCategory(model.getCategory());
         return response;
     }
 

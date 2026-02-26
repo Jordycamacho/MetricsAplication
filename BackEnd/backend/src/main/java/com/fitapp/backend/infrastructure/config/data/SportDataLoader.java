@@ -34,33 +34,33 @@ public class SportDataLoader {
     private void createPredefinedSports() {
         try {
             // Deportes de fuerza
-            createSport("Gimnasio", "strength", createGymParameters(), SportSourceType.OFFICIAL);
-            createSport("CrossFit", "strength", createCrossfitParameters(), SportSourceType.OFFICIAL);
-            createSport("Calistenia", "strength", createCalisthenicsParameters(), SportSourceType.OFFICIAL);
-            createSport("Powerlifting", "strength", createPowerliftingParameters(), SportSourceType.OFFICIAL);
+            createSport("Gimnasio", createGymParameters(), SportSourceType.OFFICIAL);
+            createSport("CrossFit", createCrossfitParameters(), SportSourceType.OFFICIAL);
+            createSport("Calistenia", createCalisthenicsParameters(), SportSourceType.OFFICIAL);
+            createSport("Powerlifting", createPowerliftingParameters(), SportSourceType.OFFICIAL);
 
             // Deportes de cardio
-            createSport("Running", "cardio", createRunningParameters(), SportSourceType.OFFICIAL);
-            createSport("Ciclismo", "cardio", createCyclingParameters(), SportSourceType.OFFICIAL);
-            createSport("Natación", "cardio", createSwimmingParameters(), SportSourceType.OFFICIAL);
-            createSport("Salto de Cuerda", "cardio", createJumpRopeParameters(), SportSourceType.OFFICIAL);
+            createSport("Running", createRunningParameters(), SportSourceType.OFFICIAL);
+            createSport("Ciclismo", createCyclingParameters(), SportSourceType.OFFICIAL);
+            createSport("Natación", createSwimmingParameters(), SportSourceType.OFFICIAL);
+            createSport("Salto de Cuerda", createJumpRopeParameters(), SportSourceType.OFFICIAL);
 
             // Deportes de combate
-            createSport("Boxeo", "combat", createBoxingParameters(), SportSourceType.OFFICIAL);
-            createSport("MMA", "combat", createMMAParameters(), SportSourceType.OFFICIAL);
-            createSport("Judo", "combat", createJudoParameters(), SportSourceType.OFFICIAL);
-            createSport("Karate", "combat", createKarateParameters(), SportSourceType.OFFICIAL);
+            createSport("Boxeo", createBoxingParameters(), SportSourceType.OFFICIAL);
+            createSport("MMA", createMMAParameters(), SportSourceType.OFFICIAL);
+            createSport("Judo", createJudoParameters(), SportSourceType.OFFICIAL);
+            createSport("Karate", createKarateParameters(), SportSourceType.OFFICIAL);
 
             // Deportes de flexibilidad
-            createSport("Yoga", "flexibility", createYogaParameters(), SportSourceType.OFFICIAL);
-            createSport("Pilates", "flexibility", createPilatesParameters(), SportSourceType.OFFICIAL);
-            createSport("Estiramientos", "flexibility", createStretchingParameters(), SportSourceType.OFFICIAL);
+            createSport("Yoga", createYogaParameters(), SportSourceType.OFFICIAL);
+            createSport("Pilates", createPilatesParameters(), SportSourceType.OFFICIAL);
+            createSport("Estiramientos", createStretchingParameters(), SportSourceType.OFFICIAL);
 
             // Deportes de equipo
-            createSport("Fútbol", "team", createFootballParameters(), SportSourceType.OFFICIAL);
-            createSport("Baloncesto", "team", createBasketballParameters(), SportSourceType.OFFICIAL);
-            createSport("Voleibol", "team", createVolleyballParameters(), SportSourceType.OFFICIAL);
-            createSport("Tenis", "team", createTennisParameters(), SportSourceType.OFFICIAL);
+            createSport("Fútbol", createFootballParameters(), SportSourceType.OFFICIAL);
+            createSport("Baloncesto", createBasketballParameters(), SportSourceType.OFFICIAL);
+            createSport("Voleibol", createVolleyballParameters(), SportSourceType.OFFICIAL);
+            createSport("Tenis", createTennisParameters(), SportSourceType.OFFICIAL);
 
             log.info("CREATED_PREDEFINED_SPORTS | Total sports created: {}", sportRepository.count());
         } catch (Exception e) {
@@ -69,18 +69,17 @@ public class SportDataLoader {
         }
     }
 
-    private void createSport(String name, String category, Map<String, String> parameters, 
+    private void createSport(String name, Map<String, String> parameters, 
                              SportSourceType sourceType) {
         SportEntity sport = new SportEntity();
         sport.setName(name);
-        sport.setCategory(category);
         sport.setIsPredefined(true);
         sport.setSourceType(sourceType);
         sport.setParameterTemplate(parameters);
 
         sportRepository.save(sport);
-        log.debug("CREATED_SPORT | name={} | category={} | params={}", 
-                 name, category, parameters.size());
+        log.debug("CREATED_SPORT | name={} | params={}", 
+                 name, parameters.size());
     }
 
     private Map<String, String> createGymParameters() {
