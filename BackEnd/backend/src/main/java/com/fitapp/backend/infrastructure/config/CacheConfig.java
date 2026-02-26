@@ -14,41 +14,61 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @EnableCaching
 public class CacheConfig {
 
-    @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        @Bean
+        public CacheManager cacheManager() {
+                CaffeineCacheManager cacheManager = new CaffeineCacheManager();
 
-        cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .maximumSize(100)
-                .recordStats());
+                cacheManager.setCaffeine(Caffeine.newBuilder()
+                                .expireAfterWrite(10, TimeUnit.MINUTES)
+                                .maximumSize(100)
+                                .recordStats());
 
-        cacheManager.registerCustomCache("routines", Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .maximumSize(100)
-                .recordStats()
-                .build());
+                cacheManager.registerCustomCache("routines", Caffeine.newBuilder()
+                                .expireAfterWrite(10, TimeUnit.MINUTES)
+                                .maximumSize(100)
+                                .recordStats()
+                                .build());
 
-        cacheManager.registerCustomCache("userRoutines", Caffeine.newBuilder()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .maximumSize(50)
-                .recordStats()
-                .build());
+                cacheManager.registerCustomCache("userRoutines", Caffeine.newBuilder()
+                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                .maximumSize(50)
+                                .recordStats()
+                                .build());
 
-        cacheManager.registerCustomCache("recentRoutines", Caffeine.newBuilder()
-                .expireAfterWrite(2, TimeUnit.MINUTES)
-                .maximumSize(20)
-                .build());
+                cacheManager.registerCustomCache("recentRoutines", Caffeine.newBuilder()
+                                .expireAfterWrite(2, TimeUnit.MINUTES)
+                                .maximumSize(20)
+                                .build());
 
-        cacheManager.registerCustomCache("activeRoutines", Caffeine.newBuilder()
-                .expireAfterWrite(15, TimeUnit.MINUTES)
-                .maximumSize(20)
-                .build());
+                cacheManager.registerCustomCache("activeRoutines", Caffeine.newBuilder()
+                                .expireAfterWrite(15, TimeUnit.MINUTES)
+                                .maximumSize(20)
+                                .build());
 
-        cacheManager.registerCustomCache("routineStats", Caffeine.newBuilder()
-                .expireAfterWrite(30, TimeUnit.MINUTES)
-                .maximumSize(10)
-                .build());
-        return cacheManager;
-    }
+                cacheManager.registerCustomCache("routineStats", Caffeine.newBuilder()
+                                .expireAfterWrite(30, TimeUnit.MINUTES)
+                                .maximumSize(10)
+                                .build());
+                cacheManager.registerCustomCache("predefined-sports",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(24, TimeUnit.HOURS)
+                                                .maximumSize(200)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("user-sports",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(15, TimeUnit.MINUTES)
+                                                .maximumSize(1000)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("sport-by-id",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                .maximumSize(2000)
+                                                .recordStats()
+                                                .build());
+                return cacheManager;
+        }
 }
