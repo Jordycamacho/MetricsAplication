@@ -5,58 +5,42 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Schema(description = "Request para crear o actualizar un ejercicio")
 public class ExerciseRequest {
 
-    private static final Logger log = LoggerFactory.getLogger(ExerciseRequest.class);
-    
     @NotBlank(message = "El nombre del ejercicio es obligatorio")
-    @Schema(description = "Nombre del ejercicio", example = "Sentadilla", required = true)
+    @Size(min = 2, max = 200, message = "El nombre debe tener entre 2 y 200 caracteres")
     @JsonProperty("name")
     private String name;
-    
-    @Schema(description = "Descripción del ejercicio", example = "Ejercicio para piernas")
+
+    @Size(max = 2000, message = "La descripción no puede superar los 2000 caracteres")
     @JsonProperty("description")
     private String description;
-    
+
     @NotNull(message = "El tipo de ejercicio es obligatorio")
-    @Schema(description = "Tipo de ejercicio", required = true)
     @JsonProperty("exerciseType")
     private ExerciseType exerciseType;
-    
-    @NotNull(message = "El deporte es obligatorio")
-    @Schema(description = "ID del deporte", required = true)
-    @JsonProperty("sportId")
-    private Long sportId;
-    
-    @Schema(description = "IDs de las categorías")
+
+    @NotEmpty(message = "Se requiere al menos un deporte")
+    @Size(max = 10, message = "Un ejercicio puede pertenecer a máximo 10 deportes")
+    @JsonProperty("sportIds")
+    private Set<Long> sportIds = new HashSet<>();
+
     @JsonProperty("categoryIds")
     private Set<Long> categoryIds = new HashSet<>();
-    
-    @Schema(description = "IDs de los parámetros soportados")
+
     @JsonProperty("supportedParameterIds")
     private Set<Long> supportedParameterIds = new HashSet<>();
-    
-    @Schema(description = "Si el ejercicio es público", example = "false")
+
     @JsonProperty("isPublic")
     private Boolean isPublic = false;
-    
-    @Schema(description = "Equipo necesario", example = "Barra, discos")
-    @JsonProperty("equipmentNeeded")
-    private String equipmentNeeded;
-    
-    public void logRequestData() {
-        log.info("EXERCISE_REQUEST_RECEIVED | name={} | type={} | sportId={} | isPublic={}", 
-                name, exerciseType, sportId, isPublic);
-        log.debug("EXERCISE_REQUEST_DETAILS | categories={} | parameters={}", 
-                categoryIds.size(), supportedParameterIds.size());
-    }
 }

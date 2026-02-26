@@ -348,7 +348,7 @@ public class ExerciseDataLoader {
         ExerciseEntity exercise = new ExerciseEntity();
         exercise.setName(name);
         exercise.setDescription(description);
-        exercise.setSport(sport);
+        exercise.setSports(new HashSet<>(Set.of(sport)));
         exercise.setCategories(new HashSet<>(categories));
         exercise.setSupportedParameters(new HashSet<>(parameters));
         exercise.setExerciseType(exerciseType);

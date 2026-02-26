@@ -26,7 +26,6 @@ public class ExerciseSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             
-            // Búsqueda por texto en nombre o descripción
             if (StringUtils.hasText(search)) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
                 Predicate namePredicate = criteriaBuilder.like(
@@ -40,50 +39,40 @@ public class ExerciseSpecification {
                 predicates.add(criteriaBuilder.or(namePredicate, descPredicate));
             }
             
-            // Filtro por tipo de ejercicio
             if (exerciseType != null) {
                 predicates.add(criteriaBuilder.equal(root.get("exerciseType"), exerciseType));
             }
             
-            // Filtro por deporte
             if (sportId != null) {
                 predicates.add(criteriaBuilder.equal(root.get("sport").get("id"), sportId));
             }
             
-            // Filtro por categoría (join optimizado)
             if (categoryId != null) {
                 Join<Object, Object> categoryJoin = root.join("categories", JoinType.INNER);
                 predicates.add(criteriaBuilder.equal(categoryJoin.get("id"), categoryId));
                 
-                // Para evitar duplicados en paginación
                 query.distinct(true);
             }
             
-            // Filtro por parámetro (join optimizado)
             if (parameterId != null) {
                 Join<Object, Object> paramJoin = root.join("supportedParameters", JoinType.INNER);
                 predicates.add(criteriaBuilder.equal(paramJoin.get("id"), parameterId));
                 
-                // Para evitar duplicados en paginación
                 query.distinct(true);
             }
             
-            // Filtro por activo
             if (isActive != null) {
                 predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive));
             }
             
-            // Filtro por público
             if (isPublic != null) {
                 predicates.add(criteriaBuilder.equal(root.get("isPublic"), isPublic));
             }
             
-            // Filtro por creador
             if (createdById != null) {
                 predicates.add(criteriaBuilder.equal(root.get("createdBy").get("id"), createdById));
             }
             
-            // Filtro por rating mínimo
             if (minRating != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(
                     root.get("rating"), 

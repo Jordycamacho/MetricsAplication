@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface SportPersistencePort {
     Optional<SportModel> findById(Long id);
@@ -19,4 +20,5 @@ public interface SportPersistencePort {
     Page<SportModel> findByUserWithSearch(Long userId, String search, Pageable pageable);
     SportModel save(SportModel sportModel);
     void delete(Long id);
+    List<SportModel> findAllById(Set<Long> sportIds);
 }

@@ -1,25 +1,35 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
 import lombok.extern.slf4j.Slf4j;
-
 import java.time.LocalDateTime;
+import jakarta.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import lombok.*;
 
 @Entity
+@Table(name = "exercises", indexes = {
+    @Index(name = "idx_exercise_created_by", columnList = "created_by"),
+    @Index(name = "idx_exercise_type", columnList = "exercise_type"),
+    @Index(name = "idx_exercise_active", columnList = "is_active"),
+    @Index(name = "idx_exercise_public", columnList = "is_public"),
+    @Index(name = "idx_exercise_usage", columnList = "usage_count"),
+    @Index(name = "idx_exercise_rating", columnList = "rating")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "exercises")
 @Slf4j
 public class ExerciseEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
@@ -31,9 +41,18 @@ public class ExerciseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sport_id")
-    private SportEntity sport;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "exercise_sports",
+        joinColumns = @JoinColumn(name = "exercise_id"),
+        inverseJoinColumns = @JoinColumn(name = "sport_id"),
+        indexes = {
+            @Index(name = "idx_exercise_sports_exercise", columnList = "exercise_id"),
+            @Index(name = "idx_exercise_sports_sport", columnList = "sport_id")
+        }
+    )
+    @Builder.Default
+    private Set<SportEntity> sports = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
@@ -61,7 +80,6 @@ public class ExerciseEntity {
     @Column(name = "exercise_type", nullable = false, length = 50)
     private ExerciseType exerciseType;
 
-    // Campos de auditoría
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;
@@ -70,88 +88,44 @@ public class ExerciseEntity {
     @Builder.Default
     private Boolean isPublic = false;
 
-    @Column(name = "usage_count")
+    @Column(name = "usage_count", nullable = false)
     @Builder.Default
     private Integer usageCount = 0;
 
-    @Column(name = "rating")
+    @Column(name = "rating", nullable = false)
     @Builder.Default
     private Double rating = 0.0;
 
-    @Column(name = "rating_count")
+    @Column(name = "rating_count", nullable = false)
     @Builder.Default
     private Integer ratingCount = 0;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(name = "last_used_at")
     private LocalDateTime lastUsedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        log.debug("EXERCISE_CREATING | name={} | type={} | sportId={} | createdBy={}", 
-                 name, exerciseType, sport != null ? sport.getId() : "null", 
-                 createdBy != null ? createdBy.getId() : "null");
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        validateRelationships();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        log.debug("EXERCISE_UPDATING | id={} | name={}", id, name);
-        updatedAt = LocalDateTime.now();
-        validateRelationships();
-    }
-
-    private void validateRelationships() {
-        // Validar que el ejercicio tenga al menos un parámetro soportado
-        if (supportedParameters == null || supportedParameters.isEmpty()) {
-            log.warn("EXERCISE_NO_PARAMETERS | id={} | name={} | Exercise has no supported parameters", 
-                    id, name);
-        }
-        
-        // Validar que el tipo de ejercicio sea compatible con los parámetros
-        validateExerciseTypeCompatibility();
-    }
-
-    private void validateExerciseTypeCompatibility() {
-        // Lógica de validación de compatibilidad entre tipo y parámetros
-        if (exerciseType != null && supportedParameters != null) {
-            long weightParamCount = supportedParameters.stream()
-                .filter(p -> p.getName().toLowerCase().contains("weight"))
-                .count();
-            
-            long timeParamCount = supportedParameters.stream()
-                .filter(p -> p.getName().toLowerCase().contains("time") || 
-                            p.getName().toLowerCase().contains("duration"))
-                .count();
-            
-            if (exerciseType == ExerciseType.WEIGHTED && weightParamCount == 0) {
-                log.warn("EXERCISE_TYPE_MISMATCH | id={} | type=WEIGHTED but no weight parameters", id);
-            }
-            
-            if (exerciseType == ExerciseType.TIMED && timeParamCount == 0) {
-                log.warn("EXERCISE_TYPE_MISMATCH | id={} | type=TIMED but no time parameters", id);
-            }
-        }
-    }
-
     public void incrementUsage() {
-        this.usageCount++;
+        this.usageCount = (this.usageCount == null ? 0 : this.usageCount) + 1;
         this.lastUsedAt = LocalDateTime.now();
-        log.debug("EXERCISE_USAGE_INCREMENTED | id={} | count={}", id, usageCount);
     }
 
-    public void addRating(Double newRating) {
-        double totalRating = this.rating * this.ratingCount;
-        this.ratingCount++;
-        this.rating = (totalRating + newRating) / this.ratingCount;
-        log.debug("EXERCISE_RATING_UPDATED | id={} | newRating={} | average={}", 
-                 id, newRating, this.rating);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ExerciseEntity)) return false;
+        ExerciseEntity that = (ExerciseEntity) o;
+        return id != null && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

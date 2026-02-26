@@ -315,7 +315,6 @@ public class RoutineConverter {
         return entity;
     }
 
-    // ✅ BUG 2 CORREGIDO: repetitions faltaba
     private RoutineSetParameterEntity convertToRoutineSetParameterEntity(
             RoutineSetParameterModel model, RoutineSetTemplateEntity setTemplate) {
         RoutineSetParameterEntity entity = new RoutineSetParameterEntity();
@@ -332,7 +331,7 @@ public class RoutineConverter {
         entity.setNumericValue(model.getNumericValue());
         entity.setDurationValue(model.getDurationValue());
         entity.setIntegerValue(model.getIntegerValue());
-        entity.setRepetitions(model.getRepetitions()); // ✅ CORREGIDO
+        entity.setRepetitions(model.getRepetitions());
         return entity;
     }
 
@@ -340,10 +339,12 @@ public class RoutineConverter {
     public RoutineExerciseEntity addExerciseToRoutine(
             RoutineEntity routine,
             AddExerciseToRoutineRequest request,
-            ExerciseEntity exercise) {
+            Long exerciseId) {
+
+        ExerciseEntity exercise = exerciseRepository.findById(exerciseId)
+                .orElseThrow(() -> new RuntimeException("Exercise not found: " + exerciseId));
 
         log.info("ADD_EXERCISE_TO_ROUTINE | routineId={} | exerciseId={}", routine.getId(), exercise.getId());
-
         int nextPosition = routine.getExercises().stream()
                 .mapToInt(RoutineExerciseEntity::getPosition)
                 .max().orElse(0) + 1;

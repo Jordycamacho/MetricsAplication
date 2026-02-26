@@ -155,28 +155,6 @@ public class ExerciseController {
         return ResponseEntity.ok(response);
     }
     
-    @Operation(summary = "Obtener un ejercicio por ID con todas las relaciones")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Ejercicio obtenido exitosamente"),
-        @ApiResponse(responseCode = "404", description = "Ejercicio no encontrado")
-    })
-    @GetMapping("/{id}/detailed")
-    public ResponseEntity<ExerciseResponse> getExerciseByIdWithRelations(
-            @PathVariable Long id,
-            HttpServletRequest request) {
-        setCorrelationId(request);
-        
-        log.info("CONTROLLER_GET_EXERCISE_DETAILED | endpoint={} | exerciseId={}", 
-                request.getRequestURI(), id);
-        
-        ExerciseResponse response = convertToResponse(exerciseUseCase.getExerciseByIdWithRelations(id));
-        
-        log.info("CONTROLLER_GET_EXERCISE_DETAILED_SUCCESS | exerciseId={}", id);
-        clearCorrelationId();
-        
-        return ResponseEntity.ok(response);
-    }
-    
     @Operation(summary = "Crear un nuevo ejercicio")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Ejercicio creado exitosamente"),
@@ -499,15 +477,13 @@ public class ExerciseController {
     }
     
     private void logRequestData(ExerciseRequest request, HttpServletRequest httpRequest) {
-        log.debug("EXERCISE_REQUEST_DETAILS | name={} | type={} | sportId={} | isPublic={} | categories={} | parameters={}", 
-                request.getName(), request.getExerciseType(), request.getSportId(), 
+        log.debug("EXERCISE_REQUEST_DETAILS | name={} | type={} | isPublic={} | categories={} | parameters={}", 
+                request.getName(), request.getExerciseType(), 
                 request.getIsPublic(), request.getCategoryIds().size(), 
                 request.getSupportedParameterIds().size());
     }
     
     private ExerciseResponse convertToResponse(com.fitapp.backend.domain.model.ExerciseModel model) {
-        // Implementación de conversión (similar a la que ya tienes en tu código)
-        // ...
         return new ExerciseResponse();
     }
 }

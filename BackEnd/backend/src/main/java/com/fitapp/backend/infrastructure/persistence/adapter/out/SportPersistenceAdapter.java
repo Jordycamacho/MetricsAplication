@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -138,6 +139,14 @@ public class SportPersistenceAdapter implements SportPersistencePort {
         log.warn("PERSISTENCE_DELETE | sportId={}", id);
         sportRepository.deleteById(id);
         log.info("PERSISTENCE_DELETE_SUCCESS | sportId={}", id);
+    }
+
+    @Override
+    public List<SportModel> findAllById(Set<Long> sportIds) {
+        log.debug("PERSISTENCE_FIND_ALL_BY_ID | sportIds={}", sportIds);
+        return sportRepository.findAllById(sportIds).stream()
+                .map(sportConverter::toDomain)
+                .collect(Collectors.toList());
     }
 
 

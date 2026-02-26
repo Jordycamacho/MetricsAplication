@@ -27,7 +27,6 @@ import com.fitapp.backend.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.converter.RoutineConverter;
-import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
@@ -52,34 +51,27 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
         @Transactional
         public RoutineExerciseResponse addExerciseToRoutine(Long routineId, AddExerciseToRoutineRequest request,
                         String userEmail) {
-                log.info("Iniciando agregado de ejercicio a rutina: rutina={}, usuario={}", routineId, userEmail);
+                log.info("ADD_EXERCISE_TO_ROUTINE | routineId={} | exerciseId={} | user={}",
+                                routineId, request.getExerciseId(), userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> {
-                                        log.error("Usuario no encontrado: {}", userEmail);
-                                        return new RuntimeException("User not found");
-                                });
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
                 RoutineEntity routineEntity = routineRepository.findById(routineId)
-                                .orElseThrow(() -> {
-                                        log.error("Rutina no encontrada: id={}", routineId);
-                                        return new RuntimeException("Routine not found");
-                                });
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
                 if (!routineEntity.getUser().getId().equals(user.getId())) {
-                        log.error("Usuario no autorizado para modificar rutina: rutina={}, usuario={}",
-                                        routineId, user.getId());
+                        log.error("UNAUTHORIZED_ROUTINE_ACCESS | routineId={} | userId={}", routineId, user.getId());
                         throw new RuntimeException("Unauthorized");
                 }
 
-                ExerciseEntity exerciseEntity = exercisePersistencePort.findEntityById(request.getExerciseId())
-                                .orElseThrow(() -> {
-                                        log.error("Ejercicio no encontrado: {}", request.getExerciseId());
-                                        return new RuntimeException("Exercise not found");
-                                });
+                String exerciseName = exercisePersistencePort.findNameById(request.getExerciseId());
+                if (exerciseName == null) {
+                        throw new RuntimeException("Exercise not found: " + request.getExerciseId());
+                }
 
                 RoutineExerciseEntity routineExercise = routineConverter.addExerciseToRoutine(
-                                routineEntity, request, exerciseEntity);
+                                routineEntity, request, request.getExerciseId());
 
                 routineEntity = routineRepository.save(routineEntity);
 
@@ -89,234 +81,195 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                                 .findFirst()
                                 .orElseThrow(() -> new RuntimeException("Exercise not found after save"));
 
-                log.info("Ejercicio agregado exitosamente: rutina={}, ejercicio={}, posición={}",
+                log.info("EXERCISE_ADDED | routineId={} | exerciseId={} | position={}",
                                 routineId, request.getExerciseId(), savedExercise.getPosition());
 
-                return mapToResponse(routineConverter.convertRoutineExercise(savedExercise), exerciseEntity);
+                return mapToResponse(routineConverter.convertRoutineExercise(savedExercise), exerciseName);
         }
 
         @Override
         @Transactional
         public RoutineExerciseResponse updateExerciseInRoutine(Long routineId, Long exerciseId,
                         AddExerciseToRoutineRequest request, String userEmail) {
-                log.info("Actualizando ejercicio en rutina: rutina={}, ejercicio={}, usuario={}",
+                log.info("UPDATE_EXERCISE_IN_ROUTINE | routineId={} | exerciseId={} | user={}",
                                 routineId, exerciseId, userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
                 RoutineModel routine = routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
                 RoutineExerciseModel existingExercise = routine.getExercises().stream()
                                 .filter(e -> e.getId().equals(exerciseId))
                                 .findFirst()
-                                .orElseThrow(() -> {
-                                        log.error("Ejercicio no encontrado en rutina: ejercicio={}, rutina={}",
-                                                        exerciseId, routineId);
-                                        return new RuntimeException("Exercise not found in routine");
-                                });
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Exercise not found in routine: " + exerciseId));
 
-                if (request.getSessionNumber() != null) {
+                if (request.getSessionNumber() != null)
                         existingExercise.setSessionNumber(request.getSessionNumber());
-                }
-                if (request.getSessionOrder() != null) {
+                if (request.getSessionOrder() != null)
                         existingExercise.setSessionOrder(request.getSessionOrder());
-                }
+                if (request.getRestAfterExercise() != null)
+                        existingExercise.setRestAfterExercise(request.getRestAfterExercise());
                 if (request.getDayOfWeek() != null) {
                         try {
                                 existingExercise.setDayOfWeek(DayOfWeek.valueOf(request.getDayOfWeek()));
                         } catch (IllegalArgumentException e) {
-                                log.warn("Día de la semana inválido: {}", request.getDayOfWeek());
+                                log.warn("INVALID_DAY_OF_WEEK | value={}", request.getDayOfWeek());
                         }
                 }
-                if (request.getRestAfterExercise() != null) {
-                        existingExercise.setRestAfterExercise(request.getRestAfterExercise());
-                }
 
-                // Actualizar en base de datos
                 RoutineModel updatedRoutine = routinePersistencePort.update(routine);
 
-                log.info("Ejercicio actualizado exitosamente: rutina={}, ejercicio={}", routineId, exerciseId);
-
-                // Obtener ejercicio actualizado
                 RoutineExerciseModel updatedExercise = updatedRoutine.getExercises().stream()
                                 .filter(e -> e.getId().equals(exerciseId))
                                 .findFirst()
                                 .orElseThrow(() -> new RuntimeException("Exercise not found after update"));
 
-                ExerciseEntity exerciseEntity = exercisePersistencePort.findEntityById(updatedExercise.getExerciseId())
-                                .orElseThrow(() -> new RuntimeException("Exercise entity not found"));
+                String exerciseName = exercisePersistencePort.findNameById(updatedExercise.getExerciseId());
 
-                return mapToResponse(updatedExercise, exerciseEntity);
+                log.info("EXERCISE_UPDATED | routineId={} | exerciseId={}", routineId, exerciseId);
+
+                return mapToResponse(updatedExercise, exerciseName);
         }
 
         @Override
         @Transactional
         public void removeExerciseFromRoutine(Long routineId, Long exerciseId, String userEmail) {
-                log.info("Eliminando ejercicio de rutina: rutina={}, ejercicio={}, usuario={}",
+                log.info("REMOVE_EXERCISE_FROM_ROUTINE | routineId={} | exerciseId={} | user={}",
                                 routineId, exerciseId, userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
-                // Verificar que la rutina pertenece al usuario
                 routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
-                // Eliminar ejercicio
                 routineExercisePersistencePort.deleteByIdAndRoutineId(exerciseId, routineId);
 
-                log.info("Ejercicio eliminado exitosamente: rutina={}, ejercicio={}", routineId, exerciseId);
+                log.info("EXERCISE_REMOVED | routineId={} | exerciseId={}", routineId, exerciseId);
         }
 
         @Override
         @Transactional(readOnly = true)
         public List<RoutineExerciseResponse> getExercisesBySession(Long routineId, Integer sessionNumber,
                         String userEmail) {
-                log.debug("Obteniendo ejercicios por sesión: rutina={}, sesión={}, usuario={}",
+                log.debug("GET_EXERCISES_BY_SESSION | routineId={} | session={} | user={}",
                                 routineId, sessionNumber, userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
-                // Verificar rutina
                 routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
-                List<RoutineExerciseModel> exercises = routineExercisePersistencePort
-                                .findByRoutineIdAndSessionNumber(routineId, sessionNumber);
-
-                return exercises.stream()
-                                .map(exercise -> {
-                                        ExerciseEntity exerciseEntity = exercisePersistencePort
-                                                        .findEntityById(exercise.getExerciseId())
-                                                        .orElse(null);
-                                        return mapToResponse(exercise, exerciseEntity);
-                                })
+                return routineExercisePersistencePort
+                                .findByRoutineIdAndSessionNumber(routineId, sessionNumber)
+                                .stream()
+                                .map(exercise -> mapToResponse(
+                                                exercise,
+                                                exercisePersistencePort.findNameById(exercise.getExerciseId())))
                                 .collect(Collectors.toList());
         }
 
         @Override
         @Transactional(readOnly = true)
         public List<RoutineExerciseResponse> getExercisesByDay(Long routineId, String dayOfWeek, String userEmail) {
-                log.debug("Obteniendo ejercicios por día: rutina={}, día={}, usuario={}",
+                log.debug("GET_EXERCISES_BY_DAY | routineId={} | day={} | user={}",
                                 routineId, dayOfWeek, userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
-                // Verificar rutina
                 routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
-                List<RoutineExerciseModel> exercises = routineExercisePersistencePort
-                                .findByRoutineIdAndDayOfWeek(routineId, dayOfWeek);
-
-                return exercises.stream()
-                                .map(exercise -> {
-                                        ExerciseEntity exerciseEntity = exercisePersistencePort
-                                                        .findEntityById(exercise.getExerciseId())
-                                                        .orElse(null);
-                                        return mapToResponse(exercise, exerciseEntity);
-                                })
+                return routineExercisePersistencePort
+                                .findByRoutineIdAndDayOfWeek(routineId, dayOfWeek)
+                                .stream()
+                                .map(exercise -> mapToResponse(
+                                                exercise,
+                                                exercisePersistencePort.findNameById(exercise.getExerciseId())))
                                 .collect(Collectors.toList());
         }
 
         @Override
         @Transactional
         public void reorderExercises(Long routineId, List<Long> exerciseIds, String userEmail) {
-                log.info("Reordenando ejercicios: rutina={}, cantidad={}, usuario={}",
+                log.info("REORDER_EXERCISES | routineId={} | count={} | user={}",
                                 routineId, exerciseIds.size(), userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
                 RoutineModel routine = routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
-                // Verificar que todos los IDs pertenecen a la rutina
                 Set<Long> routineExerciseIds = routine.getExercises().stream()
                                 .map(RoutineExerciseModel::getId)
                                 .collect(Collectors.toSet());
 
                 if (!routineExerciseIds.containsAll(exerciseIds)) {
-                        log.error("Algunos ejercicios no pertenecen a la rutina");
-                        throw new IllegalArgumentException("Some exercises do not belong to the routine");
+                        throw new IllegalArgumentException("Some exercise IDs do not belong to routine: " + routineId);
                 }
 
-                // Reordenar ejercicios
                 Map<Long, RoutineExerciseModel> exerciseMap = routine.getExercises().stream()
                                 .collect(Collectors.toMap(RoutineExerciseModel::getId, Function.identity()));
 
-                List<RoutineExerciseModel> reorderedExercises = new ArrayList<>();
+                List<RoutineExerciseModel> reordered = new ArrayList<>();
                 for (int i = 0; i < exerciseIds.size(); i++) {
                         RoutineExerciseModel exercise = exerciseMap.get(exerciseIds.get(i));
                         exercise.setPosition(i + 1);
-                        reorderedExercises.add(exercise);
+                        reordered.add(exercise);
                 }
 
-                // Agregar los ejercicios que no estaban en la lista de reordenamiento
-                for (RoutineExerciseModel exercise : routine.getExercises()) {
-                        if (!exerciseIds.contains(exercise.getId())) {
-                                reorderedExercises.add(exercise);
-                        }
-                }
+                routine.getExercises().stream()
+                                .filter(e -> !exerciseIds.contains(e.getId()))
+                                .forEach(reordered::add);
 
-                // Actualizar rutina
-                routine.setExercises(reorderedExercises);
+                routine.setExercises(reordered);
                 routinePersistencePort.update(routine);
 
-                log.info("Ejercicios reordenados exitosamente: rutina={}, ejercicios={}",
-                                routineId, exerciseIds.size());
+                log.info("EXERCISES_REORDERED | routineId={} | reordered={}", routineId, exerciseIds.size());
         }
 
         @Override
         @Transactional(readOnly = true)
         public List<RoutineExerciseResponse> getRoutineExercises(Long routineId, String userEmail) {
-                log.info("Obteniendo todos los ejercicios de la rutina: routineId={}, usuario={}", routineId,
-                                userEmail);
+                log.info("GET_ROUTINE_EXERCISES | routineId={} | user={}", routineId, userEmail);
 
                 UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> {
-                                        log.error("Usuario no encontrado: {}", userEmail);
-                                        return new RuntimeException("User not found");
-                                });
+                                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
-                RoutineModel routine = routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> {
-                                        log.error("Rutina no encontrada o no pertenece al usuario: routineId={}, userId={}",
-                                                        routineId, user.getId());
-                                        return new RuntimeException("Routine not found");
-                                });
+                routinePersistencePort.findByIdAndUserId(routineId, user.getId())
+                                .orElseThrow(() -> new RuntimeException("Routine not found: " + routineId));
 
                 List<RoutineExerciseModel> exercises = routineExercisePersistencePort.findByRoutineId(routineId);
-                log.debug("Se encontraron {} ejercicios para la rutina {}", exercises.size(), routineId);
 
-                List<RoutineExerciseResponse> response = exercises.stream()
-                                .map(exercise -> {
-                                        ExerciseEntity exerciseEntity = exercisePersistencePort
-                                                        .findEntityById(exercise.getExerciseId())
-                                                        .orElse(null);
-                                        return mapToResponse(exercise, exerciseEntity);
-                                })
+                log.debug("ROUTINE_EXERCISES_FOUND | routineId={} | count={}", routineId, exercises.size());
+
+                return exercises.stream()
+                                .map(exercise -> mapToResponse(
+                                                exercise,
+                                                exercisePersistencePort.findNameById(exercise.getExerciseId())))
                                 .collect(Collectors.toList());
-
-                log.info("Devolviendo {} ejercicios para la rutina {}", response.size(), routineId);
-                return response;
         }
 
-        private RoutineExerciseResponse mapToResponse(RoutineExerciseModel model, ExerciseEntity exerciseEntity) {
+        // =========================================================
+        // Helpers privados
+        // =========================================================
+
+        private RoutineExerciseResponse mapToResponse(RoutineExerciseModel model, String exerciseName) {
                 if (model == null)
                         return null;
 
-                // Calcular sets y otros valores derivados
                 int setsCount = model.getSets() != null ? model.getSets().size() : 0;
 
                 return RoutineExerciseResponse.builder()
                                 .id(model.getId())
                                 .exerciseId(model.getExerciseId())
-                                .exerciseName(exerciseEntity != null ? exerciseEntity.getName() : null)
+                                .exerciseName(exerciseName)
                                 .position(model.getPosition())
                                 .sessionNumber(model.getSessionNumber())
                                 .dayOfWeek(model.getDayOfWeek())
@@ -348,8 +301,7 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                                 .collect(Collectors.toList());
         }
 
-        private List<RoutineSetTemplateResponse> mapToSetTemplateResponses(
-                        List<RoutineSetTemplateModel> sets) {
+        private List<RoutineSetTemplateResponse> mapToSetTemplateResponses(List<RoutineSetTemplateModel> sets) {
                 if (sets == null)
                         return new ArrayList<>();
 
