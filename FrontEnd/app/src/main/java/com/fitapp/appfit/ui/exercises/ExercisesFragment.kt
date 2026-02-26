@@ -1,7 +1,6 @@
 package com.fitapp.appfit.ui.exercises
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,7 +8,6 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
@@ -28,63 +26,36 @@ class ExercisesFragment : Fragment() {
     private val exerciseViewModel: ExerciseViewModel by viewModels()
     private lateinit var exerciseAdapter: ExerciseAdapter
 
-    companion object {
-        private const val TAG = "ExercisesFragment"
-    }
-
-    // Filtro actual
-    private var currentFilter = "available" // "all", "my", "available", "bySport"
+    private var currentFilter = "available"
     private var currentSportId: Long? = null
     private var currentPage = 0
     private var isLoading = false
     private var hasMorePages = true
+    private var isUpdatingChips = false  // Fix bug doble disparo
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        Log.i(TAG, "onCreateView: Creando vista de ejercicios")
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentExercisesBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.i(TAG, "onViewCreated: Configurando vista")
-
         setupRecyclerView()
-        setupClickListeners()
+        setupChipListeners()
         setupObservers()
         setupScrollListener()
-
-        // Cargar ejercicios iniciales (disponibles por defecto)
+        binding.fabCreateExercise.setOnClickListener { navigateToCreateExercise() }
         loadExercises(reset = true)
     }
 
     private fun setupRecyclerView() {
-        Log.d(TAG, "setupRecyclerView: Configurando RecyclerView")
-
         exerciseAdapter = ExerciseAdapter(
-            onItemClick = { exercise ->
-                Log.d(TAG, "setupRecyclerView: Click en ejercicio ${exercise.id}")
-                navigateToExerciseDetail(exercise)
-            },
-            onEditClick = { exercise ->
-                Log.d(TAG, "setupRecyclerView: Editar ejercicio ${exercise.id}")
-                navigateToEditExercise(exercise)
-            },
-            onDeleteClick = { exercise ->
-                Log.d(TAG, "setupRecyclerView: Eliminar ejercicio ${exercise.id}")
-                showDeleteConfirmation(exercise)
-            },
-            onToggleStatusClick = { exercise ->
-                Log.d(TAG, "setupRecyclerView: Cambiar estado ejercicio ${exercise.id}")
-                toggleExerciseStatus(exercise)
-            },
+            onItemClick = { exercise -> navigateToExerciseDetail(exercise) },
+            onEditClick = { exercise -> navigateToEditExercise(exercise) },
+            onDeleteClick = { exercise -> showDeleteConfirmation(exercise) },
+            onToggleStatusClick = { exercise -> toggleExerciseStatus(exercise) },
             isAdminMode = false
         )
-
         binding.recyclerExercises.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = exerciseAdapter
@@ -92,188 +63,84 @@ class ExercisesFragment : Fragment() {
         }
     }
 
-    private fun navigateToExerciseDetail(exercise: ExerciseResponse) {
-        try {
-            val action = ExercisesFragmentDirections.actionNavigationExercisesToExerciseDetail(
-                exerciseId = exercise.id
-            )
-            findNavController().navigate(action)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error usando Safe Args: ${e.message}")
-            val bundle = Bundle().apply {
-                putLong("exerciseId", exercise.id)
+    private fun setupChipListeners() {
+        // Fix: solo reaccionar cuando isChecked = true para evitar doble disparo
+        binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { currentFilter = "all"; loadExercises(reset = true) }
+        }
+        binding.chipMy.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { currentFilter = "my"; loadExercises(reset = true) }
+        }
+        binding.chipAvailable.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) { currentFilter = "available"; loadExercises(reset = true) }
+        }
+        binding.chipBySport.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !isUpdatingChips) {
+                currentFilter = "bySport"
+                currentSportId = null
+                loadExercises(reset = true)
             }
-            findNavController().navigate(
-                R.id.action_navigation_exercises_to_exercise_detail,
-                bundle
-            )
         }
-    }
-
-    private fun navigateToEditExercise(exercise: ExerciseResponse) {
-        try {
-            val action = ExercisesFragmentDirections.actionNavigationExercisesToEditExercise(
-                exerciseId = exercise.id
-            )
-            findNavController().navigate(action)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error usando Safe Args: ${e.message}")
-            val bundle = Bundle().apply {
-                putLong("exerciseId", exercise.id)
-            }
-            findNavController().navigate(
-                R.id.action_navigation_exercises_to_edit_exercise,
-                bundle
-            )
-        }
-    }
-
-    private fun setupClickListeners() {
-        Log.d(TAG, "setupClickListeners: Configurando listeners")
-
-        binding.chipAvailable.isChecked = true
-
-        // Botón flotante para crear ejercicio
-        binding.fabCreateExercise.setOnClickListener {
-            Log.d(TAG, "setupClickListeners: Click en crear ejercicio")
-            navigateToCreateExercise()
-        }
-
-        // Filtros
-        binding.chipAll.setOnClickListener {
-            Log.d(TAG, "setupClickListeners: Filtro - Todos")
-            currentFilter = "all"
-            updateChipSelection()
-            loadExercises(reset = true)
-        }
-
-        binding.chipMy.setOnClickListener {
-            Log.d(TAG, "setupClickListeners: Filtro - Mis ejercicios")
-            currentFilter = "my"
-            updateChipSelection()
-            loadExercises(reset = true)
-        }
-
-        binding.chipAvailable.setOnClickListener {
-            Log.d(TAG, "setupClickListeners: Filtro - Disponibles")
-            currentFilter = "available"
-            updateChipSelection()
-            loadExercises(reset = true)
-        }
-
-        binding.chipBySport.setOnClickListener {
-            Log.d(TAG, "setupClickListeners: Filtro - Por deporte")
-            currentFilter = "bySport"
-            updateChipSelection()
-            currentSportId = null
-            loadExercises(reset = true)
-        }
-    }
-
-    private fun updateChipSelection() {
-        Log.d(TAG, "updateChipSelection: Actualizando selección de chips")
-        binding.chipAll.isChecked = (currentFilter == "all")
-        binding.chipMy.isChecked = (currentFilter == "my")
-        binding.chipAvailable.isChecked = (currentFilter == "available")
-        binding.chipBySport.isChecked = (currentFilter == "bySport")
     }
 
     private fun setupScrollListener() {
-        Log.d(TAG, "setupScrollListener: Configurando scroll infinito")
-
         binding.recyclerExercises.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val visibleItemCount = layoutManager.childCount
-                val totalItemCount = layoutManager.itemCount
-                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-
-                if (!isLoading && hasMorePages) {
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
-                        && firstVisibleItemPosition >= 0
-                        && totalItemCount >= 20) {
-                        loadMoreExercises()
-                    }
+                val lm = recyclerView.layoutManager as LinearLayoutManager
+                val visible = lm.childCount
+                val total = lm.itemCount
+                val firstVisible = lm.findFirstVisibleItemPosition()
+                if (!isLoading && hasMorePages && (visible + firstVisible) >= total && firstVisible >= 0 && total >= 20) {
+                    loadMoreExercises()
                 }
             }
         })
     }
 
     private fun setupObservers() {
-        Log.d(TAG, "setupObservers: Configurando observadores")
+        exerciseViewModel.allExercisesState.observe(viewLifecycleOwner) { resource ->
+            resource?.let { handleExercisesResponse(it, "No hay ejercicios disponibles") }
+        }
+        exerciseViewModel.myExercisesState.observe(viewLifecycleOwner) { resource ->
+            resource?.let { handleExercisesResponse(it, "No has creado ejercicios") }
+        }
+        exerciseViewModel.availableExercisesState.observe(viewLifecycleOwner) { resource ->
+            resource?.let { handleExercisesResponse(it, "No hay ejercicios disponibles") }
+        }
+        exerciseViewModel.exercisesBySportState.observe(viewLifecycleOwner) { resource ->
+            resource?.let { handleExercisesResponse(it, "No hay ejercicios para este deporte") }
+        }
 
-        // Observar todos los ejercicios
-        exerciseViewModel.allExercisesState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleExercisesResponse(it, "No hay ejercicios disponibles")
-            }
-        })
-
-        // Observar mis ejercicios
-        exerciseViewModel.myExercisesState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleExercisesResponse(it, "No has creado ejercicios")
-            }
-        })
-
-        // Observar ejercicios disponibles
-        exerciseViewModel.availableExercisesState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleExercisesResponse(it, "No hay ejercicios disponibles")
-            }
-        })
-
-        // Observar ejercicios por deporte
-        exerciseViewModel.exercisesBySportState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleExercisesResponse(it, "No hay ejercicios para este deporte")
-            }
-        })
-
-        // Observar estado de eliminación
-        exerciseViewModel.deleteExerciseState.observe(viewLifecycleOwner, Observer { resource ->
+        exerciseViewModel.deleteExerciseState.observe(viewLifecycleOwner) { resource ->
             resource?.let {
                 when (it) {
                     is Resource.Success -> {
-                        Log.i(TAG, "setupObservers: Ejercicio eliminado exitosamente")
-                        Toast.makeText(requireContext(), "✅ Ejercicio eliminado", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Ejercicio eliminado", Toast.LENGTH_SHORT).show()
                         loadExercises(reset = true)
                     }
-                    is Resource.Error -> {
-                        Log.e(TAG, "setupObservers: Error eliminando ejercicio: ${it.message}")
-                        Toast.makeText(requireContext(), "❌ Error: ${it.message}", Toast.LENGTH_SHORT).show()
-                    }
+                    is Resource.Error -> Toast.makeText(requireContext(), it.message ?: "Error", Toast.LENGTH_SHORT).show()
                     else -> {}
                 }
                 exerciseViewModel.clearDeleteState()
             }
-        })
+        }
 
-        // Observar estado de cambio de estado
-        exerciseViewModel.toggleExerciseState.observe(viewLifecycleOwner, Observer { resource ->
+        exerciseViewModel.toggleExerciseState.observe(viewLifecycleOwner) { resource ->
             resource?.let {
                 when (it) {
                     is Resource.Success -> {
-                        Log.i(TAG, "setupObservers: Estado cambiado exitosamente")
-                        Toast.makeText(requireContext(), "✅ Estado cambiado", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Estado actualizado", Toast.LENGTH_SHORT).show()
                         loadExercises(reset = true)
                     }
-                    is Resource.Error -> {
-                        Log.e(TAG, "setupObservers: Error cambiando estado: ${it.message}")
-                        Toast.makeText(requireContext(), "❌ Error: ${it.message}", Toast.LENGTH_SHORT).show()
-                    }
+                    is Resource.Error -> Toast.makeText(requireContext(), it.message ?: "Error", Toast.LENGTH_SHORT).show()
                     else -> {}
                 }
                 exerciseViewModel.clearToggleState()
             }
-        })
+        }
     }
 
     private fun handleExercisesResponse(resource: Resource<ExercisePageResponse>, emptyMessage: String) {
-        Log.d(TAG, "handleExercisesResponse: Procesando respuesta - $resource")
-
         isLoading = false
         binding.progressBar.isVisible = false
         binding.loadMoreProgress.isVisible = false
@@ -281,43 +148,24 @@ class ExercisesFragment : Fragment() {
         when (resource) {
             is Resource.Success -> {
                 resource.data?.let { pageResponse ->
-                    Log.i(TAG, "handleExercisesResponse: Éxito - ${pageResponse.numberOfElements} ejercicios")
-
-                    if (currentPage == 0) {
-                        exerciseAdapter.clearExercises()
-                    }
-
+                    if (currentPage == 0) exerciseAdapter.clearExercises()
                     if (pageResponse.content.isNotEmpty()) {
                         exerciseAdapter.addExercises(pageResponse.content)
                         binding.layoutEmptyState.visibility = View.GONE
                         binding.recyclerExercises.visibility = View.VISIBLE
-
                         hasMorePages = !pageResponse.last
                         currentPage = pageResponse.pageNumber
-
-                        Log.d(TAG, "handleExercisesResponse: Página $currentPage, total ${pageResponse.totalElements}")
                     } else {
-                        if (currentPage == 0) {
-                            showEmptyState(emptyMessage)
-                        }
+                        if (currentPage == 0) showEmptyState(emptyMessage)
                         hasMorePages = false
                     }
-                } ?: run {
-                    Log.w(TAG, "handleExercisesResponse: Respuesta vacía")
-                    if (currentPage == 0) {
-                        showEmptyState(emptyMessage)
-                    }
-                }
+                } ?: run { if (currentPage == 0) showEmptyState(emptyMessage) }
             }
             is Resource.Error -> {
-                Log.e(TAG, "handleExercisesResponse: Error - ${resource.message}")
-                Toast.makeText(requireContext(), "❌ Error: ${resource.message}", Toast.LENGTH_SHORT).show()
-                if (currentPage == 0) {
-                    showEmptyState("Error al cargar ejercicios")
-                }
+                Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
+                if (currentPage == 0) showEmptyState("Error al cargar ejercicios")
             }
             is Resource.Loading -> {
-                Log.d(TAG, "handleExercisesResponse: Cargando...")
                 if (currentPage == 0) {
                     binding.progressBar.isVisible = true
                     binding.layoutEmptyState.visibility = View.GONE
@@ -330,19 +178,16 @@ class ExercisesFragment : Fragment() {
     }
 
     private fun loadExercises(reset: Boolean = false) {
-        Log.i(TAG, "loadExercises: Cargando ejercicios (reset: $reset)")
-
         if (reset) {
             currentPage = 0
             hasMorePages = true
             exerciseAdapter.clearExercises()
         }
 
-        // AQUÍ ESTÁ LA SOLUCIÓN: usa copy() en lugar de apply()
         val filterRequest = ExerciseFilterRequest().copy(
             page = currentPage,
             size = 20,
-            search = if (binding.etSearch.text.isNotBlank()) binding.etSearch.text.toString() else null
+            search = binding.etSearch.text?.let { if (it.isNotBlank()) binding.etSearch.text.toString() else null }
         )
 
         when (currentFilter) {
@@ -350,65 +195,56 @@ class ExercisesFragment : Fragment() {
             "my" -> exerciseViewModel.searchMyExercises(filterRequest)
             "available" -> exerciseViewModel.searchAvailableExercises(filterRequest)
             "bySport" -> {
-                currentSportId?.let { sportId ->
-                    exerciseViewModel.searchExercisesBySport(sportId, filterRequest)
-                } ?: run {
-                    exerciseViewModel.searchAvailableExercises(filterRequest)
-                }
+                currentSportId?.let { exerciseViewModel.searchExercisesBySport(it, filterRequest) }
+                    ?: exerciseViewModel.searchAvailableExercises(filterRequest)
             }
         }
     }
 
     private fun loadMoreExercises() {
-        if (!isLoading && hasMorePages) {
-            Log.d(TAG, "loadMoreExercises: Cargando más ejercicios, página ${currentPage + 1}")
-            currentPage++
-            loadExercises(reset = false)
+        if (!isLoading && hasMorePages) { currentPage++; loadExercises(reset = false) }
+    }
+
+    private fun navigateToExerciseDetail(exercise: ExerciseResponse) {
+        try {
+            findNavController().navigate(
+                ExercisesFragmentDirections.actionNavigationExercisesToExerciseDetail(exercise.id)
+            )
+        } catch (e: Exception) {
+            findNavController().navigate(R.id.action_navigation_exercises_to_exercise_detail,
+                Bundle().apply { putLong("exerciseId", exercise.id) })
         }
     }
 
-    private fun showExerciseDetail(exercise: ExerciseResponse) {
-        Log.i(TAG, "showExerciseDetail: Mostrando detalle ejercicio ${exercise.id}")
-        // Crea un Bundle para pasar el ID
-        val bundle = Bundle().apply {
-            putLong("exerciseId", exercise.id)
+    private fun navigateToEditExercise(exercise: ExerciseResponse) {
+        try {
+            findNavController().navigate(
+                ExercisesFragmentDirections.actionNavigationExercisesToEditExercise(exercise.id)
+            )
+        } catch (e: Exception) {
+            findNavController().navigate(R.id.action_navigation_exercises_to_edit_exercise,
+                Bundle().apply { putLong("exerciseId", exercise.id) })
         }
-        findNavController().navigate(R.id.navigation_exercise_detail, bundle)
     }
 
-    private fun editExercise(exercise: ExerciseResponse) {
-        Log.i(TAG, "editExercise: Editando ejercicio ${exercise.id}")
-        val bundle = Bundle().apply {
-            putLong("exerciseId", exercise.id)
-        }
-        findNavController().navigate(R.id.navigation_edit_exercise, bundle)
+    private fun navigateToCreateExercise() {
+        findNavController().navigate(R.id.navigation_create_exercise)
     }
 
     private fun showDeleteConfirmation(exercise: ExerciseResponse) {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Eliminar ejercicio")
-            .setMessage("¿Estás seguro de eliminar el ejercicio '${exercise.name}'?")
-            .setPositiveButton("Eliminar") { _, _ ->
-                exerciseViewModel.deleteExercise(exercise.id)
-            }
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setMessage("¿Eliminar '${exercise.name}'? Esta acción no se puede deshacer.")
+            .setPositiveButton("Eliminar") { _, _ -> exerciseViewModel.deleteExercise(exercise.id) }
+            .setNegativeButton("Cancelar") { d, _ -> d.dismiss() }
             .show()
     }
 
     private fun toggleExerciseStatus(exercise: ExerciseResponse) {
-        Log.i(TAG, "toggleExerciseStatus: Cambiando estado ejercicio ${exercise.id}")
         exerciseViewModel.toggleExerciseStatus(exercise.id)
     }
 
-    private fun navigateToCreateExercise() {
-        Log.i(TAG, "navigateToCreateExercise: Navegando a crear ejercicio")
-        findNavController().navigate(R.id.navigation_create_exercise)
-    }
-
     private fun showEmptyState(message: String) {
-        Log.d(TAG, "showEmptyState: Mostrando estado vacío - $message")
         binding.recyclerExercises.visibility = View.GONE
         binding.layoutEmptyState.visibility = View.VISIBLE
         binding.tvEmptyState.text = message
@@ -416,9 +252,6 @@ class ExercisesFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        Log.i(TAG, "onDestroyView: Destruyendo vista")
         _binding = null
     }
-
-
 }

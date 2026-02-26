@@ -1,14 +1,14 @@
 package com.fitapp.appfit.ui.exercises.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.fitapp.appfit.R
 import com.fitapp.appfit.databinding.ItemExerciseBinding
 import com.fitapp.appfit.response.exercise.response.ExerciseResponse
-import com.fitapp.appfit.utils.DateUtils  // Importar DateUtils
+import com.fitapp.appfit.utils.DateUtils
 
 class ExerciseAdapter(
     private val onItemClick: (ExerciseResponse) -> Unit,
@@ -16,168 +16,90 @@ class ExerciseAdapter(
     private val onDeleteClick: (ExerciseResponse) -> Unit,
     private val onToggleStatusClick: (ExerciseResponse) -> Unit,
     private val isAdminMode: Boolean = false
-) : RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
+) : ListAdapter<ExerciseResponse, ExerciseAdapter.ExerciseViewHolder>(ExerciseDiffCallback()) {
 
-    companion object {
-        private const val TAG = "ExerciseAdapter"
-    }
-
-    private var exercises = mutableListOf<ExerciseResponse>()
+    // Compatibilidad con código existente que usa setExercises / addExercises / clearExercises
+    private val internalList = mutableListOf<ExerciseResponse>()
 
     fun setExercises(exercises: List<ExerciseResponse>) {
-        Log.d(TAG, "setExercises: Actualizando lista con ${exercises.size} ejercicios")
-        this.exercises.clear()
-        this.exercises.addAll(exercises)
-        notifyDataSetChanged()
+        internalList.clear()
+        internalList.addAll(exercises)
+        submitList(internalList.toList())
     }
 
     fun addExercises(newExercises: List<ExerciseResponse>) {
-        Log.d(TAG, "addExercises: Agregando ${newExercises.size} ejercicios")
-        val startPosition = exercises.size
-        exercises.addAll(newExercises)
-        notifyItemRangeInserted(startPosition, newExercises.size)
+        internalList.addAll(newExercises)
+        submitList(internalList.toList())
     }
 
-    fun getExercises(): List<ExerciseResponse> {
-        return exercises.toList()
-    }
+    fun getExercises(): List<ExerciseResponse> = internalList.toList()
 
     fun clearExercises() {
-        Log.d(TAG, "clearExercises: Limpiando lista")
-        exercises.clear()
-        notifyDataSetChanged()
+        internalList.clear()
+        submitList(emptyList())
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
-        Log.d(TAG, "onCreateViewHolder: Creando view holder")
         val binding = ItemExerciseBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ExerciseViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
-        Log.v(TAG, "onBindViewHolder: Binding ejercicio posición $position")
-        holder.bind(exercises[position])
+        holder.bind(getItem(position))
     }
-
-    override fun getItemCount(): Int = exercises.size
 
     inner class ExerciseViewHolder(private val binding: ItemExerciseBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(exercise: ExerciseResponse) {
-            try {
-                Log.d(TAG, "bind: Mostrando ejercicio ${exercise.id} - ${exercise.name}")
+            binding.tvExerciseName.text = exercise.name
+            binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
+            binding.tvExerciseDescription.text = exercise.description ?: "Sin descripción"
+            binding.tvExerciseSport.text = exercise.sportName ?: "—"
+            binding.tvExerciseCreatedBy.text = exercise.createdByEmail ?: "—"
 
-                // Configurar datos básicos
-                binding.tvExerciseName.text = exercise.name
-                binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
-                binding.tvExerciseDescription.text = exercise.description ?: "Sin descripción"
-                binding.tvExerciseSport.text = exercise.sportName ?: "Sin deporte"
-                binding.tvExerciseCreatedBy.text = exercise.createdByEmail ?: "Usuario desconocido"
+            // Categorías
+            binding.tvExerciseCategories.text = if (exercise.categoryNames.isNullOrEmpty()) "Sin categorías"
+            else exercise.categoryNames.joinToString(", ")
 
-                // Configurar categorías
-                val categoriesText = if (exercise.categoryNames.isNullOrEmpty()) {
-                    "Sin categorías"
-                } else {
-                    exercise.categoryNames.joinToString(", ")
-                }
-                binding.tvExerciseCategories.text = "Categorías: $categoriesText"
+            // Parámetros
+            binding.tvExerciseParameters.text = if (exercise.supportedParameterNames.isNullOrEmpty()) "Sin parámetros"
+            else "${exercise.supportedParameterNames.size} parámetros"
 
-                // Configurar parámetros
-                val paramsText = if (exercise.supportedParameterNames.isNullOrEmpty()) {
-                    "Sin parámetros"
-                } else {
-                    "Parámetros: ${exercise.supportedParameterNames.size}"
-                }
-                binding.tvExerciseParameters.text = paramsText
+            // Visibilidad — sin emojis
+            binding.tvExerciseVisibility.text = if (exercise.isPublic == true) "Público" else "Personal"
 
-                // Configurar visibilidad
-                if (exercise.isPublic == true) {
-                    binding.tvExerciseVisibility.text = "👥 PÚBLICO"
-                    binding.tvExerciseVisibility.setBackgroundResource(R.drawable.badge_custom)
-                } else {
-                    binding.tvExerciseVisibility.text = "👤 PERSONAL"
-                    binding.tvExerciseVisibility.setBackgroundResource(R.drawable.badge_predefined)
-                }
+            // Estado — sin emojis
+            val isActive = exercise.isActive == true
+            binding.tvExerciseStatus.text = if (isActive) "Activo" else "Inactivo"
+            binding.btnToggleStatus.text = if (isActive) "Pausar" else "Activar"
 
-                // Configurar estado activo
-                if (exercise.isActive == true) {
-                    binding.tvExerciseStatus.text = "✅ ACTIVO"
-                    binding.btnToggleStatus.text = "DESACTIVAR"
-                    binding.tvExerciseStatus.setBackgroundResource(R.drawable.badge_active)
-                } else {
-                    binding.tvExerciseStatus.text = "❌ INACTIVO"
-                    binding.btnToggleStatus.text = "ACTIVAR"
-                    binding.tvExerciseStatus.setBackgroundResource(R.drawable.badge_inactive)
-                }
+            // Estadísticas
+            binding.tvExerciseUsageCount.text = "${exercise.usageCount ?: 0} usos"
+            binding.tvExerciseRating.text = String.format("%.1f", exercise.rating ?: 0.0)
 
-                // Configurar estadísticas
-                binding.tvExerciseUsageCount.text = "Usado ${exercise.usageCount ?: 0} veces"
-                binding.tvExerciseRating.text = "⭐ ${exercise.rating ?: 0.0}"
+            // Fecha último uso
+            binding.tvExerciseLastUsed.text = if (!exercise.lastUsedAt.isNullOrEmpty())
+                "Último uso: ${DateUtils.formatForDisplay(exercise.lastUsedAt)}"
+            else "Nunca usado"
 
-                // CORRECCIÓN PRINCIPAL: Usar DateUtils para formatear la fecha
-                if (!exercise.lastUsedAt.isNullOrEmpty()) {
-                    val formattedDate = DateUtils.formatForDisplay(exercise.lastUsedAt)
-                    binding.tvExerciseLastUsed.text = "Último uso: $formattedDate"
-                    binding.tvExerciseLastUsed.visibility = View.VISIBLE
-                } else {
-                    binding.tvExerciseLastUsed.text = "Último uso: Nunca"
-                    binding.tvExerciseLastUsed.visibility = View.VISIBLE
-                }
+            // Botones según permisos
+            val canEdit = exercise.isPublic == false || isAdminMode
+            binding.btnEditExercise.visibility = if (canEdit) View.VISIBLE else View.GONE
+            binding.btnDeleteExercise.visibility = if (canEdit) View.VISIBLE else View.GONE
+            binding.btnMakePublic.visibility =
+                if (isAdminMode && exercise.isPublic == false) View.VISIBLE else View.GONE
 
-                // Configurar botones según permisos
-                val isPersonalExercise = exercise.isPublic == false
-                val canEdit = isPersonalExercise || isAdminMode
-                val canDelete = isPersonalExercise || isAdminMode
-
-                if (canEdit) {
-                    binding.btnEditExercise.visibility = View.VISIBLE
-                } else {
-                    binding.btnEditExercise.visibility = View.GONE
-                }
-
-                if (canDelete) {
-                    binding.btnDeleteExercise.visibility = View.VISIBLE
-                } else {
-                    binding.btnDeleteExercise.visibility = View.GONE
-                }
-
-                // Listeners
-                binding.root.setOnClickListener {
-                    Log.d(TAG, "bind: Click en ejercicio ${exercise.id}")
-                    onItemClick(exercise)
-                }
-
-                binding.btnEditExercise.setOnClickListener {
-                    Log.d(TAG, "bind: Editar ejercicio ${exercise.id}")
-                    onEditClick(exercise)
-                }
-
-                binding.btnDeleteExercise.setOnClickListener {
-                    Log.d(TAG, "bind: Eliminar ejercicio ${exercise.id}")
-                    onDeleteClick(exercise)
-                }
-
-                binding.btnToggleStatus.setOnClickListener {
-                    Log.d(TAG, "bind: Cambiar estado ejercicio ${exercise.id}")
-                    onToggleStatusClick(exercise)
-                }
-
-                // Solo admin puede hacer ejercicios públicos
-                if (isAdminMode && exercise.isPublic == false) {
-                    binding.btnMakePublic.visibility = View.VISIBLE
-                    binding.btnMakePublic.setOnClickListener {
-                        Log.d(TAG, "bind: Hacer público ejercicio ${exercise.id}")
-                        // Aquí puedes agregar lógica adicional si necesitas
-                    }
-                } else {
-                    binding.btnMakePublic.visibility = View.GONE
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "bind error: ${e.message}", e)
-                binding.tvExerciseName.text = "Error al cargar ejercicio"
-            }
+            // Listeners
+            binding.root.setOnClickListener { onItemClick(exercise) }
+            binding.btnEditExercise.setOnClickListener { onEditClick(exercise) }
+            binding.btnDeleteExercise.setOnClickListener { onDeleteClick(exercise) }
+            binding.btnToggleStatus.setOnClickListener { onToggleStatusClick(exercise) }
         }
+    }
+
+    class ExerciseDiffCallback : DiffUtil.ItemCallback<ExerciseResponse>() {
+        override fun areItemsTheSame(old: ExerciseResponse, new: ExerciseResponse) = old.id == new.id
+        override fun areContentsTheSame(old: ExerciseResponse, new: ExerciseResponse) = old == new
     }
 }

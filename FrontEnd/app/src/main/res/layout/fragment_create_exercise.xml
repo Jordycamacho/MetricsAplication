@@ -1,295 +1,390 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:fillViewport="true"
-    tools:context=".ui.exercises.create.CreateExerciseFragment">
+    android:orientation="vertical"
+    android:background="@color/background_dark">
 
-    <LinearLayout
+    <!-- Toolbar fijo -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:paddingBottom="100dp">
+        android:background="@color/surface_dark"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/gold_primary"
+        app:titleTextColor="@color/text_primary_dark"
+        app:title="Crear ejercicio" />
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/gold_primary"
+        android:alpha="0.4" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:fillViewport="false">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/surface_dark"
-            app:navigationIcon="@drawable/ic_arrow_right"
-            app:titleTextColor="@color/text_primary_dark" />
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:paddingBottom="32dp">
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
+            <!-- Banner informativo -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:background="@color/surface_dark"
+                android:layout_marginBottom="20dp">
 
-                <!-- Información importante -->
-                <com.google.android.material.card.MaterialCardView
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/gold_primary" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardBackgroundColor="@color/gold_primary"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="2dp">
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
+                        android:text="EJERCICIO PERSONAL"
+                        android:textColor="@color/gold_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.1" />
 
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="⚠️ Ejercicio Personal"
-                            android:textColor="@color/background_dark"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Este ejercicio solo será visible para ti. Solo los administradores pueden crear ejercicios públicos."
-                            android:textColor="@color/background_dark"
-                            android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Nombre -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/til_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:hint="Nombre del ejercicio *"
-                    app:boxBackgroundMode="outline"
-                    app:boxCornerRadiusTopStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:hintTextColor="@color/text_secondary_dark"
-                    app:boxStrokeColor="@color/gold_primary"
-                    app:boxStrokeWidth="1dp">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_name"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary_dark"
-                        android:inputType="textCapWords"
-                        android:maxLines="1"
-                        android:imeOptions="actionNext" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:text="Solo será visible para ti. Los administradores pueden crear ejercicios públicos."
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="12sp"
+                        android:layout_marginTop="3dp"
+                        android:lineSpacingMultiplier="1.3" />
 
-                <!-- Descripción -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/til_description"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:hint="Descripción (opcional)"
-                    app:boxBackgroundMode="outline"
-                    app:boxCornerRadiusTopStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:hintTextColor="@color/text_secondary_dark"
-                    app:boxStrokeColor="@color/gold_primary"
-                    app:boxStrokeWidth="1dp">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_description"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary_dark"
-                        android:inputType="textMultiLine"
-                        android:lines="3"
-                        android:imeOptions="actionNext" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Tipo de ejercicio -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:hint="Tipo de ejercicio *"
-                    app:boxBackgroundMode="outline"
-                    app:boxCornerRadiusTopStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:hintTextColor="@color/text_secondary_dark"
-                    app:boxStrokeColor="@color/gold_primary"
-                    app:boxStrokeWidth="1dp"
-                    app:endIconMode="dropdown_menu">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/spinner_exercise_type"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary_dark"
-                        android:inputType="none"
-                        android:focusable="false"
-                        android:hint="Seleccionar tipo"
-                        android:textSize="16sp"
-                        android:padding="12dp" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Deporte -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:hint="Deporte *"
-                    app:boxBackgroundMode="outline"
-                    app:boxCornerRadiusTopStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:hintTextColor="@color/text_secondary_dark"
-                    app:boxStrokeColor="@color/gold_primary"
-                    app:boxStrokeWidth="1dp"
-                    app:endIconMode="dropdown_menu">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/spinner_sports"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary_dark"
-                        android:inputType="none"
-                        android:focusable="false"
-                        android:hint="Seleccionar deporte" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Parámetros soportados -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Parámetros soportados"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Selecciona los parámetros que este ejercicio puede medir"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chip_group_parameters"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    app:singleSelection="false" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_load_more_parameters"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cargar más parámetros"
-                    android:textColor="@color/gold_primary"
-                    app:backgroundTint="@android:color/transparent"
-                    app:cornerRadius="8dp"
-                    android:layout_gravity="end"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Categorías -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Categorías"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Selecciona las categorías a las que pertenece este ejercicio"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chip_group_categories"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    app:singleSelection="false" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_load_more_categories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cargar más categorías"
-                    android:textColor="@color/gold_primary"
-                    app:backgroundTint="@android:color/transparent"
-                    app:cornerRadius="8dp"
-                    android:layout_gravity="end"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Nota sobre visibilidad -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="📝 Nota: Este ejercicio será personal y solo tú podrás verlo y usarlo."
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="12sp" />
+                </LinearLayout>
 
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Botón Guardar -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_save"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="CREAR EJERCICIO"
-            android:textColor="@color/background_dark"
-            app:backgroundTint="@color/gold_primary"
-            app:cornerRadius="12dp"
-            android:elevation="4dp" />
+            <!-- Nombre -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NOMBRE"
+                android:textColor="@color/gold_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:visibility="gone" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Nombre del ejercicio"
+                app:hintTextColor="#666666"
+                app:errorEnabled="true">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/dsad"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="..."
-            android:textColor="@color/background_dark"
-            app:backgroundTint="@color/gold_primary"
-            app:cornerRadius="12dp"
-            android:elevation="4dp" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary_dark"
+                    android:inputType="textCapWords"
+                    android:maxLines="1"
+                    android:imeOptions="actionNext"
+                    android:paddingVertical="12dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    </LinearLayout>
-</ScrollView>
+            <!-- Descripción -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DESCRIPCIÓN"
+                android:textColor="@color/gold_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Opcional"
+                app:hintTextColor="#666666">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary_dark"
+                    android:inputType="textMultiLine"
+                    android:lines="3"
+                    android:paddingVertical="12dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Tipo de ejercicio -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TIPO DE EJERCICIO"
+                android:textColor="@color/gold_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Seleccionar tipo"
+                app:hintTextColor="#666666"
+                app:endIconMode="dropdown_menu"
+                app:endIconTint="@color/gold_primary">
+
+                <AutoCompleteTextView
+                    android:id="@+id/spinner_exercise_type"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary_dark"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:paddingVertical="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Deporte -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEPORTE"
+                android:textColor="@color/gold_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Seleccionar deporte"
+                app:hintTextColor="#666666"
+                app:endIconMode="dropdown_menu"
+                app:endIconTint="@color/gold_primary">
+
+                <AutoCompleteTextView
+                    android:id="@+id/spinner_sports"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary_dark"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:paddingVertical="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Parámetros -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="16dp"
+                    android:background="@color/gold_primary"
+                    android:layout_marginEnd="10dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Parámetros soportados"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selecciona los que puede medir este ejercicio"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_parameters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                app:singleSelection="false" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_load_more_parameters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ver más parámetros"
+                android:textColor="@color/gold_primary"
+                android:textSize="12sp"
+                app:backgroundTint="@android:color/transparent"
+                app:cornerRadius="8dp"
+                android:layout_gravity="end"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Categorías -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="16dp"
+                    android:background="@color/gold_primary"
+                    android:layout_marginEnd="10dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Categorías"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Categorías a las que pertenece este ejercicio"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_categories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                app:singleSelection="false" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_load_more_categories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ver más categorías"
+                android:textColor="@color/gold_primary"
+                android:textSize="12sp"
+                app:backgroundTint="@android:color/transparent"
+                app:cornerRadius="8dp"
+                android:layout_gravity="end"
+                android:layout_marginBottom="28dp" />
+
+            <!-- Botón guardar -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="CREAR EJERCICIO"
+                android:textColor="#121212"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                app:backgroundTint="@color/gold_primary"
+                app:cornerRadius="12dp"
+                android:elevation="0dp" />
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:indeterminateTint="@color/gold_primary"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/badw_ssdadaave"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="CREAR EJERCICIO"
+                android:textColor="#121212"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                app:backgroundTint="@color/gold_primary"
+                app:cornerRadius="12dp"
+                android:elevation="0dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
