@@ -1,5 +1,6 @@
-package com.fitapp.appfit.domain.model
+package com.fitapp.appfit.model
 
+import com.fitapp.appfit.response.exercise.response.ExerciseResponse
 import com.fitapp.appfit.response.exercise.response.ExerciseType
 import com.fitapp.appfit.utils.DateUtils
 import java.time.LocalDateTime
@@ -9,10 +10,8 @@ data class Exercise(
     val name: String,
     val description: String?,
     val exerciseType: ExerciseType?,
-    val sportId: Long?,
-    val sportName: String?,
+    val sports: Map<Long, String>,
     val createdById: Long?,
-    val createdByEmail: String?,
     val categoryIds: Set<Long>,
     val categoryNames: Set<String>,
     val supportedParameterIds: Set<Long>,
@@ -26,17 +25,17 @@ data class Exercise(
     val updatedAt: LocalDateTime?,
     val lastUsedAt: LocalDateTime?
 ) {
+    fun sportsDisplayName(): String = sports.values.joinToString(", ").ifEmpty { "—" }
+
     companion object {
-        fun fromResponse(response: com.fitapp.appfit.response.exercise.response.ExerciseResponse): Exercise {
+        fun fromResponse(response: ExerciseResponse): Exercise {
             return Exercise(
                 id = response.id,
                 name = response.name,
                 description = response.description,
                 exerciseType = response.exerciseType,
-                sportId = response.sportId,
-                sportName = response.sportName,
+                sports = response.sports,
                 createdById = response.createdById,
-                createdByEmail = response.createdByEmail,
                 categoryIds = response.categoryIds,
                 categoryNames = response.categoryNames,
                 supportedParameterIds = response.supportedParameterIds,

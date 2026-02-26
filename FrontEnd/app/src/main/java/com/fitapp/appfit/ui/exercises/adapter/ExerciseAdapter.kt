@@ -18,7 +18,6 @@ class ExerciseAdapter(
     private val isAdminMode: Boolean = false
 ) : ListAdapter<ExerciseResponse, ExerciseAdapter.ExerciseViewHolder>(ExerciseDiffCallback()) {
 
-    // Compatibilidad con código existente que usa setExercises / addExercises / clearExercises
     private val internalList = mutableListOf<ExerciseResponse>()
 
     fun setExercises(exercises: List<ExerciseResponse>) {
@@ -55,42 +54,33 @@ class ExerciseAdapter(
             binding.tvExerciseName.text = exercise.name
             binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
             binding.tvExerciseDescription.text = exercise.description ?: "Sin descripción"
-            binding.tvExerciseSport.text = exercise.sportName ?: "—"
-            binding.tvExerciseCreatedBy.text = exercise.createdByEmail ?: "—"
-
-            // Categorías
-            binding.tvExerciseCategories.text = if (exercise.categoryNames.isNullOrEmpty()) "Sin categorías"
+            binding.tvExerciseSport.text = exercise.sports.values.joinToString(", ").ifEmpty { "—" }
+            binding.tvExerciseCategories.text = if (exercise.categoryNames.isEmpty()) "Sin categorías"
             else exercise.categoryNames.joinToString(", ")
 
             // Parámetros
-            binding.tvExerciseParameters.text = if (exercise.supportedParameterNames.isNullOrEmpty()) "Sin parámetros"
+            binding.tvExerciseParameters.text = if (exercise.supportedParameterNames.isEmpty()) "Sin parámetros"
             else "${exercise.supportedParameterNames.size} parámetros"
 
-            // Visibilidad — sin emojis
             binding.tvExerciseVisibility.text = if (exercise.isPublic == true) "Público" else "Personal"
 
-            // Estado — sin emojis
             val isActive = exercise.isActive == true
             binding.tvExerciseStatus.text = if (isActive) "Activo" else "Inactivo"
             binding.btnToggleStatus.text = if (isActive) "Pausar" else "Activar"
 
-            // Estadísticas
             binding.tvExerciseUsageCount.text = "${exercise.usageCount ?: 0} usos"
             binding.tvExerciseRating.text = String.format("%.1f", exercise.rating ?: 0.0)
 
-            // Fecha último uso
             binding.tvExerciseLastUsed.text = if (!exercise.lastUsedAt.isNullOrEmpty())
                 "Último uso: ${DateUtils.formatForDisplay(exercise.lastUsedAt)}"
             else "Nunca usado"
 
-            // Botones según permisos
             val canEdit = exercise.isPublic == false || isAdminMode
             binding.btnEditExercise.visibility = if (canEdit) View.VISIBLE else View.GONE
             binding.btnDeleteExercise.visibility = if (canEdit) View.VISIBLE else View.GONE
             binding.btnMakePublic.visibility =
                 if (isAdminMode && exercise.isPublic == false) View.VISIBLE else View.GONE
 
-            // Listeners
             binding.root.setOnClickListener { onItemClick(exercise) }
             binding.btnEditExercise.setOnClickListener { onEditClick(exercise) }
             binding.btnDeleteExercise.setOnClickListener { onDeleteClick(exercise) }

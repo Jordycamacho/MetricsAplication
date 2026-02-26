@@ -247,12 +247,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_create_sport"
-        android:name="com.fitapp.appfit.ui.sports.create.CreateSportFragment"
-        android:label="@string/title_create_sport"
-        tools:layout="@layout/fragment_create_sport" />
-
-    <fragment
         android:id="@+id/navigation_exercise_params"
         android:name="com.fitapp.appfit.ui.exercises.params.ExerciseParamsFragment"
         android:label="Parámetros"

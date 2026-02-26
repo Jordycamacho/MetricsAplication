@@ -16,17 +16,11 @@ data class ExerciseResponse(
     @SerializedName("exerciseType")
     val exerciseType: ExerciseType?,
 
-    @SerializedName("sportId")
-    val sportId: Long?,
-
-    @SerializedName("sportName")
-    val sportName: String?,
+    @SerializedName("sports")
+    val sports: Map<String, String> = emptyMap(),
 
     @SerializedName("createdById")
     val createdById: Long?,
-
-    @SerializedName("createdByEmail")
-    val createdByEmail: String?,
 
     @SerializedName("categoryIds")
     val categoryIds: Set<Long> = emptySet(),
@@ -63,4 +57,9 @@ data class ExerciseResponse(
 
     @SerializedName("lastUsedAt")
     val lastUsedAt: String?
-) : Serializable
+) : Serializable {
+
+    fun sportIds(): Set<Long> = sports.keys.mapNotNull { it.toLongOrNull() }.toSet()
+
+    fun sportsDisplayName(): String = sports.values.joinToString(", ").ifEmpty { "—" }
+}

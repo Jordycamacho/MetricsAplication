@@ -14,8 +14,8 @@ data class ExerciseRequest(
     @SerializedName("exerciseType")
     val exerciseType: ExerciseType,
 
-    @SerializedName("sportId")
-    val sportId: Long,
+    @SerializedName("sportIds")
+    val sportIds: Set<Long>,
 
     @SerializedName("categoryIds")
     val categoryIds: Set<Long> = emptySet(),

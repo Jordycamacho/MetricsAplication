@@ -20,7 +20,7 @@ class ExerciseViewModel : ViewModel() {
         private const val TAG = "ExerciseViewModel"
     }
 
-    // Estados para listas paginadas
+    // --- Listas ---
     private val _allExercisesState = MutableLiveData<Resource<ExercisePageResponse>?>()
     val allExercisesState: LiveData<Resource<ExercisePageResponse>?> = _allExercisesState
 
@@ -33,7 +33,19 @@ class ExerciseViewModel : ViewModel() {
     private val _exercisesBySportState = MutableLiveData<Resource<ExercisePageResponse>?>()
     val exercisesBySportState: LiveData<Resource<ExercisePageResponse>?> = _exercisesBySportState
 
-    // Estados para operaciones CRUD
+    private val _recentlyUsedState = MutableLiveData<Resource<ExercisePageResponse>?>()
+    val recentlyUsedState: LiveData<Resource<ExercisePageResponse>?> = _recentlyUsedState
+
+    private val _mostPopularState = MutableLiveData<Resource<ExercisePageResponse>?>()
+    val mostPopularState: LiveData<Resource<ExercisePageResponse>?> = _mostPopularState
+
+    private val _topRatedState = MutableLiveData<Resource<ExercisePageResponse>?>()
+    val topRatedState: LiveData<Resource<ExercisePageResponse>?> = _topRatedState
+
+    // --- CRUD ---
+    private val _exerciseDetailState = MutableLiveData<Resource<ExerciseResponse>?>()
+    val exerciseDetailState: LiveData<Resource<ExerciseResponse>?> = _exerciseDetailState
+
     private val _createExerciseState = MutableLiveData<Resource<ExerciseResponse>?>()
     val createExerciseState: LiveData<Resource<ExerciseResponse>?> = _createExerciseState
 
@@ -55,26 +67,14 @@ class ExerciseViewModel : ViewModel() {
     private val _makePublicState = MutableLiveData<Resource<ExerciseResponse>?>()
     val makePublicState: LiveData<Resource<ExerciseResponse>?> = _makePublicState
 
-    private val _recentlyUsedState = MutableLiveData<Resource<ExercisePageResponse>?>()
-    val recentlyUsedState: LiveData<Resource<ExercisePageResponse>?> = _recentlyUsedState
-
-    private val _mostPopularState = MutableLiveData<Resource<ExercisePageResponse>?>()
-    val mostPopularState: LiveData<Resource<ExercisePageResponse>?> = _mostPopularState
-
-    private val _topRatedState = MutableLiveData<Resource<ExercisePageResponse>?>()
-    val topRatedState: LiveData<Resource<ExercisePageResponse>?> = _topRatedState
-
     private val _myExerciseCountState = MutableLiveData<Resource<Long>?>()
     val myExerciseCountState: LiveData<Resource<Long>?> = _myExerciseCountState
 
-    // Estado para un solo ejercicio (detalle)
-    private val _exerciseDetailState = MutableLiveData<Resource<ExerciseResponse>?>()
-    val exerciseDetailState: LiveData<Resource<ExerciseResponse>?> = _exerciseDetailState
-
-    // Métodos para listas paginadas
+    // =========================================================
+    // Queries
+    // =========================================================
 
     fun searchExercises(filterRequest: ExerciseFilterRequest) {
-        Log.i(TAG, "searchExercises: Iniciando búsqueda general")
         _allExercisesState.value = Resource.Loading()
         viewModelScope.launch {
             _allExercisesState.value = repository.searchExercises(filterRequest)
@@ -82,7 +82,6 @@ class ExerciseViewModel : ViewModel() {
     }
 
     fun searchMyExercises(filterRequest: ExerciseFilterRequest) {
-        Log.i(TAG, "searchMyExercises: Iniciando búsqueda de mis ejercicios")
         _myExercisesState.value = Resource.Loading()
         viewModelScope.launch {
             _myExercisesState.value = repository.searchMyExercises(filterRequest)
@@ -90,7 +89,6 @@ class ExerciseViewModel : ViewModel() {
     }
 
     fun searchAvailableExercises(filterRequest: ExerciseFilterRequest) {
-        Log.i(TAG, "searchAvailableExercises: Iniciando búsqueda de disponibles")
         _availableExercisesState.value = Resource.Loading()
         viewModelScope.launch {
             _availableExercisesState.value = repository.searchAvailableExercises(filterRequest)
@@ -98,75 +96,21 @@ class ExerciseViewModel : ViewModel() {
     }
 
     fun searchExercisesBySport(sportId: Long, filterRequest: ExerciseFilterRequest) {
-        Log.i(TAG, "searchExercisesBySport: Iniciando búsqueda por deporte $sportId")
         _exercisesBySportState.value = Resource.Loading()
         viewModelScope.launch {
             _exercisesBySportState.value = repository.searchExercisesBySport(sportId, filterRequest)
         }
     }
 
-    // CRUD
-
-    fun createExercise(exerciseRequest: ExerciseRequest) {
-        Log.i(TAG, "createExercise: Creando ejercicio ${exerciseRequest.name}")
-        _createExerciseState.value = Resource.Loading()
+    fun getExerciseById(id: Long) {
+        Log.i(TAG, "getExerciseById: $id")
+        _exerciseDetailState.value = Resource.Loading()
         viewModelScope.launch {
-            _createExerciseState.value = repository.createExercise(exerciseRequest)
+            _exerciseDetailState.value = repository.getExerciseById(id)
         }
     }
-
-    fun updateExercise(id: Long, exerciseRequest: ExerciseRequest) {
-        Log.i(TAG, "updateExercise: Actualizando ejercicio $id")
-        _updateExerciseState.value = Resource.Loading()
-        viewModelScope.launch {
-            _updateExerciseState.value = repository.updateExercise(id, exerciseRequest)
-        }
-    }
-
-    fun deleteExercise(id: Long) {
-        Log.i(TAG, "deleteExercise: Eliminando ejercicio $id")
-        _deleteExerciseState.value = Resource.Loading()
-        viewModelScope.launch {
-            _deleteExerciseState.value = repository.deleteExercise(id)
-        }
-    }
-
-    fun toggleExerciseStatus(id: Long) {
-        Log.i(TAG, "toggleExerciseStatus: Cambiando estado ejercicio $id")
-        _toggleExerciseState.value = Resource.Loading()
-        viewModelScope.launch {
-            _toggleExerciseState.value = repository.toggleExerciseStatus(id)
-        }
-    }
-
-    fun rateExercise(id: Long, rating: Double) {
-        Log.i(TAG, "rateExercise: Calificando ejercicio $id con $rating")
-        _rateExerciseState.value = Resource.Loading()
-        viewModelScope.launch {
-            _rateExerciseState.value = repository.rateExercise(id, rating)
-        }
-    }
-
-    fun duplicateExercise(id: Long) {
-        Log.i(TAG, "duplicateExercise: Duplicando ejercicio $id")
-        _duplicateExerciseState.value = Resource.Loading()
-        viewModelScope.launch {
-            _duplicateExerciseState.value = repository.duplicateExercise(id)
-        }
-    }
-
-    fun makeExercisePublic(id: Long) {
-        Log.i(TAG, "makeExercisePublic: Haciendo público ejercicio $id")
-        _makePublicState.value = Resource.Loading()
-        viewModelScope.launch {
-            _makePublicState.value = repository.makeExercisePublic(id)
-        }
-    }
-
-    // Listas especiales
 
     fun getRecentlyUsedExercises(page: Int = 0, size: Int = 10) {
-        Log.i(TAG, "getRecentlyUsedExercises: Obteniendo recientemente usados")
         _recentlyUsedState.value = Resource.Loading()
         viewModelScope.launch {
             _recentlyUsedState.value = repository.getRecentlyUsedExercises(page, size)
@@ -174,7 +118,6 @@ class ExerciseViewModel : ViewModel() {
     }
 
     fun getMostPopularExercises(page: Int = 0, size: Int = 10) {
-        Log.i(TAG, "getMostPopularExercises: Obteniendo más populares")
         _mostPopularState.value = Resource.Loading()
         viewModelScope.launch {
             _mostPopularState.value = repository.getMostPopularExercises(page, size)
@@ -182,80 +125,84 @@ class ExerciseViewModel : ViewModel() {
     }
 
     fun getTopRatedExercises(page: Int = 0, size: Int = 10) {
-        Log.i(TAG, "getTopRatedExercises: Obteniendo mejor calificados")
         _topRatedState.value = Resource.Loading()
         viewModelScope.launch {
             _topRatedState.value = repository.getTopRatedExercises(page, size)
         }
     }
 
-    // Contador
-
     fun getMyExerciseCount() {
-        Log.i(TAG, "getMyExerciseCount: Obteniendo mi contador")
         _myExerciseCountState.value = Resource.Loading()
         viewModelScope.launch {
             _myExerciseCountState.value = repository.getMyExerciseCount()
         }
     }
 
-    // Detalle
+    // =========================================================
+    // Commands
+    // =========================================================
 
-    fun getExerciseById(id: Long) {
-        Log.i(TAG, "getExerciseById: Obteniendo detalle ejercicio $id")
-        _exerciseDetailState.value = Resource.Loading()
+    fun createExercise(exerciseRequest: ExerciseRequest) {
+        _createExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _exerciseDetailState.value = repository.getExerciseById(id)
+            _createExerciseState.value = repository.createExercise(exerciseRequest)
         }
     }
 
-    fun getExerciseByIdWithRelations(id: Long) {
-        Log.i(TAG, "getExerciseByIdWithRelations: Obteniendo detalle con relaciones ejercicio $id")
-        _exerciseDetailState.value = Resource.Loading()
+    fun updateExercise(id: Long, exerciseRequest: ExerciseRequest) {
+        _updateExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _exerciseDetailState.value = repository.getExerciseByIdWithRelations(id)
+            _updateExerciseState.value = repository.updateExercise(id, exerciseRequest)
         }
     }
 
-    // Limpiar estados
-
-    fun clearCreateState() {
-        Log.d(TAG, "clearCreateState: Limpiando estado creación")
-        _createExerciseState.value = null
+    fun deleteExercise(id: Long) {
+        _deleteExerciseState.value = Resource.Loading()
+        viewModelScope.launch {
+            _deleteExerciseState.value = repository.deleteExercise(id)
+        }
     }
 
-    fun clearUpdateState() {
-        Log.d(TAG, "clearUpdateState: Limpiando estado actualización")
-        _updateExerciseState.value = null
+    fun toggleExerciseStatus(id: Long) {
+        _toggleExerciseState.value = Resource.Loading()
+        viewModelScope.launch {
+            _toggleExerciseState.value = repository.toggleExerciseStatus(id)
+        }
     }
 
-    fun clearDeleteState() {
-        Log.d(TAG, "clearDeleteState: Limpiando estado eliminación")
-        _deleteExerciseState.value = null
+    // ✅ incrementExerciseUsage ELIMINADO — el back lo gestiona internamente
+
+    fun rateExercise(id: Long, rating: Double) {
+        _rateExerciseState.value = Resource.Loading()
+        viewModelScope.launch {
+            _rateExerciseState.value = repository.rateExercise(id, rating)
+        }
     }
 
-    fun clearToggleState() {
-        Log.d(TAG, "clearToggleState: Limpiando estado toggle")
-        _toggleExerciseState.value = null
+    fun duplicateExercise(id: Long) {
+        _duplicateExerciseState.value = Resource.Loading()
+        viewModelScope.launch {
+            _duplicateExerciseState.value = repository.duplicateExercise(id)
+        }
     }
 
-    fun clearRateState() {
-        Log.d(TAG, "clearRateState: Limpiando estado calificación")
-        _rateExerciseState.value = null
+    fun makeExercisePublic(id: Long) {
+        _makePublicState.value = Resource.Loading()
+        viewModelScope.launch {
+            _makePublicState.value = repository.makeExercisePublic(id)
+        }
     }
 
-    fun clearDuplicateState() {
-        Log.d(TAG, "clearDuplicateState: Limpiando estado duplicación")
-        _duplicateExerciseState.value = null
-    }
+    // =========================================================
+    // Clear states
+    // =========================================================
 
-    fun clearMakePublicState() {
-        Log.d(TAG, "clearMakePublicState: Limpiando estado hacer público")
-        _makePublicState.value = null
-    }
-
-    fun clearDetailState() {
-        Log.d(TAG, "clearDetailState: Limpiando estado detalle")
-        _exerciseDetailState.value = null
-    }
+    fun clearCreateState()      { _createExerciseState.value = null }
+    fun clearUpdateState()      { _updateExerciseState.value = null }
+    fun clearDeleteState()      { _deleteExerciseState.value = null }
+    fun clearToggleState()      { _toggleExerciseState.value = null }
+    fun clearRateState()        { _rateExerciseState.value = null }
+    fun clearDuplicateState()   { _duplicateExerciseState.value = null }
+    fun clearMakePublicState()  { _makePublicState.value = null }
+    fun clearDetailState()      { _exerciseDetailState.value = null }
 }

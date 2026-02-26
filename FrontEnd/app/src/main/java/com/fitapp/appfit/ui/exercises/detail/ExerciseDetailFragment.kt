@@ -66,7 +66,10 @@ class ExerciseDetailFragment : Fragment() {
 
         exerciseViewModel.toggleExerciseState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
-                is Resource.Success -> loadExerciseDetails()
+                is Resource.Success -> {
+                    exerciseViewModel.clearToggleState()
+                    loadExerciseDetails()
+                }
                 is Resource.Error -> showError(resource.message ?: "Error al cambiar estado")
                 else -> {}
             }
@@ -74,7 +77,10 @@ class ExerciseDetailFragment : Fragment() {
 
         exerciseViewModel.deleteExerciseState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
-                is Resource.Success -> findNavController().navigateUp()
+                is Resource.Success -> {
+                    exerciseViewModel.clearDeleteState()
+                    findNavController().navigateUp()
+                }
                 is Resource.Error -> showError(resource.message ?: "Error al eliminar")
                 else -> {}
             }
@@ -82,7 +88,10 @@ class ExerciseDetailFragment : Fragment() {
 
         exerciseViewModel.makePublicState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
-                is Resource.Success -> loadExerciseDetails()
+                is Resource.Success -> {
+                    exerciseViewModel.clearMakePublicState()
+                    loadExerciseDetails()
+                }
                 is Resource.Error -> showError(resource.message ?: "Error")
                 else -> {}
             }
@@ -90,17 +99,18 @@ class ExerciseDetailFragment : Fragment() {
     }
 
     private fun loadExerciseDetails() {
-        exerciseViewModel.getExerciseByIdWithRelations(args.exerciseId)
+        // ✅ CAMBIADO: getExerciseByIdWithRelations → getExerciseById (ya devuelve todo)
+        exerciseViewModel.getExerciseById(args.exerciseId)
     }
 
     private fun displayExerciseDetails(exercise: ExerciseResponse) {
         binding.tvExerciseName.text = exercise.name
         binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
         binding.tvExerciseDescription.text = exercise.description ?: "Sin descripción"
-        binding.tvSport.text = exercise.sportName ?: "—"
-        binding.tvCreator.text = exercise.createdByEmail ?: "—"
 
-        // Visibilidad — sin emojis
+        // ✅ CAMBIADO: sportName → sports Map, mostramos todos los deportes
+        binding.tvSport.text = exercise.sports.values.joinToString(", ").ifEmpty { "—" }
+
         binding.tvVisibility.text = if (exercise.isPublic == true) "Público" else "Personal"
         binding.tvVisibility.setTextColor(
             if (exercise.isPublic == true)
@@ -109,7 +119,6 @@ class ExerciseDetailFragment : Fragment() {
                 resources.getColor(R.color.text_secondary_dark, null)
         )
 
-        // Estado — sin emojis
         val isActive = exercise.isActive == true
         binding.tvStatus.text = if (isActive) "Activo" else "Inactivo"
         binding.tvStatus.setTextColor(
@@ -118,11 +127,9 @@ class ExerciseDetailFragment : Fragment() {
         )
         binding.btnToggleStatus.text = if (isActive) "Pausar" else "Activar"
 
-        // Estadísticas — sin emojis
         binding.tvUsage.text = (exercise.usageCount ?: 0).toString()
         binding.tvRating.text = String.format("%.1f", exercise.rating ?: 0.0)
 
-        // Fechas
         binding.tvCreatedAt.text = "Creado: ${DateUtils.formatForDisplay(exercise.createdAt)}"
         binding.tvUpdatedAt.text = "Actualizado: ${DateUtils.formatForDisplay(exercise.updatedAt)}"
         binding.tvLastUsed.text = "Último uso: ${
@@ -130,54 +137,31 @@ class ExerciseDetailFragment : Fragment() {
             else "Nunca"
         }"
 
-        // Chips categorías
-        setupChips(
-            chipGroup = binding.chipGroupCategories,
-            items = exercise.categoryNames.toList(),
-            emptyView = binding.tvNoCategories
-        )
+        setupChips(binding.chipGroupCategories, exercise.categoryNames.toList(), binding.tvNoCategories)
+        setupChips(binding.chipGroupParameters, exercise.supportedParameterNames.toList(), binding.tvNoParameters)
 
-        // Chips parámetros — mismo color dorado, consistente con categorías
-        setupChips(
-            chipGroup = binding.chipGroupParameters,
-            items = exercise.supportedParameterNames.toList(),
-            emptyView = binding.tvNoParameters
-        )
-
-        // Mostrar editar solo si el ejercicio es personal
-        binding.btnEdit.visibility =
-            if (exercise.isPublic == false) View.VISIBLE else View.GONE
-        binding.btnDelete.visibility =
-            if (exercise.isPublic == false) View.VISIBLE else View.GONE
+        binding.btnEdit.visibility = if (exercise.isPublic == false) View.VISIBLE else View.GONE
+        binding.btnDelete.visibility = if (exercise.isPublic == false) View.VISIBLE else View.GONE
     }
 
-    /**
-     * Crea chips uniformes con estilo dorado para cualquier lista de strings.
-     * Esto reemplaza los dos métodos separados setupCategoryChips / setupParameterChips
-     * que usaban colores distintos (gold vs blue_500).
-     */
     private fun setupChips(
         chipGroup: com.google.android.material.chip.ChipGroup,
         items: List<String>,
         emptyView: android.widget.TextView
     ) {
         chipGroup.removeAllViews()
-
         if (items.isEmpty()) {
             emptyView.visibility = View.VISIBLE
             chipGroup.visibility = View.GONE
             return
         }
-
         emptyView.visibility = View.GONE
         chipGroup.visibility = View.VISIBLE
-
         items.forEach { label ->
             val chip = Chip(requireContext()).apply {
                 text = label
                 isCheckable = false
                 isClickable = false
-                // Fondo dorado con texto oscuro — igual que los badges del resto de la app
                 setChipBackgroundColorResource(R.color.gold_primary)
                 setTextColor(resources.getColor(android.R.color.black, null))
                 chipStrokeWidth = 0f
