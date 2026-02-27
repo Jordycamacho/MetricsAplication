@@ -132,7 +132,7 @@ class ExerciseDetailFragment : Fragment() {
                 if (isActive) R.color.gold_primary else R.color.text_secondary_dark, null
             )
         )
-        binding.btnToggleStatus.text = if (isActive) "Pausar" else "Activar"
+        binding.btnToggleStatus.text = if (isActive) "Desactivar" else "Activar"
 
         // ── Estadísticas ──────────────────────────────────────────────────────
         binding.tvUsage.text  = (exercise.usageCount ?: 0).toString()
@@ -161,10 +161,10 @@ class ExerciseDetailFragment : Fragment() {
             binding.tvNoParameters
         )
 
-        // ── Botones editar/eliminar solo en ejercicios personales ─────────────
         val canEdit = exercise.isPublic == false
         binding.btnEdit.visibility   = if (canEdit) View.VISIBLE else View.GONE
         binding.btnDelete.visibility = if (canEdit) View.VISIBLE else View.GONE
+        binding.btnToggleStatus.visibility = if (canEdit) View.VISIBLE else View.GONE
     }
 
     private fun setupChips(

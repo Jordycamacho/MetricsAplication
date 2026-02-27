@@ -8,13 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.databinding.ItemExerciseBinding
 import com.fitapp.appfit.response.exercise.response.ExerciseResponse
-import com.fitapp.appfit.utils.DateUtils
 
 class ExerciseAdapter(
     private val onItemClick: (ExerciseResponse) -> Unit,
-    private val onEditClick: (ExerciseResponse) -> Unit,
-    private val onDeleteClick: (ExerciseResponse) -> Unit,
-    private val onToggleStatusClick: (ExerciseResponse) -> Unit,
     private val isAdminMode: Boolean = false
 ) : ListAdapter<ExerciseResponse, ExerciseAdapter.ExerciseViewHolder>(ExerciseDiffCallback()) {
 
@@ -53,38 +49,17 @@ class ExerciseAdapter(
         fun bind(exercise: ExerciseResponse) {
             binding.tvExerciseName.text = exercise.name
             binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
-            binding.tvExerciseDescription.text = exercise.description ?: "Sin descripción"
-            binding.tvExerciseSport.text = exercise.sports.values.joinToString(", ").ifEmpty { "—" }
-            binding.tvExerciseCategories.text = if (exercise.categoryNames.isEmpty()) "Sin categorías"
-            else exercise.categoryNames.joinToString(", ")
-
-            // Parámetros
-            binding.tvExerciseParameters.text = if (exercise.supportedParameterNames.isEmpty()) "Sin parámetros"
-            else "${exercise.supportedParameterNames.size} parámetros"
 
             binding.tvExerciseVisibility.text = if (exercise.isPublic == true) "Público" else "Personal"
 
             val isActive = exercise.isActive == true
-            binding.tvExerciseStatus.text = if (isActive) "Activo" else "Inactivo"
-            binding.btnToggleStatus.text = if (isActive) "Pausar" else "Activar"
 
-            binding.tvExerciseUsageCount.text = "${exercise.usageCount ?: 0} usos"
             binding.tvExerciseRating.text = String.format("%.1f", exercise.rating ?: 0.0)
 
-            binding.tvExerciseLastUsed.text = if (!exercise.lastUsedAt.isNullOrEmpty())
-                "Último uso: ${DateUtils.formatForDisplay(exercise.lastUsedAt)}"
-            else "Nunca usado"
-
-            val canEdit = exercise.isPublic == false || isAdminMode
-            binding.btnEditExercise.visibility = if (canEdit) View.VISIBLE else View.GONE
-            binding.btnDeleteExercise.visibility = if (canEdit) View.VISIBLE else View.GONE
             binding.btnMakePublic.visibility =
                 if (isAdminMode && exercise.isPublic == false) View.VISIBLE else View.GONE
 
             binding.root.setOnClickListener { onItemClick(exercise) }
-            binding.btnEditExercise.setOnClickListener { onEditClick(exercise) }
-            binding.btnDeleteExercise.setOnClickListener { onDeleteClick(exercise) }
-            binding.btnToggleStatus.setOnClickListener { onToggleStatusClick(exercise) }
         }
     }
 

@@ -547,18 +547,7 @@
                 app:backgroundTint="@color/gold_primary"
                 app:cornerRadius="12dp"
                 android:elevation="0dp" />
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/badw_ssddadaave"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="CREAR EJERCICIO"
-                android:textColor="#121212"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.05"
-                app:backgroundTint="@color/gold_primary"
-                app:cornerRadius="12dp"
-                android:elevation="0dp" />
+
 
         </LinearLayout>
     </ScrollView>

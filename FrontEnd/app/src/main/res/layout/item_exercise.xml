@@ -18,20 +18,20 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Nombre + badge tipo -->
+        <!-- Línea 1: Nombre + badge tipo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="4dp">
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/tv_exercise_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Nombre del Ejercicio"
+                android:text="Nombre del ejercicio"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary_dark"
@@ -50,219 +50,79 @@
                 android:paddingVertical="4dp"
                 android:background="@drawable/badge_predefined"
                 android:letterSpacing="0.05" />
-
         </LinearLayout>
 
-        <!-- Deporte · Creador -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="6dp">
-
-            <TextView
-                android:id="@+id/tv_exercise_sport"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Deporte"
-                android:textSize="12sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="10dp"
-                android:background="@color/divider_dark"
-                android:layout_marginHorizontal="8dp" />
-
-            <TextView
-                android:id="@+id/tv_exercise_created_by"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Creado por"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-        </LinearLayout>
-
-        <!-- Descripción -->
+        <!-- Línea 2: Deportes (máx 3) -->
         <TextView
-            android:id="@+id/tv_exercise_description"
+            android:id="@+id/tv_exercise_sports"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Descripción del ejercicio"
+            android:text="Deportes: —"
             android:textSize="13sp"
-            android:textColor="@color/text_secondary_dark"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:lineSpacingMultiplier="1.3"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Categorías y parámetros -->
-        <TextView
-            android:id="@+id/tv_exercise_categories"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Categorías: —"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary_dark"
+            android:textColor="@color/gold_primary"
             android:maxLines="1"
             android:ellipsize="end"
-            android:layout_marginBottom="2dp" />
+            android:layout_marginBottom="6dp" />
 
-        <TextView
-            android:id="@+id/tv_exercise_parameters"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Parámetros: —"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary_dark"
-            android:layout_marginBottom="10dp" />
-
-        <!-- Separador -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#252525"
-            android:layout_marginBottom="10dp" />
-
-        <!-- Fila inferior: badges + contadores + botones -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <!-- Visibilidad -->
-            <TextView
-                android:id="@+id/tv_exercise_visibility"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Personal"
-                android:textSize="11sp"
-                android:textColor="@color/text_secondary_dark" />
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="10dp"
-                android:background="@color/divider_dark"
-                android:layout_marginHorizontal="8dp" />
-
-            <!-- Estado -->
-            <TextView
-                android:id="@+id/tv_exercise_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Activo"
-                android:textSize="11sp"
-                android:textColor="@color/text_secondary_dark" />
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="10dp"
-                android:background="@color/divider_dark"
-                android:layout_marginHorizontal="8dp" />
-
-            <TextView
-                android:id="@+id/tv_exercise_usage_count"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0 usos"
-                android:textSize="11sp"
-                android:textColor="@color/text_secondary_dark" />
-
-            <!-- Botones -->
-            <TextView
-                android:id="@+id/btn_toggle_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pausar"
-                android:textSize="11sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:paddingVertical="5dp"
-                android:paddingHorizontal="12dp"
-                android:background="@drawable/button_edit_background" />
-
-            <TextView
-                android:id="@+id/btn_edit_exercise"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Editar"
-                android:textSize="11sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:paddingVertical="5dp"
-                android:paddingHorizontal="12dp"
-                android:background="@drawable/button_edit_background"
-                android:layout_marginStart="6dp" />
-
-            <TextView
-                android:id="@+id/btn_delete_exercise"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Eliminar"
-                android:textSize="11sp"
-                android:textColor="@color/red"
-                android:textStyle="bold"
-                android:paddingVertical="5dp"
-                android:paddingHorizontal="12dp"
-                android:background="@drawable/button_delete_background"
-                android:layout_marginStart="6dp" />
-
-        </LinearLayout>
-
-        <!-- Fila rating + última vez (secundaria, discreta) -->
+        <!-- Línea 3: Métricas en fila horizontal -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="8dp">
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tv_exercise_usage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 usos"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary_dark" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="12dp"
+                android:background="@color/divider_dark"
+                android:layout_marginHorizontal="8dp" />
 
             <TextView
                 android:id="@+id/tv_exercise_rating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0.0 valoración"
-                android:textSize="11sp"
-                android:textColor="#555555" />
+                android:text="0.0"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary_dark" />
 
             <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_width="1dp"
+                android:layout_height="12dp"
+                android:background="@color/divider_dark"
+                android:layout_marginHorizontal="8dp" />
 
             <TextView
-                android:id="@+id/tv_exercise_last_used"
+                android:id="@+id/tv_exercise_visibility"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nunca usado"
-                android:textSize="11sp"
-                android:textColor="#555555" />
-
-            <!-- Botón hacer público (oculto por defecto) -->
-            <TextView
-                android:id="@+id/btn_make_public"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hacer público"
-                android:textSize="11sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:paddingVertical="5dp"
-                android:paddingHorizontal="12dp"
-                android:background="@drawable/button_edit_background"
-                android:layout_marginStart="8dp"
-                android:visibility="gone" />
-
+                android:text="Personal"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary_dark" />
         </LinearLayout>
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/btn_make_public"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hacer público"
+            android:textSize="12sp"
+            android:textColor="@color/gold_primary"
+            android:textStyle="bold"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="12dp"
+            android:background="@drawable/button_edit_background"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
 
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

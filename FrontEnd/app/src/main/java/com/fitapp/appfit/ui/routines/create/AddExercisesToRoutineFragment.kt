@@ -83,11 +83,8 @@ class AddExercisesToRoutineFragment : Fragment() {
     private fun setupRecyclerView() {
         exerciseAdapter = ExerciseAdapter(
             onItemClick = { exercise ->
-                selectExercise(exercise) // 🔥 SELECCIÓN ÚNICA
-            },
-            onEditClick = {},
-            onDeleteClick = { },
-            onToggleStatusClick = { }
+                selectExercise(exercise)
+            }
         )
 
         binding.recyclerExercises.apply {
@@ -157,7 +154,6 @@ class AddExercisesToRoutineFragment : Fragment() {
         binding.chipMy.setOnClickListener { loadMyExercises() }
         binding.chipAvailable.setOnClickListener { loadAvailableExercises() }
 
-        // 🔥 NUEVO BOTÓN PARA AGREGAR
         binding.btnAddExercise.setOnClickListener {
             addExerciseToRoutine()
         }
@@ -199,7 +195,6 @@ class AddExercisesToRoutineFragment : Fragment() {
             }
         })
 
-        // 🔥 OBSERVER PARA AGREGAR EJERCICIO
         routineExerciseViewModel.addExerciseState.observe(viewLifecycleOwner, Observer { resource ->
             when (resource) {
                 is Resource.Success -> {
@@ -207,7 +202,6 @@ class AddExercisesToRoutineFragment : Fragment() {
                     resource.data?.let { routineExercise ->
                         Toast.makeText(requireContext(), "✅ Ejercicio agregado", Toast.LENGTH_SHORT).show()
 
-                        // 🔥 NAVEGAR A CONFIGURAR SETS
                         val action = AddExercisesToRoutineFragmentDirections
                             .actionAddExercisesToRoutineToConfigureSets(routineExercise.id)
                         findNavController().navigate(action)
@@ -299,7 +293,6 @@ class AddExercisesToRoutineFragment : Fragment() {
         exerciseViewModel.searchAvailableExercises(filterRequest)
     }
 
-    // 🔥 SELECCIÓN ÚNICA DE EJERCICIO
     private fun selectExercise(exercise: ExerciseResponse) {
         selectedExercise = exercise
         binding.btnAddExercise.visibility = View.VISIBLE
@@ -307,7 +300,6 @@ class AddExercisesToRoutineFragment : Fragment() {
         Toast.makeText(requireContext(), "Seleccionado: ${exercise.name}", Toast.LENGTH_SHORT).show()
     }
 
-    // 🔥 AGREGAR EJERCICIO A LA RUTINA
     private fun addExerciseToRoutine() {
         val exercise = selectedExercise
         if (exercise == null) {

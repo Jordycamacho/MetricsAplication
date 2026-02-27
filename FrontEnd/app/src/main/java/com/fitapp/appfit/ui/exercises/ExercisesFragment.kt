@@ -51,9 +51,6 @@ class ExercisesFragment : Fragment() {
     private fun setupRecyclerView() {
         exerciseAdapter = ExerciseAdapter(
             onItemClick = { exercise -> navigateToExerciseDetail(exercise) },
-            onEditClick = { exercise -> navigateToEditExercise(exercise) },
-            onDeleteClick = { exercise -> showDeleteConfirmation(exercise) },
-            onToggleStatusClick = { exercise -> toggleExerciseStatus(exercise) },
             isAdminMode = false
         )
         binding.recyclerExercises.apply {
@@ -64,7 +61,6 @@ class ExercisesFragment : Fragment() {
     }
 
     private fun setupChipListeners() {
-        // Fix: solo reaccionar cuando isChecked = true para evitar doble disparo
         binding.chipAll.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked && !isUpdatingChips) { currentFilter = "all"; loadExercises(reset = true) }
         }
@@ -216,32 +212,8 @@ class ExercisesFragment : Fragment() {
         }
     }
 
-    private fun navigateToEditExercise(exercise: ExerciseResponse) {
-        try {
-            findNavController().navigate(
-                ExercisesFragmentDirections.actionNavigationExercisesToEditExercise(exercise.id)
-            )
-        } catch (e: Exception) {
-            findNavController().navigate(R.id.action_navigation_exercises_to_edit_exercise,
-                Bundle().apply { putLong("exerciseId", exercise.id) })
-        }
-    }
-
     private fun navigateToCreateExercise() {
         findNavController().navigate(R.id.navigation_create_exercise)
-    }
-
-    private fun showDeleteConfirmation(exercise: ExerciseResponse) {
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Eliminar ejercicio")
-            .setMessage("¿Eliminar '${exercise.name}'? Esta acción no se puede deshacer.")
-            .setPositiveButton("Eliminar") { _, _ -> exerciseViewModel.deleteExercise(exercise.id) }
-            .setNegativeButton("Cancelar") { d, _ -> d.dismiss() }
-            .show()
-    }
-
-    private fun toggleExerciseStatus(exercise: ExerciseResponse) {
-        exerciseViewModel.toggleExerciseStatus(exercise.id)
     }
 
     private fun showEmptyState(message: String) {
