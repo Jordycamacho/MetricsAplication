@@ -4,7 +4,6 @@ import com.google.gson.annotations.SerializedName
 
 data class SportFilterRequest(
     @SerializedName("search") val search: String? = null,
-    @SerializedName("category") val category: String? = null,
     @SerializedName("isPredefined") val isPredefined: Boolean? = null,
     @SerializedName("sourceType") val sourceType: String? = null,
     @SerializedName("createdBy") val createdBy: Long? = null,

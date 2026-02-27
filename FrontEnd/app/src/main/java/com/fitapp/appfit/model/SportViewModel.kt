@@ -17,8 +17,6 @@ import kotlinx.coroutines.launch
 
 class SportViewModel : ViewModel() {
     private val repository = SportRepository()
-
-    // Estados para listas de deportes
     private val _sportsState = MutableLiveData<Resource<List<SportResponse>>>()
     val sportsState: LiveData<Resource<List<SportResponse>>> = _sportsState
 
@@ -27,8 +25,6 @@ class SportViewModel : ViewModel() {
 
     private val _userSportsState = MutableLiveData<Resource<List<SportResponse>>>()
     val userSportsState: LiveData<Resource<List<SportResponse>>> = _userSportsState
-
-    // Estados para listas paginadas
     private val _sportsPageState = MutableLiveData<Resource<PageResponse<SportResponse>>>()
     val sportsPageState: LiveData<Resource<PageResponse<SportResponse>>> = _sportsPageState
 
@@ -38,20 +34,17 @@ class SportViewModel : ViewModel() {
     private val _userSportsPageState = MutableLiveData<Resource<PageResponse<SportResponse>>>()
     val userSportsPageState: LiveData<Resource<PageResponse<SportResponse>>> = _userSportsPageState
 
-    // Estado para creación y eliminación
     private val _createSportState = MutableLiveData<Resource<SportResponse>?>()
     val createSportState: LiveData<Resource<SportResponse>?> = _createSportState
 
     private val _deleteSportState = MutableLiveData<Resource<Unit>?>()
     val deleteSportState: LiveData<Resource<Unit>?> = _deleteSportState
 
-    // Estado para categorías
     private val _categoriesState = MutableLiveData<Resource<List<String>>>()
     val categoriesState: LiveData<Resource<List<String>>> = _categoriesState
 
     private val _allSportsState = MutableLiveData<Resource<List<SportResponse>>>()
     val allSportsState: LiveData<Resource<List<SportResponse>>> = _allSportsState
-    // Función para obtener todos los deportes
     fun getSports() {
         _sportsState.value = Resource.Loading()
         viewModelScope.launch {
@@ -59,7 +52,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para obtener deportes predefinidos
     fun getPredefinedSports() {
         _predefinedSportsState.value = Resource.Loading()
         viewModelScope.launch {
@@ -67,7 +59,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para obtener deportes del usuario
     fun getUserSports() {
         _userSportsState.value = Resource.Loading()
         viewModelScope.launch {
@@ -75,16 +66,14 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para crear un deporte personalizado
-    fun createCustomSport(name: String, category: String, parameters: Map<String, String>) {
+    fun createCustomSport(name: String, parameters: Map<String, String> = emptyMap()) {
         _createSportState.value = Resource.Loading()
         viewModelScope.launch {
-            val sportRequest = SportRequest(name, parameters, category, "USER_CREATED")
+            val sportRequest = SportRequest(name, parameters, "USER_CREATED")
             _createSportState.value = repository.createCustomSport(sportRequest)
         }
     }
 
-    // Función para eliminar un deporte personalizado
     fun deleteCustomSport(id: Long) {
         _deleteSportState.value = Resource.Loading()
         viewModelScope.launch {
@@ -92,7 +81,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para búsqueda paginada con filtros
     fun searchSports(filterRequest: SportFilterRequest) {
         _sportsPageState.value = Resource.Loading()
         viewModelScope.launch {
@@ -104,19 +92,16 @@ class SportViewModel : ViewModel() {
         _allSportsState.value = Resource.Loading()
         viewModelScope.launch {
             try {
-                // Intentar obtener predefinidos primero
                 val predefinedResult = repository.getPredefinedSports()
 
                 val combinedList = mutableListOf<SportResponse>()
 
-                // Agregar predefinidos si se cargaron
                 if (predefinedResult is Resource.Success) {
                     predefinedResult.data?.let { sports ->
                         combinedList.addAll(sports)
                     }
                 }
 
-                // Intentar obtener personales, si falla continuar con predefinidos
                 try {
                     val userResult = repository.getUserSports()
                     if (userResult is Resource.Success) {
@@ -125,11 +110,9 @@ class SportViewModel : ViewModel() {
                         }
                     } else if (userResult is Resource.Error) {
                         Log.e("SportViewModel", "Error cargando deportes personales: ${userResult.message}")
-                        // Continuar solo con predefinidos
                     }
                 } catch (e: Exception) {
                     Log.e("SportViewModel", "Excepción cargando deportes personales: ${e.message}")
-                    // Continuar solo con predefinidos
                 }
 
                 _allSportsState.value = Resource.Success(combinedList)
@@ -139,7 +122,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para búsqueda paginada de predefinidos
     fun searchPredefinedSports(filterRequest: SportFilterRequest) {
         _predefinedSportsPageState.value = Resource.Loading()
         viewModelScope.launch {
@@ -147,7 +129,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para búsqueda paginada de personales
     fun searchUserSports(filterRequest: SportFilterRequest) {
         _userSportsPageState.value = Resource.Loading()
         viewModelScope.launch {
@@ -155,7 +136,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para búsqueda rápida
     fun quickSearch(
         search: String?,
         category: String?,
@@ -170,7 +150,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Función para obtener categorías
     fun getCategories() {
         _categoriesState.value = Resource.Loading()
         viewModelScope.launch {
@@ -178,7 +157,6 @@ class SportViewModel : ViewModel() {
         }
     }
 
-    // Limpiar estados
     fun clearCreateState() {
         _createSportState.value = null
     }

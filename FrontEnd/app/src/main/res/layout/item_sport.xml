@@ -51,16 +51,6 @@
 
         </LinearLayout>
 
-        <!-- Categoría -->
-        <TextView
-            android:id="@+id/tv_sport_category"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Categoría"
-            android:textSize="13sp"
-            android:textColor="@color/text_secondary_dark"
-            android:layout_marginBottom="10dp" />
-
         <!-- Separador -->
         <View
             android:layout_width="match_parent"

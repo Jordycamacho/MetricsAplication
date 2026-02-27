@@ -17,17 +17,13 @@ class SportAdapter(
 
     inner class SportViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvName: TextView = itemView.findViewById(R.id.tv_sport_name)
-        private val tvCategory: TextView = itemView.findViewById(R.id.tv_sport_category)
         private val tvType: TextView = itemView.findViewById(R.id.tv_sport_type)
         private val btnDelete: TextView = itemView.findViewById(R.id.btn_delete_sport)
 
         fun bind(sport: SportResponse) {
             tvName.text = sport.name
 
-            tvCategory.text = if (sport.category.isNullOrEmpty()) "Sin categoría"
-            else sport.category
-
-            tvType.text = if (sport.isPredefined) "PRE" else "MÍO"
+            tvType.text = if (sport.isPredefined) "Público" else "Personal"
 
             btnDelete.visibility = if (sport.isPredefined) View.GONE else View.VISIBLE
 
@@ -52,7 +48,6 @@ class SportAdapter(
         holder.bind(getItem(position))
     }
 
-    // Mantener compatibilidad con código existente que usa updateList()
     fun updateList(newSports: List<SportResponse>) {
         submitList(newSports)
     }

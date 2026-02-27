@@ -103,7 +103,6 @@ class SportsFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     Toast.makeText(requireContext(), "Deporte creado", Toast.LENGTH_SHORT).show()
-                    // Cambiar a "Mis deportes" sin disparar doble carga
                     isUpdatingChips = true
                     currentFilter = "custom"
                     isUpdatingChips = false
@@ -153,7 +152,6 @@ class SportsFragment : Fragment() {
     }
 
     private fun showSportDetail(sport: SportResponse) {
-        // Predefinidos y personalizados: por ahora sin acción adicional
         // TODO: navegar a detalle o mostrar BottomSheet si se necesita
     }
 
@@ -165,11 +163,10 @@ class SportsFragment : Fragment() {
             .setView(dialogBinding.root)
             .setPositiveButton("Crear") { dialog, _ ->
                 val name = dialogBinding.etSportName.text.toString().trim()
-                val category = dialogBinding.etSportCategory.text.toString().trim()
                 if (name.isEmpty()) {
                     Toast.makeText(requireContext(), "El nombre es obligatorio", Toast.LENGTH_SHORT).show()
                 } else {
-                    sportViewModel.createCustomSport(name, category, emptyMap())
+                    sportViewModel.createCustomSport(name, emptyMap())
                     dialog.dismiss()
                 }
             }

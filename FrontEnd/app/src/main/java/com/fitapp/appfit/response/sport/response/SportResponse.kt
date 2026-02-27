@@ -7,6 +7,5 @@ data class SportResponse(
     @SerializedName("name") val name: String,
     @SerializedName("isPredefined") val isPredefined: Boolean,
     @SerializedName("parameterTemplate") val parameterTemplate: Map<String, String>?,
-    @SerializedName("category") val category: String?,
     @SerializedName("sourceType") val sourceType: String? = null
 )
