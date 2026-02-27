@@ -7,17 +7,22 @@ import com.fitapp.backend.application.dto.category.response.ExerciseCategoryResp
 import com.fitapp.backend.application.ports.input.ExerciseCategoryUseCase;
 import com.fitapp.backend.application.ports.output.ExerciseCategoryPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
+import com.fitapp.backend.domain.exception.CategoryDuplicateException;
+import com.fitapp.backend.domain.exception.CategoryNotFoundException;
+import com.fitapp.backend.domain.exception.CategoryOwnershipException;
+import com.fitapp.backend.domain.exception.PredefinedCategoryException;
 import com.fitapp.backend.domain.model.ExerciseCategoryModel;
-
-import jakarta.persistence.EntityNotFoundException;
+import com.fitapp.backend.infrastructure.config.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +35,9 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
 
     private final ExerciseCategoryPersistencePort categoryPersistencePort;
     private final UserPersistencePort userPersistencePort;
+    private final CacheService cacheService;
+
+    // ── CRUD ──────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
@@ -39,14 +47,13 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         var user = userPersistencePort.findByEmail(userEmail)
                 .orElseThrow(() -> {
                     log.error("USER_NOT_FOUND_FOR_CATEGORY | email={}", userEmail);
-                    return new RuntimeException("Usuario no encontrado");
+                    return new com.fitapp.backend.domain.exception.UserNotFoundException(
+                            "Usuario no encontrado: " + userEmail);
                 });
 
-        // Validar unicidad del nombre
-        boolean nameExists = categoryPersistencePort.findByNameAndOwnerId(request.getName(), user.getId()).isPresent();
-        if (nameExists) {
-            log.error("CATEGORY_NAME_DUPLICATE | user={} | name={}", userEmail, request.getName());
-            throw new RuntimeException("Ya existe una categoría con este nombre");
+        if (categoryPersistencePort.findByNameAndOwnerId(request.getName(), user.getId()).isPresent()) {
+            log.warn("CATEGORY_NAME_DUPLICATE | user={} | name={}", userEmail, request.getName());
+            throw new CategoryDuplicateException(request.getName(), userEmail);
         }
 
         ExerciseCategoryModel model = new ExerciseCategoryModel();
@@ -66,6 +73,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
 
         ExerciseCategoryModel saved = categoryPersistencePort.save(model);
 
+        cacheService.clearUserCategoryCache(saved.getId(), userEmail);
         log.info("SERVICE_CREATE_CATEGORY_SUCCESS | id={} | user={}", saved.getId(), userEmail);
         return saved;
     }
@@ -76,28 +84,25 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_UPDATE_CATEGORY_START | user={} | categoryId={}", userEmail, id);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
 
         var existingCategory = categoryPersistencePort.findById(id)
                 .orElseThrow(() -> {
-                    log.error("CATEGORY_NOT_FOUND | id={}", id);
-                    return new RuntimeException("Categoría no encontrada");
+                    log.warn("CATEGORY_NOT_FOUND_FOR_UPDATE | id={}", id);
+                    return new CategoryNotFoundException(id);
                 });
 
-        // Validar permisos (solo dueño puede modificar)
         if (!existingCategory.getOwnerId().equals(user.getId())) {
-            log.error("CATEGORY_UPDATE_UNAUTHORIZED | user={} | categoryId={} | ownerId={}",
-                    userEmail, id, existingCategory.getOwnerId());
-            throw new RuntimeException("No tienes permisos para modificar esta categoría");
+            log.warn("CATEGORY_UPDATE_UNAUTHORIZED | user={} | categoryId={}", userEmail, id);
+            throw new CategoryOwnershipException(id, userEmail);
         }
 
-        // Validar que no sea predefinida
         if (Boolean.TRUE.equals(existingCategory.getIsPredefined())) {
-            log.error("CATEGORY_UPDATE_PREDEFINED | categoryId={} is predefined", id);
-            throw new RuntimeException("No se pueden modificar categorías predefinidas");
+            log.warn("CATEGORY_UPDATE_PREDEFINED | categoryId={}", id);
+            throw new PredefinedCategoryException(id);
         }
 
-        // Actualizar campos
         existingCategory.setName(request.getName());
         existingCategory.setDescription(request.getDescription());
         existingCategory
@@ -110,6 +115,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
 
         ExerciseCategoryModel updated = categoryPersistencePort.save(existingCategory);
 
+        cacheService.clearUserCategoryCache(id, userEmail);
         log.info("SERVICE_UPDATE_CATEGORY_SUCCESS | id={} | user={}", id, userEmail);
         return updated;
     }
@@ -120,36 +126,53 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_DELETE_CATEGORY_START | user={} | categoryId={}", userEmail, id);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
 
         var category = categoryPersistencePort.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new CategoryNotFoundException(id));
 
-        // Validar permisos
         if (!category.getOwnerId().equals(user.getId())) {
-            log.error("CATEGORY_DELETE_UNAUTHORIZED | user={} | categoryId={}", userEmail, id);
-            throw new RuntimeException("No tienes permisos para eliminar esta categoría");
+            log.warn("CATEGORY_DELETE_UNAUTHORIZED | user={} | categoryId={}", userEmail, id);
+            throw new CategoryOwnershipException(id, userEmail);
         }
 
-        // Validar que no sea predefinida
         if (Boolean.TRUE.equals(category.getIsPredefined())) {
-            log.error("CATEGORY_DELETE_PREDEFINED | categoryId={} is predefined", id);
-            throw new RuntimeException("No se pueden eliminar categorías predefinidas");
+            log.warn("CATEGORY_DELETE_PREDEFINED | categoryId={}", id);
+            throw new PredefinedCategoryException(id);
         }
 
         categoryPersistencePort.delete(id);
 
+        cacheService.clearUserCategoryCache(id, userEmail);
         log.info("SERVICE_DELETE_CATEGORY_SUCCESS | id={} | user={}", id, userEmail);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "category-by-id", key = "#id")
+    public ExerciseCategoryModel getCategoryById(Long id, String userEmail) {
+        log.debug("SERVICE_GET_CATEGORY_BY_ID | id={} | user={}", id, userEmail);
+        return categoryPersistencePort.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+    }
+
+    // ── Consultas paginadas ───────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
     public ExerciseCategoryPageResponse getAllCategoriesPaginated(ExerciseCategoryFilterRequest filterRequest) {
-        log.info("SERVICE_GET_ALL_CATEGORIES | filters={}", filterRequest);
+        StopWatch sw = new StopWatch();
+        sw.start();
+        log.info("SERVICE_GET_ALL_CATEGORIES | search={} | isPredefined={}",
+                filterRequest.getSearch(), filterRequest.getIsPredefined());
 
         Pageable pageable = createPageable(filterRequest);
         Page<ExerciseCategoryModel> page = categoryPersistencePort.findByFilters(filterRequest, pageable);
 
+        sw.stop();
+        log.info("SERVICE_GET_ALL_CATEGORIES_SUCCESS | totalElements={} | timeMs={}",
+                page.getTotalElements(), sw.getTotalTimeMillis());
         return buildPageResponse(page);
     }
 
@@ -157,10 +180,13 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
     @Transactional(readOnly = true)
     public ExerciseCategoryPageResponse getMyCategoriesPaginated(String userEmail,
             ExerciseCategoryFilterRequest filterRequest) {
+        StopWatch sw = new StopWatch();
+        sw.start();
         log.info("SERVICE_GET_MY_CATEGORIES | user={}", userEmail);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
 
         filterRequest.setOwnerId(user.getId());
         filterRequest.setOnlyMine(true);
@@ -169,7 +195,28 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         Pageable pageable = createPageable(filterRequest);
         Page<ExerciseCategoryModel> page = categoryPersistencePort.findByFilters(filterRequest, pageable);
 
-        log.info("SERVICE_GET_MY_CATEGORIES_SUCCESS | user={} | count={}", userEmail, page.getTotalElements());
+        sw.stop();
+        log.info("SERVICE_GET_MY_CATEGORIES_SUCCESS | user={} | count={} | timeMs={}",
+                userEmail, page.getTotalElements(), sw.getTotalTimeMillis());
+        return buildPageResponse(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExerciseCategoryPageResponse getPredefinedCategoriesPaginated(ExerciseCategoryFilterRequest filterRequest) {
+        StopWatch sw = new StopWatch();
+        sw.start();
+        log.info("SERVICE_GET_PREDEFINED_CATEGORIES | search={}", filterRequest.getSearch());
+
+        filterRequest.setIsPredefined(true);
+        filterRequest.setIncludePredefined(true);
+
+        Pageable pageable = createPageable(filterRequest);
+        Page<ExerciseCategoryModel> page = categoryPersistencePort.findByFilters(filterRequest, pageable);
+
+        sw.stop();
+        log.info("SERVICE_GET_PREDEFINED_CATEGORIES_SUCCESS | count={} | timeMs={}",
+                page.getTotalElements(), sw.getTotalTimeMillis());
         return buildPageResponse(page);
     }
 
@@ -177,20 +224,161 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
     @Transactional(readOnly = true)
     public ExerciseCategoryPageResponse getAvailableCategoriesPaginated(String userEmail, Long sportId,
             ExerciseCategoryFilterRequest filterRequest) {
+        StopWatch sw = new StopWatch();
+        sw.start();
         log.info("SERVICE_GET_AVAILABLE_CATEGORIES | user={} | sportId={}", userEmail, sportId);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
 
         Pageable pageable = createPageable(filterRequest);
-        Page<ExerciseCategoryModel> page = categoryPersistencePort.findAvailableForUser(user.getId(), sportId,
-                pageable);
+        Page<ExerciseCategoryModel> page = categoryPersistencePort.findAvailableForUser(
+                user.getId(), sportId, pageable);
 
-        log.info("SERVICE_GET_AVAILABLE_CATEGORIES_SUCCESS | user={} | count={}", userEmail, page.getTotalElements());
+        sw.stop();
+        log.info("SERVICE_GET_AVAILABLE_CATEGORIES_SUCCESS | user={} | count={} | timeMs={}",
+                userEmail, page.getTotalElements(), sw.getTotalTimeMillis());
         return buildPageResponse(page);
     }
 
-    // Métodos auxiliares
+    // ── Operaciones específicas ───────────────────────────────────────────────
+
+    @Override
+    @Transactional
+    public void toggleCategoryStatus(Long id, String userEmail) {
+        log.info("SERVICE_TOGGLE_STATUS | categoryId={} | user={}", id, userEmail);
+
+        var user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
+
+        var category = categoryPersistencePort.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+
+        if (!category.getOwnerId().equals(user.getId())) {
+            throw new CategoryOwnershipException(id, userEmail);
+        }
+
+        if (Boolean.TRUE.equals(category.getIsPredefined())) {
+            throw new PredefinedCategoryException(id);
+        }
+
+        boolean newStatus = !Boolean.TRUE.equals(category.getIsActive());
+        category.setIsActive(newStatus);
+        category.setUpdatedAt(LocalDateTime.now());
+        categoryPersistencePort.save(category);
+
+        cacheService.clearUserCategoryCache(id, userEmail);
+        log.info("SERVICE_TOGGLE_STATUS_SUCCESS | categoryId={} | newStatus={}", id, newStatus);
+    }
+
+    @Override
+    @Transactional
+    public void toggleCategoryVisibility(Long id, String userEmail) {
+        log.info("SERVICE_TOGGLE_VISIBILITY | categoryId={} | user={}", id, userEmail);
+
+        var user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
+
+        var category = categoryPersistencePort.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+
+        if (!category.getOwnerId().equals(user.getId())) {
+            throw new CategoryOwnershipException(id, userEmail);
+        }
+
+        if (Boolean.TRUE.equals(category.getIsPredefined())) {
+            throw new PredefinedCategoryException(id);
+        }
+
+        boolean newVisibility = !Boolean.TRUE.equals(category.getIsPublic());
+        category.setIsPublic(newVisibility);
+        category.setUpdatedAt(LocalDateTime.now());
+        categoryPersistencePort.save(category);
+
+        cacheService.clearUserCategoryCache(id, userEmail);
+        log.info("SERVICE_TOGGLE_VISIBILITY_SUCCESS | categoryId={} | isPublic={}", id, newVisibility);
+    }
+
+    @Override
+    @Transactional
+    public void incrementCategoryUsage(Long categoryId) {
+        log.debug("SERVICE_INCREMENT_USAGE | categoryId={}", categoryId);
+        // No lanzamos excepción si no existe — es una operación de telemetría, no debe
+        // fallar el flujo principal
+        categoryPersistencePort.findById(categoryId).ifPresentOrElse(
+                category -> {
+                    categoryPersistencePort.incrementUsageCount(categoryId);
+                    // Limpiar solo la cache del ID para que se actualice el contador
+                    cacheService.clearUserCategoryCache(categoryId, null);
+                    log.debug("SERVICE_INCREMENT_USAGE_SUCCESS | categoryId={}", categoryId);
+                },
+                () -> log.warn("SERVICE_INCREMENT_USAGE_SKIP | categoryId={} not found", categoryId));
+    }
+
+    // ── Consultas de listas ───────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "available-categories", key = "#sportId != null ? #sportId : 'all'")
+    public List<ExerciseCategoryResponse> getCategoriesBySport(Long sportId) {
+        log.debug("SERVICE_GET_CATEGORIES_BY_SPORT | sportId={}", sportId);
+
+        ExerciseCategoryFilterRequest filter = new ExerciseCategoryFilterRequest();
+        filter.setSportId(sportId);
+        filter.setIsActive(true);
+        filter.setIncludePredefined(true);
+        filter.setPage(0);
+        filter.setSize(200); // Lista completa para uso en selects/dropdowns del móvil
+
+        Pageable pageable = createPageable(filter);
+        Page<ExerciseCategoryModel> page = categoryPersistencePort.findByFilters(filter, pageable);
+
+        log.debug("SERVICE_GET_CATEGORIES_BY_SPORT_SUCCESS | sportId={} | count={}",
+                sportId, page.getTotalElements());
+        return page.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "most-used-categories", key = "#limit")
+    public List<ExerciseCategoryResponse> getMostUsedCategories(int limit) {
+        log.debug("SERVICE_GET_MOST_USED | limit={}", limit);
+
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "usageCount"));
+        Page<ExerciseCategoryModel> page = categoryPersistencePort.findMostUsedCategories(pageable);
+
+        log.debug("SERVICE_GET_MOST_USED_SUCCESS | returned={}", page.getNumberOfElements());
+        return page.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ── Validaciones ─────────────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isCategoryNameAvailable(String name, String userEmail) {
+        log.debug("SERVICE_CHECK_NAME_AVAILABLE | name={} | user={}", name, userEmail);
+
+        var user = userPersistencePort.findByEmail(userEmail)
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
+
+        boolean takenByUser = categoryPersistencePort.findByNameAndOwnerId(name, user.getId()).isPresent();
+        boolean takenByPredefined = categoryPersistencePort.findByNameAndIsPredefined(name).isPresent();
+
+        boolean available = !takenByUser && !takenByPredefined;
+        log.debug("SERVICE_CHECK_NAME_AVAILABLE_RESULT | name={} | available={}", name, available);
+        return available;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private Pageable createPageable(ExerciseCategoryFilterRequest filterRequest) {
         Sort sort = Sort.by(filterRequest.getDirection(), filterRequest.getSortBy());
         return PageRequest.of(filterRequest.getPage(), filterRequest.getSize(), sort);
@@ -227,57 +415,5 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
                 .createdAt(model.getCreatedAt())
                 .updatedAt(model.getUpdatedAt())
                 .build();
-    }
-
-    @Override
-    public ExerciseCategoryModel getCategoryById(Long id, String userEmail) {
-        log.info("Getting category by ID: {} for user: {}", id, userEmail);
-
-        ExerciseCategoryModel category = categoryPersistencePort.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + id));
-
-        return category;
-    }
-
-    @Override
-    public ExerciseCategoryPageResponse getPredefinedCategoriesPaginated(ExerciseCategoryFilterRequest filterRequest) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPredefinedCategoriesPaginated'");
-    }
-
-    @Override
-    public void toggleCategoryStatus(Long id, String userEmail) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'toggleCategoryStatus'");
-    }
-
-    @Override
-    public void toggleCategoryVisibility(Long id, String userEmail) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'toggleCategoryVisibility'");
-    }
-
-    @Override
-    public void incrementCategoryUsage(Long categoryId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'incrementCategoryUsage'");
-    }
-
-    @Override
-    public List<ExerciseCategoryResponse> getCategoriesBySport(Long sportId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCategoriesBySport'");
-    }
-
-    @Override
-    public List<ExerciseCategoryResponse> getMostUsedCategories(int limit) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMostUsedCategories'");
-    }
-
-    @Override
-    public boolean isCategoryNameAvailable(String name, String userEmail) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isCategoryNameAvailable'");
     }
 }

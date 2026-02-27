@@ -68,7 +68,7 @@ public class ExerciseCategoryEntity {
     private SportEntity sport;
 
     @Column(name = "parent_category_id")
-    private Long parentCategoryId;
+    private Long parentCategoryId; // no se usa ni se va a usar 
 
     @Column(name = "display_order")
     private Integer displayOrder;

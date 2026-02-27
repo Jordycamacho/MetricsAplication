@@ -23,6 +23,7 @@ public class CacheConfig {
                                 .maximumSize(100)
                                 .recordStats());
 
+                // ── Routines ──────────────────────────────────────────────────────────
                 cacheManager.registerCustomCache("routines", Caffeine.newBuilder()
                                 .expireAfterWrite(10, TimeUnit.MINUTES)
                                 .maximumSize(100)
@@ -49,6 +50,8 @@ public class CacheConfig {
                                 .expireAfterWrite(30, TimeUnit.MINUTES)
                                 .maximumSize(10)
                                 .build());
+
+                // ── Sports ────────────────────────────────────────────────────────────
                 cacheManager.registerCustomCache("predefined-sports",
                                 Caffeine.newBuilder()
                                                 .expireAfterWrite(24, TimeUnit.HOURS)
@@ -69,6 +72,43 @@ public class CacheConfig {
                                                 .maximumSize(2000)
                                                 .recordStats()
                                                 .build());
+
+                // ── Categories ────────────────────────────────────────────────────────
+                cacheManager.registerCustomCache("predefined-categories",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(24, TimeUnit.HOURS)
+                                                .maximumSize(500)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("user-categories",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                .maximumSize(1000)
+                                                .recordStats()
+                                                .build());
+                                                
+                cacheManager.registerCustomCache("available-categories",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                                .maximumSize(1000)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("category-by-id",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(15, TimeUnit.MINUTES)
+                                                .maximumSize(2000)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("most-used-categories",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(30, TimeUnit.MINUTES)
+                                                .maximumSize(50)
+                                                .recordStats()
+                                                .build());
+
                 return cacheManager;
         }
 }
