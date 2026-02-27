@@ -64,7 +64,6 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
                 .map(parameterConverter::toDomain);
     }
 
-    @SuppressWarnings("unused")
     @Override
     @Cacheable(value = "parameters", key = "'filters_' + #filters.hashCode() + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<CustomParameterModel> findByFilters(CustomParameterFilterRequest filters, Pageable pageable) {
@@ -72,14 +71,8 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
                 filters.getSearch(), filters.getParameterType(), filters.getIsGlobal());
 
         Specification<CustomParameterEntity> spec = buildSpecification(filters);
-        Page<CustomParameterEntity> result = customParameterRepository.findByFilters(
-                filters.getSearch(),
-                filters.getParameterType(),
-                filters.getIsGlobal(),
-                filters.getIsActive(),
-                filters.getOwnerId(),
-                filters.getIsFavorite(),
-                pageable);
+
+        Page<CustomParameterEntity> result = customParameterRepository.findAll(spec, pageable);
 
         log.debug("PERSISTENCE_FILTER_RESULT | totalElements={} | totalPages={}",
                 result.getTotalElements(), result.getTotalPages());
@@ -128,7 +121,7 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
 
     @Override
     @Transactional
-    @CacheEvict(value = {"parameters", "parameterTypes"}, allEntries = true)
+    @CacheEvict(value = { "parameters", "parameterTypes" }, allEntries = true)
     public CustomParameterModel save(CustomParameterModel parameterModel) {
         log.debug("PERSISTENCE_SAVE_PARAMETER | name={} | type={} | isGlobal={}",
                 parameterModel.getName(), parameterModel.getParameterType(), parameterModel.getIsGlobal());
@@ -149,7 +142,7 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
 
     @Override
     @Transactional
-    @CacheEvict(value = {"parameters", "parameterTypes"}, allEntries = true)
+    @CacheEvict(value = { "parameters", "parameterTypes" }, allEntries = true)
     public void delete(Long id) {
         log.warn("PERSISTENCE_DELETE_PARAMETER | id={}", id);
         customParameterRepository.deleteById(id);
@@ -158,7 +151,7 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
 
     @Override
     @Transactional
-    @CacheEvict(value = "parameters", allEntries = true) 
+    @CacheEvict(value = "parameters", allEntries = true)
     public void incrementUsageCount(Long parameterId) {
         log.debug("PERSISTENCE_INCREMENT_USAGE_COUNT | parameterId={}", parameterId);
         customParameterRepository.incrementUsageCount(parameterId);
@@ -172,8 +165,7 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
                 String searchPattern = "%" + filters.getSearch().toLowerCase() + "%";
                 predicates.add(criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern)
-                ));
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern)));
             }
 
             if (filters.getParameterType() != null) {
