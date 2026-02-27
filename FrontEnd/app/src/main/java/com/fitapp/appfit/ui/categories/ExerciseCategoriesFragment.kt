@@ -1,15 +1,16 @@
 package com.fitapp.appfit.ui.categories
 
-import androidx.fragment.app.Fragment
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
@@ -23,19 +24,17 @@ import com.fitapp.appfit.utils.Resource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class ExerciseCategoriesFragment : Fragment() {
+
     private var _binding: FragmentExerciseCategoriesBinding? = null
     private val binding get() = _binding!!
+
     private val categoryViewModel: ExerciseCategoryViewModel by viewModels()
     private lateinit var categoryAdapter: ExerciseCategoryAdapter
 
-    // Filtro actual
-    private var currentFilter = "all" // "all", "my", "available"
-    private var currentSportId: Long? = null
+    private var currentFilter = "all"
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentExerciseCategoriesBinding.inflate(inflater, container, false)
         return binding.root
@@ -43,29 +42,20 @@ class ExerciseCategoriesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
-        setupClickListeners()
+        setupChips()
+        setupSearch()
+        setupFab()
         setupObservers()
-        setupSearchListener()
-
-        // Cargar categorías iniciales
         loadCategories()
     }
 
     private fun setupRecyclerView() {
         categoryAdapter = ExerciseCategoryAdapter(
-            onItemClick = { category ->
-                showCategoryDetail(category)
-            },
-            onEditClick = { category ->
-                editCategory(category)
-            },
-            onDeleteClick = { category ->
-                showDeleteConfirmation(category)
-            }
+            onItemClick = { showCategoryDetail(it) },
+            onEditClick = { editCategory(it) },
+            onDeleteClick = { showDeleteConfirmation(it) }
         )
-
         binding.recyclerCategories.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = categoryAdapter
@@ -73,200 +63,131 @@ class ExerciseCategoriesFragment : Fragment() {
         }
     }
 
-    private fun setupClickListeners() {
-        // Botón flotante para crear categoría
-        binding.fabCreateCategory.setOnClickListener {
-            navigateToCreateCategory()
-        }
+    private fun setupChips() {
+        binding.chipAll.setOnClickListener { currentFilter = "all"; loadCategories() }
+        binding.chipMy.setOnClickListener { currentFilter = "my"; loadCategories() }
+        binding.chipPredefined.setOnClickListener { currentFilter = "predefined"; loadCategories() }
+    }
 
-        // Filtros
-        binding.chipAll.setOnClickListener {
-            currentFilter = "all"
-            binding.chipAll.isChecked = true
-            binding.chipMy.isChecked = false
-            binding.chipAvailable.isChecked = false
-            loadCategories()
-        }
-
-        binding.chipMy.setOnClickListener {
-            currentFilter = "my"
-            binding.chipAll.isChecked = false
-            binding.chipMy.isChecked = true
-            binding.chipAvailable.isChecked = false
-            loadCategories()
-        }
-
-        binding.chipAvailable.setOnClickListener {
-            currentFilter = "available"
-            binding.chipAll.isChecked = false
-            binding.chipMy.isChecked = false
-            binding.chipAvailable.isChecked = true
-
-            // Aquí podrías mostrar un diálogo para seleccionar deporte
-            // Por ahora cargamos sin deporte (se cargará empty)
-            currentSportId = null
-            loadCategories()
+    private fun setupSearch() {
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) { loadCategories() }
+        })
+        binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) { loadCategories(); true } else false
         }
     }
 
-    private fun setupSearchListener() {
-        binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                performSearch()
-                true
-            } else {
-                false
-            }
+    private fun setupFab() {
+        binding.fabCreateCategory.setOnClickListener {
+            findNavController().navigate(R.id.navigation_create_category)
         }
     }
 
     private fun setupObservers() {
-        // Observar todas las categorías
-        categoryViewModel.allCategoriesState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleCategoriesResponse(it, "No hay categorías disponibles")
+        // FIX: cada observer actualiza la lista independientemente del filtro activo en ese momento
+        // El loadCategories() ya se encarga de llamar solo al método correcto según currentFilter
+        categoryViewModel.allCategoriesState.observe(viewLifecycleOwner) { resource ->
+            if (currentFilter == "all" || currentFilter == "predefined") {
+                resource?.let { handleResponse(it) }
             }
-        })
+        }
 
-        // Observar mis categorías
-        categoryViewModel.myCategoriesState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleCategoriesResponse(it, "No has creado categorías personalizadas")
+        categoryViewModel.myCategoriesState.observe(viewLifecycleOwner) { resource ->
+            if (currentFilter == "my") {
+                resource?.let { handleResponse(it) }
             }
-        })
+        }
 
-        // Observar categorías disponibles
-        categoryViewModel.availableCategoriesState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                handleCategoriesResponse(it, "No hay categorías disponibles para este deporte")
-            }
-        })
-
-        // Observar estado de eliminación
-        categoryViewModel.deleteCategoryState.observe(viewLifecycleOwner, Observer { resource ->
-            resource?.let {
-                when (it) {
-                    is Resource.Success -> {
-                        Toast.makeText(requireContext(), "✅ Categoría eliminada", Toast.LENGTH_SHORT).show()
-                        loadCategories() // Recargar lista
-                    }
-                    is Resource.Error -> {
-                        Toast.makeText(requireContext(), "❌ Error: ${it.message}", Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {}
+        // FIX DELETE: limpiar estado + recargar lista en el mismo observer
+        categoryViewModel.deleteCategoryState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    categoryViewModel.clearDeleteState()
+                    Toast.makeText(requireContext(), "Categoría eliminada", Toast.LENGTH_SHORT).show()
+                    loadCategories() // recarga la lista activa
                 }
+                is Resource.Error -> {
+                    categoryViewModel.clearDeleteState()
+                    Toast.makeText(requireContext(), resource.message ?: "Error al eliminar", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
             }
-        })
+        }
     }
 
-    private fun handleCategoriesResponse(resource: Resource<ExerciseCategoryPageResponse>, emptyMessage: String) {
+    private fun handleResponse(resource: Resource<ExerciseCategoryPageResponse>) {
         when (resource) {
             is Resource.Success -> {
                 hideLoading()
-                resource.data?.let { pageResponse ->
-                    val categories = pageResponse.content
-                    if (categories.isEmpty()) {
-                        showEmptyState(emptyMessage)
-                    } else {
-                        showCategoriesList()
-                        categoryAdapter.updateList(categories)
-                    }
-                }
+                val categories = resource.data?.content ?: emptyList()
+                if (categories.isEmpty()) showEmpty() else showList(categories)
             }
             is Resource.Error -> {
                 hideLoading()
-                showError(resource.message ?: "Error al cargar categorías")
-                showEmptyState("Error al cargar")
+                showEmpty()
+                binding.tvEmptyState.text = "Error al cargar"
+                binding.tvEmptySubtitle.text = resource.message ?: ""
             }
-            is Resource.Loading -> {
-                showLoading()
-            }
+            is Resource.Loading -> showLoading()
         }
     }
 
     private fun loadCategories() {
-        val searchQuery = binding.etSearch.text.toString().trim()
-
-        // Crear filtro con búsqueda si existe
-        val filterRequest = ExerciseCategoryFilterRequest(
-            search = searchQuery,
-            page = 0,
-            size = 20,
-            sortBy = "name",
-            direction = "ASC"
-        )
-
+        val query = binding.etSearch.text?.toString()?.trim()
         when (currentFilter) {
-            "all" -> {
-                categoryViewModel.searchAllCategories(filterRequest)
-            }
-            "my" -> {
-                // Para "mis categorías", usar onlyMine = true
-                val myFilter = filterRequest.copy(onlyMine = true, includePredefined = false)
-                categoryViewModel.searchMyCategories(myFilter)
-            }
-            "available" -> {
-                currentSportId?.let { sportId ->
-                    val sportFilter = filterRequest.copy(sportId = sportId)
-                    categoryViewModel.searchAvailableCategories(sportId, sportFilter)
-                } ?: run {
-                    // Para categorías disponibles sin deporte específico
-                    categoryViewModel.searchAllCategories(filterRequest)
-                }
-            }
-        }
-    }
-
-    private fun performSearch() {
-        loadCategories()
-    }
-
-    private fun navigateToCreateCategory() {
-        findNavController().navigate(R.id.navigation_create_category)
-    }
-
-    private fun showCategoryDetail(category: ExerciseCategoryResponse) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(category.name)
-            .setMessage(
-                """
-                Descripción: ${category.description ?: "No especificada"}
-                Tipo: ${if (category.isPredefined) "Predefinida" else "Personal"}
-                Visibilidad: ${if (category.isPublic) "Pública" else "Privada"}
-                Deporte: ${category.sportName ?: "Todos"}
-                Creado por: ${category.ownerName ?: "Sistema"}
-                Usos: ${category.usageCount}
-                Creado: ${category.createdAt}
-                Actualizado: ${category.updatedAt}
-                """.trimIndent()
+            "all" -> categoryViewModel.searchAllCategories(
+                ExerciseCategoryFilterRequest(search = query, page = 0, size = 50)
             )
-            .setPositiveButton("Aceptar", null)
-            .show()
+            "my" -> categoryViewModel.searchMyCategories(
+                ExerciseCategoryFilterRequest(
+                    search = query, onlyMine = true, includePredefined = false, page = 0, size = 50
+                )
+            )
+            "predefined" -> categoryViewModel.searchAllCategories(
+                ExerciseCategoryFilterRequest(
+                    search = query, isPredefined = true, includePredefined = true, page = 0, size = 50
+                )
+            )
+        }
     }
 
     private fun editCategory(category: ExerciseCategoryResponse) {
         if (category.isPredefined) {
-            Toast.makeText(requireContext(), "No se puede editar una categoría predefinida", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Las categorías del sistema no se pueden editar", Toast.LENGTH_SHORT).show()
             return
         }
-        val bundle = bundleOf("categoryId" to category.id)
-        findNavController().navigate(R.id.navigation_edit_category, bundle)
+        findNavController().navigate(
+            R.id.navigation_edit_category,
+            bundleOf("categoryId" to category.id)
+        )
     }
 
     private fun showDeleteConfirmation(category: ExerciseCategoryResponse) {
         if (category.isPredefined) {
-            Toast.makeText(requireContext(), "No se puede eliminar una categoría predefinida", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Las categorías del sistema no se pueden eliminar", Toast.LENGTH_SHORT).show()
             return
         }
-
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Eliminar Categoría")
-            .setMessage("¿Estás seguro de que quieres eliminar '${category.name}'?\n\nEsta acción no se puede deshacer.")
+            .setTitle("Eliminar categoría")
+            .setMessage("¿Eliminar \"${category.name}\"? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { dialog, _ ->
                 categoryViewModel.deleteCategory(category.id)
                 dialog.dismiss()
             }
             .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showCategoryDetail(category: ExerciseCategoryResponse) {
+        val tipo = if (category.isPredefined) "Sistema" else "Personal"
+        val deporte = category.sportName ?: "Todos los deportes"
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(category.name)
+            .setMessage("Tipo: $tipo\nDeporte: $deporte\nUsos: ${category.usageCount}")
+            .setPositiveButton("Cerrar", null)
             .show()
     }
 
@@ -280,19 +201,24 @@ class ExerciseCategoriesFragment : Fragment() {
         binding.progressBar.visibility = View.GONE
     }
 
-    private fun showCategoriesList() {
+    private fun showList(categories: List<ExerciseCategoryResponse>) {
         binding.recyclerCategories.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
+        categoryAdapter.updateList(categories)
     }
 
-    private fun showEmptyState(message: String) {
+    private fun showEmpty() {
         binding.recyclerCategories.visibility = View.GONE
         binding.layoutEmptyState.visibility = View.VISIBLE
-        binding.tvEmptyState.text = message
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), "❌ $message", Toast.LENGTH_LONG).show()
+        val query = binding.etSearch.text?.toString()?.trim() ?: ""
+        binding.tvEmptyState.text = when {
+            query.isNotEmpty() -> "Sin resultados para \"$query\""
+            currentFilter == "my" -> "Sin categorías propias"
+            currentFilter == "predefined" -> "Sin categorías del sistema"
+            else -> "Sin categorías"
+        }
+        binding.tvEmptySubtitle.text = if (currentFilter == "my" && query.isEmpty())
+            "Pulsa + para crear la primera" else ""
     }
 
     override fun onResume() {

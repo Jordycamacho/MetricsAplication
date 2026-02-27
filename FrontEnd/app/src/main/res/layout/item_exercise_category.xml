@@ -6,9 +6,9 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
-    app:cardBackgroundColor="@color/card_dark"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
+    app:cardBackgroundColor="#1E1E1E"
     app:strokeColor="#2A2A2A"
     app:strokeWidth="1dp">
 
@@ -18,7 +18,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Nombre + badge tipo -->
+        <!-- Fila superior: Nombre + Badge tipo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,45 +26,52 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="6dp">
 
-            <TextView
-                android:id="@+id/tv_category_name"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Nombre de la Categoría"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary_dark"
-                android:maxLines="1"
-                android:ellipsize="end" />
+                android:orientation="vertical">
 
+                <TextView
+                    android:id="@+id/tv_category_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre de la Categoría"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:letterSpacing="0.01"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/tv_category_sport"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fútbol"
+                    android:textSize="12sp"
+                    android:textColor="#78703F"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Badge tipo: solo para predefinidas -->
             <TextView
                 android:id="@+id/tv_category_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TIPO"
+                android:text="SISTEMA"
                 android:textSize="10sp"
-                android:textStyle="bold"
                 android:textColor="#121212"
+                android:textStyle="bold"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:background="@drawable/badge_predefined"
-                android:letterSpacing="0.05" />
+                android:letterSpacing="0.05"
+                android:visibility="gone" />
 
         </LinearLayout>
-
-        <!-- Descripción -->
-        <TextView
-            android:id="@+id/tv_category_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Descripción de la categoría"
-            android:textSize="13sp"
-            android:textColor="@color/text_secondary_dark"
-            android:layout_marginBottom="10dp"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:lineSpacingMultiplier="1.3" />
 
         <!-- Separador -->
         <View
@@ -73,7 +80,7 @@
             android:background="#252525"
             android:layout_marginBottom="10dp" />
 
-        <!-- Visibilidad + usos + botones -->
+        <!-- Fila inferior: usos + botones -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -81,64 +88,41 @@
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/tv_category_visibility"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pública"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark" />
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="10dp"
-                android:background="@color/divider_dark"
-                android:layout_marginHorizontal="8dp" />
-
-            <TextView
                 android:id="@+id/tv_category_usage"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="0 usos"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark" />
+                android:text="Personal"
+                android:textSize="11sp"
+                android:textColor="#B3B3B3" />
 
-            <LinearLayout
-                android:id="@+id/layout_actions"
+            <TextView
+                android:id="@+id/btn_edit_category"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:visibility="gone">
+                android:text="Editar"
+                android:textSize="12sp"
+                android:textColor="#78703F"
+                android:textStyle="bold"
+                android:paddingVertical="6dp"
+                android:paddingHorizontal="14dp"
+                android:background="@drawable/button_edit_background"
+                android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/btn_edit_category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Editar"
-                    android:textSize="12sp"
-                    android:textColor="@color/gold_primary"
-                    android:textStyle="bold"
-                    android:paddingVertical="6dp"
-                    android:paddingHorizontal="14dp"
-                    android:background="@drawable/button_edit_background" />
-
-                <TextView
-                    android:id="@+id/btn_delete_category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Eliminar"
-                    android:textSize="12sp"
-                    android:textColor="@color/red"
-                    android:textStyle="bold"
-                    android:paddingVertical="6dp"
-                    android:paddingHorizontal="14dp"
-                    android:background="@drawable/button_delete_background"
-                    android:layout_marginStart="8dp" />
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/btn_delete_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Eliminar"
+                android:textSize="12sp"
+                android:textColor="#E41D1D"
+                android:textStyle="bold"
+                android:paddingVertical="6dp"
+                android:paddingHorizontal="14dp"
+                android:background="@drawable/button_delete_background"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
-
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>
