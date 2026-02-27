@@ -10,7 +10,7 @@ data class Exercise(
     val name: String,
     val description: String?,
     val exerciseType: ExerciseType?,
-    val sports: Map<Long, String>,
+    val sports: Map<String, String>,
     val createdById: Long?,
     val categoryIds: Set<Long>,
     val categoryNames: Set<String>,

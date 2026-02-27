@@ -55,4 +55,28 @@
         <item name="colorOnSurface">@color/text_primary_dark</item>
         <item name="buttonBarPositiveButtonStyle">@style/GoldButton</item>
     </style>
+    <!-- Añadir dentro de <resources> en res/values/styles.xml -->
+
+    <style name="FormLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/gold_primary</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:layout_marginBottom">6dp</item>
+    </style>
+
+    <style name="FormField" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">20dp</item>
+        <item name="boxBackgroundColor">@color/surface_dark</item>
+        <item name="boxCornerRadiusTopStart">10dp</item>
+        <item name="boxCornerRadiusTopEnd">10dp</item>
+        <item name="boxCornerRadiusBottomStart">10dp</item>
+        <item name="boxCornerRadiusBottomEnd">10dp</item>
+        <item name="boxStrokeColor">#333333</item>
+        <item name="hintTextColor">#666666</item>
+    </style>
 </resources>

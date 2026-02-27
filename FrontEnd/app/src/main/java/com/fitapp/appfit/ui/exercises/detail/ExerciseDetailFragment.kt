@@ -16,6 +16,7 @@ import com.fitapp.appfit.utils.DateUtils
 import com.fitapp.appfit.utils.Resource
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 
 class ExerciseDetailFragment : Fragment() {
 
@@ -24,7 +25,9 @@ class ExerciseDetailFragment : Fragment() {
     private val exerciseViewModel: ExerciseViewModel by viewModels()
     private val args: ExerciseDetailFragmentArgs by navArgs()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentExerciseDetailBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -34,7 +37,7 @@ class ExerciseDetailFragment : Fragment() {
         setupToolbar()
         setupClickListeners()
         setupObservers()
-        loadExerciseDetails()
+        exerciseViewModel.getExerciseById(args.exerciseId)
     }
 
     private fun setupToolbar() {
@@ -43,9 +46,17 @@ class ExerciseDetailFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnEdit.setOnClickListener { navigateToEdit() }
-        binding.btnToggleStatus.setOnClickListener { toggleExerciseStatus() }
-        binding.btnDelete.setOnClickListener { showDeleteConfirmation() }
+        binding.btnEdit.setOnClickListener {
+            findNavController().navigate(
+                ExerciseDetailFragmentDirections.actionExerciseDetailToEditExercise(args.exerciseId)
+            )
+        }
+        binding.btnToggleStatus.setOnClickListener {
+            exerciseViewModel.toggleExerciseStatus(args.exerciseId)
+        }
+        binding.btnDelete.setOnClickListener {
+            showDeleteConfirmation()
+        }
     }
 
     private fun setupObservers() {
@@ -53,11 +64,11 @@ class ExerciseDetailFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     hideLoading()
-                    resource.data?.let { displayExerciseDetails(it) }
+                    resource.data?.let { displayExercise(it) }
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    showError(resource.message ?: "Error al cargar el ejercicio")
+                    showError("Error al cargar: ${resource.message}")
                 }
                 is Resource.Loading -> showLoading()
                 else -> {}
@@ -68,7 +79,8 @@ class ExerciseDetailFragment : Fragment() {
             when (resource) {
                 is Resource.Success -> {
                     exerciseViewModel.clearToggleState()
-                    loadExerciseDetails()
+                    // Recargar para reflejar el nuevo estado
+                    exerciseViewModel.getExerciseById(args.exerciseId)
                 }
                 is Resource.Error -> showError(resource.message ?: "Error al cambiar estado")
                 else -> {}
@@ -85,130 +97,124 @@ class ExerciseDetailFragment : Fragment() {
                 else -> {}
             }
         }
-
-        exerciseViewModel.makePublicState.observe(viewLifecycleOwner) { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    exerciseViewModel.clearMakePublicState()
-                    loadExerciseDetails()
-                }
-                is Resource.Error -> showError(resource.message ?: "Error")
-                else -> {}
-            }
-        }
     }
 
-    private fun loadExerciseDetails() {
-        // ✅ CAMBIADO: getExerciseByIdWithRelations → getExerciseById (ya devuelve todo)
-        exerciseViewModel.getExerciseById(args.exerciseId)
-    }
+    private fun displayExercise(exercise: ExerciseResponse) {
+        // ── Información principal ─────────────────────────────────────────────
+        binding.tvExerciseName.text        = exercise.name
+        binding.tvExerciseType.text        = exercise.exerciseType?.name ?: "SIN TIPO"
+        binding.tvExerciseDescription.text = exercise.description?.ifEmpty { "Sin descripción" } ?: "Sin descripción"
 
-    private fun displayExerciseDetails(exercise: ExerciseResponse) {
-        binding.tvExerciseName.text = exercise.name
-        binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
-        binding.tvExerciseDescription.text = exercise.description ?: "Sin descripción"
+        // Deporte: Map<String, String> — values son los nombres
+        binding.tvSport.text = exercise.sports.values
+            .joinToString(", ")
+            .ifEmpty { "—" }
 
-        // ✅ CAMBIADO: sportName → sports Map, mostramos todos los deportes
-        binding.tvSport.text = exercise.sports.values.joinToString(", ").ifEmpty { "—" }
+        // Creador: solo tenemos el ID, mostrarlo o "—"
+        binding.tvCreator.text = exercise.createdById
+            ?.let { "Usuario #$it" }
+            ?: "—"
 
-        binding.tvVisibility.text = if (exercise.isPublic == true) "Público" else "Personal"
+        // Visibilidad
+        val isPublic = exercise.isPublic == true
+        binding.tvVisibility.text = if (isPublic) "Público" else "Personal"
         binding.tvVisibility.setTextColor(
-            if (exercise.isPublic == true)
-                resources.getColor(R.color.gold_primary, null)
-            else
-                resources.getColor(R.color.text_secondary_dark, null)
+            resources.getColor(
+                if (isPublic) R.color.gold_primary else R.color.text_secondary_dark, null
+            )
         )
 
+        // Estado activo/inactivo
         val isActive = exercise.isActive == true
         binding.tvStatus.text = if (isActive) "Activo" else "Inactivo"
         binding.tvStatus.setTextColor(
-            if (isActive) resources.getColor(R.color.gold_primary, null)
-            else resources.getColor(R.color.text_secondary_dark, null)
+            resources.getColor(
+                if (isActive) R.color.gold_primary else R.color.text_secondary_dark, null
+            )
         )
         binding.btnToggleStatus.text = if (isActive) "Pausar" else "Activar"
 
-        binding.tvUsage.text = (exercise.usageCount ?: 0).toString()
+        // ── Estadísticas ──────────────────────────────────────────────────────
+        binding.tvUsage.text  = (exercise.usageCount ?: 0).toString()
         binding.tvRating.text = String.format("%.1f", exercise.rating ?: 0.0)
 
+        // ── Fechas ────────────────────────────────────────────────────────────
         binding.tvCreatedAt.text = "Creado: ${DateUtils.formatForDisplay(exercise.createdAt)}"
         binding.tvUpdatedAt.text = "Actualizado: ${DateUtils.formatForDisplay(exercise.updatedAt)}"
-        binding.tvLastUsed.text = "Último uso: ${
-            if (!exercise.lastUsedAt.isNullOrEmpty()) DateUtils.formatForDisplay(exercise.lastUsedAt)
+        binding.tvLastUsed.text  = "Último uso: ${
+            if (!exercise.lastUsedAt.isNullOrEmpty())
+                DateUtils.formatForDisplay(exercise.lastUsedAt)
             else "Nunca"
         }"
 
-        setupChips(binding.chipGroupCategories, exercise.categoryNames.toList(), binding.tvNoCategories)
-        setupChips(binding.chipGroupParameters, exercise.supportedParameterNames.toList(), binding.tvNoParameters)
+        // ── Chips categorías ──────────────────────────────────────────────────
+        setupChips(
+            binding.chipGroupCategories,
+            exercise.categoryNames.toList(),
+            binding.tvNoCategories
+        )
 
-        binding.btnEdit.visibility = if (exercise.isPublic == false) View.VISIBLE else View.GONE
-        binding.btnDelete.visibility = if (exercise.isPublic == false) View.VISIBLE else View.GONE
+        // ── Chips parámetros ──────────────────────────────────────────────────
+        setupChips(
+            binding.chipGroupParameters,
+            exercise.supportedParameterNames.toList(),
+            binding.tvNoParameters
+        )
+
+        // ── Botones editar/eliminar solo en ejercicios personales ─────────────
+        val canEdit = exercise.isPublic == false
+        binding.btnEdit.visibility   = if (canEdit) View.VISIBLE else View.GONE
+        binding.btnDelete.visibility = if (canEdit) View.VISIBLE else View.GONE
     }
 
     private fun setupChips(
         chipGroup: com.google.android.material.chip.ChipGroup,
         items: List<String>,
-        emptyView: android.widget.TextView
+        emptyLabel: android.widget.TextView
     ) {
         chipGroup.removeAllViews()
         if (items.isEmpty()) {
-            emptyView.visibility = View.VISIBLE
-            chipGroup.visibility = View.GONE
-            return
-        }
-        emptyView.visibility = View.GONE
-        chipGroup.visibility = View.VISIBLE
-        items.forEach { label ->
-            val chip = Chip(requireContext()).apply {
-                text = label
-                isCheckable = false
-                isClickable = false
-                setChipBackgroundColorResource(R.color.gold_primary)
-                setTextColor(resources.getColor(android.R.color.black, null))
-                chipStrokeWidth = 0f
-                textSize = 12f
+            emptyLabel.visibility = View.VISIBLE
+            chipGroup.visibility  = View.GONE
+        } else {
+            emptyLabel.visibility = View.GONE
+            chipGroup.visibility  = View.VISIBLE
+            items.forEach { label ->
+                chipGroup.addView(Chip(requireContext()).apply {
+                    text           = label
+                    isCheckable    = false
+                    isClickable    = false
+                    chipStrokeWidth = 1f
+                    setChipBackgroundColorResource(R.color.surface_dark)
+                    setTextColor(resources.getColor(R.color.gold_primary, null))
+                    setChipStrokeColorResource(R.color.gold_primary)
+                })
             }
-            chipGroup.addView(chip)
         }
-    }
-
-    private fun navigateToEdit() {
-        try {
-            val action = ExerciseDetailFragmentDirections.actionExerciseDetailToEditExercise(args.exerciseId)
-            findNavController().navigate(action)
-        } catch (e: Exception) {
-            findNavController().navigate(
-                R.id.action_exercise_detail_to_edit_exercise,
-                Bundle().apply { putLong("exerciseId", args.exerciseId) }
-            )
-        }
-    }
-
-    private fun toggleExerciseStatus() {
-        exerciseViewModel.toggleExerciseStatus(args.exerciseId)
     }
 
     private fun showDeleteConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar ejercicio")
             .setMessage("Esta acción no se puede deshacer.")
-            .setPositiveButton("Eliminar") { _, _ -> exerciseViewModel.deleteExercise(args.exerciseId) }
+            .setPositiveButton("Eliminar") { _, _ ->
+                exerciseViewModel.deleteExercise(args.exerciseId)
+            }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
     private fun showError(message: String) {
-        com.google.android.material.snackbar.Snackbar
-            .make(binding.root, message, com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-            .show()
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 
     private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
+        binding.progressBar.visibility    = View.VISIBLE
         binding.contentContainer.visibility = View.GONE
     }
 
     private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
+        binding.progressBar.visibility    = View.GONE
         binding.contentContainer.visibility = View.VISIBLE
     }
 

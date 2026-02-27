@@ -31,7 +31,7 @@ class ExercisesFragment : Fragment() {
     private var currentPage = 0
     private var isLoading = false
     private var hasMorePages = true
-    private var isUpdatingChips = false  // Fix bug doble disparo
+    private var isUpdatingChips = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentExercisesBinding.inflate(inflater, container, false)

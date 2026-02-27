@@ -59,7 +59,9 @@ data class ExerciseResponse(
     val lastUsedAt: String?
 ) : Serializable {
 
-    fun sportIds(): Set<Long> = sports.keys.mapNotNull { it.toLongOrNull() }.toSet()
+    fun sportIds(): Set<Long> =
+        sports.keys.mapNotNull { it.toLongOrNull() }.toSet()
 
-    fun sportsDisplayName(): String = sports.values.joinToString(", ").ifEmpty { "—" }
+    fun sportsDisplayName(): String =
+        sports.values.joinToString(", ").ifEmpty { "—" }
 }

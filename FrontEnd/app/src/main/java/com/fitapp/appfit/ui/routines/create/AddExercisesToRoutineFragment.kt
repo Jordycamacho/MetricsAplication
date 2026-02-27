@@ -34,7 +34,7 @@ class AddExercisesToRoutineFragment : Fragment() {
     private val routineViewModel: RoutineViewModel by viewModels()
 
     private lateinit var exerciseAdapter: ExerciseAdapter
-    private var selectedExercise: ExerciseResponse? = null // 🔥 AHORA ES ÚNICO
+    private var selectedExercise: ExerciseResponse? = null
     private var routineId: Long = 0
     private var currentSession = 1
     private var currentDay: String? = null

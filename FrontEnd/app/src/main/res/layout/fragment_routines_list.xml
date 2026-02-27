@@ -38,7 +38,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:src="@drawable/ic_add"
-                        android:tint="@color/gold_primary" />
+                        app:tint="@color/gold_primary" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -54,7 +54,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_arrow_right"
-                        android:tint="@color/text_secondary_dark" />
+                        app:tint="@color/text_secondary_dark" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -78,8 +78,8 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_search"
-                        android:tint="@color/text_secondary_dark"
-                        android:layout_marginEnd="8dp" />
+                        android:layout_marginEnd="8dp"
+                        app:tint="@color/text_secondary_dark" />
 
                     <EditText
                         android:id="@+id/et_search_routines"
@@ -136,8 +136,8 @@
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:src="@drawable/ic_empty_routines"
-                    android:tint="@color/text_secondary_dark"
-                    android:layout_marginBottom="20dp" />
+                    android:layout_marginBottom="20dp"
+                    app:tint="@color/text_secondary_dark" />
 
                 <TextView
                     android:layout_width="wrap_content"

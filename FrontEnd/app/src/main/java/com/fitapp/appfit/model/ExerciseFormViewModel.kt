@@ -21,10 +21,10 @@ import kotlinx.coroutines.launch
 
 class ExerciseFormViewModel : ViewModel() {
 
-    private val sportRepository = SportRepository()
-    private val categoryRepository = ExerciseCategoryRepository()
+    private val sportRepository     = SportRepository()
+    private val categoryRepository  = ExerciseCategoryRepository()
     private val parameterRepository = ParameterRepository()
-    private val exerciseRepository = ExerciseRepository()
+    private val exerciseRepository  = ExerciseRepository()
 
     private val _loadingForm = MutableLiveData(false)
     val loadingForm: LiveData<Boolean> = _loadingForm
@@ -55,7 +55,6 @@ class ExerciseFormViewModel : ViewModel() {
             try {
                 val sportsDeferred     = async { fetchSports() }
                 val categoriesDeferred = async { fetchCategories() }
-
                 sportsDeferred.await()
                 categoriesDeferred.await()
             } catch (e: Exception) {
@@ -66,7 +65,7 @@ class ExerciseFormViewModel : ViewModel() {
         }
     }
 
-    // ── EDITAR: carga ejercicio + sports + categories en paralelo ─────────────
+    // ── EDITAR: ejercicio + sports + categories en paralelo ───────────────────
 
     fun initEditForm(exerciseId: Long) {
         _loadingForm.value = true
@@ -91,22 +90,21 @@ class ExerciseFormViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _exerciseToEdit.value = Resource.Error("Error: ${e.message}")
-                _formError.value = "Error cargando formulario: ${e.message}"
             } finally {
                 _loadingForm.value = false
             }
         }
     }
 
-    // ── Parámetros: se recargan cada vez que cambia el deporte seleccionado ───
+    // ── Parámetros por deporte ────────────────────────────────────────────────
 
     fun loadParametersForSport(sportId: Long) {
         viewModelScope.launch {
             try {
-                // AJUSTAR SI FALLA: cambia el nombre del método si tu ParameterRepository lo llama diferente
-                val filterRequest = CustomParameterFilterRequest(sportId = sportId, isActive = true)
-                val result = parameterRepository.searchAvailableParameters(sportId, filterRequest)
-                _parameters.value = if (result is Resource.Success) result.data?.content ?: emptyList()
+                val filter = CustomParameterFilterRequest(sportId = sportId, isActive = true)
+                val result = parameterRepository.searchAvailableParameters(sportId, filter)
+                _parameters.value = if (result is Resource.Success)
+                    result.data?.content ?: emptyList()
                 else emptyList()
             } catch (e: Exception) {
                 _parameters.value = emptyList()
@@ -114,9 +112,7 @@ class ExerciseFormViewModel : ViewModel() {
         }
     }
 
-    fun clearParameters() {
-        _parameters.value = emptyList()
-    }
+    fun clearParameters() { _parameters.value = emptyList() }
 
     // ── Guardar ───────────────────────────────────────────────────────────────
 
@@ -136,16 +132,21 @@ class ExerciseFormViewModel : ViewModel() {
     // ── Privados ──────────────────────────────────────────────────────────────
 
     private suspend fun fetchSports() {
+        // SportRepository.getSports() devuelve Resource<List<SportResponse>>
         val result = sportRepository.getSports()
         _sports.value = if (result is Resource.Success) result.data ?: emptyList() else emptyList()
     }
 
     private suspend fun fetchCategories() {
-        val result = categoryRepository.searchAvailableCategories(
-            sportId = TODO(),
-            filterRequest = TODO()
+        // ExerciseCategoryRepository.searchCategories() necesita un FilterRequest
+        val filter = ExerciseCategoryFilterRequest(
+            page = 0,
+            size = 200,   // traemos todas de una vez para el selector
+            isActive = true
         )
-        _categories.value = if (result is Resource.Success) result.data?.content ?: emptyList()
+        val result = categoryRepository.searchCategories(filter)
+        _categories.value = if (result is Resource.Success)
+            result.data?.content ?: emptyList()
         else emptyList()
     }
 }
