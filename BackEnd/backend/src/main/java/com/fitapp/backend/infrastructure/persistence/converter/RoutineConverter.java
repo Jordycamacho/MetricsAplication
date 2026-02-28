@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.fitapp.backend.application.dto.routine.request.AddExerciseToRoutineRequest;
 import com.fitapp.backend.domain.model.RoutineExerciseModel;
@@ -52,10 +51,11 @@ public class RoutineConverter {
     private final RoutineExerciseParameterRepository routineExerciseParameterRepository;
     private final RoutineSetTemplateRepository routineSetTemplateRepository;
 
-    @Transactional(readOnly = true)
-    public RoutineModel toDomain(RoutineEntity entity) {
-        log.debug("ROUTINE_CONVERTER_TO_DOMAIN | routineId={}", entity.getId());
+    // ── toDomain ──────────────────────────────────────────────────────────────
+    // Nota: @Transactional pertenece al servicio/repositorio, no al converter.
+    // El converter recibe entidades ya cargadas en el contexto transaccional.
 
+    public RoutineModel toDomain(RoutineEntity entity) {
         RoutineModel routine = new RoutineModel();
         routine.setId(entity.getId());
         routine.setName(entity.getName());
@@ -71,8 +71,6 @@ public class RoutineConverter {
         routine.setSessionsPerWeek(entity.getSessionsPerWeek() != null ? entity.getSessionsPerWeek() : 3);
 
         if (entity.getExercises() != null) {
-            log.debug("ROUTINE_CONVERTER_EXERCISES | routineId={} | count={}", entity.getId(),
-                    entity.getExercises().size());
             List<RoutineExerciseModel> exerciseModels = entity.getExercises().stream()
                     .map(this::convertRoutineExercise)
                     .sorted(Comparator.comparing(RoutineExerciseModel::getPosition))
@@ -82,14 +80,10 @@ public class RoutineConverter {
             routine.setExercises(new ArrayList<>());
         }
 
-        log.info("ROUTINE_CONVERTER_TO_DOMAIN_OK | routineId={} | exerciseCount={}",
-                entity.getId(), routine.getExercises().size());
         return routine;
     }
 
     public RoutineExerciseModel convertRoutineExercise(RoutineExerciseEntity entity) {
-        log.debug("ROUTINE_EXERCISE_CONVERT | exerciseId={}", entity.getId());
-
         RoutineExerciseModel model = new RoutineExerciseModel();
         model.setId(entity.getId());
         model.setRoutineId(entity.getRoutine().getId());
@@ -100,25 +94,18 @@ public class RoutineConverter {
         model.setSessionOrder(entity.getSessionOrder());
         model.setRestAfterExercise(entity.getRestAfterExercise());
 
-        if (entity.getTargetParameters() != null && !entity.getTargetParameters().isEmpty()) {
-            List<RoutineExerciseParameterModel> paramModels = entity.getTargetParameters().stream()
-                    .map(this::convertRoutineExerciseParameter)
-                    .collect(Collectors.toList());
-            model.setTargetParameters(paramModels);
-        } else {
-            model.setTargetParameters(new ArrayList<>());
-        }
+        model.setTargetParameters(entity.getTargetParameters() != null && !entity.getTargetParameters().isEmpty()
+                ? entity.getTargetParameters().stream()
+                        .map(this::convertRoutineExerciseParameter)
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
-        if (entity.getSets() != null && !entity.getSets().isEmpty()) {
-            log.debug("ROUTINE_EXERCISE_SETS | exerciseId={} | setCount={}", entity.getId(), entity.getSets().size());
-            List<RoutineSetTemplateModel> setModels = entity.getSets().stream()
-                    .sorted(Comparator.comparing(RoutineSetTemplateEntity::getPosition))
-                    .map(this::convertRoutineSetTemplate)
-                    .collect(Collectors.toList());
-            model.setSets(setModels);
-        } else {
-            model.setSets(new ArrayList<>());
-        }
+        model.setSets(entity.getSets() != null && !entity.getSets().isEmpty()
+                ? entity.getSets().stream()
+                        .sorted(Comparator.comparing(RoutineSetTemplateEntity::getPosition))
+                        .map(this::convertRoutineSetTemplate)
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
         return model;
     }
@@ -138,8 +125,6 @@ public class RoutineConverter {
     }
 
     public RoutineSetTemplateModel convertRoutineSetTemplate(RoutineSetTemplateEntity entity) {
-        log.debug("ROUTINE_SET_TEMPLATE_CONVERT | setId={} | position={}", entity.getId(), entity.getPosition());
-
         RoutineSetTemplateModel model = new RoutineSetTemplateModel();
         model.setId(entity.getId());
         model.setPosition(entity.getPosition());
@@ -148,38 +133,29 @@ public class RoutineConverter {
         model.setSetType(entity.getSetType() != null ? entity.getSetType().name() : null);
         model.setRestAfterSet(entity.getRestAfterSet());
 
-        if (entity.getParameters() != null && !entity.getParameters().isEmpty()) {
-            log.debug("ROUTINE_SET_TEMPLATE_PARAMS | setId={} | paramCount={}",
-                    entity.getId(), entity.getParameters().size());
-            List<RoutineSetParameterModel> paramModels = entity.getParameters().stream()
-                    .map(this::convertRoutineSetParameter)
-                    .collect(Collectors.toList());
-            model.setParameters(paramModels);
-        } else {
-            model.setParameters(new ArrayList<>());
-        }
+        model.setParameters(entity.getParameters() != null && !entity.getParameters().isEmpty()
+                ? entity.getParameters().stream()
+                        .map(this::convertRoutineSetParameter)
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
         return model;
     }
 
-    // ✅ BUG 1 CORREGIDO: repetitions faltaba
     public RoutineSetParameterModel convertRoutineSetParameter(RoutineSetParameterEntity entity) {
-        log.debug("ROUTINE_SET_PARAM_CONVERT | paramId={} | repetitions={} | integerValue={} | numericValue={}",
-                entity.getId(), entity.getRepetitions(), entity.getIntegerValue(), entity.getNumericValue());
-
         RoutineSetParameterModel model = new RoutineSetParameterModel();
         model.setId(entity.getId());
         model.setParameterId(entity.getParameter().getId());
         model.setNumericValue(entity.getNumericValue());
         model.setDurationValue(entity.getDurationValue());
         model.setIntegerValue(entity.getIntegerValue());
-        model.setRepetitions(entity.getRepetitions()); // ✅ CORREGIDO
+        model.setRepetitions(entity.getRepetitions());
         return model;
     }
 
-    public RoutineEntity toEntity(RoutineModel domain) {
-        log.debug("ROUTINE_CONVERTER_TO_ENTITY | routineId={}", domain.getId());
+    // ── toEntity ──────────────────────────────────────────────────────────────
 
+    public RoutineEntity toEntity(RoutineModel domain) {
         RoutineEntity entity = new RoutineEntity();
         entity.setId(domain.getId());
         entity.setName(domain.getName());
@@ -193,18 +169,12 @@ public class RoutineConverter {
         entity.setSessionsPerWeek(domain.getSessionsPerWeek() != null ? domain.getSessionsPerWeek() : 3);
 
         UserEntity user = springDataUserRepository.findById(domain.getUserId())
-                .orElseThrow(() -> {
-                    log.error("ROUTINE_CONVERTER_USER_NOT_FOUND | userId={}", domain.getUserId());
-                    return new RuntimeException("User not found with id: " + domain.getUserId());
-                });
+                .orElseThrow(() -> new RuntimeException("User not found: " + domain.getUserId()));
         entity.setUser(user);
 
         if (domain.getSportId() != null) {
             SportEntity sport = sportRepository.findById(domain.getSportId())
-                    .orElseThrow(() -> {
-                        log.error("ROUTINE_CONVERTER_SPORT_NOT_FOUND | sportId={}", domain.getSportId());
-                        return new RuntimeException("Sport not found with id: " + domain.getSportId());
-                    });
+                    .orElseThrow(() -> new RuntimeException("Sport not found: " + domain.getSportId()));
             entity.setSport(sport);
         } else {
             entity.setSport(null);
@@ -212,14 +182,13 @@ public class RoutineConverter {
 
         if (domain.getExercises() != null && !domain.getExercises().isEmpty()) {
             Set<RoutineExerciseEntity> exerciseEntities = domain.getExercises().stream()
-                    .map(exerciseModel -> convertToRoutineExerciseEntity(exerciseModel, entity))
+                    .map(m -> convertToRoutineExerciseEntity(m, entity))
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             entity.setExercises(exerciseEntities);
         } else {
             entity.setExercises(new HashSet<>());
         }
 
-        log.info("ROUTINE_CONVERTER_TO_ENTITY_OK | routineId={}", domain.getId());
         return entity;
     }
 
@@ -229,10 +198,7 @@ public class RoutineConverter {
         entity.setRoutine(routine);
 
         ExerciseEntity exercise = exerciseRepository.findById(model.getExerciseId())
-                .orElseThrow(() -> {
-                    log.error("ROUTINE_CONVERTER_EXERCISE_NOT_FOUND | exerciseId={}", model.getExerciseId());
-                    return new RuntimeException("Exercise not found with id: " + model.getExerciseId());
-                });
+                .orElseThrow(() -> new RuntimeException("Exercise not found: " + model.getExerciseId()));
         entity.setExercise(exercise);
 
         entity.setPosition(model.getPosition());
@@ -241,40 +207,30 @@ public class RoutineConverter {
         entity.setSessionOrder(model.getSessionOrder());
         entity.setRestAfterExercise(model.getRestAfterExercise());
 
-        if (model.getTargetParameters() != null && !model.getTargetParameters().isEmpty()) {
-            List<RoutineExerciseParameterEntity> paramEntities = model.getTargetParameters().stream()
-                    .map(paramModel -> convertToRoutineExerciseParameterEntity(paramModel, entity))
-                    .collect(Collectors.toList());
-            entity.setTargetParameters(paramEntities);
-        } else {
-            entity.setTargetParameters(new ArrayList<>());
-        }
+        entity.setTargetParameters(model.getTargetParameters() != null && !model.getTargetParameters().isEmpty()
+                ? model.getTargetParameters().stream()
+                        .map(pm -> convertToRoutineExerciseParameterEntity(pm, entity))
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
-        if (model.getSets() != null && !model.getSets().isEmpty()) {
-            List<RoutineSetTemplateEntity> setEntities = model.getSets().stream()
-                    .map(setModel -> convertToRoutineSetTemplateEntity(setModel, entity))
-                    .collect(Collectors.toList());
-            entity.setSets(setEntities);
-        } else {
-            entity.setSets(new ArrayList<>());
-        }
+        entity.setSets(model.getSets() != null && !model.getSets().isEmpty()
+                ? model.getSets().stream()
+                        .map(sm -> convertToRoutineSetTemplateEntity(sm, entity))
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
         return entity;
     }
 
     private RoutineExerciseParameterEntity convertToRoutineExerciseParameterEntity(
             RoutineExerciseParameterModel model, RoutineExerciseEntity exercise) {
+        CustomParameterEntity parameter = customParameterRepository.findById(model.getParameterId())
+                .orElseThrow(() -> new RuntimeException("Parameter not found: " + model.getParameterId()));
+
         RoutineExerciseParameterEntity entity = new RoutineExerciseParameterEntity();
         entity.setId(model.getId());
         entity.setRoutineExercise(exercise);
-
-        CustomParameterEntity parameter = customParameterRepository.findById(model.getParameterId())
-                .orElseThrow(() -> {
-                    log.error("ROUTINE_CONVERTER_PARAM_NOT_FOUND | parameterId={}", model.getParameterId());
-                    return new RuntimeException("Parameter not found with id: " + model.getParameterId());
-                });
         entity.setParameter(parameter);
-
         entity.setNumericValue(model.getNumericValue());
         entity.setIntegerValue(model.getIntegerValue());
         entity.setDurationValue(model.getDurationValue());
@@ -293,41 +249,33 @@ public class RoutineConverter {
         entity.setPosition(model.getPosition());
         entity.setSubSetNumber(model.getSubSetNumber() != null ? model.getSubSetNumber() : 1);
         entity.setGroupId(model.getGroupId());
+        entity.setRestAfterSet(model.getRestAfterSet());
 
         try {
             entity.setSetType(model.getSetType() != null ? SetType.valueOf(model.getSetType()) : SetType.NORMAL);
         } catch (IllegalArgumentException e) {
-            log.warn("ROUTINE_CONVERTER_INVALID_SET_TYPE | setType={} | defaulting=NORMAL", model.getSetType());
+            log.warn("INVALID_SET_TYPE | value={} | defaulting=NORMAL", model.getSetType());
             entity.setSetType(SetType.NORMAL);
         }
 
-        entity.setRestAfterSet(model.getRestAfterSet());
-
-        if (model.getParameters() != null && !model.getParameters().isEmpty()) {
-            List<RoutineSetParameterEntity> paramEntities = model.getParameters().stream()
-                    .map(paramModel -> convertToRoutineSetParameterEntity(paramModel, entity))
-                    .collect(Collectors.toList());
-            entity.setParameters(paramEntities);
-        } else {
-            entity.setParameters(new ArrayList<>());
-        }
+        entity.setParameters(model.getParameters() != null && !model.getParameters().isEmpty()
+                ? model.getParameters().stream()
+                        .map(pm -> convertToRoutineSetParameterEntity(pm, entity))
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
         return entity;
     }
 
     private RoutineSetParameterEntity convertToRoutineSetParameterEntity(
             RoutineSetParameterModel model, RoutineSetTemplateEntity setTemplate) {
+        CustomParameterEntity parameter = customParameterRepository.findById(model.getParameterId())
+                .orElseThrow(() -> new RuntimeException("Set parameter not found: " + model.getParameterId()));
+
         RoutineSetParameterEntity entity = new RoutineSetParameterEntity();
         entity.setId(model.getId());
         entity.setSetTemplate(setTemplate);
-
-        CustomParameterEntity parameter = customParameterRepository.findById(model.getParameterId())
-                .orElseThrow(() -> {
-                    log.error("ROUTINE_CONVERTER_SET_PARAM_NOT_FOUND | parameterId={}", model.getParameterId());
-                    return new RuntimeException("Set parameter not found with id: " + model.getParameterId());
-                });
         entity.setParameter(parameter);
-
         entity.setNumericValue(model.getNumericValue());
         entity.setDurationValue(model.getDurationValue());
         entity.setIntegerValue(model.getIntegerValue());
@@ -335,16 +283,14 @@ public class RoutineConverter {
         return entity;
     }
 
-    @Transactional
+    // ── addExerciseToRoutine (operación de negocio) ──────────────────────────
+
     public RoutineExerciseEntity addExerciseToRoutine(
-            RoutineEntity routine,
-            AddExerciseToRoutineRequest request,
-            Long exerciseId) {
+            RoutineEntity routine, AddExerciseToRoutineRequest request, Long exerciseId) {
 
         ExerciseEntity exercise = exerciseRepository.findById(exerciseId)
                 .orElseThrow(() -> new RuntimeException("Exercise not found: " + exerciseId));
 
-        log.info("ADD_EXERCISE_TO_ROUTINE | routineId={} | exerciseId={}", routine.getId(), exercise.getId());
         int nextPosition = routine.getExercises().stream()
                 .mapToInt(RoutineExerciseEntity::getPosition)
                 .max().orElse(0) + 1;
@@ -375,41 +321,32 @@ public class RoutineConverter {
             }
         }
 
-        if (request.getTargetParameters() != null && !request.getTargetParameters().isEmpty()) {
-            log.debug("ADD_EXERCISE_TARGET_PARAMS | count={}", request.getTargetParameters().size());
-            List<RoutineExerciseParameterEntity> targetParams = request.getTargetParameters().stream()
-                    .map(paramRequest -> createRoutineExerciseParameter(paramRequest, routineExercise))
-                    .collect(Collectors.toList());
-            routineExercise.setTargetParameters(targetParams);
-        } else {
-            routineExercise.setTargetParameters(new ArrayList<>());
-        }
+        routineExercise.setTargetParameters(
+                request.getTargetParameters() != null && !request.getTargetParameters().isEmpty()
+                        ? request.getTargetParameters().stream()
+                                .map(pr -> createRoutineExerciseParameter(pr, routineExercise))
+                                .collect(Collectors.toList())
+                        : new ArrayList<>());
 
-        if (request.getSets() != null && !request.getSets().isEmpty()) {
-            log.debug("ADD_EXERCISE_SETS | count={}", request.getSets().size());
-            List<RoutineSetTemplateEntity> sets = request.getSets().stream()
-                    .map(setRequest -> createRoutineSetTemplate(setRequest, routineExercise))
-                    .collect(Collectors.toList());
-            routineExercise.setSets(sets);
-        } else {
-            routineExercise.setSets(new ArrayList<>());
-        }
+        routineExercise.setSets(
+                request.getSets() != null && !request.getSets().isEmpty()
+                        ? request.getSets().stream()
+                                .map(sr -> createRoutineSetTemplate(sr, routineExercise))
+                                .collect(Collectors.toList())
+                        : new ArrayList<>());
 
         routine.getExercises().add(routineExercise);
 
-        log.info("ADD_EXERCISE_TO_ROUTINE_OK | position={} | session={}", nextPosition, request.getSessionNumber());
+        log.info("ADD_EXERCISE_OK | routineId={} | exerciseId={} | position={} | session={}",
+                routine.getId(), exercise.getId(), nextPosition, request.getSessionNumber());
         return routineExercise;
     }
 
     private RoutineExerciseParameterEntity createRoutineExerciseParameter(
-            AddExerciseToRoutineRequest.ExerciseParameterRequest request,
-            RoutineExerciseEntity routineExercise) {
+            AddExerciseToRoutineRequest.ExerciseParameterRequest request, RoutineExerciseEntity routineExercise) {
 
         CustomParameterEntity parameter = customParameterRepository.findById(request.getParameterId())
-                .orElseThrow(() -> {
-                    log.error("CREATE_EXERCISE_PARAM_NOT_FOUND | parameterId={}", request.getParameterId());
-                    return new RuntimeException("Parameter not found: " + request.getParameterId());
-                });
+                .orElseThrow(() -> new RuntimeException("Parameter not found: " + request.getParameterId()));
 
         RoutineExerciseParameterEntity entity = new RoutineExerciseParameterEntity();
         entity.setRoutineExercise(routineExercise);
@@ -425,46 +362,36 @@ public class RoutineConverter {
     }
 
     private RoutineSetTemplateEntity createRoutineSetTemplate(
-            AddExerciseToRoutineRequest.SetTemplateRequest request,
-            RoutineExerciseEntity routineExercise) {
+            AddExerciseToRoutineRequest.SetTemplateRequest request, RoutineExerciseEntity routineExercise) {
 
         RoutineSetTemplateEntity entity = new RoutineSetTemplateEntity();
         entity.setRoutineExercise(routineExercise);
         entity.setPosition(request.getPosition());
         entity.setSubSetNumber(request.getSubSetNumber() != null ? request.getSubSetNumber() : 1);
+        entity.setGroupId(request.getGroupId());
+        entity.setRestAfterSet(request.getRestAfterSet());
 
         try {
             entity.setSetType(request.getSetType() != null ? SetType.valueOf(request.getSetType()) : SetType.NORMAL);
         } catch (IllegalArgumentException e) {
-            log.warn("CREATE_SET_TEMPLATE_INVALID_TYPE | setType={} | defaulting=NORMAL", request.getSetType());
+            log.warn("CREATE_SET_TEMPLATE_INVALID_TYPE | value={} | defaulting=NORMAL", request.getSetType());
             entity.setSetType(SetType.NORMAL);
         }
 
-        entity.setRestAfterSet(request.getRestAfterSet());
-        entity.setGroupId(request.getGroupId());
-
-        if (request.getParameters() != null && !request.getParameters().isEmpty()) {
-            List<RoutineSetParameterEntity> setParams = request.getParameters().stream()
-                    .map(paramRequest -> createRoutineSetParameter(paramRequest, entity))
-                    .collect(Collectors.toList());
-            entity.setParameters(setParams);
-        } else {
-            entity.setParameters(new ArrayList<>());
-        }
+        entity.setParameters(request.getParameters() != null && !request.getParameters().isEmpty()
+                ? request.getParameters().stream()
+                        .map(pr -> createRoutineSetParameter(pr, entity))
+                        .collect(Collectors.toList())
+                : new ArrayList<>());
 
         return entity;
     }
 
-    // ✅ BUG 3 CORREGIDO: repetitions faltaba
     private RoutineSetParameterEntity createRoutineSetParameter(
-            AddExerciseToRoutineRequest.SetParameterRequest request,
-            RoutineSetTemplateEntity setTemplate) {
+            AddExerciseToRoutineRequest.SetParameterRequest request, RoutineSetTemplateEntity setTemplate) {
 
         CustomParameterEntity parameter = customParameterRepository.findById(request.getParameterId())
-                .orElseThrow(() -> {
-                    log.error("CREATE_SET_PARAM_NOT_FOUND | parameterId={}", request.getParameterId());
-                    return new RuntimeException("Set parameter not found: " + request.getParameterId());
-                });
+                .orElseThrow(() -> new RuntimeException("Set parameter not found: " + request.getParameterId()));
 
         RoutineSetParameterEntity entity = new RoutineSetParameterEntity();
         entity.setSetTemplate(setTemplate);
@@ -472,7 +399,7 @@ public class RoutineConverter {
         entity.setNumericValue(request.getNumericValue());
         entity.setDurationValue(request.getDurationValue());
         entity.setIntegerValue(request.getIntegerValue());
-        entity.setRepetitions(request.getRepetitions()); // ✅ CORREGIDO
+        entity.setRepetitions(request.getRepetitions());
         return entity;
     }
 }

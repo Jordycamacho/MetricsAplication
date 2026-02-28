@@ -13,6 +13,7 @@ import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,9 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RoutinePersistenceAdapter implements RoutinePersistencePort {
+
     private final RoutineRepository routineRepository;
     private final RoutineConverter routineConverter;
     private final SportRepository sportRepository;
@@ -36,33 +39,32 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     @Override
     public RoutineModel save(RoutineModel routine) {
         RoutineEntity entity = routineConverter.toEntity(routine);
-        RoutineEntity savedEntity = routineRepository.save(entity);
-        return routineConverter.toDomain(savedEntity);
+        RoutineEntity saved = routineRepository.save(entity);
+        return routineConverter.toDomain(saved);
     }
 
     @Override
     public Optional<RoutineModel> findFullRoutineByIdAndUserId(Long id, Long userId) {
-
         Optional<RoutineEntity> routineOpt = routineRepository.findRoutineWithExercisesAndSets(id, userId);
-
-        if (routineOpt.isEmpty())
-            return Optional.empty();
+        if (routineOpt.isEmpty()) return Optional.empty();
 
         RoutineEntity routine = routineOpt.get();
 
+        // Batch-load de parámetros de sets para evitar N+1
         List<Long> setIds = routine.getExercises().stream()
                 .flatMap(e -> e.getSets().stream())
                 .map(RoutineSetTemplateEntity::getId)
                 .toList();
 
         if (!setIds.isEmpty()) {
-            List<RoutineSetParameterEntity> parameters = routineRepository.findParametersBySetIds(setIds);
+            Map<Long, List<RoutineSetParameterEntity>> grouped = routineRepository
+                    .findParametersBySetIds(setIds)
+                    .stream()
+                    .collect(Collectors.groupingBy(p -> p.getSetTemplate().getId()));
 
-            Map<Long, List<RoutineSetParameterEntity>> grouped = parameters.stream().collect(Collectors.groupingBy(
-                    p -> p.getSetTemplate().getId()));
-
-            routine.getExercises().forEach(
-                    e -> e.getSets().forEach(s -> s.setParameters(grouped.getOrDefault(s.getId(), List.of()))));
+            routine.getExercises().forEach(e ->
+                    e.getSets().forEach(s ->
+                            s.setParameters(grouped.getOrDefault(s.getId(), List.of()))));
         }
 
         return Optional.of(routineConverter.toDomain(routine));
@@ -80,27 +82,26 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
                 .map(routineConverter::toDomain);
     }
 
+    @SuppressWarnings("removal")
     @Override
     public Page<RoutineModel> findByUserIdAndFilters(Long userId, RoutineFilterRequest filters, Pageable pageable) {
-        @SuppressWarnings("removal")
         Specification<RoutineEntity> spec = Specification
                 .where((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
 
         if (filters.getSportId() != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("sport").get("id"), filters.getSportId()));
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("sport").get("id"), filters.getSportId()));
         }
-
         if (filters.getIsActive() != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("isActive"), filters.getIsActive()));
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("isActive"), filters.getIsActive()));
         }
-
         if (filters.getName() != null && !filters.getName().isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("name")),
-                    "%" + filters.getName().toLowerCase() + "%"));
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + filters.getName().toLowerCase() + "%"));
         }
 
-        return routineRepository.findAll(spec, pageable)
-                .map(routineConverter::toDomain);
+        return routineRepository.findAll(spec, pageable).map(routineConverter::toDomain);
     }
 
     @Override
@@ -125,15 +126,12 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     @Override
     @Transactional
     public RoutineModel update(RoutineModel routine) {
-        RoutineEntity existing = routineRepository.findByIdAndUserId(routine.getId(), routine.getUserId())
+        RoutineEntity existing = routineRepository
+                .findByIdAndUserId(routine.getId(), routine.getUserId())
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
 
-        System.out.println("DEBUG - Update Routine:");
-        System.out.println("  - Name: " + routine.getName());
-        System.out.println("  - SportId: " + routine.getSportId());
-        System.out.println("  - TrainingDays: " + routine.getTrainingDays());
-        System.out.println("  - SessionsPerWeek: " + routine.getSessionsPerWeek());
-        System.out.println("  - Goal: " + routine.getGoal());
+        log.debug("UPDATE_ROUTINE | routineId={} | sportId={} | days={} | sessions={}",
+                routine.getId(), routine.getSportId(), routine.getTrainingDays(), routine.getSessionsPerWeek());
 
         existing.setName(routine.getName());
         existing.setDescription(routine.getDescription());
@@ -145,19 +143,18 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
 
         if (routine.getSportId() != null) {
             SportEntity sport = sportRepository.findById(routine.getSportId())
-                    .orElseThrow(() -> new RuntimeException("Sport not found with id: " + routine.getSportId()));
+                    .orElseThrow(() -> new RuntimeException("Sport not found: " + routine.getSportId()));
             existing.setSport(sport);
-            System.out.println("  - Sport updated to: " + sport.getName());
         } else {
             existing.setSport(null);
-            System.out.println("  - Sport set to null");
         }
 
         RoutineEntity updated = routineRepository.save(existing);
-        System.out.println("DEBUG - After save:");
-        System.out.println("  - Sport: " + (existing.getSport() != null ? existing.getSport().getId() : "null"));
-        System.out.println("  - TrainingDays: " + existing.getTrainingDays());
-        System.out.println("  - SessionsPerWeek: " + existing.getSessionsPerWeek());
+        log.debug("UPDATE_ROUTINE_OK | routineId={} | sport={} | days={}",
+                updated.getId(),
+                updated.getSport() != null ? updated.getSport().getId() : "null",
+                updated.getTrainingDays());
+
         return routineConverter.toDomain(updated);
     }
 
@@ -167,6 +164,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
         RoutineEntity routine = routineRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
         routineRepository.delete(routine);
+        log.info("DELETE_ROUTINE_OK | routineId={} | userId={}", id, userId);
     }
 
     @Override
@@ -174,7 +172,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     public void toggleActiveStatus(Long id, Long userId, boolean isActive) {
         int updated = routineRepository.updateActiveStatus(id, userId, isActive);
         if (updated == 0) {
-            throw new RuntimeException("Routine not found or not authorized");
+            throw new RuntimeException("Routine not found or not authorized: id=" + id);
         }
     }
 
@@ -190,7 +188,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     public void updateLastUsedAt(Long id, Long userId, LocalDateTime lastUsedAt) {
         int updated = routineRepository.updateLastUsedAt(id, userId, lastUsedAt);
         if (updated == 0) {
-            throw new RuntimeException("Routine not found or not authorized");
+            throw new RuntimeException("Routine not found or not authorized: id=" + id);
         }
     }
 }

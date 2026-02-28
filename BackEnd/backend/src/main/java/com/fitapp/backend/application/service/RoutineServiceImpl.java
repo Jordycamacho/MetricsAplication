@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -46,505 +47,576 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RoutineServiceImpl implements RoutineUseCase {
-        private final RoutinePersistencePort routinePersistencePort;
-        private final UserPersistencePort userPersistencePort;
-        private final ExercisePersistencePort exercisePersistencePort;
-        private final SportPersistencePort sportPersistencePort;
-        private final CustomParameterPersistencePort customParameterPersistencePort;
-        private final RoutineServiceLogger serviceLogger;
 
-        @Override
-        @CacheEvict(value = { "routines", "userRoutines" }, allEntries = true)
-        public RoutineResponse createRoutine(CreateRoutineRequest request, String userEmail) {
-                log.info("Creando nueva rutina para usuario: {}", userEmail);
-                serviceLogger.logRoutineCreationStart(userEmail, request.getName());
+    private final RoutinePersistencePort routinePersistencePort;
+    private final UserPersistencePort userPersistencePort;
+    private final ExercisePersistencePort exercisePersistencePort;
+    private final SportPersistencePort sportPersistencePort;
+    private final CustomParameterPersistencePort customParameterPersistencePort;
+    private final RoutineServiceLogger serviceLogger;
 
-                if (request.getTrainingDays() == null || request.getTrainingDays().isEmpty()) {
-                        throw new IllegalArgumentException("Training days are required");
-                }
+    // ── CRUD ──────────────────────────────────────────────────────────────────
 
-                Set<DayOfWeek> trainingDays = request.getTrainingDays().stream()
-                                .map(String::toUpperCase)
-                                .map(DayOfWeek::valueOf)
-                                .collect(Collectors.toSet());
+    @Override
+    @Caching(evict = {
+        @CacheEvict(value = "routines", allEntries = true),
+        @CacheEvict(value = "userRoutines", allEntries = true),
+        @CacheEvict(value = "recentRoutines", allEntries = true),
+        @CacheEvict(value = "routineStats", allEntries = true)
+    })
+    public RoutineResponse createRoutine(CreateRoutineRequest request, String userEmail) {
+        log.info("CREATE_ROUTINE | user={} | name={}", userEmail, request.getName());
+        serviceLogger.logRoutineCreationStart(userEmail, request.getName());
 
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                SportModel sport = null;
-                if (request.getSportId() != null) {
-                        sport = sportPersistencePort.findById(request.getSportId())
-                                        .orElseThrow(() -> new RuntimeException(
-                                                        "Sport not found with id: " + request.getSportId()));
-                }
-
-                RoutineModel routine = new RoutineModel();
-                routine.setName(request.getName());
-                routine.setDescription(request.getDescription());
-                routine.setUserId(user.getId());
-                routine.setSportId(sport != null ? sport.getId() : null);
-                routine.setIsActive(true);
-                routine.setExercises(new ArrayList<>());
-                routine.setTrainingDays(trainingDays);
-                routine.setGoal(request.getGoal());
-                routine.setSessionsPerWeek(request.getSessionsPerWeek());
-                routine.setLastUsedAt(null);
-
-                RoutineModel savedRoutine = routinePersistencePort.save(routine);
-                log.info("Rutina creada exitosamente con ID: {}", savedRoutine.getId());
-                serviceLogger.logRoutineCreationSuccess(savedRoutine.getId(), userEmail);
-                return mapToResponse(savedRoutine, sport);
+        if (request.getTrainingDays() == null || request.getTrainingDays().isEmpty()) {
+            throw new IllegalArgumentException("Training days are required");
         }
 
-        @Override
-        @Cacheable(value = "routineForTraining", key = "#id + '_' + #userEmail")
-        public RoutineResponse getRoutineForTraining(Long id, String userEmail) {
-                log.info("Obteniendo rutina para entrenamiento: id={}, usuario={}", id, userEmail);
+        Set<DayOfWeek> trainingDays = request.getTrainingDays().stream()
+                .map(String::toUpperCase)
+                .map(DayOfWeek::valueOf)
+                .collect(Collectors.toSet());
 
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        UserModel user = findUser(userEmail);
 
-                RoutineModel routine = routinePersistencePort.findFullRoutineByIdAndUserId(id, user.getId())
-                                .orElseThrow(() -> new RoutineNotFoundException(id));
+        RoutineModel routine = new RoutineModel();
+        routine.setName(request.getName());
+        routine.setDescription(request.getDescription());
+        routine.setUserId(user.getId());
+        routine.setSportId(request.getSportId());
+        routine.setIsActive(true);
+        routine.setExercises(new ArrayList<>());
+        routine.setTrainingDays(trainingDays);
+        routine.setGoal(request.getGoal());
+        routine.setSessionsPerWeek(request.getSessionsPerWeek());
+        routine.setLastUsedAt(null);
 
-                SportModel sport = null;
-                if (routine.getSportId() != null) {
-                        sport = sportPersistencePort.findById(routine.getSportId()).orElse(null);
-                }
+        RoutineModel saved = routinePersistencePort.save(routine);
+        log.info("CREATE_ROUTINE_OK | routineId={} | user={}", saved.getId(), userEmail);
+        serviceLogger.logRoutineCreationSuccess(saved.getId(), userEmail);
 
-                RoutineResponse response = mapToResponse(routine, sport);
+        SportModel sport = loadSport(saved.getSportId());
+        return mapToResponse(saved, sport);
+    }
 
-                routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
+    @Override
+    // FIX: no cachear getRoutineForTraining porque siempre actualiza lastUsedAt
+    public RoutineResponse getRoutineForTraining(Long id, String userEmail) {
+        log.info("GET_ROUTINE_TRAINING | routineId={} | user={}", id, userEmail);
 
-                log.info("Rutina para entrenamiento obtenida exitosamente: id={}", id);
-                return response;
+        UserModel user = findUser(userEmail);
+        RoutineModel routine = routinePersistencePort
+                .findFullRoutineByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new RoutineNotFoundException(id));
+
+        SportModel sport = loadSport(routine.getSportId());
+
+        // Carga todos los ejercicios y parámetros en batch para evitar N+1
+        RoutineResponse response = mapToResponseBatch(routine, sport);
+
+        routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
+        log.info("GET_ROUTINE_TRAINING_OK | routineId={}", id);
+        return response;
+    }
+
+    @Override
+    @Cacheable(value = "routines", key = "#id + '_' + #userEmail")
+    public RoutineResponse getRoutineById(Long id, String userEmail) {
+        log.debug("GET_ROUTINE | routineId={} | user={}", id, userEmail);
+
+        UserModel user = findUser(userEmail);
+        RoutineModel routine = routinePersistencePort
+                .findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new RoutineNotFoundException(id));
+
+        SportModel sport = loadSport(routine.getSportId());
+        return mapToResponse(routine, sport);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "routines", allEntries = true),
+        @CacheEvict(value = "userRoutines", allEntries = true),
+        @CacheEvict(value = "recentRoutines", allEntries = true),
+        @CacheEvict(value = "routineStats", allEntries = true),
+        @CacheEvict(value = "activeRoutines", allEntries = true)
+    })
+    public RoutineResponse updateRoutine(Long id, UpdateRoutineRequest request, String userEmail) {
+        log.info("UPDATE_ROUTINE | routineId={} | user={}", id, userEmail);
+        serviceLogger.logRoutineUpdateStart(id, userEmail);
+
+        UserModel user = findUser(userEmail);
+        RoutineModel existing = routinePersistencePort
+                .findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new RoutineNotFoundException(id));
+
+        if (request.getName() != null) existing.setName(request.getName());
+        if (request.getDescription() != null) existing.setDescription(request.getDescription());
+        if (request.getGoal() != null) existing.setGoal(request.getGoal());
+        if (request.getSessionsPerWeek() != null) existing.setSessionsPerWeek(request.getSessionsPerWeek());
+        if (request.getIsActive() != null) existing.setIsActive(request.getIsActive());
+        if (request.getSportId() != null) existing.setSportId(request.getSportId());
+
+        if (request.getTrainingDays() != null && !request.getTrainingDays().isEmpty()) {
+            Set<DayOfWeek> days = request.getTrainingDays().stream()
+                    .map(String::toUpperCase)
+                    .map(DayOfWeek::valueOf)
+                    .collect(Collectors.toSet());
+            existing.setTrainingDays(days);
         }
 
-        @Override
-        @Cacheable(value = "routines", key = "#id + '_' + #userEmail")
-        public RoutineResponse getRoutineById(Long id, String userEmail) {
-                log.debug("Obteniendo rutina por ID: {}, usuario: {}", id, userEmail);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                RoutineModel routine = routinePersistencePort.findByIdAndUserId(id, user.getId())
-                                .orElseThrow(() -> new RoutineNotFoundException(id));
-
-                SportModel sport = null;
-                if (routine.getSportId() != null) {
-                        sport = sportPersistencePort.findById(routine.getSportId())
-                                        .orElse(null);
-                }
-
-                return mapToResponse(routine, sport);
+        if (request.getSportId() == null && request.hasSportIdExplicit()) {
+            existing.setSportId(null);
         }
 
-        @Override
-        @Transactional
-        @CacheEvict(value = { "routines", "userRoutines", "routineStats" }, key = "#userEmail")
-        public RoutineResponse updateRoutine(Long id, UpdateRoutineRequest request, String userEmail) {
-                log.info("Actualizando rutina ID: {}, usuario: {}", id, userEmail);
-                serviceLogger.logRoutineUpdateStart(id, userEmail);
+        RoutineModel updated = routinePersistencePort.update(existing);
+        SportModel sport = loadSport(updated.getSportId());
 
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+        serviceLogger.logRoutineUpdateSuccess(updated.getId(), userEmail);
+        log.info("UPDATE_ROUTINE_OK | routineId={}", updated.getId());
+        return mapToResponse(updated, sport);
+    }
 
-                Long userId = user.getId();
+    @Override
+    @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "routines", allEntries = true),
+        @CacheEvict(value = "userRoutines", allEntries = true),
+        @CacheEvict(value = "recentRoutines", allEntries = true),
+        @CacheEvict(value = "routineStats", allEntries = true),
+        @CacheEvict(value = "activeRoutines", allEntries = true),
+        @CacheEvict(value = "lastUsedRoutines", allEntries = true)
+    })
+    public void deleteRoutine(Long id, String userEmail) {
+        log.info("DELETE_ROUTINE | routineId={} | user={}", id, userEmail);
+        serviceLogger.logRoutineDeletionStart(id, userEmail);
 
-                RoutineModel existingRoutine = routinePersistencePort.findByIdAndUserId(id, userId)
-                                .orElseThrow(() -> new RoutineNotFoundException(id));
+        UserModel user = findUser(userEmail);
+        routinePersistencePort.deleteByIdAndUserId(id, user.getId());
 
-                if (request.getName() != null)
-                        existingRoutine.setName(request.getName());
-                if (request.getDescription() != null)
-                        existingRoutine.setDescription(request.getDescription());
-                if (request.getGoal() != null)
-                        existingRoutine.setGoal(request.getGoal());
-                if (request.getSessionsPerWeek() != null) {
-                        log.debug("Estableciendo sessionsPerWeek a: {}", request.getSessionsPerWeek());
-                        existingRoutine.setSessionsPerWeek(request.getSessionsPerWeek());
-                }
-                if (request.getIsActive() != null)
-                        existingRoutine.setIsActive(request.getIsActive());
+        serviceLogger.logRoutineDeletionSuccess(id, userEmail);
+        log.info("DELETE_ROUTINE_OK | routineId={}", id);
+    }
 
-                if (request.getTrainingDays() != null && !request.getTrainingDays().isEmpty()) {
-                        Set<DayOfWeek> trainingDays = request.getTrainingDays().stream()
-                                        .map(String::toUpperCase)
-                                        .map(DayOfWeek::valueOf)
-                                        .collect(Collectors.toSet());
-                        log.debug("Estableciendo trainingDays a: {}", trainingDays);
-                        existingRoutine.setTrainingDays(trainingDays);
-                }
+    @Override
+    @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "routines", allEntries = true),
+        @CacheEvict(value = "activeRoutines", allEntries = true),
+        @CacheEvict(value = "userRoutines", allEntries = true)
+    })
+    public void toggleRoutineActiveStatus(Long id, boolean isActive, String userEmail) {
+        log.info("TOGGLE_ACTIVE | routineId={} | active={} | user={}", id, isActive, userEmail);
+        UserModel user = findUser(userEmail);
+        routinePersistencePort.toggleActiveStatus(id, user.getId(), isActive);
+        serviceLogger.logRoutineStatusToggle(id, isActive, userEmail);
+    }
 
-                log.debug("DEBUG - Update Routine Request:");
-                log.debug("  - SportId from request: {}", request.getSportId());
-                log.debug("  - TrainingDays from request: {}", request.getTrainingDays());
-                log.debug("  - SessionsPerWeek from request: {}", request.getSessionsPerWeek());
-                log.debug("  - Goal from request: {}", request.getGoal());
+    // ── Listados ──────────────────────────────────────────────────────────────
 
-                if (request.getSportId() != null) {
-                        log.debug("  - Setting sportId to: {}", request.getSportId());
-                        existingRoutine.setSportId(request.getSportId());
-                }
+    @Override
+    @Cacheable(value = "userRoutines", key = "#userEmail + '_p' + #page + '_s' + #size + '_' + #sortBy + '_' + #sortDirection")
+    public PageResponse<RoutineSummaryResponse> getUserRoutines(
+            String userEmail, int page, int size, String sortBy, String sortDirection) {
+        log.debug("GET_USER_ROUTINES | user={} | page={}", userEmail, page);
 
-                RoutineModel updatedRoutine = routinePersistencePort.update(existingRoutine);
+        UserModel user = findUser(userEmail);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
+        Page<RoutineModel> routinePage = routinePersistencePort.findByUserId(user.getId(), pageable);
 
-                SportModel sport = null;
-                if (updatedRoutine.getSportId() != null) {
-                        sport = sportPersistencePort.findById(updatedRoutine.getSportId()).orElse(null);
-                }
+        return mapToPageResponse(routinePage);
+    }
 
-                serviceLogger.logRoutineUpdateSuccess(updatedRoutine.getId(), userEmail);
-                log.info("Rutina actualizada exitosamente: {}", updatedRoutine.getId());
-                return mapToResponse(updatedRoutine, sport);
+    @Override
+    public PageResponse<RoutineSummaryResponse> getUserRoutinesWithFilters(
+            String userEmail, RoutineFilterRequest filters, int page, int size) {
+        log.debug("GET_ROUTINES_FILTERED | user={} | page={}", userEmail, page);
+
+        UserModel user = findUser(userEmail);
+        Sort sort = Sort.by(Sort.Direction.fromString(filters.getSortDirection()), filters.getSortBy());
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<RoutineModel> routinePage = routinePersistencePort.findByUserIdAndFilters(user.getId(), filters, pageable);
+
+        return mapToPageResponse(routinePage);
+    }
+
+    @Override
+    @Cacheable(value = "recentRoutines", key = "#userEmail + '_' + #limit")
+    public List<RoutineSummaryResponse> getRecentRoutines(String userEmail, int limit) {
+        log.debug("GET_RECENT_ROUTINES | user={} | limit={}", userEmail, limit);
+        serviceLogger.logRecentRoutinesRetrievalStart(userEmail, limit);
+
+        UserModel user = findUser(userEmail);
+        List<RoutineModel> routines = routinePersistencePort.findRecentByUserId(user.getId(), limit);
+
+        serviceLogger.logRecentRoutinesRetrievalSuccess(userEmail, routines.size());
+        return mapToSummaryListBatch(routines);
+    }
+
+    @Override
+    @Cacheable(value = "activeRoutines", key = "#userEmail")
+    public List<RoutineSummaryResponse> getActiveRoutines(String userEmail) {
+        log.debug("GET_ACTIVE_ROUTINES | user={}", userEmail);
+        serviceLogger.logActiveRoutinesRetrievalStart(userEmail);
+
+        UserModel user = findUser(userEmail);
+        List<RoutineModel> routines = routinePersistencePort.findActiveRoutinesByUserId(user.getId());
+
+        serviceLogger.logActiveRoutinesRetrievalSuccess(userEmail, routines.size());
+        return mapToSummaryListBatch(routines);
+    }
+
+    @Override
+    @Cacheable(value = "lastUsedRoutines", key = "#userEmail + '_' + #limit")
+    public List<RoutineSummaryResponse> getLastUsedRoutines(String userEmail, int limit) {
+        log.debug("GET_LAST_USED | user={} | limit={}", userEmail, limit);
+        UserModel user = findUser(userEmail);
+        List<RoutineModel> routines = routinePersistencePort.findLastUsedByUserId(user.getId(), limit);
+        return mapToSummaryListBatch(routines);
+    }
+
+    @Override
+    @Cacheable(value = "routineStats", key = "#userEmail")
+    public RoutineStatisticsResponse getRoutineStatistics(String userEmail) {
+        log.debug("GET_STATS | user={}", userEmail);
+        serviceLogger.logRoutineStatisticsRetrievalStart(userEmail);
+
+        UserModel user = findUser(userEmail);
+        long total = routinePersistencePort.countByUserId(user.getId());
+        long active = routinePersistencePort.findActiveRoutinesByUserId(user.getId()).size();
+
+        serviceLogger.logRoutineStatisticsRetrievalSuccess(userEmail);
+        return RoutineStatisticsResponse.builder()
+                .totalRoutines(total)
+                .activeRoutines(active)
+                .inactiveRoutines(total - active)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "lastUsedRoutines", allEntries = true)
+    public void markRoutineAsUsed(Long id, String userEmail) {
+        log.debug("MARK_USED | routineId={} | user={}", id, userEmail);
+        UserModel user = findUser(userEmail);
+        routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
+    }
+
+    // ── Mapeo sin N+1: carga deportes y parámetros en batch ──────────────────
+
+    /**
+     * Mapea una lista de rutinas a resúmenes cargando todos los deportes necesarios
+     * en una sola pasada (evita N+1 por deporte).
+     */
+    private List<RoutineSummaryResponse> mapToSummaryListBatch(List<RoutineModel> routines) {
+        // Recoger todos los sportIds únicos
+        Set<Long> sportIds = routines.stream()
+                .filter(r -> r.getSportId() != null)
+                .map(RoutineModel::getSportId)
+                .collect(Collectors.toSet());
+
+        // Cargar todos los deportes de una vez
+        Map<Long, SportModel> sportMap = sportIds.stream()
+                .map(id -> sportPersistencePort.findById(id).orElse(null))
+                .filter(s -> s != null)
+                .collect(Collectors.toMap(SportModel::getId, Function.identity()));
+
+        return routines.stream()
+                .map(routine -> mapToSummaryResponse(routine, sportMap.get(routine.getSportId())))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Mapea una rutina completa con sus ejercicios cargando ejercicios y parámetros
+     * en batch (evita N+1 anidado en getRoutineForTraining).
+     */
+    private RoutineResponse mapToResponseBatch(RoutineModel routine, SportModel sport) {
+        if (routine.getExercises() == null || routine.getExercises().isEmpty()) {
+            return mapToResponse(routine, sport);
         }
 
-        @Override
-        @Transactional
-        @CacheEvict(value = { "routines", "userRoutines", "routineStats" }, key = "#userEmail")
-        public void deleteRoutine(Long id, String userEmail) {
-                log.info("Eliminando rutina ID: {}, usuario: {}", id, userEmail);
-                serviceLogger.logRoutineDeletionStart(id, userEmail);
+        // Batch: todos los exerciseIds en una sola query
+        Set<Long> exerciseIds = routine.getExercises().stream()
+                .map(e -> e.getExerciseId())
+                .collect(Collectors.toSet());
 
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> {
-                                        serviceLogger.logRoutineDeletionError(id, userEmail, "User not found");
-                                        return new RuntimeException("User not found");
-                                });
+        Map<Long, ExerciseModel> exerciseMap = exerciseIds.stream()
+                .map(id -> exercisePersistencePort.findById(id).orElse(null))
+                .filter(e -> e != null)
+                .collect(Collectors.toMap(ExerciseModel::getId, Function.identity()));
 
-                routinePersistencePort.deleteByIdAndUserId(id, user.getId());
-                serviceLogger.logRoutineDeletionSuccess(id, userEmail);
-                log.info("Rutina eliminada exitosamente: {}", id);
-        }
+        // Batch: todos los parameterIds únicos (de todos los ejercicios y sets)
+        Set<Long> paramIds = new java.util.HashSet<>();
+        routine.getExercises().forEach(ex -> {
+            if (ex.getTargetParameters() != null)
+                ex.getTargetParameters().forEach(p -> paramIds.add(p.getParameterId()));
+            if (ex.getSets() != null)
+                ex.getSets().forEach(s -> {
+                    if (s.getParameters() != null)
+                        s.getParameters().forEach(p -> paramIds.add(p.getParameterId()));
+                });
+        });
 
-        @Override
-        @Transactional
-        @CacheEvict(value = { "routines", "userRoutines", "routineStats" }, key = "#userEmail")
-        public void toggleRoutineActiveStatus(Long id, boolean isActive, String userEmail) {
-                log.info("Cambiando estado de rutina ID: {} a activo={}, usuario: {}", id, isActive, userEmail);
+        Map<Long, CustomParameterModel> paramMap = paramIds.stream()
+                .map(id -> customParameterPersistencePort.findById(id).orElse(null))
+                .filter(p -> p != null)
+                .collect(Collectors.toMap(CustomParameterModel::getId, Function.identity()));
 
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+        RoutineResponse response = buildBaseResponse(routine, sport);
 
-                routinePersistencePort.toggleActiveStatus(id, user.getId(), isActive);
-                serviceLogger.logRoutineStatusToggle(id, isActive, userEmail);
-                log.info("Estado de rutina cambiado exitosamente: {}", id);
-        }
+        List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
+                .map(exercise -> {
+                    ExerciseModel exerciseModel = exerciseMap.get(exercise.getExerciseId());
+                    return RoutineExerciseResponse.builder()
+                            .id(exercise.getId())
+                            .exerciseId(exercise.getExerciseId())
+                            .exerciseName(exerciseModel != null ? exerciseModel.getName() : null)
+                            .position(exercise.getPosition())
+                            .sessionNumber(exercise.getSessionNumber())
+                            .dayOfWeek(exercise.getDayOfWeek())
+                            .sessionOrder(exercise.getSessionOrder())
+                            .restAfterExercise(exercise.getRestAfterExercise())
+                            .sets(exercise.getSets() != null ? exercise.getSets().size() : 0)
+                            .targetParameters(mapParamsFromCache(exercise.getTargetParameters(), paramMap))
+                            .setsTemplate(mapSetsFromCache(exercise.getSets(), paramMap))
+                            .build();
+                })
+                .sorted(Comparator.comparing(RoutineExerciseResponse::getPosition))
+                .collect(Collectors.toList());
 
-        @Override
-        @Cacheable(value = "userRoutines", key = "#userEmail + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
-        public PageResponse<RoutineSummaryResponse> getUserRoutines(String userEmail, int page, int size, String sortBy,
-                        String sortDirection) {
-                log.debug("Obteniendo rutinas del usuario: {}, página: {}, tamaño: {}", userEmail, page, size);
+        response.setExercises(exerciseResponses);
+        return response;
+    }
 
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+    // ── Mapeo estándar (para operaciones simples sin batch necesario) ─────────
 
-                Pageable pageable = PageRequest.of(page, size,
-                                Sort.by(Sort.Direction.fromString(sortDirection), sortBy));
-                Page<RoutineModel> routinePage = routinePersistencePort.findByUserId(user.getId(), pageable);
+    private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
+        RoutineResponse response = buildBaseResponse(routine, sport);
 
-                return mapToPageResponse(routinePage);
-        }
-
-        @Override
-        public PageResponse<RoutineSummaryResponse> getUserRoutinesWithFilters(String userEmail,
-                        RoutineFilterRequest filters, int page, int size) {
-                log.debug("Obteniendo rutinas con filtros para usuario: {}, página: {}", userEmail, page);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                Sort sort = Sort.by(Sort.Direction.fromString(filters.getSortDirection()), filters.getSortBy());
-                Pageable pageable = PageRequest.of(page, size, sort);
-
-                Page<RoutineModel> routinePage = routinePersistencePort.findByUserIdAndFilters(
-                                user.getId(), filters, pageable);
-
-                return mapToPageResponse(routinePage);
-        }
-
-        @Override
-        @Cacheable(value = "recentRoutines", key = "#userEmail + '_' + #limit")
-        public List<RoutineSummaryResponse> getRecentRoutines(String userEmail, int limit) {
-                log.debug("Obteniendo rutinas recientes para usuario: {}, límite: {}", userEmail, limit);
-                serviceLogger.logRecentRoutinesRetrievalStart(userEmail, limit);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                List<RoutineModel> recentRoutines = routinePersistencePort.findRecentByUserId(user.getId(), limit);
-
-                serviceLogger.logRecentRoutinesRetrievalSuccess(userEmail, recentRoutines.size());
-                return recentRoutines.stream()
-                                .map(this::mapToSummaryResponse)
-                                .collect(Collectors.toList());
-        }
-
-        @Override
-        @Cacheable(value = "activeRoutines", key = "#userEmail")
-        public List<RoutineSummaryResponse> getActiveRoutines(String userEmail) {
-                log.debug("Obteniendo rutinas activas para usuario: {}", userEmail);
-                serviceLogger.logActiveRoutinesRetrievalStart(userEmail);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                List<RoutineModel> activeRoutines = routinePersistencePort.findActiveRoutinesByUserId(user.getId());
-
-                serviceLogger.logActiveRoutinesRetrievalSuccess(userEmail, activeRoutines.size());
-                return activeRoutines.stream()
-                                .map(this::mapToSummaryResponse)
-                                .collect(Collectors.toList());
-        }
-
-        @Override
-        @Cacheable(value = "routineStats", key = "#userEmail")
-        public RoutineStatisticsResponse getRoutineStatistics(String userEmail) {
-                log.debug("Obteniendo estadísticas de rutinas para usuario: {}", userEmail);
-                serviceLogger.logRoutineStatisticsRetrievalStart(userEmail);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                long totalRoutines = routinePersistencePort.countByUserId(user.getId());
-                List<RoutineModel> activeRoutines = routinePersistencePort.findActiveRoutinesByUserId(user.getId());
-
-                serviceLogger.logRoutineStatisticsRetrievalSuccess(userEmail);
-                log.debug("Estadísticas obtenidas: total={}, activas={}", totalRoutines, activeRoutines.size());
-
-                return RoutineStatisticsResponse.builder()
-                                .totalRoutines(totalRoutines)
-                                .activeRoutines(activeRoutines.size())
-                                .inactiveRoutines(totalRoutines - activeRoutines.size())
+        if (routine.getExercises() != null && !routine.getExercises().isEmpty()) {
+            List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
+                    .map(exercise -> {
+                        ExerciseModel exerciseModel = exercisePersistencePort
+                                .findById(exercise.getExerciseId()).orElse(null);
+                        return RoutineExerciseResponse.builder()
+                                .id(exercise.getId())
+                                .exerciseId(exercise.getExerciseId())
+                                .exerciseName(exerciseModel != null ? exerciseModel.getName() : null)
+                                .position(exercise.getPosition())
+                                .sessionNumber(exercise.getSessionNumber())
+                                .dayOfWeek(exercise.getDayOfWeek())
+                                .sessionOrder(exercise.getSessionOrder())
+                                .restAfterExercise(exercise.getRestAfterExercise())
+                                .sets(exercise.getSets() != null ? exercise.getSets().size() : 0)
+                                .targetParameters(mapToParameterResponses(exercise.getTargetParameters()))
+                                .setsTemplate(mapToSetTemplateResponses(exercise.getSets()))
                                 .build();
+                    })
+                    .sorted(Comparator.comparing(RoutineExerciseResponse::getPosition))
+                    .collect(Collectors.toList());
+            response.setExercises(exerciseResponses);
+        } else {
+            response.setExercises(new ArrayList<>());
         }
 
-        private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
-                log.debug("Mapeando RoutineModel a RoutineResponse: {}", routine.getId());
+        return response;
+    }
 
-                RoutineResponse response = new RoutineResponse();
-                response.setId(routine.getId());
-                response.setName(routine.getName());
-                response.setDescription(routine.getDescription());
-                response.setSportId(routine.getSportId());
-                response.setSportName(sport != null ? sport.getName() : null);
-                response.setIsActive(routine.getIsActive());
-                response.setCreatedAt(routine.getCreatedAt());
-                response.setUpdatedAt(routine.getUpdatedAt());
-                response.setLastUsedAt(routine.getLastUsedAt());
-                response.setTrainingDays(routine.getTrainingDays());
-                response.setGoal(routine.getGoal());
-                response.setSessionsPerWeek(routine.getSessionsPerWeek());
+    private RoutineResponse buildBaseResponse(RoutineModel routine, SportModel sport) {
+        RoutineResponse response = new RoutineResponse();
+        response.setId(routine.getId());
+        response.setName(routine.getName());
+        response.setDescription(routine.getDescription());
+        response.setSportId(routine.getSportId());
+        response.setSportName(sport != null ? sport.getName() : null);
+        response.setIsActive(routine.getIsActive());
+        response.setCreatedAt(routine.getCreatedAt());
+        response.setUpdatedAt(routine.getUpdatedAt());
+        response.setLastUsedAt(routine.getLastUsedAt());
+        response.setTrainingDays(routine.getTrainingDays());
+        response.setGoal(routine.getGoal());
+        response.setSessionsPerWeek(routine.getSessionsPerWeek());
+        return response;
+    }
 
-                if (routine.getExercises() != null) {
-                        log.debug("Mapeando {} ejercicios", routine.getExercises().size());
+    private RoutineSummaryResponse mapToSummaryResponse(RoutineModel routine, SportModel sport) {
+        int exerciseCount = routine.getExercises() != null ? routine.getExercises().size() : 0;
+        return RoutineSummaryResponse.builder()
+                .id(routine.getId())
+                .name(routine.getName())
+                .description(routine.getDescription())
+                .sportId(routine.getSportId())
+                .sportName(sport != null ? sport.getName() : null)
+                .isActive(routine.getIsActive())
+                .createdAt(routine.getCreatedAt())
+                .updatedAt(routine.getUpdatedAt())
+                .lastUsedAt(routine.getLastUsedAt())
+                .trainingDays(routine.getTrainingDays())
+                .goal(routine.getGoal())
+                .sessionsPerWeek(routine.getSessionsPerWeek())
+                .exerciseCount(exerciseCount)
+                .build();
+    }
 
-                        List<RoutineExerciseResponse> exerciseResponses = routine.getExercises().stream()
-                                        .map(exercise -> {
-                                                ExerciseModel exerciseModel = exercisePersistencePort
-                                                                .findById(exercise.getExerciseId())
-                                                                .orElse(null);
+    private PageResponse<RoutineSummaryResponse> mapToPageResponse(Page<RoutineModel> page) {
+        // Batch sport load para toda la página
+        List<RoutineSummaryResponse> content = mapToSummaryListBatch(page.getContent());
+        return PageResponse.<RoutineSummaryResponse>builder()
+                .content(content)
+                .pageNumber(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
 
-                                                return RoutineExerciseResponse.builder()
-                                                                .id(exercise.getId())
-                                                                .exerciseId(exercise.getExerciseId())
-                                                                .exerciseName(exerciseModel != null
-                                                                                ? exerciseModel.getName()
-                                                                                : null)
-                                                                .position(exercise.getPosition())
-                                                                .sessionNumber(exercise.getSessionNumber())
-                                                                .dayOfWeek(exercise.getDayOfWeek())
-                                                                .sessionOrder(exercise.getSessionOrder())
-                                                                .restAfterExercise(exercise.getRestAfterExercise())
-                                                                .sets(exercise.getSets() != null
-                                                                                ? exercise.getSets().size()
-                                                                                : 0)
-                                                                .targetParameters(mapToParameterResponses(
-                                                                                exercise.getTargetParameters()))
-                                                                .setsTemplate(mapToSetTemplateResponses(
-                                                                                exercise.getSets()))
-                                                                .build();
-                                        })
-                                        .sorted(Comparator.comparing(RoutineExerciseResponse::getPosition))
-                                        .collect(Collectors.toList());
+    // ── Mapeo de parámetros con caché in-memory ───────────────────────────────
 
-                        response.setExercises(exerciseResponses);
-                } else {
-                        response.setExercises(new ArrayList<>());
-                }
+    private List<RoutineExerciseParameterResponse> mapParamsFromCache(
+            List<RoutineExerciseParameterModel> parameters, Map<Long, CustomParameterModel> paramMap) {
+        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        return parameters.stream()
+                .map(param -> {
+                    CustomParameterModel model = paramMap.get(param.getParameterId());
+                    return RoutineExerciseParameterResponse.builder()
+                            .id(param.getId())
+                            .parameterId(param.getParameterId())
+                            .parameterName(model != null ? model.getName() : null)
+                            .parameterType(model != null && model.getParameterType() != null
+                                    ? model.getParameterType().name() : null)
+                            .numericValue(param.getNumericValue())
+                            .integerValue(param.getIntegerValue())
+                            .durationValue(param.getDurationValue())
+                            .stringValue(param.getStringValue())
+                            .minValue(param.getMinValue())
+                            .maxValue(param.getMaxValue())
+                            .defaultValue(param.getDefaultValue())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 
-                log.debug("Mapeo completado para rutina: {}", routine.getId());
-                return response;
-        }
+    private List<RoutineSetTemplateResponse> mapSetsFromCache(
+            List<RoutineSetTemplateModel> sets, Map<Long, CustomParameterModel> paramMap) {
+        if (sets == null || sets.isEmpty()) return new ArrayList<>();
+        return sets.stream()
+                .sorted(Comparator.comparing(RoutineSetTemplateModel::getPosition))
+                .map(set -> RoutineSetTemplateResponse.builder()
+                        .id(set.getId())
+                        .position(set.getPosition())
+                        .subSetNumber(set.getSubSetNumber())
+                        .groupId(set.getGroupId())
+                        .setType(set.getSetType())
+                        .restAfterSet(set.getRestAfterSet())
+                        .parameters(mapSetParamsFromCache(set.getParameters(), paramMap))
+                        .build())
+                .collect(Collectors.toList());
+    }
 
-        private List<RoutineExerciseParameterResponse> mapToParameterResponses(
-                        List<RoutineExerciseParameterModel> parameters) {
-                if (parameters == null || parameters.isEmpty()) {
-                        return new ArrayList<>();
-                }
+    private List<RoutineSetParameterResponse> mapSetParamsFromCache(
+            List<RoutineSetParameterModel> parameters, Map<Long, CustomParameterModel> paramMap) {
+        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        return parameters.stream()
+                .map(param -> {
+                    CustomParameterModel model = paramMap.get(param.getParameterId());
+                    return RoutineSetParameterResponse.builder()
+                            .id(param.getId())
+                            .parameterId(param.getParameterId())
+                            .parameterName(model != null ? model.getName() : null)
+                            .parameterType(model != null && model.getParameterType() != null
+                                    ? model.getParameterType().name() : null)
+                            .numericValue(param.getNumericValue())
+                            .durationValue(param.getDurationValue())
+                            .integerValue(param.getIntegerValue())
+                            .repetitions(param.getRepetitions())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 
-                log.debug("Mapeando {} parámetros", parameters.size());
+    // Mapeo estándar (para operaciones que no son getRoutineForTraining)
+    private List<RoutineExerciseParameterResponse> mapToParameterResponses(
+            List<RoutineExerciseParameterModel> parameters) {
+        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        return parameters.stream()
+                .map(param -> {
+                    CustomParameterModel model = customParameterPersistencePort
+                            .findById(param.getParameterId()).orElse(null);
+                    return RoutineExerciseParameterResponse.builder()
+                            .id(param.getId())
+                            .parameterId(param.getParameterId())
+                            .parameterName(model != null ? model.getName() : null)
+                            .parameterType(model != null && model.getParameterType() != null
+                                    ? model.getParameterType().name() : null)
+                            .numericValue(param.getNumericValue())
+                            .integerValue(param.getIntegerValue())
+                            .durationValue(param.getDurationValue())
+                            .stringValue(param.getStringValue())
+                            .minValue(param.getMinValue())
+                            .maxValue(param.getMaxValue())
+                            .defaultValue(param.getDefaultValue())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 
-                return parameters.stream()
-                                .map(param -> {
-                                        CustomParameterModel paramModel = customParameterPersistencePort
-                                                        .findById(param.getParameterId())
-                                                        .orElse(null);
-                                        String parameterType = null;
-                                        if (paramModel != null && paramModel.getParameterType() != null) {
-                                                parameterType = paramModel.getParameterType().name();
-                                        }
+    private List<RoutineSetTemplateResponse> mapToSetTemplateResponses(List<RoutineSetTemplateModel> sets) {
+        if (sets == null || sets.isEmpty()) return new ArrayList<>();
+        return sets.stream()
+                .sorted(Comparator.comparing(RoutineSetTemplateModel::getPosition))
+                .map(set -> RoutineSetTemplateResponse.builder()
+                        .id(set.getId())
+                        .position(set.getPosition())
+                        .subSetNumber(set.getSubSetNumber())
+                        .groupId(set.getGroupId())
+                        .setType(set.getSetType())
+                        .restAfterSet(set.getRestAfterSet())
+                        .parameters(mapToSetParameterResponses(set.getParameters()))
+                        .build())
+                .collect(Collectors.toList());
+    }
 
-                                        return RoutineExerciseParameterResponse.builder()
-                                                        .id(param.getId())
-                                                        .parameterId(param.getParameterId())
-                                                        .parameterName(paramModel != null ? paramModel.getName() : null)
-                                                        .parameterType(parameterType)
-                                                        .numericValue(param.getNumericValue())
-                                                        .integerValue(param.getIntegerValue())
-                                                        .durationValue(param.getDurationValue())
-                                                        .stringValue(param.getStringValue())
-                                                        .minValue(param.getMinValue())
-                                                        .maxValue(param.getMaxValue())
-                                                        .defaultValue(param.getDefaultValue())
-                                                        .build();
-                                })
-                                .collect(Collectors.toList());
-        }
+    private List<RoutineSetParameterResponse> mapToSetParameterResponses(List<RoutineSetParameterModel> parameters) {
+        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        return parameters.stream()
+                .map(param -> {
+                    CustomParameterModel model = customParameterPersistencePort
+                            .findById(param.getParameterId()).orElse(null);
+                    return RoutineSetParameterResponse.builder()
+                            .id(param.getId())
+                            .parameterId(param.getParameterId())
+                            .parameterName(model != null ? model.getName() : null)
+                            .parameterType(model != null && model.getParameterType() != null
+                                    ? model.getParameterType().name() : null)
+                            .numericValue(param.getNumericValue())
+                            .durationValue(param.getDurationValue())
+                            .integerValue(param.getIntegerValue())
+                            .repetitions(param.getRepetitions())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 
-        private List<RoutineSetTemplateResponse> mapToSetTemplateResponses(
-                        List<RoutineSetTemplateModel> sets) {
-                if (sets == null || sets.isEmpty()) {
-                        return new ArrayList<>();
-                }
+    // ── Utilidades ────────────────────────────────────────────────────────────
 
-                log.debug("Mapeando {} sets", sets.size());
+    private UserModel findUser(String email) {
+        return userPersistencePort.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+    }
 
-                return sets.stream()
-                                .sorted(Comparator.comparing(RoutineSetTemplateModel::getPosition))
-                                .map(set -> {
-                                        return RoutineSetTemplateResponse.builder()
-                                                        .id(set.getId())
-                                                        .position(set.getPosition())
-                                                        .subSetNumber(set.getSubSetNumber())
-                                                        .groupId(set.getGroupId())
-                                                        .setType(set.getSetType())
-                                                        .restAfterSet(set.getRestAfterSet())
-                                                        .parameters(mapToSetParameterResponses(set.getParameters()))
-                                                        .build();
-                                })
-                                .collect(Collectors.toList());
-        }
-
-        private List<RoutineSetParameterResponse> mapToSetParameterResponses(
-                        List<RoutineSetParameterModel> parameters) {
-                if (parameters == null || parameters.isEmpty()) {
-                        return new ArrayList<>();
-                }
-
-                log.debug("Mapeando {} parámetros de set", parameters.size());
-
-                return parameters.stream()
-                                .map(param -> {
-                                        CustomParameterModel paramModel = customParameterPersistencePort
-                                                        .findById(param.getParameterId())
-                                                        .orElse(null);
-                                        String parameterType = null;
-                                        if (paramModel != null && paramModel.getParameterType() != null) {
-                                                parameterType = paramModel.getParameterType().name();
-                                        }
-
-                                        return RoutineSetParameterResponse.builder()
-                                                        .id(param.getId())
-                                                        .parameterId(param.getParameterId())
-                                                        .parameterName(paramModel != null ? paramModel.getName() : null)
-                                                        .parameterType(parameterType)
-                                                        .numericValue(param.getNumericValue())
-                                                        .durationValue(param.getDurationValue())
-                                                        .integerValue(param.getIntegerValue())
-                                                        .repetitions(param.getRepetitions())
-                                                        .build();
-                                })
-                                .collect(Collectors.toList());
-        }
-
-        private PageResponse<RoutineSummaryResponse> mapToPageResponse(Page<RoutineModel> routinePage) {
-                log.debug("Mapeando página de rutinas: {} elementos", routinePage.getContent().size());
-
-                List<RoutineSummaryResponse> content = routinePage.getContent().stream()
-                                .map(this::mapToSummaryResponse)
-                                .collect(Collectors.toList());
-
-                return PageResponse.<RoutineSummaryResponse>builder()
-                                .content(content)
-                                .pageNumber(routinePage.getNumber())
-                                .pageSize(routinePage.getSize())
-                                .totalElements(routinePage.getTotalElements())
-                                .totalPages(routinePage.getTotalPages())
-                                .first(routinePage.isFirst())
-                                .last(routinePage.isLast())
-                                .build();
-        }
-
-        private RoutineSummaryResponse mapToSummaryResponse(RoutineModel routine) {
-                log.debug("Mapeando resumen de rutina: {}", routine.getId());
-
-                SportModel sport = null;
-                if (routine.getSportId() != null) {
-                        sport = sportPersistencePort.findById(routine.getSportId()).orElse(null);
-                }
-
-                int exerciseCount = routine.getExercises() != null ? routine.getExercises().size() : 0;
-
-                return RoutineSummaryResponse.builder()
-                                .id(routine.getId())
-                                .name(routine.getName())
-                                .description(routine.getDescription())
-                                .sportId(routine.getSportId())
-                                .sportName(sport != null ? sport.getName() : null)
-                                .isActive(routine.getIsActive())
-                                .createdAt(routine.getCreatedAt())
-                                .updatedAt(routine.getUpdatedAt())
-                                .lastUsedAt(routine.getLastUsedAt())
-                                .trainingDays(routine.getTrainingDays())
-                                .goal(routine.getGoal())
-                                .sessionsPerWeek(routine.getSessionsPerWeek())
-                                .exerciseCount(exerciseCount)
-                                .build();
-        }
-
-        @Override
-        @Cacheable(value = "lastUsedRoutines", key = "#userEmail + '_' + #limit")
-        public List<RoutineSummaryResponse> getLastUsedRoutines(String userEmail, int limit) {
-                log.debug("Obteniendo rutinas usadas recientemente para usuario: {}, límite: {}", userEmail, limit);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                List<RoutineModel> lastUsedRoutines = routinePersistencePort.findLastUsedByUserId(user.getId(), limit);
-
-                return lastUsedRoutines.stream()
-                                .map(this::mapToSummaryResponse)
-                                .collect(Collectors.toList());
-        }
-
-        @Override
-        @Transactional
-        public void markRoutineAsUsed(Long id, String userEmail) {
-                log.debug("Marcando rutina como usada: {}, usuario: {}", id, userEmail);
-
-                UserModel user = userPersistencePort.findByEmail(userEmail)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
-                log.debug("Rutina marcada como usada: {}", id);
-        }
+    private SportModel loadSport(Long sportId) {
+        if (sportId == null) return null;
+        return sportPersistencePort.findById(sportId).orElse(null);
+    }
 }
