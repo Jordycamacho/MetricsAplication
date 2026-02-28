@@ -1,16 +1,14 @@
 package com.fitapp.appfit.ui.routines
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
@@ -25,17 +23,12 @@ class RoutinesFragment : Fragment() {
 
     private var _binding: FragmentRoutinesListBinding? = null
     private val binding get() = _binding!!
+
     private val routineViewModel: RoutineViewModel by viewModels()
     private lateinit var routineAdapter: RoutineAdapter
 
-    companion object {
-        private const val TAG = "RoutinesFragment"
-    }
-
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRoutinesListBinding.inflate(inflater, container, false)
         return binding.root
@@ -43,60 +36,22 @@ class RoutinesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
-        setupClickListeners()
+        setupSearch()
+        setupFab()
         setupObservers()
-        setupNavigationResultListener()
+        setupNavigationResults()
     }
 
-    private fun setupNavigationResultListener() {
-        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>(
-            NavigationKeys.ROUTINE_UPDATED
-        )?.observe(viewLifecycleOwner) { updated ->
-            if (updated == true) {
-                Log.d(TAG, "🔄 Recibida señal de rutina actualizada desde SavedStateHandle")
-                Handler(Looper.getMainLooper()).postDelayed({
-                    loadRoutines()
-                }, 500)
-                findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
-                    NavigationKeys.ROUTINE_UPDATED
-                )
-            }
-        }
-
-        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>(
-            NavigationKeys.ROUTINE_DELETED
-        )?.observe(viewLifecycleOwner) { deleted ->
-            if (deleted == true) {
-                Log.d(TAG, "🗑️ Recibida señal de rutina eliminada desde SavedStateHandle")
-                Handler(Looper.getMainLooper()).postDelayed({
-                    loadRoutines()
-                }, 500)
-                findNavController().currentBackStackEntry?.savedStateHandle?.remove<Boolean>(
-                    NavigationKeys.ROUTINE_DELETED
-                )
-            }
-        }
-    }
+    // ── RecyclerView ──────────────────────────────────────────────────────────
 
     private fun setupRecyclerView() {
         routineAdapter = RoutineAdapter(
-            onItemClick = { routine ->
-                showRoutineDetail(routine)
-            },
-            onEditClick = { routine ->
-                editRoutine(routine)
-            },
-            onStartClick = { routine ->
-                startWorkout(routine)
-            },
-            onAddExercisesClick = { routine ->
-                val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
-                findNavController().navigate(action)
-            }
+            onItemClick = { navigateToExercises(it) },
+            onEditClick = { editRoutine(it) },
+            onStartClick = { startWorkout(it) },
+            onAddExercisesClick = { navigateToExercises(it) }
         )
-
         binding.recyclerRoutines.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = routineAdapter
@@ -104,128 +59,104 @@ class RoutinesFragment : Fragment() {
         }
     }
 
-    private fun setupClickListeners() {
-        binding.fabCreateRoutine.setOnClickListener {
-            navigateToCreateRoutine()
-        }
+    // ── Búsqueda ──────────────────────────────────────────────────────────────
 
-        binding.cardCreateRoutine.setOnClickListener {
-            navigateToCreateRoutine()
-        }
-
-        binding.etSearchRoutines.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                searchRoutines()
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun setupObservers() {
-        setupRoutinesListObserver()
-        setupUpdateObservers()
-    }
-
-    private fun addExercisesToRoutine(routine: RoutineSummaryResponse) {
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
-        findNavController().navigate(action)
-    }
-
-    private fun setupRoutinesListObserver() {
-        // Observar lista de rutinas (TODAS las rutinas)
-        routineViewModel.routinesListState.observe(viewLifecycleOwner, Observer { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    hideLoading()
-                    resource.data?.let { pageResponse ->
-                        val routinesList = pageResponse.content
-                        if (routinesList.isEmpty()) {
-                            showEmptyState()
-                        } else {
-                            showRoutinesList()
-                            routineAdapter.submitList(routinesList.toList())
-                        }
-                    }
-                }
-                is Resource.Error -> {
-                    hideLoading()
-                    val errorMsg = resource.message ?: "Error al cargar rutinas"
-                    if (errorMsg.contains("500")) {
-                        Log.e(TAG, "Error 500 del servidor, esperando 2 segundos...")
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            loadRoutines()
-                        }, 2000)
-                    } else {
-                        showError(errorMsg)
-                        showEmptyState()
-                    }
-                }
-                is Resource.Loading -> {
-                    showLoading()
+    private fun setupSearch() {
+        binding.etSearchRoutines.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                if (query.isEmpty()) {
+                    loadRoutines()
+                } else {
+                    routineViewModel.getRoutinesWithFilters(name = query)
                 }
             }
         })
     }
 
-    private fun setupUpdateObservers() {
-        // Observador ÚNICO para todas las actualizaciones
+    // ── FAB ───────────────────────────────────────────────────────────────────
+
+    private fun setupFab() {
+        binding.fabCreateRoutine.setOnClickListener {
+            findNavController().navigate(R.id.navigation_create_routine)
+        }
+    }
+
+    // ── Observadores ─────────────────────────────────────────────────────────
+
+    private fun setupObservers() {
+        routineViewModel.routinesListState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Loading -> showLoading()
+                is Resource.Success -> {
+                    hideLoading()
+                    val list = resource.data?.content ?: emptyList()
+                    if (list.isEmpty()) showEmpty() else showList(list)
+                }
+                is Resource.Error -> {
+                    hideLoading()
+                    showEmpty()
+                    Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        routineViewModel.filteredRoutinesState.observe(viewLifecycleOwner) { resource ->
+            if (resource is Resource.Success) {
+                val list = resource.data?.content ?: emptyList()
+                if (list.isEmpty()) showEmpty() else showList(list)
+            }
+        }
+
+        // Recarga automática tras cualquier mutación (crear, editar, eliminar, toggle)
         routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
-            Log.d(TAG, "🔄 Evento de actualización recibido - Recargando lista")
-            Handler(Looper.getMainLooper()).postDelayed({
+            loadRoutines()
+        }
+    }
+
+    // ── Resultados de navegación (desde EditRoutine vía SavedStateHandle) ─────
+
+    private fun setupNavigationResults() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle
+
+        handle?.getLiveData<Boolean>(NavigationKeys.ROUTINE_UPDATED)?.observe(viewLifecycleOwner) { updated ->
+            if (updated == true) {
                 loadRoutines()
-            }, 500)
+                handle.remove<Boolean>(NavigationKeys.ROUTINE_UPDATED)
+            }
         }
 
-        routineViewModel.refreshTrigger.observe(viewLifecycleOwner) {
-            Log.d(TAG, "🔄 Refresh trigger recibido - Recargando lista")
-            Handler(Looper.getMainLooper()).postDelayed({
+        handle?.getLiveData<Boolean>(NavigationKeys.ROUTINE_DELETED)?.observe(viewLifecycleOwner) { deleted ->
+            if (deleted == true) {
                 loadRoutines()
-            }, 500)
+                handle.remove<Boolean>(NavigationKeys.ROUTINE_DELETED)
+            }
         }
     }
 
-    private fun loadRoutines() {
-        Log.d(TAG, "📥 Cargando lista de rutinas...")
-        routineViewModel.getRoutines(page = 0, size = 20)
-    }
-
-    private fun searchRoutines() {
-        val query = binding.etSearchRoutines.text.toString().trim()
-        if (query.isNotEmpty()) {
-            Toast.makeText(requireContext(), "Buscando: $query", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun navigateToCreateRoutine() {
-        findNavController().navigate(R.id.navigation_create_routine)
-    }
-
-    private fun showRoutineDetail(routine: RoutineSummaryResponse) {
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
-        findNavController().navigate(action)
-    }
+    // ── Navegación ────────────────────────────────────────────────────────────
 
     private fun editRoutine(routine: RoutineSummaryResponse) {
-        try {
-            val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationEditRoutine(routine.id)
-            findNavController().navigate(action)
-        } catch (e: Exception) {
-            Toast.makeText(
-                requireContext(),
-                "Error al navegar: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationEditRoutine(routine.id)
+        findNavController().navigate(action)
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
         routineViewModel.markRoutineAsUsed(routine.id)
         val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationWorkout(routine.id)
         findNavController().navigate(action)
-
     }
+
+    private fun navigateToExercises(routine: RoutineSummaryResponse) {
+        val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
+        findNavController().navigate(action)
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+
+    private fun loadRoutines() { routineViewModel.getRoutines(page = 0, size = 20) }
 
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
@@ -233,32 +164,22 @@ class RoutinesFragment : Fragment() {
         binding.layoutEmptyState.visibility = View.GONE
     }
 
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-    }
+    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
 
-    private fun showRoutinesList() {
+    private fun showList(routines: List<RoutineSummaryResponse>) {
         binding.recyclerRoutines.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
+        routineAdapter.updateRoutines(routines)
     }
 
-    private fun showEmptyState() {
+    private fun showEmpty() {
         binding.recyclerRoutines.visibility = View.GONE
         binding.layoutEmptyState.visibility = View.VISIBLE
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), "❌ $message", Toast.LENGTH_LONG).show()
-    }
-
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "🔄 Fragmento reanudado - Limpiando estados y recargando")
-        routineViewModel.clearAllUpdateStates()
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            loadRoutines()
-        }, 300)
+        loadRoutines()
     }
 
     override fun onDestroyView() {

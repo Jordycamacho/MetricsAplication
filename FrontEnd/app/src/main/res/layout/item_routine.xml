@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
-    app:cardBackgroundColor="@color/card_dark"
+    app:cardBackgroundColor="#1E1E1E"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
     app:strokeColor="#2A2A2A"
@@ -18,7 +18,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Nombre + última vez -->
+        <!-- Fila superior: Nombre + badge última vez usada -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -33,7 +33,7 @@
                 android:layout_weight="1"
                 android:text="Nombre de la rutina"
                 android:textSize="16sp"
-                android:textColor="@color/text_primary_dark"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:ellipsize="end"
                 android:maxLines="1" />
@@ -49,7 +49,8 @@
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:background="@drawable/badge_predefined"
-                android:layout_marginStart="10dp" />
+                android:layout_marginStart="10dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 
@@ -60,22 +61,10 @@
             android:layout_height="wrap_content"
             android:text="Deporte"
             android:textSize="12sp"
-            android:textColor="@color/gold_primary"
+            android:textColor="#78703F"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Descripción -->
-        <TextView
-            android:id="@+id/tv_routine_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Descripción de la rutina"
-            android:textSize="13sp"
-            android:textColor="@color/text_secondary_dark"
-            android:layout_marginBottom="6dp"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:lineSpacingMultiplier="1.3" />
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
 
         <!-- Ejercicios count -->
         <TextView
@@ -84,7 +73,7 @@
             android:layout_height="wrap_content"
             android:text="0 ejercicios"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary_dark"
+            android:textColor="#B3B3B3"
             android:layout_marginBottom="12dp" />
 
         <!-- Separador -->
@@ -101,7 +90,6 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- INICIAR (principal, relleno dorado) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_start_workout"
                 android:layout_width="0dp"
@@ -111,37 +99,35 @@
                 android:textColor="#121212"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                app:backgroundTint="@color/gold_primary"
+                app:backgroundTint="#78703F"
                 app:cornerRadius="10dp"
                 android:elevation="0dp"
                 android:layout_marginEnd="8dp" />
 
-            <!-- EDITAR (contorno) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_edit"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:text="Editar"
-                android:textColor="@color/gold_primary"
+                android:textColor="#78703F"
                 android:textSize="13sp"
-                app:strokeColor="@color/gold_primary"
+                app:strokeColor="#78703F"
                 app:strokeWidth="1dp"
                 app:cornerRadius="10dp"
                 android:layout_marginEnd="8dp" />
 
-            <!-- AGREGAR SET (icono) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_exercises"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:text="+"
-                android:textColor="@color/gold_primary"
+                android:textColor="#78703F"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:paddingHorizontal="0dp"
-                app:strokeColor="@color/gold_primary"
+                app:strokeColor="#78703F"
                 app:strokeWidth="1dp"
                 app:cornerRadius="10dp" />
 

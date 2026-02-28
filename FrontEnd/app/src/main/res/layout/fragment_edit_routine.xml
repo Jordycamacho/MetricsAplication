@@ -1,348 +1,375 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:background="#121212">
 
-    <LinearLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:layout_height="?attr/actionBarSize"
+        android:background="#1E1E1E"
+        app:navigationIcon="@drawable/ic_arrow_right"
+        app:titleTextColor="#FFFFFF"
+        app:title="Editar Rutina"
+        app:navigationIconTint="#78703F" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="20dp"
-            android:visibility="gone" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#78703F"
+        android:alpha="0.4" />
 
-        <!-- Encabezado -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="24dp">
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:paddingBottom="32dp">
 
-            <ImageButton
-                android:id="@+id/btn_back"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/logo_app"
-                android:contentDescription="Volver" />
-
-            <TextView
-                android:layout_width="0dp"
+            <!-- Header info -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Editar Rutina"
-                android:textSize="24sp"
-                android:textColor="@color/gold_primary"
-                android:textStyle="bold"
-                android:gravity="center" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#1A78703F"
+                android:padding="14dp"
+                android:layout_marginBottom="24dp">
 
-        <!-- Formulario de edición -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/card_dark">
+                <View
+                    android:layout_width="3dp"
+                    android:layout_height="36dp"
+                    android:background="#78703F"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rutina Personal"
+                        android:textColor="#78703F"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:id="@+id/tv_routine_info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Solo visible para ti"
+                        android:textColor="#B3B3B3"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Nombre -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NOMBRE"
+                android:textColor="#78703F"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="#1E1E1E"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:hintTextColor="#B3B3B3"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Nombre de la rutina">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_routine_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textCapSentences"
+                    android:paddingVertical="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Deporte -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEPORTE"
+                android:textColor="#78703F"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                app:boxBackgroundColor="#1E1E1E"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:hintTextColor="#B3B3B3"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Sin deporte específico">
+
+                <AutoCompleteTextView
+                    android:id="@+id/spinner_sports"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:inputType="none"
+                    android:focusable="true"
+                    android:focusableInTouchMode="false"
+                    android:paddingVertical="14dp"
+                    android:paddingHorizontal="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Objetivo -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OBJETIVO"
+                android:textColor="#78703F"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="#1E1E1E"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:hintTextColor="#B3B3B3"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="Ej: Ganar masa muscular">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_goal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textCapSentences"
+                    android:paddingVertical="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Sesiones por semana -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SESIONES POR SEMANA"
+                android:textColor="#78703F"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="#1E1E1E"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:hintTextColor="#B3B3B3"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                android:hint="3">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_sessions_per_week"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:inputType="number"
+                    android:paddingVertical="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Días de entrenamiento -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DÍAS DE ENTRENAMIENTO"
+                android:textColor="#78703F"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="10dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:orientation="horizontal"
+                android:background="#1E1E1E"
+                android:padding="12dp"
+                android:layout_marginBottom="32dp">
 
-                <!-- Nombre de la rutina -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Nombre de la rutina"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp" />
-
-                <EditText
-                    android:id="@+id/et_routine_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="48dp"
-                    android:backgroundTint="@color/gold_primary"
-                    android:hint="Ej: Rutina de fuerza"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark" />
-
-                <!-- Selección de deporte -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Seleccionar deporte"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp" />
-
-                <Spinner
-                    android:id="@+id/spinner_sports"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginBottom="16dp"
-                    android:backgroundTint="@color/gold_primary" />
-
-                <!-- Días de la semana -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Días de la semana"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="7">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="L"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="M"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="X"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="J"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="V"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="S"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="D"
-                        android:textColor="@color/text_secondary_dark"
-                        android:textSize="14sp" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="L" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_monday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:orientation="horizontal"
-                    android:weightSum="7">
-
-                    <CheckBox
-                        android:id="@+id/cb_monday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
-
-                    <CheckBox
-                        android:id="@+id/cb_tuesday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
-
-                    <CheckBox
-                        android:id="@+id/cb_wednesday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
-
-                    <CheckBox
-                        android:id="@+id/cb_thursday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
-
-                    <CheckBox
-                        android:id="@+id/cb_friday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
-
-                    <CheckBox
-                        android:id="@+id/cb_saturday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
-
-                    <CheckBox
-                        android:id="@+id/cb_sunday"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:buttonTint="@color/gold_primary"
-                        android:gravity="center" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="M" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_tuesday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
                 </LinearLayout>
-
-                <!-- Descripción -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Descripción (opcional)"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp" />
-
-                <EditText
-                    android:id="@+id/et_routine_description"
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:backgroundTint="@color/gold_primary"
-                    android:gravity="top"
-                    android:hint="Describe el propósito de esta rutina..."
-                    android:inputType="textMultiLine"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark" />
-
-                <!-- Objetivo -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Objetivo"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp" />
-
-                <EditText
-                    android:id="@+id/et_goal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:backgroundTint="@color/gold_primary"
-                    android:hint="Ej: Ganar masa muscular"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark" />
-
-                <!-- Sesiones por semana -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="Sesiones por semana"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="16sp" />
-
-                <EditText
-                    android:id="@+id/et_sessions_per_week"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:backgroundTint="@color/gold_primary"
-                    android:hint="3"
-                    android:inputType="number"
-                    android:textColor="@color/text_primary_dark"
-                    android:textColorHint="@color/text_secondary_dark" />
-
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="X" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_wednesday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="J" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_thursday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="V" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_friday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="S" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_saturday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="D" android:textColor="#B3B3B3" android:textSize="12sp"
+                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                    <CheckBox android:id="@+id/cb_sunday" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                </LinearLayout>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-        <!-- Botones de acción -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp">
-
-            <Button
-                android:id="@+id/btn_delete_routine"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="Eliminar"
-                android:backgroundTint="@android:color/holo_red_dark"
-                style="@style/GoldButton" />
-
-            <Button
+            <!-- Guardar -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_save_routine"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="Guardar Cambios"
-                style="@style/GoldButton" />
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="GUARDAR CAMBIOS"
+                android:textColor="#121212"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                app:backgroundTint="#78703F"
+                app:cornerRadius="12dp"
+                android:elevation="0dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Toggle activo/inactivo -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_toggle_active"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="DESACTIVAR RUTINA"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                app:backgroundTint="#1AE41D1D"
+                app:strokeColor="#E41D1D"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                android:elevation="0dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Eliminar -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_delete_routine"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="ELIMINAR RUTINA"
+                android:textColor="#E41D1D"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                app:backgroundTint="#00000000"
+                app:strokeColor="#E41D1D"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                android:elevation="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnd_ddelete_rdwdwoutine"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="ELIMINAR RUTINA"
+                android:textColor="#E41D1D"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                app:backgroundTint="#00000000"
+                app:strokeColor="#E41D1D"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                android:elevation="0dp" />
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                android:indeterminateTint="#78703F" />
+
         </LinearLayout>
-
-        <!-- Botón para activar/desactivar -->
-        <Button
-            android:id="@+id/btn_toggle_active"
-            style="@style/GoldButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:text="Desactivar Rutina" />
-
-        <Button
-            android:id="@+id/btn_temporal_por_error"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="..."
-            style="@style/GoldButton" />
-
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</LinearLayout>

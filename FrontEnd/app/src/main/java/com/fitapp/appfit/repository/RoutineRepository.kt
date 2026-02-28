@@ -1,6 +1,5 @@
 package com.fitapp.appfit.repository
 
-import android.util.Log
 import com.fitapp.appfit.response.routine.request.*
 import com.fitapp.appfit.response.routine.response.*
 import com.fitapp.appfit.response.page.PageResponse
@@ -11,102 +10,29 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 
 class RoutineRepository {
-    private val routineService = RoutineService.instance
+    private val service = RoutineService.instance
 
-    companion object {
-        private const val TAG = "RoutineRepository"
-    }
+    // ── CRUD básico ──────────────────────────────────────────────────────────
 
-    // ==================== CRUD básico ====================
+    suspend fun createRoutine(request: CreateRoutineRequest) =
+        call { service.createRoutine(request) }
 
-    suspend fun createRoutine(request: CreateRoutineRequest): Resource<RoutineResponse> {
-        return try {
-            Log.d(TAG, "Enviando solicitud de creación de rutina:")
-            val response = routineService.createRoutine(request)
-            handleResponse(response, "crear rutina")
-        } catch (e: Exception) {
-            handleException(e, "crear rutina")
-        }
-    }
+    suspend fun getRoutine(id: Long) =
+        call { service.getRoutine(id) }
 
-    suspend fun getRoutineForTraining(id: Long): Resource<RoutineResponse> {
-        return try {
-            Log.d(TAG, "Obteniendo rutina para entrenamiento: $id")
-            val response = routineService.getRoutineForTraining(id)
-            handleResponse(response, "obtener rutina para entrenamiento")
-        } catch (e: Exception) {
-            handleException(e, "obtener rutina para entrenamiento")
-        }
-    }
+    suspend fun getRoutineForTraining(id: Long) =
+        call { service.getRoutineForTraining(id) }
 
-    suspend fun getRoutine(id: Long): Resource<RoutineResponse> {
-        return try {
-            Log.d(TAG, "Obteniendo rutina con ID: $id")
-            val response = routineService.getRoutine(id)
-            handleResponse(response, "obtener rutina por ID")
-        } catch (e: Exception) {
-            handleException(e, "obtener rutina por ID")
-        }
-    }
+    suspend fun updateRoutine(id: Long, request: UpdateRoutineRequest) =
+        call { service.updateRoutine(id, request) }
 
-    suspend fun updateRoutine(id: Long, request: UpdateRoutineRequest): Resource<RoutineResponse> {
-        return try {
-            Log.d(TAG, "Actualizando rutina con ID: $id")
-            val response = routineService.updateRoutine(id, request)
-            handleResponse(response, "actualizar rutina")
-        } catch (e: Exception) {
-            handleException(e, "actualizar rutina")
-        }
-    }
+    suspend fun deleteRoutine(id: Long) =
+        callUnit { service.deleteRoutine(id) }
 
-    suspend fun deleteRoutine(id: Long): Resource<Unit> {
-        return try {
-            Log.d(TAG, "Eliminando rutina con ID: $id")
-            val response = routineService.deleteRoutine(id)
-            handleResponseUnit(response, "eliminar rutina")
-        } catch (e: Exception) {
-            handleExceptionUnit(e, "eliminar rutina")
-        }
-    }
+    // ── Listados ─────────────────────────────────────────────────────────────
 
-    // ==================== Listados ====================
-
-    suspend fun getRoutines(
-        page: Int = 0,
-        size: Int = 10,
-        sortBy: String = "createdAt",
-        sortDirection: String = "DESC"
-    ): Resource<PageResponse<RoutineSummaryResponse>> {
-        return try {
-            Log.d(TAG, "Obteniendo lista de rutinas (página $page, tamaño $size)")
-            val response = routineService.getRoutines(page, size, sortBy, sortDirection)
-            handleResponse(response, "obtener rutinas paginadas")
-        } catch (e: Exception) {
-            handleException(e, "obtener rutinas paginadas")
-        }
-    }
-
-    suspend fun getRecentRoutines(limit: Int = 5): Resource<List<RoutineSummaryResponse>> {
-        return try {
-            Log.d(TAG, "Obteniendo rutinas recientes (límite: $limit)")
-            val response = routineService.getRecentRoutines(limit)
-            handleResponse(response, "obtener rutinas recientes")
-        } catch (e: Exception) {
-            handleException(e, "obtener rutinas recientes")
-        }
-    }
-
-    suspend fun getActiveRoutines(): Resource<List<RoutineSummaryResponse>> {
-        return try {
-            Log.d(TAG, "Obteniendo rutinas activas")
-            val response = routineService.getActiveRoutines()
-            handleResponse(response, "obtener rutinas activas")
-        } catch (e: Exception) {
-            handleException(e, "obtener rutinas activas")
-        }
-    }
-
-    // ==================== Filtros ====================
+    suspend fun getRoutines(page: Int = 0, size: Int = 20) =
+        call { service.getRoutines(page, size) }
 
     suspend fun getRoutinesWithFilters(
         sportId: Long? = null,
@@ -115,141 +41,67 @@ class RoutineRepository {
         sortBy: String = "createdAt",
         sortDirection: String = "DESC",
         page: Int = 0,
-        size: Int = 10
-    ): Resource<PageResponse<RoutineSummaryResponse>> {
+        size: Int = 20
+    ) = call { service.getRoutinesWithFilters(sportId, name, isActive, sortBy, sortDirection, page, size) }
+
+    suspend fun getRecentRoutines(limit: Int = 5) =
+        call { service.getRecentRoutines(limit) }
+
+    suspend fun getLastUsedRoutines(limit: Int = 3) =
+        call { service.getLastUsedRoutines(limit) }
+
+    suspend fun getActiveRoutines() =
+        call { service.getActiveRoutines() }
+
+    // ── Estado y estadísticas ────────────────────────────────────────────────
+
+    suspend fun toggleRoutineActiveStatus(id: Long, active: Boolean) =
+        callUnit { service.toggleRoutineActiveStatus(id, active) }
+
+    suspend fun markRoutineAsUsed(id: Long) =
+        callUnit { service.markRoutineAsUsed(id) }
+
+    suspend fun getRoutineStatistics() =
+        call { service.getRoutineStatistics() }
+
+    // ── Funciones genéricas de manejo de respuesta ───────────────────────────
+
+    private suspend fun <T> call(block: suspend () -> Response<T>): Resource<T> {
         return try {
-            Log.d(TAG, "Obteniendo rutinas con filtros")
-            val response = routineService.getRoutinesWithFilters(
-                sportId, name, isActive, sortBy, sortDirection, page, size
-            )
-            handleResponse(response, "obtener rutinas con filtros")
+            val response = block()
+            if (response.isSuccessful) {
+                response.body()?.let { Resource.Success(it) }
+                    ?: Resource.Error("El servidor respondió sin datos")
+            } else {
+                Resource.Error(httpErrorMessage(response.code(), response.errorBody()?.string()))
+            }
         } catch (e: Exception) {
-            handleException(e, "obtener rutinas con filtros")
+            Resource.Error(exceptionMessage(e))
         }
     }
 
-    // ==================== Estado activo ====================
-
-    suspend fun toggleRoutineActiveStatus(id: Long, active: Boolean): Resource<Unit> {
+    private suspend fun callUnit(block: suspend () -> Response<Unit>): Resource<Unit> {
         return try {
-            Log.d(TAG, "Cambiando estado de rutina (ID: $id) a activo=$active")
-            val response = routineService.toggleRoutineActiveStatus(id, active)
-            handleResponseUnit(response, "cambiar estado de rutina")
+            val response = block()
+            if (response.isSuccessful) Resource.Success(Unit)
+            else Resource.Error(httpErrorMessage(response.code(), response.errorBody()?.string()))
         } catch (e: Exception) {
-            handleExceptionUnit(e, "cambiar estado de rutina")
+            Resource.Error(exceptionMessage(e))
         }
     }
 
-    // ==================== Estadísticas ====================
-
-    suspend fun getRoutineStatistics(): Resource<RoutineStatisticsResponse> {
-        return try {
-            Log.d(TAG, "Obteniendo estadísticas de rutinas")
-            val response = routineService.getRoutineStatistics()
-            handleResponse(response, "obtener estadísticas de rutinas")
-        } catch (e: Exception) {
-            handleException(e, "obtener estadísticas de rutinas")
-        }
+    private fun httpErrorMessage(code: Int, body: String?): String = when (code) {
+        401 -> "Sesión expirada. Vuelve a iniciar sesión."
+        403 -> "No tienes permisos para realizar esta acción."
+        404 -> "Recurso no encontrado."
+        500 -> "Error del servidor. Intenta nuevamente."
+        else -> "Error $code: ${body ?: "Error desconocido"}"
     }
 
-    // ==================== Funciones auxiliares ====================
-
-    private fun <T> handleResponse(response: Response<T>, operation: String): Resource<T> {
-        Log.d(TAG, "Respuesta recibida - Código: ${response.code()}")
-
-        return if (response.isSuccessful) {
-            response.body()?.let { body ->
-                Log.d(TAG, "✅ Operación '$operation' exitosa")
-                Resource.Success(body)
-            } ?: run {
-                Log.w(TAG, "⚠️ Respuesta vacía del servidor en operación: $operation")
-                Resource.Error("El servidor respondió sin datos")
-            }
-        } else {
-            val errorMsg = "Error ${response.code()}: ${response.errorBody()?.string() ?: response.message()}"
-            Log.e(TAG, "❌ Error en operación '$operation': $errorMsg")
-
-            // Manejo específico de errores
-            when (response.code()) {
-                500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
-                401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
-                404 -> Resource.Error("Recurso no encontrado.")
-                403 -> Resource.Error("No tienes permisos para realizar esta acción.")
-                else -> Resource.Error(errorMsg)
-            }
-        }
-    }
-
-    private fun <T> handleException(e: Exception, operation: String): Resource<T> {
-        Log.e(TAG, "❌ Excepción en operación '$operation': ${e.message}", e)
-
-        // Verificar tipo de excepción
-        return when (e) {
-            is SocketTimeoutException -> Resource.Error("Tiempo de espera agotado. Verifica tu conexión.")
-            is ConnectException -> Resource.Error("Error de conexión. Verifica tu internet.")
-            is retrofit2.HttpException -> {
-                when (e.code()) {
-                    500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
-                    401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
-                    else -> Resource.Error("Error ${e.code()}: ${e.message()}")
-                }
-            }
-            else -> Resource.Error("Error: ${e.message ?: "Error desconocido"}")
-        }
-    }
-
-    private fun handleResponseUnit(response: Response<Unit>, operation: String): Resource<Unit> {
-        Log.d(TAG, "Respuesta recibida - Código: ${response.code()}")
-
-        return if (response.isSuccessful) {
-            Log.d(TAG, "✅ Operación '$operation' exitosa")
-            Resource.Success(Unit)
-        } else {
-            val errorMsg = "Error ${response.code()}: ${response.errorBody()?.string() ?: response.message()}"
-            Log.e(TAG, "❌ Error en operación '$operation': $errorMsg")
-
-            when (response.code()) {
-                500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
-                401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
-                else -> Resource.Error(errorMsg)
-            }
-        }
-    }
-
-    private fun handleExceptionUnit(e: Exception, operation: String): Resource<Unit> {
-        Log.e(TAG, "❌ Excepción en operación '$operation': ${e.message}", e)
-
-        return when (e) {
-            is SocketTimeoutException -> Resource.Error("Tiempo de espera agotado. Verifica tu conexión.")
-            is ConnectException -> Resource.Error("Error de conexión. Verifica tu internet.")
-            is retrofit2.HttpException -> {
-                when (e.code()) {
-                    500 -> Resource.Error("Error del servidor (500). Intenta nuevamente.")
-                    401 -> Resource.Error("Sesión expirada. Vuelve a iniciar sesión.")
-                    else -> Resource.Error("Error ${e.code()}: ${e.message()}")
-                }
-            }
-            else -> Resource.Error("Error: ${e.message ?: "Error desconocido"}")
-        }
-    }
-
-    suspend fun getLastUsedRoutines(limit: Int = 3): Resource<List<RoutineSummaryResponse>> {
-        return try {
-            Log.d(TAG, "Obteniendo últimas rutinas usadas (límite: $limit)")
-            val response = routineService.getLastUsedRoutines(limit)
-            handleResponse(response, "obtener últimas rutinas usadas")
-        } catch (e: Exception) {
-            handleException(e, "obtener últimas rutinas usadas")
-        }
-    }
-
-    suspend fun markRoutineAsUsed(id: Long): Resource<Unit> {
-        return try {
-            Log.d(TAG, "Marcando rutina como usada (ID: $id)")
-            val response = routineService.markRoutineAsUsed(id)
-            handleResponseUnit(response, "marcar rutina como usada")
-        } catch (e: Exception) {
-            handleExceptionUnit(e, "marcar rutina como usada")
-        }
+    private fun exceptionMessage(e: Exception): String = when (e) {
+        is SocketTimeoutException -> "Tiempo de espera agotado. Verifica tu conexión."
+        is ConnectException -> "Sin conexión. Verifica tu internet."
+        is retrofit2.HttpException -> httpErrorMessage(e.code(), e.message())
+        else -> "Error: ${e.message ?: "Error desconocido"}"
     }
 }

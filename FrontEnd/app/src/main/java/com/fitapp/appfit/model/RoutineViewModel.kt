@@ -1,6 +1,5 @@
 package com.fitapp.appfit.model
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,54 +12,31 @@ import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 
 class RoutineViewModel : ViewModel() {
+
     private val repository = RoutineRepository()
 
-    // LiveData para notificaciones de actualización
-    private val _routinesUpdated = MutableLiveData<Boolean>()
-    val routinesUpdated: LiveData<Boolean> = _routinesUpdated
+    // ── Estados LiveData ──────────────────────────────────────────────────────
 
-    private val _routineDeleted = MutableLiveData<Long?>()
-    val routineDeleted: LiveData<Long?> = _routineDeleted
+    private val _createRoutineState = MutableLiveData<Resource<RoutineResponse>>()
+    val createRoutineState: LiveData<Resource<RoutineResponse>> = _createRoutineState
 
-    private val _refreshTrigger = MutableLiveData<Unit>()
-    val refreshTrigger: LiveData<Unit> = _refreshTrigger
-
-    // LiveData consolidada para todas las actualizaciones
-    private val _anyUpdateEvent = MutableLiveData<Any>()
-    val anyUpdateEvent: LiveData<Any> = _anyUpdateEvent
+    private val _routineDetailState = MutableLiveData<Resource<RoutineResponse>>()
+    val routineDetailState: LiveData<Resource<RoutineResponse>> = _routineDetailState
 
     private val _workoutRoutineState = MutableLiveData<Resource<RoutineResponse>>()
     val workoutRoutineState: LiveData<Resource<RoutineResponse>> = _workoutRoutineState
 
-    companion object {
-        private const val TAG = "RoutineViewModel"
-    }
-
-    // ==================== Estados LiveData ====================
-
-    // Crear rutina
-    private val _createRoutineState = MutableLiveData<Resource<RoutineResponse>>()
-    val createRoutineState: LiveData<Resource<RoutineResponse>> = _createRoutineState
-
-    // Rutina específica
-    private val _routineDetailState = MutableLiveData<Resource<RoutineResponse>>()
-    val routineDetailState: LiveData<Resource<RoutineResponse>> = _routineDetailState
-
-    // Actualizar rutina
     private val _updateRoutineState = MutableLiveData<Resource<RoutineResponse>>()
     val updateRoutineState: LiveData<Resource<RoutineResponse>> = _updateRoutineState
 
-    // Eliminar rutina
     private val _deleteRoutineState = MutableLiveData<Resource<Unit>>()
     val deleteRoutineState: LiveData<Resource<Unit>> = _deleteRoutineState
 
-    // Agregar ejercicios
-    private val _addExercisesState = MutableLiveData<Resource<RoutineResponse>>()
-    val addExercisesState: LiveData<Resource<RoutineResponse>> = _addExercisesState
-
-    // Listas de rutinas
     private val _routinesListState = MutableLiveData<Resource<PageResponse<RoutineSummaryResponse>>>()
     val routinesListState: LiveData<Resource<PageResponse<RoutineSummaryResponse>>> = _routinesListState
+
+    private val _filteredRoutinesState = MutableLiveData<Resource<PageResponse<RoutineSummaryResponse>>>()
+    val filteredRoutinesState: LiveData<Resource<PageResponse<RoutineSummaryResponse>>> = _filteredRoutinesState
 
     private val _recentRoutinesState = MutableLiveData<Resource<List<RoutineSummaryResponse>>>()
     val recentRoutinesState: LiveData<Resource<List<RoutineSummaryResponse>>> = _recentRoutinesState
@@ -68,54 +44,20 @@ class RoutineViewModel : ViewModel() {
     private val _activeRoutinesState = MutableLiveData<Resource<List<RoutineSummaryResponse>>>()
     val activeRoutinesState: LiveData<Resource<List<RoutineSummaryResponse>>> = _activeRoutinesState
 
-    // Rutinas filtradas
-    private val _filteredRoutinesState = MutableLiveData<Resource<PageResponse<RoutineSummaryResponse>>>()
-    val filteredRoutinesState: LiveData<Resource<PageResponse<RoutineSummaryResponse>>> = _filteredRoutinesState
-
-    // Cambiar estado activo
-    private val _toggleActiveState = MutableLiveData<Resource<Unit>>()
-    val toggleActiveState: LiveData<Resource<Unit>> = _toggleActiveState
-
-    // Estadísticas
-    private val _routineStatisticsState = MutableLiveData<Resource<RoutineStatisticsResponse>>()
-    val routineStatisticsState: LiveData<Resource<RoutineStatisticsResponse>> = _routineStatisticsState
-
-    // Estado de carga general
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
-    // Ultimas rutinas usadas
     private val _lastUsedRoutinesState = MutableLiveData<Resource<List<RoutineSummaryResponse>>>()
     val lastUsedRoutinesState: LiveData<Resource<List<RoutineSummaryResponse>>> = _lastUsedRoutinesState
 
-    private val _markAsUsedState = MutableLiveData<Resource<Unit>>()
-    val markAsUsedState: LiveData<Resource<Unit>> = _markAsUsedState
+    private val _toggleActiveState = MutableLiveData<Resource<Unit>>()
+    val toggleActiveState: LiveData<Resource<Unit>> = _toggleActiveState
 
-    // ==================== Métodos públicos ====================
+    private val _routineStatisticsState = MutableLiveData<Resource<RoutineStatisticsResponse>>()
+    val routineStatisticsState: LiveData<Resource<RoutineStatisticsResponse>> = _routineStatisticsState
 
-    fun triggerRefresh() {
-        _refreshTrigger.value = Unit
-        // También resetea los otros estados para evitar duplicados
-        _routinesUpdated.value = false
-        _routineDeleted.value = null
-    }
+    // Evento único para que la lista se recargue tras cualquier mutación
+    private val _anyUpdateEvent = MutableLiveData<Unit>()
+    val anyUpdateEvent: LiveData<Unit> = _anyUpdateEvent
 
-    fun resetUpdateState() {
-        _routinesUpdated.value = false
-    }
-
-    fun resetDeleteState() {
-        _routineDeleted.value = null
-    }
-
-    fun notifyAnyUpdate() {
-        _anyUpdateEvent.value = Any()
-    }
-
-    fun clearAllUpdateStates() {
-        _routinesUpdated.value = false
-        _routineDeleted.value = null
-    }
+    // ── CRUD ──────────────────────────────────────────────────────────────────
 
     fun createRoutine(
         name: String,
@@ -123,342 +65,79 @@ class RoutineViewModel : ViewModel() {
         sportId: Long?,
         trainingDays: List<String>,
         goal: String,
-        sessionsPerWeek: Int,
-    ) {
-        _createRoutineState.value = Resource.Loading()
-
-        Log.d(TAG, "Creando rutina:")
-        Log.d(TAG, "  - Nombre: $name")
-        Log.d(TAG, "  - Deporte ID: $sportId")
-        Log.d(TAG, "  - Días: $trainingDays")
-        Log.d(TAG, "  - Objetivo: $goal")
-        Log.d(TAG, "  - Sesiones/Semana: $sessionsPerWeek")
-
-        viewModelScope.launch {
-            try {
-                val request = CreateRoutineRequest(
-                    name = name,
-                    description = description,
-                    sportId = sportId,
-                    trainingDays = trainingDays,
-                    goal = goal,
-                    sessionsPerWeek = sessionsPerWeek
-                )
-
-                val result = repository.createRoutine(request)
-                _createRoutineState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutina creada exitosamente, ID: ${result.data?.id}")
-                        notifyAnyUpdate()
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error creando rutina: ${result.message}")
-                    }
-                    else -> {}
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción creando rutina: ${e.message}", e)
-                _createRoutineState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+        sessionsPerWeek: Int
+    ) = launch(_createRoutineState) {
+        val request = CreateRoutineRequest(name, description, sportId, trainingDays, goal, sessionsPerWeek)
+        repository.createRoutine(request).also { if (it is Resource.Success) _anyUpdateEvent.postValue(Unit) }
     }
 
-    fun getRoutine(id: Long) {
-        _routineDetailState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getRoutine(id)
+    fun getRoutine(id: Long) = launch(_routineDetailState) { repository.getRoutine(id) }
 
-                if (result is Resource.Success) {
-                    result.data?.let { routine ->
-                        Log.d(TAG, "✅ Rutina obtenida - ID: ${routine.id}")
-                        Log.d(TAG, "  - Nombre: ${routine.name}")
-                        Log.d(TAG, "  - Días: ${routine.trainingDays}")
-                        Log.d(TAG, "  - Deporte: ${routine.sportName}")
-                        Log.d(TAG, "  - Objetivo: ${routine.goal}")
-                        Log.d(TAG, "  - Sesiones/semana: ${routine.sessionsPerWeek}")
-                    }
-                }
+    fun getRoutineForTraining(id: Long) = launch(_workoutRoutineState) { repository.getRoutineForTraining(id) }
 
-                _routineDetailState.value = result
-            } catch (e: Exception) {
-                Log.e(TAG, "Excepción obteniendo rutina: ${e.message}", e)
-                _routineDetailState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+    fun updateRoutine(id: Long, request: UpdateRoutineRequest) = launch(_updateRoutineState) {
+        repository.updateRoutine(id, request).also { if (it is Resource.Success) _anyUpdateEvent.postValue(Unit) }
     }
 
-    fun getRoutineForTraining(id: Long) {
-        _workoutRoutineState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getRoutineForTraining(id)
-                _workoutRoutineState.value = result
-                if (result is Resource.Success) {
-                    Log.d(TAG, "✅ Rutina de entrenamiento cargada: ${result.data?.name}")
-                } else if (result is Resource.Error) {
-                    Log.e(TAG, "Error cargando rutina: ${result.message}")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Excepción: ${e.message}")
-                _workoutRoutineState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+    fun deleteRoutine(id: Long) = launch(_deleteRoutineState) {
+        repository.deleteRoutine(id).also { if (it is Resource.Success) _anyUpdateEvent.postValue(Unit) }
     }
 
-    fun updateRoutine(id: Long, request: UpdateRoutineRequest) {
-        _updateRoutineState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.updateRoutine(id, request)
-                _updateRoutineState.value = result
+    // ── Listados ──────────────────────────────────────────────────────────────
 
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutina actualizada: ${result.data?.id}")
-                        // Notificar que se actualizó
-                        _routinesUpdated.value = true
-                        notifyAnyUpdate()
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error actualizando rutina: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción actualizando rutina: ${e.message}", e)
-                _updateRoutineState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
-    }
-
-    fun deleteRoutine(id: Long) {
-        _deleteRoutineState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.deleteRoutine(id)
-                _deleteRoutineState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutina eliminada: $id")
-                        // Notificar que se eliminó
-                        _routineDeleted.value = id
-                        notifyAnyUpdate()
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error eliminando rutina: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción eliminando rutina: ${e.message}", e)
-                _deleteRoutineState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
-    }
-
-
-    fun getRoutines(page: Int = 0, size: Int = 10, sortBy: String = "createdAt", sortDirection: String = "DESC") {
-        _isLoading.value = true
-        _routinesListState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getRoutines(page, size, sortBy, sortDirection)
-                _routinesListState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutinas obtenidas: ${result.data?.content?.size ?: 0}")
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo rutinas: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo rutinas: ${e.message}", e)
-                _routinesListState.value = Resource.Error("Error: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun getRecentRoutines(limit: Int = 5) {
-        _recentRoutinesState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getRecentRoutines(limit)
-                _recentRoutinesState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutinas recientes obtenidas: ${result.data?.size ?: 0}")
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo rutinas recientes: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo rutinas recientes: ${e.message}", e)
-                _recentRoutinesState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
-    }
-
-    fun getActiveRoutines() {
-        _activeRoutinesState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getActiveRoutines()
-                _activeRoutinesState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutinas activas obtenidas: ${result.data?.size ?: 0}")
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo rutinas activas: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo rutinas activas: ${e.message}", e)
-                _activeRoutinesState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+    fun getRoutines(page: Int = 0, size: Int = 20) = launch(_routinesListState) {
+        repository.getRoutines(page, size)
     }
 
     fun getRoutinesWithFilters(
-        sportId: Long? = null,
-        name: String? = null,
-        isActive: Boolean? = null,
-        sortBy: String = "createdAt",
-        sortDirection: String = "DESC",
-        page: Int = 0,
-        size: Int = 10
-    ) {
-        _filteredRoutinesState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getRoutinesWithFilters(
-                    sportId, name, isActive, sortBy, sortDirection, page, size
-                )
-                _filteredRoutinesState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutinas filtradas obtenidas: ${result.data?.content?.size ?: 0}")
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo rutinas filtradas: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo rutinas filtradas: ${e.message}", e)
-                _filteredRoutinesState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+        sportId: Long? = null, name: String? = null, isActive: Boolean? = null,
+        sortBy: String = "createdAt", sortDirection: String = "DESC", page: Int = 0, size: Int = 20
+    ) = launch(_filteredRoutinesState) {
+        repository.getRoutinesWithFilters(sportId, name, isActive, sortBy, sortDirection, page, size)
     }
 
-    fun toggleRoutineActiveStatus(id: Long, active: Boolean) {
-        _toggleActiveState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.toggleRoutineActiveStatus(id, active)
-                _toggleActiveState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Estado de rutina cambiado: $id a activo=$active")
-                        notifyAnyUpdate()
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error cambiando estado de rutina: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción cambiando estado de rutina: ${e.message}", e)
-                _toggleActiveState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+    fun getRecentRoutines(limit: Int = 5) = launch(_recentRoutinesState) {
+        repository.getRecentRoutines(limit)
     }
 
-    fun getRoutineStatistics() {
-        _routineStatisticsState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getRoutineStatistics()
-                _routineStatisticsState.value = result
-
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Estadísticas obtenidas")
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo estadísticas: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo estadísticas: ${e.message}", e)
-                _routineStatisticsState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+    fun getLastUsedRoutines(limit: Int = 3) = launch(_lastUsedRoutinesState) {
+        repository.getLastUsedRoutines(limit)
     }
 
-    fun getLastUsedRoutines(limit: Int = 3) {
-        _lastUsedRoutinesState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.getLastUsedRoutines(limit)
-                _lastUsedRoutinesState.value = result
+    fun getActiveRoutines() = launch(_activeRoutinesState) {
+        repository.getActiveRoutines()
+    }
 
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Últimas rutinas usadas obtenidas: ${result.data?.size ?: 0}")
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error obteniendo últimas rutinas usadas: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción obteniendo últimas rutinas usadas: ${e.message}", e)
-                _lastUsedRoutinesState.value = Resource.Error("Error: ${e.message}")
-            }
-        }
+    // ── Estado y estadísticas ─────────────────────────────────────────────────
+
+    fun toggleRoutineActiveStatus(id: Long, active: Boolean) = launch(_toggleActiveState) {
+        repository.toggleRoutineActiveStatus(id, active)
+            .also { if (it is Resource.Success) _anyUpdateEvent.postValue(Unit) }
     }
 
     fun markRoutineAsUsed(id: Long) {
-        _markAsUsedState.value = Resource.Loading()
-        viewModelScope.launch {
-            try {
-                val result = repository.markRoutineAsUsed(id)
-                _markAsUsedState.value = result
+        viewModelScope.launch { repository.markRoutineAsUsed(id) }
+    }
 
-                when (result) {
-                    is Resource.Success -> {
-                        Log.d(TAG, "✅ Rutina marcada como usada: $id")
-                        // Actualizar la rutina localmente si es necesario
-                        notifyAnyUpdate()
-                    }
-                    is Resource.Error -> {
-                        Log.e(TAG, "❌ Error marcando rutina como usada: ${result.message}")
-                    }
-                    else -> {}
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Excepción marcando rutina como usada: ${e.message}", e)
-                _markAsUsedState.value = Resource.Error("Error: ${e.message}")
-            }
+    fun getRoutineStatistics() = launch(_routineStatisticsState) {
+        repository.getRoutineStatistics()
+    }
+
+    // ── Helpers de navegación ─────────────────────────────────────────────────
+
+    fun notifyAnyUpdate() { _anyUpdateEvent.value = Unit }
+    fun clearAllUpdateStates() { /* mantenido por compatibilidad con RoutinesFragment */ }
+
+    // ── Función genérica para lanzar corrutinas ───────────────────────────────
+    // Pone Loading, ejecuta el bloque suspend, asigna el resultado al LiveData
+
+    private fun <T> launch(
+        liveData: MutableLiveData<Resource<T>>,
+        block: suspend () -> Resource<T>
+    ) {
+        liveData.value = Resource.Loading()
+        viewModelScope.launch {
+            liveData.postValue(block())
         }
     }
 }
