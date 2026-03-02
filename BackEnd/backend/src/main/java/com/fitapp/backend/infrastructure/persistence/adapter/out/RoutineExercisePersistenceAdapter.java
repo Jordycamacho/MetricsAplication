@@ -25,112 +25,109 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class RoutineExercisePersistenceAdapter implements RoutineExercisePersistencePort {
-    
+
     private final RoutineExerciseRepository routineExerciseRepository;
     private final RoutineConverter routineConverter;
-    
+
     @Override
     @Transactional
-    public RoutineExerciseModel save(RoutineExerciseModel routineExercise) {
-        log.info("Guardando ejercicio de rutina: ejercicio={}, rutina={}", 
-                routineExercise.getExerciseId(), routineExercise.getRoutineId());
-        
-        // Primero obtener la entidad de rutina y ejercicio
-        RoutineEntity routine = routineExerciseRepository.findRoutineById(routineExercise.getRoutineId())
-                .orElseThrow(() -> {
-                    log.error("Rutina no encontrada: {}", routineExercise.getRoutineId());
-                    return new RuntimeException("Routine not found");
-                });
-        
-        ExerciseEntity exercise = routineExerciseRepository.findExerciseById(routineExercise.getExerciseId())
-                .orElseThrow(() -> {
-                    log.error("Ejercicio no encontrado: {}", routineExercise.getExerciseId());
-                    return new RuntimeException("Exercise not found");
-                });
-        
-        // Crear entidad
+    public RoutineExerciseModel save(RoutineExerciseModel model) {
+        log.debug("SAVE_ROUTINE_EXERCISE | exerciseId={} | routineId={}",
+                model.getExerciseId(), model.getRoutineId());
+
+        RoutineEntity routine = routineExerciseRepository.findRoutineById(model.getRoutineId())
+                .orElseThrow(() -> new RuntimeException("Routine not found: " + model.getRoutineId()));
+
+        ExerciseEntity exercise = routineExerciseRepository.findExerciseById(model.getExerciseId())
+                .orElseThrow(() -> new RuntimeException("Exercise not found: " + model.getExerciseId()));
+
         RoutineExerciseEntity entity = new RoutineExerciseEntity();
         entity.setRoutine(routine);
         entity.setExercise(exercise);
-        entity.setPosition(routineExercise.getPosition());
-        entity.setSessionNumber(routineExercise.getSessionNumber());
-        entity.setDayOfWeek(routineExercise.getDayOfWeek());
-        entity.setSessionOrder(routineExercise.getSessionOrder());
-        entity.setRestAfterExercise(routineExercise.getRestAfterExercise());
-        
-        // Guardar
-        RoutineExerciseEntity savedEntity = routineExerciseRepository.save(entity);
-        log.info("Ejercicio de rutina guardado con ID: {}", savedEntity.getId());
-        
-        return routineConverter.convertRoutineExercise(savedEntity);
+        entity.setPosition(model.getPosition());
+        entity.setSessionNumber(model.getSessionNumber() != null ? model.getSessionNumber() : 1);
+        entity.setDayOfWeek(model.getDayOfWeek());
+        entity.setSessionOrder(model.getSessionOrder());
+        entity.setRestAfterExercise(model.getRestAfterExercise());
+
+        RoutineExerciseEntity saved = routineExerciseRepository.save(entity);
+        log.info("SAVE_ROUTINE_EXERCISE_OK | id={} | position={}", saved.getId(), saved.getPosition());
+
+        return routineConverter.convertRoutineExercise(saved);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public Optional<RoutineExerciseModel> findByIdAndRoutineId(Long id, Long routineId) {
-        log.debug("Buscando ejercicio de rutina: id={}, rutina={}", id, routineId);
+        log.debug("FIND_EXERCISE_BY_ID_AND_ROUTINE | id={} | routineId={}", id, routineId);
         return routineExerciseRepository.findByIdAndRoutineId(id, routineId)
                 .map(routineConverter::convertRoutineExercise);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<RoutineExerciseModel> findByRoutineId(Long routineId) {
-        log.debug("Buscando ejercicios para rutina: {}", routineId);
-        return routineExerciseRepository.findByRoutineId(routineId).stream()
+        log.debug("FIND_EXERCISES_BY_ROUTINE | routineId={}", routineId);
+        List<RoutineExerciseModel> result = routineExerciseRepository.findByRoutineId(routineId).stream()
                 .map(routineConverter::convertRoutineExercise)
                 .collect(Collectors.toList());
+        log.debug("FIND_EXERCISES_BY_ROUTINE_FOUND | routineId={} | count={}", routineId, result.size());
+        return result;
     }
-    
+
     @Override
     @Transactional
     public void deleteByIdAndRoutineId(Long id, Long routineId) {
-        log.info("Eliminando ejercicio de rutina: id={}, rutina={}", id, routineId);
+        log.info("DELETE_ROUTINE_EXERCISE | id={} | routineId={}", id, routineId);
         int deleted = routineExerciseRepository.deleteByIdAndRoutineId(id, routineId);
         if (deleted > 0) {
-            log.info("Ejercicio eliminado exitosamente");
+            log.info("DELETE_ROUTINE_EXERCISE_OK | id={} | routineId={}", id, routineId);
         } else {
-            log.warn("No se encontró el ejercicio para eliminar");
+            log.warn("DELETE_ROUTINE_EXERCISE_NOT_FOUND | id={} | routineId={}", id, routineId);
+            throw new RuntimeException("Exercise not found in routine: id=" + id + " routineId=" + routineId);
         }
     }
-    
+
     @Override
     @Transactional
     public void deleteByRoutineId(Long routineId) {
-        log.info("Eliminando todos los ejercicios de la rutina: {}", routineId);
+        log.info("DELETE_ALL_EXERCISES | routineId={}", routineId);
         int deleted = routineExerciseRepository.deleteByRoutineId(routineId);
-        log.info("Se eliminaron {} ejercicios", deleted);
+        log.info("DELETE_ALL_EXERCISES_OK | routineId={} | deleted={}", routineId, deleted);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<RoutineExerciseModel> findByRoutineIdAndSessionNumber(Long routineId, Integer sessionNumber) {
-        log.debug("Buscando ejercicios por sesión: rutina={}, sesión={}", routineId, sessionNumber);
+        log.debug("FIND_EXERCISES_BY_SESSION | routineId={} | session={}", routineId, sessionNumber);
         return routineExerciseRepository.findByRoutineIdAndSessionNumber(routineId, sessionNumber).stream()
                 .map(routineConverter::convertRoutineExercise)
-                .sorted(Comparator.comparing(RoutineExerciseModel::getSessionOrder))
+                .sorted(Comparator.comparing(RoutineExerciseModel::getSessionOrder,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<RoutineExerciseModel> findByRoutineIdAndDayOfWeek(Long routineId, String dayOfWeek) {
-        log.debug("Buscando ejercicios por día: rutina={}, día={}", routineId, dayOfWeek);
+        log.debug("FIND_EXERCISES_BY_DAY | routineId={} | day={}", routineId, dayOfWeek);
         try {
             DayOfWeek day = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
             return routineExerciseRepository.findByRoutineIdAndDayOfWeek(routineId, day).stream()
                     .map(routineConverter::convertRoutineExercise)
-                    .sorted(Comparator.comparing(RoutineExerciseModel::getSessionOrder))
+                    .sorted(Comparator.comparing(RoutineExerciseModel::getSessionOrder,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
                     .collect(Collectors.toList());
         } catch (IllegalArgumentException e) {
-            log.error("Día de la semana inválido: {}", dayOfWeek);
+            log.error("INVALID_DAY_OF_WEEK | routineId={} | day={}", routineId, dayOfWeek);
             return new ArrayList<>();
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<RoutineExerciseModel> findById(Long id) {
-        log.debug("Buscando ejercicio de rutina por ID: {}", id);
+        log.debug("FIND_EXERCISE_BY_ID | id={}", id);
         return routineExerciseRepository.findById(id)
                 .map(routineConverter::convertRoutineExercise);
     }
