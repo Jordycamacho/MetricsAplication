@@ -4,11 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +14,8 @@ import com.fitapp.appfit.model.RoutineSetTemplateViewModel
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.ui.routines.adapter.SetTemplateAdapter
 import com.fitapp.appfit.utils.Resource
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 
 class RoutineSetsFragment : Fragment() {
 
@@ -25,13 +24,10 @@ class RoutineSetsFragment : Fragment() {
 
     private val args: RoutineSetsFragmentArgs by navArgs()
     private val viewModel: RoutineSetTemplateViewModel by viewModels()
-
     private lateinit var adapter: SetTemplateAdapter
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRoutineSetsBinding.inflate(inflater, container, false)
         return binding.root
@@ -45,63 +41,22 @@ class RoutineSetsFragment : Fragment() {
         setupObservers()
         setupFab()
 
-        viewModel.getSetTemplatesByRoutineExercise(args.routineExerciseId)
+        viewModel.loadSets(args.routineExerciseId)
     }
 
+    // ── Setup ─────────────────────────────────────────────────────────────────
+
     private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
-        binding.toolbar.title = "Sets del ejercicio"
+        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
     }
 
     private fun setupRecyclerView() {
         adapter = SetTemplateAdapter(
-            onEditClick = { set -> editSet(set) },
+            onEditClick = { set -> navigateToEdit(set) },
             onDeleteClick = { set -> confirmDelete(set) }
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
-    }
-
-    private fun setupObservers() {
-        viewModel.getSetTemplatesByExerciseState.observe(viewLifecycleOwner, Observer { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    hideLoading()
-                    resource.data?.let { sets ->
-                        if (sets.isEmpty()) {
-                            binding.tvEmpty.visibility = View.VISIBLE
-                            binding.recyclerView.visibility = View.GONE
-                        } else {
-                            binding.tvEmpty.visibility = View.GONE
-                            binding.recyclerView.visibility = View.VISIBLE
-                            adapter.submitList(sets)
-                        }
-                    }
-                }
-                is Resource.Error -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                is Resource.Loading -> showLoading()
-                else -> {}
-            }
-        })
-
-        viewModel.deleteSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    Toast.makeText(requireContext(), "Set eliminado", Toast.LENGTH_SHORT).show()
-                    viewModel.getSetTemplatesByRoutineExercise(args.routineExerciseId)
-                }
-                is Resource.Error -> {
-                    Toast.makeText(requireContext(), "Error al eliminar: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
-            }
-            viewModel.clearDeleteState()
-        })
     }
 
     private fun setupFab() {
@@ -115,7 +70,44 @@ class RoutineSetsFragment : Fragment() {
         }
     }
 
-    private fun editSet(set: RoutineSetTemplateResponse) {
+    // ── Observers ─────────────────────────────────────────────────────────────
+
+    private fun setupObservers() {
+        viewModel.setsState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Loading -> showLoading()
+                is Resource.Success -> {
+                    hideLoading()
+                    val list = resource.data ?: emptyList()
+                    adapter.submitList(list)
+                    binding.tvEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                    binding.recyclerView.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
+                }
+                is Resource.Error -> {
+                    hideLoading()
+                    Snackbar.make(binding.root, resource.message ?: "Error cargando sets", Snackbar.LENGTH_LONG).show()
+                }
+                else -> {}
+            }
+        }
+
+        viewModel.deleteState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    Snackbar.make(binding.root, "Set eliminado", Snackbar.LENGTH_SHORT).show()
+                    viewModel.loadSets(args.routineExerciseId)
+                }
+                is Resource.Error ->
+                    Snackbar.make(binding.root, resource.message ?: "Error al eliminar", Snackbar.LENGTH_LONG).show()
+                else -> {}
+            }
+            if (resource != null) viewModel.clearDeleteState()
+        }
+    }
+
+    // ── Navegación ────────────────────────────────────────────────────────────
+
+    private fun navigateToEdit(set: RoutineSetTemplateResponse) {
         val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(
             routineExerciseId = args.routineExerciseId,
             exerciseId = args.exerciseId,
@@ -125,15 +117,15 @@ class RoutineSetsFragment : Fragment() {
     }
 
     private fun confirmDelete(set: RoutineSetTemplateResponse) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar set")
-            .setMessage("¿Estás seguro de eliminar el set ${set.position}?")
-            .setPositiveButton("Eliminar") { _, _ ->
-                viewModel.deleteSetTemplate(set.id)
-            }
+            .setMessage("¿Eliminar Set ${set.position}?")
+            .setPositiveButton("Eliminar") { _, _ -> viewModel.deleteSet(set.id) }
             .setNegativeButton("Cancelar", null)
             .show()
     }
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
 
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE

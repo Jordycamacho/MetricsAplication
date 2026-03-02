@@ -5,16 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.fitapp.appfit.databinding.FragmentAddEditSetBinding
 import com.fitapp.appfit.databinding.DialogAddParameterBinding
+import com.fitapp.appfit.databinding.FragmentAddEditSetBinding
 import com.fitapp.appfit.model.ExerciseViewModel
 import com.fitapp.appfit.model.ParameterViewModel
 import com.fitapp.appfit.model.RoutineSetTemplateViewModel
@@ -27,6 +24,8 @@ import com.fitapp.appfit.response.sets.request.UpdateSetTemplateRequest
 import com.fitapp.appfit.ui.exercises.params.ParameterAdapter
 import com.fitapp.appfit.utils.Resource
 import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 
 class AddEditSetFragment : Fragment() {
 
@@ -34,28 +33,30 @@ class AddEditSetFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val args: AddEditSetFragmentArgs by navArgs()
-    private val setTemplateViewModel: RoutineSetTemplateViewModel by viewModels()
+    private val setViewModel: RoutineSetTemplateViewModel by viewModels()
     private val parameterViewModel: ParameterViewModel by viewModels()
     private val exerciseViewModel: ExerciseViewModel by viewModels()
 
-    private var selectedSetId: Long? = null
+    private var editingSetId: Long? = null
     private lateinit var parameterAdapter: ParameterAdapter
     private var supportedParameterIds = setOf<Long>()
-    private var currentSetParameters = mutableListOf<UpdateSetParameterRequest>()
+
+    // Parámetros añadidos al set en este formulario (antes de guardar)
+    private val pendingParameters = mutableListOf<UpdateSetParameterRequest>()
 
     companion object {
-        private const val TAG = "AddEditSetFragment"
         private val SET_TYPES = listOf(
             "NORMAL", "WARM_UP", "DROP_SET", "SUPER_SET", "GIANT_SET",
-            "PYRAMID", "REVERSE_PYRAMID", "CLUSTER", "REST_PAUSE",
-            "ECCENTRIC", "ISOMETRIC"
+            "PYRAMID", "REVERSE_PYRAMID", "CLUSTER", "REST_PAUSE", "ECCENTRIC", "ISOMETRIC"
+        )
+        private val SET_TYPE_LABELS = listOf(
+            "Normal", "Calentamiento", "Drop Set", "Super Set", "Giant Set",
+            "Pirámide", "Pirámide inversa", "Cluster", "Rest-Pause", "Excéntrico", "Isométrico"
         )
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAddEditSetBinding.inflate(inflater, container, false)
         return binding.root
@@ -64,266 +65,229 @@ class AddEditSetFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        selectedSetId = if (args.setId == -1L) null else args.setId
+        editingSetId = if (args.setId == -1L) null else args.setId
 
         setupToolbar()
-        setupSpinners()
-        setupRecyclerView()
+        setupSetTypeSpinner()
+        setupParameterList()
+        setupParameterSearch()
         setupListeners()
         setupObservers()
-        loadSupportedParameters()
 
-        if (selectedSetId != null) {
-            loadSetForEdit()
-        }
+        // Cargar parámetros soportados por el ejercicio
+        exerciseViewModel.getExerciseById(args.exerciseId)
+
+        // Si estamos editando, cargar datos del set
+        editingSetId?.let { setViewModel.loadSetDetail(it) }
     }
+
+    // ── Setup ─────────────────────────────────────────────────────────────────
 
     private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
-        binding.toolbar.title = if (selectedSetId == null) "Nuevo Set" else "Editar Set"
+        binding.toolbar.title = if (editingSetId == null) "Nuevo Set" else "Editar Set"
+        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
     }
 
-    private fun loadSupportedParameters() {
-        exerciseViewModel.getExerciseById(args.exerciseId)
-    }
-
-    private fun setupSpinners() {
-        val setTypeAdapter = ArrayAdapter(
+    private fun setupSetTypeSpinner() {
+        binding.spinnerSetType.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
-            SET_TYPES
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
-        binding.spinnerSetType.adapter = setTypeAdapter
-        binding.spinnerSetType.setSelection(0)
+            SET_TYPE_LABELS
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
     }
 
-    private fun setupRecyclerView() {
+    private fun setupParameterList() {
         parameterAdapter = ParameterAdapter(
-            onItemClick = { parameter ->
-                showAddParameterDialog(parameter)
-            },
+            onItemClick = { param -> showAddParameterDialog(param) },
             onEditClick = {},
             onDeleteClick = {},
             showActions = false
         )
-
         binding.recyclerParameters.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = parameterAdapter
         }
     }
 
-    private fun setupListeners() {
-        binding.btnSaveSet.setOnClickListener {
-            saveSet()
+    private fun setupParameterSearch() {
+        binding.chipAll.setOnClickListener { loadParameters() }
+        binding.chipMy.setOnClickListener { loadMyParameters() }
+        binding.chipNumber.setOnClickListener { loadParametersByType("NUMBER") }
+        binding.chipInteger.setOnClickListener { loadParametersByType("INTEGER") }
+        binding.chipDuration.setOnClickListener { loadParametersByType("DURATION") }
+
+        binding.btnClearSearch.setOnClickListener {
+            binding.etParameterSearch.text?.clear()
+            loadParameters()
         }
 
+        binding.etParameterSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                loadParameters(); true
+            } else false
+        }
+    }
+
+    private fun setupListeners() {
+        // Mostrar/ocultar sección de parámetros
         binding.btnAddParameter.setOnClickListener {
-            if (selectedSetId == null) {
-                Toast.makeText(requireContext(), "Primero guarda el set", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            loadAllParameters()
             binding.layoutParameterSection.visibility = View.VISIBLE
+            loadParameters()
         }
 
         binding.btnCloseParameters.setOnClickListener {
             binding.layoutParameterSection.visibility = View.GONE
         }
 
-        binding.etParameterSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                performParameterSearch()
-                true
-            } else {
-                false
-            }
-        }
-
-        binding.btnClearSearch.setOnClickListener {
-            binding.etParameterSearch.text.clear()
-            loadAllParameters()
-        }
-
-        binding.chipAll.setOnClickListener { loadAllParameters() }
-        binding.chipMy.setOnClickListener { loadMyParameters() }
-        binding.chipNumber.setOnClickListener { loadParametersByType("NUMBER") }
-        binding.chipInteger.setOnClickListener { loadParametersByType("INTEGER") }
-        binding.chipDuration.setOnClickListener { loadParametersByType("DURATION") }
+        // Guardar — crea o actualiza el set CON los parámetros en una sola llamada
+        binding.btnSaveSet.setOnClickListener { saveSet() }
     }
 
+    // ── Observers ─────────────────────────────────────────────────────────────
+
     private fun setupObservers() {
+        // Ejercicio → parámetros soportados
         exerciseViewModel.exerciseDetailState.observe(viewLifecycleOwner) { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    resource.data?.let { exercise ->
-                        supportedParameterIds = exercise.supportedParameterIds ?: emptySet()
-                        loadAllParameters()
-                    }
-                }
-                is Resource.Error -> {
-                    Toast.makeText(requireContext(), "Error al cargar ejercicio: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
+            if (resource is Resource.Success) {
+                supportedParameterIds = resource.data?.supportedParameterIds ?: emptySet()
+                loadParameters()
             }
         }
 
+        // Lista de parámetros disponibles
         parameterViewModel.allParametersState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Success -> {
-                    hideLoading()
-                    resource.data?.let { pageResponse ->
-                        val allParameters = pageResponse.content
-                        val filtered = if (supportedParameterIds.isNotEmpty()) {
-                            allParameters.filter { supportedParameterIds.contains(it.id) }
-                        } else {
-                            allParameters
-                        }
-                        if (filtered.isEmpty()) {
-                            binding.tvNoParameters.visibility = View.VISIBLE
-                            binding.recyclerParameters.visibility = View.GONE
-                        } else {
-                            binding.tvNoParameters.visibility = View.GONE
-                            binding.recyclerParameters.visibility = View.VISIBLE
-                            parameterAdapter.updateList(filtered)
-                        }
-                    }
+                    val all = resource.data?.content ?: emptyList()
+                    val filtered = if (supportedParameterIds.isNotEmpty())
+                        all.filter { supportedParameterIds.contains(it.id) }
+                    else all
+
+                    binding.tvNoParameters.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+                    binding.recyclerParameters.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
+                    if (filtered.isNotEmpty()) parameterAdapter.updateList(filtered)
                 }
-                is Resource.Error -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                is Resource.Loading -> showLoading()
+                is Resource.Error -> showError(resource.message ?: "Error cargando parámetros")
                 else -> {}
             }
         }
 
-        setTemplateViewModel.createSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
+        // Cargar set para editar
+        setViewModel.setDetailState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
+                is Resource.Loading -> setFormEnabled(false)
                 is Resource.Success -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Set creado", Toast.LENGTH_SHORT).show()
-                    findNavController().navigateUp()
-                }
-                is Resource.Error -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                is Resource.Loading -> showLoading()
-                else -> {}
-            }
-        })
-
-        // Observar actualización de set
-        setTemplateViewModel.updateSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Set actualizado", Toast.LENGTH_SHORT).show()
-                    findNavController().navigateUp()
-                }
-                is Resource.Error -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_SHORT).show()
-                }
-                is Resource.Loading -> showLoading()
-                else -> {}
-            }
-        })
-
-        setTemplateViewModel.getSetTemplateState.observe(viewLifecycleOwner, Observer { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    hideLoading()
+                    setFormEnabled(true)
                     resource.data?.let { set ->
                         binding.etSetPosition.setText(set.position.toString())
-                        val typeIndex = SET_TYPES.indexOf(set.setType)
-                        if (typeIndex >= 0) binding.spinnerSetType.setSelection(typeIndex)
                         binding.etRestAfterSet.setText(set.restAfterSet?.toString() ?: "")
                         binding.etSubSetNumber.setText(set.subSetNumber?.toString() ?: "")
                         binding.etGroupId.setText(set.groupId ?: "")
 
-                        set.parameters?.let { params ->
-                            currentSetParameters.clear()
-                            currentSetParameters.addAll(params.map { param ->
-                                UpdateSetParameterRequest(
-                                    id = param.id,
-                                    parameterId = param.parameterId,
-                                    repetitions = param.repetitions,
-                                    numericValue = param.numericValue,
-                                    integerValue = param.integerValue,
-                                    durationValue = param.durationValue
-                                )
-                            })
-                            updateParametersChips()
+                        val idx = SET_TYPES.indexOf(set.setType)
+                        if (idx >= 0) binding.spinnerSetType.setSelection(idx)
+
+                        // Cargar parámetros existentes
+                        pendingParameters.clear()
+                        set.parameters?.mapTo(pendingParameters) { param ->
+                            UpdateSetParameterRequest(
+                                id = param.id,
+                                parameterId = param.parameterId,
+                                repetitions = param.repetitions,
+                                numericValue = param.numericValue,
+                                integerValue = param.integerValue,
+                                durationValue = param.durationValue
+                            )
                         }
+                        refreshParameterChips()
                     }
+                    setViewModel.clearDetailState()
                 }
                 is Resource.Error -> {
-                    hideLoading()
-                    Toast.makeText(requireContext(), "Error cargando set: ${resource.message}", Toast.LENGTH_SHORT).show()
+                    setFormEnabled(true)
+                    showError(resource.message ?: "Error cargando set")
+                    setViewModel.clearDetailState()
                 }
-                is Resource.Loading -> showLoading()
+                null -> {}
                 else -> {}
             }
-        })
-    }
+        }
 
-    private fun loadSetForEdit() {
-        selectedSetId?.let { id ->
-            setTemplateViewModel.getSetTemplate(id)
+        // Resultado de guardar
+        setViewModel.saveState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Loading -> setFormEnabled(false)
+                is Resource.Success -> {
+                    setFormEnabled(true)
+                    val msg = if (editingSetId == null) "✅ Set creado" else "✅ Set actualizado"
+                    Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
+                    setViewModel.clearSaveState()
+                    findNavController().navigateUp()
+                }
+                is Resource.Error -> {
+                    setFormEnabled(true)
+                    showError(resource.message ?: "Error al guardar")
+                    setViewModel.clearSaveState()
+                }
+                null -> {}
+                else -> {}
+            }
         }
     }
 
+    // ── Guardar ───────────────────────────────────────────────────────────────
+
     private fun saveSet() {
         val position = binding.etSetPosition.text.toString().toIntOrNull() ?: 1
-        val setType = binding.spinnerSetType.selectedItem as String
+        val setType = SET_TYPES.getOrElse(binding.spinnerSetType.selectedItemPosition) { "NORMAL" }
         val restAfterSet = binding.etRestAfterSet.text.toString().toIntOrNull()
         val subSetNumber = binding.etSubSetNumber.text.toString().toIntOrNull()
         val groupId = binding.etGroupId.text.toString().takeIf { it.isNotEmpty() }
 
-        if (selectedSetId == null) {
-            val parametersForCreation = currentSetParameters.map { param ->
+        if (editingSetId == null) {
+            // Crear: enviamos parámetros en la misma request
+            val params = pendingParameters.map { p ->
                 SetParameterRequest(
-                    parameterId = param.parameterId,
-                    repetitions = param.repetitions,
-                    numericValue = param.numericValue,
-                    integerValue = param.integerValue,
-                    durationValue = param.durationValue
+                    parameterId = p.parameterId,
+                    repetitions = p.repetitions,
+                    numericValue = p.numericValue,
+                    integerValue = p.integerValue,
+                    durationValue = p.durationValue
                 )
             }
-
-            val request = CreateSetTemplateRequest(
-                routineExerciseId = args.routineExerciseId,
-                position = position,
-                setType = setType,
-                restAfterSet = restAfterSet,
-                subSetNumber = subSetNumber,
-                groupId = groupId,
-                parameters = if (parametersForCreation.isNotEmpty()) parametersForCreation else null
+            setViewModel.createSet(
+                CreateSetTemplateRequest(
+                    routineExerciseId = args.routineExerciseId,
+                    position = position,
+                    setType = setType,
+                    restAfterSet = restAfterSet,
+                    subSetNumber = subSetNumber,
+                    groupId = groupId,
+                    parameters = params.ifEmpty { null }
+                )
             )
-            setTemplateViewModel.createSetTemplate(request)
         } else {
-            val request = UpdateSetTemplateRequest(
-                position = position,
-                subSetNumber = subSetNumber,
-                groupId = groupId,
-                setType = setType,
-                restAfterSet = restAfterSet,
-                parameters = currentSetParameters
+            // Editar: enviamos parámetros (incluidos los ya existentes con su id)
+            setViewModel.updateSet(
+                editingSetId!!,
+                UpdateSetTemplateRequest(
+                    position = position,
+                    setType = setType,
+                    restAfterSet = restAfterSet,
+                    subSetNumber = subSetNumber,
+                    groupId = groupId,
+                    parameters = pendingParameters.ifEmpty { null }
+                )
             )
-            setTemplateViewModel.updateSetTemplate(selectedSetId!!, request)
         }
     }
+
+    // ── Parámetros ────────────────────────────────────────────────────────────
 
     private fun showAddParameterDialog(parameter: CustomParameterResponse) {
         val dialogBinding = DialogAddParameterBinding.inflate(layoutInflater)
 
-        dialogBinding.tvParameterName.text = parameter.unit ?: parameter.name
+        dialogBinding.tvParameterName.text = parameter.name
         dialogBinding.tvParameterType.text = "Tipo: ${parameter.parameterType}"
         if (!parameter.unit.isNullOrEmpty()) {
             dialogBinding.tvParameterUnit.text = "Unidad: ${parameter.unit}"
@@ -331,128 +295,91 @@ class AddEditSetFragment : Fragment() {
         }
 
         dialogBinding.layoutRepetitions.visibility = View.VISIBLE
-
         when (parameter.parameterType) {
             "NUMBER", "DISTANCE", "PERCENTAGE" -> dialogBinding.layoutNumericValue.visibility = View.VISIBLE
             "INTEGER" -> dialogBinding.layoutIntegerValue.visibility = View.VISIBLE
             "DURATION" -> dialogBinding.layoutDurationValue.visibility = View.VISIBLE
-            else -> {
-                dialogBinding.layoutNumericValue.visibility = View.VISIBLE
-                dialogBinding.layoutNumericValue.hint = "Valor"
-            }
+            else -> dialogBinding.layoutNumericValue.visibility = View.VISIBLE
         }
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Añadir ${parameter.name}")
             .setView(dialogBinding.root)
-            .setTitle("Agregar ${parameter.unit ?: parameter.name}")
-            .setPositiveButton("Agregar") { dialog, _ ->
-                addParameterToSet(parameter, dialogBinding)
-                dialog.dismiss()
+            .setPositiveButton("Añadir") { _, _ ->
+                val newParam = UpdateSetParameterRequest(
+                    id = null,
+                    parameterId = parameter.id,
+                    repetitions = dialogBinding.etRepetitions.text.toString().toIntOrNull(),
+                    numericValue = when (parameter.parameterType) {
+                        "NUMBER", "DISTANCE", "PERCENTAGE" ->
+                            dialogBinding.etNumericValue.text.toString().toDoubleOrNull()
+                        else -> null
+                    },
+                    integerValue = when (parameter.parameterType) {
+                        "INTEGER" -> dialogBinding.etIntegerValue.text.toString().toIntOrNull()
+                        else -> null
+                    },
+                    durationValue = when (parameter.parameterType) {
+                        "DURATION" -> dialogBinding.etDurationValue.text.toString().toLongOrNull()
+                        else -> null
+                    }
+                )
+                pendingParameters.add(newParam)
+                refreshParameterChips()
+                binding.layoutParameterSection.visibility = View.GONE
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun addParameterToSet(parameter: CustomParameterResponse, binding: DialogAddParameterBinding) {
-        val newParameter = UpdateSetParameterRequest(
-            id = null,
-            parameterId = parameter.id,
-            repetitions = binding.etRepetitions.text.toString().toIntOrNull(),
-            numericValue = when (parameter.parameterType) {
-                "NUMBER", "DISTANCE", "PERCENTAGE" -> binding.etNumericValue.text.toString().toDoubleOrNull()
-                else -> null
-            },
-            integerValue = when (parameter.parameterType) {
-                "INTEGER" -> binding.etIntegerValue.text.toString().toIntOrNull()
-                else -> null
-            },
-            durationValue = when (parameter.parameterType) {
-                "DURATION" -> binding.etDurationValue.text.toString().toLongOrNull()
-                else -> null
-            }
-        )
-
-        currentSetParameters.add(newParameter)
-        updateParametersChips()
-        Toast.makeText(requireContext(), "Parámetro agregado", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun updateParametersChips() {
+    private fun refreshParameterChips() {
         binding.chipGroupSelected.removeAllViews()
-        if (currentSetParameters.isEmpty()) {
+        if (pendingParameters.isEmpty()) {
             binding.tvNoSelectedParameters.visibility = View.VISIBLE
             binding.layoutSelectedParameters.visibility = View.GONE
         } else {
             binding.tvNoSelectedParameters.visibility = View.GONE
             binding.layoutSelectedParameters.visibility = View.VISIBLE
-            currentSetParameters.forEach { param ->
-                val chip = Chip(requireContext())
-                chip.text = "Parámetro ${param.parameterId}" +
-                        if (param.repetitions != null) " (${param.repetitions} reps)" else ""
-                chip.isCloseIconVisible = true
-                chip.setOnCloseIconClickListener {
-                    currentSetParameters.remove(param)
-                    updateParametersChips()
+            pendingParameters.forEach { param ->
+                val chip = Chip(requireContext()).apply {
+                    text = "Parámetro ${param.parameterId}" +
+                            (param.repetitions?.let { " × $it" } ?: "")
+                    isCloseIconVisible = true
+                    setOnCloseIconClickListener {
+                        pendingParameters.remove(param)
+                        refreshParameterChips()
+                    }
                 }
                 binding.chipGroupSelected.addView(chip)
             }
         }
     }
 
-    private fun loadAllParameters() {
-        val searchQuery = binding.etParameterSearch.text.toString().trim()
-        val filterRequest = CustomParameterFilterRequest(
-            search = if (searchQuery.isNotEmpty()) searchQuery else null,
-            page = 0,
-            size = 50,
-            sortBy = "name",
-            direction = "ASC"
+    // ── Carga de parámetros ───────────────────────────────────────────────────
+
+    private fun loadParameters(type: String? = null, onlyMine: Boolean = false) {
+        parameterViewModel.searchAllParameters(
+            CustomParameterFilterRequest(
+                search = binding.etParameterSearch.text.toString().takeIf { it.isNotEmpty() },
+                page = 0, size = 50, sortBy = "name", direction = "ASC",
+                parameterType = type,
+                onlyMine = onlyMine
+            )
         )
-        parameterViewModel.searchAllParameters(filterRequest)
     }
 
-    private fun loadMyParameters() {
-        val searchQuery = binding.etParameterSearch.text.toString().trim()
-        val filterRequest = CustomParameterFilterRequest(
-            search = if (searchQuery.isNotEmpty()) searchQuery else null,
-            page = 0,
-            size = 50,
-            sortBy = "name",
-            direction = "ASC",
-            onlyMine = true
-        )
-        parameterViewModel.searchMyParameters(filterRequest)
+    private fun loadMyParameters() = loadParameters(onlyMine = true)
+    private fun loadParametersByType(type: String) = loadParameters(type = type)
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+
+    private fun setFormEnabled(enabled: Boolean) {
+        binding.progressBar.visibility = if (enabled) View.GONE else View.VISIBLE
+        binding.btnSaveSet.isEnabled = enabled
     }
 
-    private fun loadParametersByType(type: String) {
-        val searchQuery = binding.etParameterSearch.text.toString().trim()
-        val filterRequest = CustomParameterFilterRequest(
-            search = if (searchQuery.isNotEmpty()) searchQuery else null,
-            page = 0,
-            size = 50,
-            sortBy = "name",
-            direction = "ASC",
-            parameterType = type
-        )
-        parameterViewModel.searchAllParameters(filterRequest)
-    }
-
-    private fun performParameterSearch() {
-        val query = binding.etParameterSearch.text.toString().trim()
-        binding.btnClearSearch.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
-        loadAllParameters()
-    }
-
-    private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.btnSaveSet.isEnabled = false
-        binding.btnAddParameter.isEnabled = false
-    }
-
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-        binding.btnSaveSet.isEnabled = true
-        binding.btnAddParameter.isEnabled = true
+    private fun showError(msg: String) {
+        Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {

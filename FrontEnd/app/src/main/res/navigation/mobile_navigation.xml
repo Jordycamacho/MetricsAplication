@@ -70,9 +70,6 @@
                 app:argType="long" />
         </action>
         <action
-            android:id="@+id/action_routine_exercises_to_configure_sets"
-            app:destination="@id/navigation_configure_sets" />
-        <action
             android:id="@+id/action_routine_exercises_to_routine_sets"
             app:destination="@id/navigation_routine_sets" />
     </fragment>
@@ -132,9 +129,6 @@
             android:name="exerciseId"
             app:argType="long"
             android:defaultValue="-1L" />
-        <action
-            android:id="@+id/action_addExercisesToRoutine_to_configureSets"
-            app:destination="@id/navigation_configure_sets" />
     </fragment>
 
     <fragment
@@ -203,16 +197,6 @@
                 android:name="exerciseId"
                 app:argType="long" />
         </action>
-    </fragment>
-
-    <fragment
-        android:id="@+id/navigation_configure_sets"
-        android:name="com.fitapp.appfit.ui.routines.sets.ConfigureSetsFragment"
-        android:label="Configurar Sets"
-        tools:layout="@layout/fragment_configure_sets">
-        <argument
-            android:name="routineExerciseId"
-            app:argType="long" />
     </fragment>
 
     <!-- Nuevas secciones -->

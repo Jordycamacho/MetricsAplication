@@ -1,39 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="24dp">
 
+    <!-- Nombre del parámetro -->
     <TextView
         android:id="@+id/tv_parameter_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Nombre del Parámetro"
-        android:textColor="@color/text_primary_dark"
+        android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginBottom="4dp" />
 
+    <!-- Tipo -->
     <TextView
         android:id="@+id/tv_parameter_type"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tipo: "
-        android:textColor="@color/text_secondary_dark"
-        android:textSize="14sp"
-        android:layout_marginBottom="4dp" />
+        android:textColor="#B3B3B3"
+        android:textSize="13sp"
+        android:layout_marginBottom="2dp" />
 
+    <!-- Unidad (oculto si no aplica) -->
     <TextView
         android:id="@+id/tv_parameter_unit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Unidad: "
-        android:textColor="@color/text_secondary_dark"
-        android:textSize="14sp"
-        android:layout_marginBottom="16dp"
+        android:textColor="#B3B3B3"
+        android:textSize="13sp"
+        android:layout_marginBottom="20dp"
         android:visibility="gone" />
+
+    <!-- Separador -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#78703F"
+        android:alpha="0.3"
+        android:layout_marginBottom="20dp" />
 
     <!-- Repeticiones (siempre visible) -->
     <com.google.android.material.textfield.TextInputLayout
@@ -41,21 +50,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
+        android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:hintTextColor="@color/text_secondary_dark"
-        app:boxStrokeColor="@color/gold_primary"
-        app:boxStrokeWidth="1dp">
+        app:boxBackgroundColor="#1E1E1E"
+        app:boxCornerRadiusTopStart="10dp"
+        app:boxCornerRadiusTopEnd="10dp"
+        app:boxCornerRadiusBottomStart="10dp"
+        app:boxCornerRadiusBottomEnd="10dp"
+        app:boxStrokeColor="#333333"
+        app:hintTextColor="#B3B3B3"
+        android:hint="Repeticiones (opcional)">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_repetitions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Repeticiones (opcional)"
-            android:textColor="@color/text_primary_dark"
-            android:inputType="number" />
+            android:textColor="#FFFFFF"
+            android:inputType="number"
+            android:paddingVertical="14dp" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Valor numérico (según tipo) -->
+    <!-- Valor numérico (NUMBER / DISTANCE / PERCENTAGE) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_numeric_value"
         android:layout_width="match_parent"
@@ -63,19 +79,26 @@
         android:layout_marginBottom="12dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:hintTextColor="@color/text_secondary_dark"
-        app:boxStrokeColor="@color/gold_primary"
-        app:boxStrokeWidth="1dp">
+        app:boxBackgroundColor="#1E1E1E"
+        app:boxCornerRadiusTopStart="10dp"
+        app:boxCornerRadiusTopEnd="10dp"
+        app:boxCornerRadiusBottomStart="10dp"
+        app:boxCornerRadiusBottomEnd="10dp"
+        app:boxStrokeColor="#333333"
+        app:hintTextColor="#B3B3B3"
+        android:hint="Valor">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_numeric_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Valor numérico"
-            android:textColor="@color/text_primary_dark"
-            android:inputType="numberDecimal" />
+            android:textColor="#FFFFFF"
+            android:inputType="numberDecimal"
+            android:paddingVertical="14dp" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Valor entero (INTEGER) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_integer_value"
         android:layout_width="match_parent"
@@ -83,36 +106,50 @@
         android:layout_marginBottom="12dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:hintTextColor="@color/text_secondary_dark"
-        app:boxStrokeColor="@color/gold_primary"
-        app:boxStrokeWidth="1dp">
+        app:boxBackgroundColor="#1E1E1E"
+        app:boxCornerRadiusTopStart="10dp"
+        app:boxCornerRadiusTopEnd="10dp"
+        app:boxCornerRadiusBottomStart="10dp"
+        app:boxCornerRadiusBottomEnd="10dp"
+        app:boxStrokeColor="#333333"
+        app:hintTextColor="#B3B3B3"
+        android:hint="Valor entero">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_integer_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Valor entero"
-            android:textColor="@color/text_primary_dark"
-            android:inputType="number" />
+            android:textColor="#FFFFFF"
+            android:inputType="number"
+            android:paddingVertical="14dp" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Duración (DURATION) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_duration_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="4dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:hintTextColor="@color/text_secondary_dark"
-        app:boxStrokeColor="@color/gold_primary"
-        app:boxStrokeWidth="1dp">
+        app:boxBackgroundColor="#1E1E1E"
+        app:boxCornerRadiusTopStart="10dp"
+        app:boxCornerRadiusTopEnd="10dp"
+        app:boxCornerRadiusBottomStart="10dp"
+        app:boxCornerRadiusBottomEnd="10dp"
+        app:boxStrokeColor="#333333"
+        app:hintTextColor="#B3B3B3"
+        android:hint="Duración (segundos)">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_duration_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Duración (segundos)"
-            android:textColor="@color/text_primary_dark"
-            android:inputType="number" />
+            android:textColor="#FFFFFF"
+            android:inputType="number"
+            android:paddingVertical="14dp" />
+
     </com.google.android.material.textfield.TextInputLayout>
+
 </LinearLayout>

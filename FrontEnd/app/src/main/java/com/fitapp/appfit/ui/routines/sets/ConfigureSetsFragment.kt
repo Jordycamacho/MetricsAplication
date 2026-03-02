@@ -28,7 +28,7 @@ import com.fitapp.appfit.utils.Resource
 import kotlin.properties.Delegates
 
 class ConfigureSetsFragment : Fragment() {
-
+ /*
     private var _binding: FragmentConfigureSetsBinding? = null
     private val binding get() = _binding!!
 
@@ -540,5 +540,5 @@ class ConfigureSetsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
+    }*/
 }
