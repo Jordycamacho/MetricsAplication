@@ -208,4 +208,79 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                 .correlationId(MDC.get("correlationId"))
                                                 .build());
         }
+
+        // ── Set Templates ─────────────────────────────────────────────────────────
+
+        @ExceptionHandler(SetTemplateNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleSetTemplateNotFound(SetTemplateNotFoundException ex) {
+                log.warn("SET_TEMPLATE_NOT_FOUND | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                                ErrorResponse.builder()
+                                                .code("SET_TEMPLATE_NOT_FOUND")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(SetTemplateOwnershipException.class)
+        public ResponseEntity<ErrorResponse> handleSetTemplateOwnership(SetTemplateOwnershipException ex) {
+                log.warn("SET_TEMPLATE_OWNERSHIP_VIOLATION | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                ErrorResponse.builder()
+                                                .code("SET_TEMPLATE_FORBIDDEN")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(SetParameterNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleSetParameterNotFound(SetParameterNotFoundException ex) {
+                log.warn("SET_PARAMETER_NOT_FOUND | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                                ErrorResponse.builder()
+                                                .code("SET_PARAMETER_NOT_FOUND")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(SetTemplatePositionConflictException.class)
+        public ResponseEntity<ErrorResponse> handleSetTemplatePositionConflict(
+                        SetTemplatePositionConflictException ex) {
+                log.warn("SET_TEMPLATE_POSITION_CONFLICT | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                                ErrorResponse.builder()
+                                                .code("SET_TEMPLATE_POSITION_CONFLICT")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(UnsupportedParameterException.class)
+        public ResponseEntity<ErrorResponse> handleUnsupportedParameter(UnsupportedParameterException ex) {
+                log.warn("UNSUPPORTED_PARAMETER | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                                ErrorResponse.builder()
+                                                .code("UNSUPPORTED_PARAMETER")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+                log.warn("ILLEGAL_ARGUMENT | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                                ErrorResponse.builder()
+                                                .code("BAD_REQUEST")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
 }

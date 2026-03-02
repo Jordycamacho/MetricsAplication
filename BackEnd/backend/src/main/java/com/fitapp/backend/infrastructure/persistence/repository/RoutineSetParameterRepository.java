@@ -11,13 +11,13 @@ import java.util.List;
 
 @Repository
 public interface RoutineSetParameterRepository extends JpaRepository<RoutineSetParameterEntity, Long> {
-    
+
     List<RoutineSetParameterEntity> findBySetTemplateId(Long setTemplateId);
-    
+
     @Modifying
     @Query("DELETE FROM RoutineSetParameterEntity p WHERE p.setTemplate.id = :setTemplateId")
     int deleteBySetTemplateId(@Param("setTemplateId") Long setTemplateId);
-    
+
     @Modifying
     @Query("DELETE FROM RoutineSetParameterEntity p WHERE p.id IN :ids")
     int deleteAllById(@Param("ids") List<Long> ids);

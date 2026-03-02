@@ -4,8 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
+@Slf4j
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,14 +31,10 @@ public class RoutineSetParameterModel {
         }
     }
     
-    public void logModelData(String operation) {
-        System.out.println("RoutineSetParameterModel " + operation + ":");
-        System.out.println("ID: " + id);
-        System.out.println("Set Template ID: " + setTemplateId);
-        System.out.println("Parameter ID: " + parameterId);
-        System.out.println("Repetitions: " + repetitions);
-        System.out.println("Numeric Value: " + numericValue);
-        System.out.println("Duration Value: " + durationValue);
-        System.out.println("Integer Value: " + integerValue);
-    }
+public void logModelData(String operation) {
+    log.debug("RoutineSetParameterModel {} | id={} | setTemplateId={} | parameterId={} | "
+            + "repetitions={} | numericValue={} | durationValue={} | integerValue={}",
+            operation, id, setTemplateId, parameterId,
+            repetitions, numericValue, durationValue, integerValue);
+}
 }

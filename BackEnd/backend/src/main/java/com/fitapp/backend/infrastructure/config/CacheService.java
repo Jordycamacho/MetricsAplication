@@ -46,7 +46,8 @@ public class CacheService {
 
     /**
      * Llamar cuando cambia una categoría predefinida (operación de admin).
-     * Limpia todas las caches relacionadas porque las predefinidas aparecen en todos los listados.
+     * Limpia todas las caches relacionadas porque las predefinidas aparecen en
+     * todos los listados.
      */
     public void clearPredefinedCategoryCache(Long categoryId) {
         log.warn("CACHE_EVICT | predefined-categories | categoryId={}", categoryId);
@@ -95,5 +96,29 @@ public class CacheService {
         if (cache != null) {
             cache.clear();
         }
+    }
+
+    // ── Set Templates ─────────────────────────────────────────────────────────
+
+    public void clearSetTemplateCache(Long setTemplateId, Long routineExerciseId) {
+        log.debug("CACHE_EVICT | setTemplates | setTemplateId={}", setTemplateId);
+        evict("setTemplates", setTemplateId);
+        if (routineExerciseId != null) {
+            evict("setTemplatesByExercise", routineExerciseId);
+        }
+    }
+
+    public void clearSetTemplatesByExercise(Long routineExerciseId) {
+        log.debug("CACHE_EVICT | setTemplatesByExercise | routineExerciseId={}", routineExerciseId);
+        evict("setTemplatesByExercise", routineExerciseId);
+        clearAll("setTemplates");
+    }
+
+    public void clearSetParameterCache(Long setParameterId, Long setTemplateId) {
+        log.debug("CACHE_EVICT | setParameters | setParameterId={}", setParameterId);
+        if (setParameterId != null)
+            evict("setParameters", setParameterId);
+        if (setTemplateId != null)
+            evict("setParameters", "template_" + setTemplateId);
     }
 }

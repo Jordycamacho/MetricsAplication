@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -15,7 +16,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "routine_set_parameters")
+@Table(name = "routine_set_parameters", indexes = {
+    @Index(name = "idx_set_parameter_template", columnList = "set_template_id"),
+    @Index(name = "idx_set_parameter_param",    columnList = "parameter_id")
+})
 public class RoutineSetParameterEntity {
 
     @Id

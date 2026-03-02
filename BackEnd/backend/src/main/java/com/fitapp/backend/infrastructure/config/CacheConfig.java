@@ -87,7 +87,7 @@ public class CacheConfig {
                                                 .maximumSize(1000)
                                                 .recordStats()
                                                 .build());
-                                                
+
                 cacheManager.registerCustomCache("available-categories",
                                 Caffeine.newBuilder()
                                                 .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -106,6 +106,28 @@ public class CacheConfig {
                                 Caffeine.newBuilder()
                                                 .expireAfterWrite(30, TimeUnit.MINUTES)
                                                 .maximumSize(50)
+                                                .recordStats()
+                                                .build());
+
+                // ── Set Templates ─────────────────────────────────────────────────────────
+                cacheManager.registerCustomCache("setTemplates",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                                .maximumSize(500)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("setParameters",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                                .maximumSize(1000)
+                                                .recordStats()
+                                                .build());
+
+                cacheManager.registerCustomCache("setTemplatesByExercise",
+                                Caffeine.newBuilder()
+                                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                                .maximumSize(500)
                                                 .recordStats()
                                                 .build());
 

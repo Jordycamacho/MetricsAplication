@@ -11,17 +11,39 @@ import java.util.List;
 
 @Repository
 public interface RoutineSetTemplateRepository extends JpaRepository<RoutineSetTemplateEntity, Long> {
-    
+
     List<RoutineSetTemplateEntity> findByRoutineExerciseId(Long routineExerciseId);
-    
+
     List<RoutineSetTemplateEntity> findByRoutineExerciseIdAndGroupId(Long routineExerciseId, String groupId);
-    
+
     boolean existsByRoutineExerciseIdAndPosition(Long routineExerciseId, Integer position);
-    
+
     @Modifying
     @Query("DELETE FROM RoutineSetTemplateEntity s WHERE s.routineExercise.id = :routineExerciseId")
     int deleteByRoutineExerciseId(@Param("routineExerciseId") Long routineExerciseId);
-    
+
     @Query("SELECT s FROM RoutineSetTemplateEntity s WHERE s.routineExercise.id = :routineExerciseId ORDER BY s.position ASC")
     List<RoutineSetTemplateEntity> findByRoutineExerciseIdOrdered(@Param("routineExerciseId") Long routineExerciseId);
+
+    @Query("""
+            SELECT DISTINCT s FROM RoutineSetTemplateEntity s
+            LEFT JOIN FETCH s.parameters p
+            LEFT JOIN FETCH p.parameter
+            WHERE s.routineExercise.id = :routineExerciseId
+            ORDER BY s.position ASC
+            """)
+    List<RoutineSetTemplateEntity> findByRoutineExerciseIdWithParameters(
+            @Param("routineExerciseId") Long routineExerciseId);
+
+    @Query("""
+            SELECT DISTINCT s FROM RoutineSetTemplateEntity s
+            LEFT JOIN FETCH s.parameters p
+            LEFT JOIN FETCH p.parameter
+            WHERE s.routineExercise.id = :routineExerciseId
+              AND s.groupId = :groupId
+            ORDER BY s.position ASC
+            """)
+    List<RoutineSetTemplateEntity> findByRoutineExerciseIdAndGroupIdWithParameters(
+            @Param("routineExerciseId") Long routineExerciseId,
+            @Param("groupId") String groupId);
 }
