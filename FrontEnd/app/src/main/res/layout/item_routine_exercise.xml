@@ -5,34 +5,33 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginVertical="4dp"
-    app:cardBackgroundColor="@color/card_dark"
-    app:cardCornerRadius="12dp"
+    app:cardBackgroundColor="#1E1E1E"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeColor="#2A2A2A"
+    app:strokeColor="#333333"
     app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="12dp">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
 
-        <!-- Nombre + orden -->
+        <!-- Nombre + badge sesión/día -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="2dp">
+            android:layout_marginBottom="4dp">
 
             <TextView
                 android:id="@+id/tv_exercise_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Nombre del ejercicio"
-                android:textColor="@color/text_primary_dark"
+                android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:maxLines="1"
@@ -40,24 +39,23 @@
 
         </LinearLayout>
 
-        <!-- Sesión · orden -->
+        <!-- Detalles: sesión · día · orden · descanso -->
         <TextView
             android:id="@+id/tv_exercise_details"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sesión 1 · Orden 1"
-            android:textColor="@color/text_secondary_dark"
+            android:textColor="#B3B3B3"
             android:textSize="12sp"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="12dp" />
 
         <!-- Separador -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#252525"
+            android:background="#333333"
             android:layout_marginBottom="10dp" />
 
-        <!-- Sets info + botones -->
+        <!-- Sets + botones -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -69,41 +67,49 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="3 sets"
-                android:textColor="@color/gold_primary"
+                android:textColor="#78703F"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <ImageView
+            <!-- Añadir set -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_set"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_add"
-                android:padding="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Agregar set"
-                app:tint="@color/gold_primary" />
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Sets"
+                android:textColor="#78703F"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_add"
+                app:iconTint="#78703F"
+                app:iconSize="16dp"
+                app:iconPadding="4dp"
+                app:strokeColor="#78703F"
+                app:cornerRadius="12dp"
+                android:paddingHorizontal="12dp" />
 
+            <!-- Editar -->
             <ImageView
                 android:id="@+id/btn_edit"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/ic_edit"
-                android:padding="4dp"
+                android:padding="6dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Editar"
-                app:tint="@color/text_secondary_dark"
+                app:tint="#B3B3B3"
                 android:layout_marginStart="4dp" />
 
+            <!-- Eliminar -->
             <ImageView
                 android:id="@+id/btn_delete"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/ic_delete_24"
-                android:padding="4dp"
+                android:padding="6dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Eliminar"
-                app:tint="@color/red"
+                app:tint="#E41D1D"
                 android:layout_marginStart="4dp" />
 
         </LinearLayout>

@@ -4,47 +4,35 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fitapp.appfit.response.routine.request.AddExerciseToRoutineRequest
-import com.fitapp.appfit.response.routine.response.RoutineExerciseResponse
-import com.fitapp.appfit.service.RoutineExerciseService
-import com.fitapp.appfit.utils.Resource
-import kotlinx.coroutines.launch
-import android.util.Log
 import com.fitapp.appfit.repository.RoutineExerciseRepository
 import com.fitapp.appfit.response.exercise.response.ExerciseResponse
-import kotlinx.coroutines.delay
+import com.fitapp.appfit.response.routine.request.AddExerciseToRoutineRequest
+import com.fitapp.appfit.response.routine.response.RoutineExerciseResponse
+import com.fitapp.appfit.utils.Resource
+import kotlinx.coroutines.launch
 
 class RoutineExerciseViewModel : ViewModel() {
 
     private val repository = RoutineExerciseRepository()
 
+    // ── Estados ──────────────────────────────────────────────────────────────
+
     private val _exercisesState = MutableLiveData<Resource<List<RoutineExerciseResponse>>>()
     val exercisesState: LiveData<Resource<List<RoutineExerciseResponse>>> = _exercisesState
 
+    private val _addExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>?>()
+    val addExerciseState: LiveData<Resource<RoutineExerciseResponse>?> = _addExerciseState
+
+    private val _updateExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>?>()
+    val updateExerciseState: LiveData<Resource<RoutineExerciseResponse>?> = _updateExerciseState
+
     private val _deleteState = MutableLiveData<Resource<Unit>?>()
-
     val deleteState: LiveData<Resource<Unit>?> = _deleteState
-    private val _addExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>>()
-    val addExerciseState: LiveData<Resource<RoutineExerciseResponse>> get() = _addExerciseState
 
-    private val _updateExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>>()
-    val updateExerciseState: LiveData<Resource<RoutineExerciseResponse>> get() = _updateExerciseState
+    private val _reorderState = MutableLiveData<Resource<Unit>?>()
+    val reorderState: LiveData<Resource<Unit>?> = _reorderState
 
-    private val _removeExerciseState = MutableLiveData<Resource<Unit>>()
-    val removeExerciseState: LiveData<Resource<Unit>> get() = _removeExerciseState
-
-    private val _exercisesBySessionState = MutableLiveData<Resource<List<RoutineExerciseResponse>>>()
-    val exercisesBySessionState: LiveData<Resource<List<RoutineExerciseResponse>>> get() = _exercisesBySessionState
-
-    private val _exercisesByDayState = MutableLiveData<Resource<List<RoutineExerciseResponse>>>()
-    val exercisesByDayState: LiveData<Resource<List<RoutineExerciseResponse>>> get() = _exercisesByDayState
-
-    private val _reorderExercisesState = MutableLiveData<Resource<Unit>>()
-    val reorderExercisesState: LiveData<Resource<Unit>> get() = _reorderExercisesState
-
-    companion object {
-        private const val TAG = "AddExercisesToRoutine"
-    }
+    // ── Carga de ejercicios ───────────────────────────────────────────────────
 
     fun loadRoutineExercises(routineId: Long) {
         _exercisesState.value = Resource.Loading()
@@ -53,53 +41,62 @@ class RoutineExerciseViewModel : ViewModel() {
         }
     }
 
+    // ── Añadir ejercicio(s) ───────────────────────────────────────────────────
+
     fun addExerciseToRoutine(routineId: Long, request: AddExerciseToRoutineRequest) {
+        _addExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _addExerciseState.value = Resource.Loading()
-            try {
-                val response = RoutineExerciseService.instance.addExerciseToRoutine(routineId, request)
-                if (response.isSuccessful) {
-                    _addExerciseState.value = Resource.Success(response.body()!!)
-                } else {
-                    _addExerciseState.value = Resource.Error(response.message())
-                }
-            } catch (e: Exception) {
-                _addExerciseState.value = Resource.Error(e.message ?: "Error adding exercise")
-            }
+            _addExerciseState.value = repository.addExerciseToRoutine(routineId, request)
         }
     }
 
-    fun updateExerciseInRoutine(routineId: Long, exerciseId: Long, request: AddExerciseToRoutineRequest) {
+    /**
+     * Agrega múltiples ejercicios secuencialmente.
+     * En caso de fallo parcial notifica error pero continúa con el resto.
+     * Al terminar recarga la lista de ejercicios de la rutina.
+     */
+    fun addMultipleExercisesToRoutine(
+        routineId: Long,
+        exercises: List<Pair<ExerciseResponse, AddExerciseToRoutineRequest>>
+    ) {
+        _addExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _updateExerciseState.value = Resource.Loading()
-            try {
-                val response = RoutineExerciseService.instance.updateExerciseInRoutine(routineId, exerciseId, request)
-                if (response.isSuccessful) {
-                    _updateExerciseState.value = Resource.Success(response.body()!!)
-                } else {
-                    _updateExerciseState.value = Resource.Error(response.message())
+            var lastSuccess: RoutineExerciseResponse? = null
+            var errorMessage: String? = null
+
+            for ((exercise, request) in exercises) {
+                when (val result = repository.addExerciseToRoutine(routineId, request)) {
+                    is Resource.Success -> lastSuccess = result.data
+                    is Resource.Error -> errorMessage = "Error en ${exercise.name}: ${result.message}"
+                    else -> {}
                 }
-            } catch (e: Exception) {
-                _updateExerciseState.value = Resource.Error(e.message ?: "Error updating exercise")
             }
+
+            if (errorMessage != null) {
+                _addExerciseState.value = Resource.Error(errorMessage!!)
+            } else if (lastSuccess != null) {
+                _addExerciseState.value = Resource.Success(lastSuccess!!)
+            }
+
+            // Siempre recargar la lista tras añadir múltiples
+            loadRoutineExercises(routineId)
         }
     }
 
-    fun removeExerciseFromRoutine(routineId: Long, exerciseId: Long) {
+    // ── Editar ────────────────────────────────────────────────────────────────
+
+    fun updateExerciseInRoutine(
+        routineId: Long,
+        exerciseId: Long,
+        request: AddExerciseToRoutineRequest
+    ) {
+        _updateExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _removeExerciseState.value = Resource.Loading()
-            try {
-                val response = RoutineExerciseService.instance.removeExerciseFromRoutine(routineId, exerciseId)
-                if (response.isSuccessful) {
-                    _removeExerciseState.value = Resource.Success(Unit)
-                } else {
-                    _removeExerciseState.value = Resource.Error(response.message())
-                }
-            } catch (e: Exception) {
-                _removeExerciseState.value = Resource.Error(e.message ?: "Error removing exercise")
-            }
+            _updateExerciseState.value = repository.updateExerciseInRoutine(routineId, exerciseId, request)
         }
     }
+
+    // ── Eliminar ──────────────────────────────────────────────────────────────
 
     fun deleteExercise(routineId: Long, exerciseId: Long) {
         _deleteState.value = Resource.Loading()
@@ -112,111 +109,19 @@ class RoutineExerciseViewModel : ViewModel() {
         }
     }
 
-    fun getExercisesBySession(routineId: Long, sessionNumber: Int) {
-        viewModelScope.launch {
-            _exercisesBySessionState.value = Resource.Loading()
-            try {
-                val response = RoutineExerciseService.instance.getExercisesBySession(routineId, sessionNumber)
-                if (response.isSuccessful) {
-                    _exercisesBySessionState.value = Resource.Success(response.body()!!)
-                } else {
-                    _exercisesBySessionState.value = Resource.Error(response.message())
-                }
-            } catch (e: Exception) {
-                _exercisesBySessionState.value = Resource.Error(e.message ?: "Error getting exercises by session")
-            }
-        }
-    }
-
-    fun getExercisesByDay(routineId: Long, dayOfWeek: String) {
-        viewModelScope.launch {
-            _exercisesByDayState.value = Resource.Loading()
-            try {
-                val response = RoutineExerciseService.instance.getExercisesByDay(routineId, dayOfWeek)
-                if (response.isSuccessful) {
-                    _exercisesByDayState.value = Resource.Success(response.body()!!)
-                } else {
-                    _exercisesByDayState.value = Resource.Error(response.message())
-                }
-            } catch (e: Exception) {
-                _exercisesByDayState.value = Resource.Error(e.message ?: "Error getting exercises by day")
-            }
-        }
-    }
-
-    fun addMultipleExercisesToRoutine(
-        routineId: Long,
-        exercises: List<Pair<ExerciseResponse, AddExerciseToRoutineRequest>>
-    ) {
-        viewModelScope.launch {
-            _addExerciseState.value = Resource.Loading()
-
-            try {
-                var allSuccessful = true
-                var errorMessage = ""
-
-                for ((exercise, request) in exercises) {
-                    try {
-                        val response = RoutineExerciseService.instance.addExerciseToRoutine(routineId, request)
-
-                        if (!response.isSuccessful) {
-                            allSuccessful = false
-                            errorMessage = "Error agregando ejercicio ${exercise.name}: ${response.message()}"
-                            Log.e(TAG, errorMessage)
-                        }
-                    } catch (e: Exception) {
-                        allSuccessful = false
-                        errorMessage = "Error agregando ejercicio ${exercise.name}: ${e.message}"
-                        Log.e(TAG, errorMessage)
-                    }
-
-                    delay(200)
-                }
-
-                if (allSuccessful) {
-                    _addExerciseState.value = Resource.Success(
-                        RoutineExerciseResponse(
-                            id = 0,
-                            routineId = routineId,
-                            exerciseId = 0,
-                            exerciseName = "",
-                            position = 0,
-                            sessionNumber = null,
-                            dayOfWeek = null,
-                            sessionOrder = null,
-                            restAfterExercise = null,
-                            sets = 0,
-                            targetParameters = null,
-                            setsTemplate = null
-                        )
-                    )
-                } else {
-                    _addExerciseState.value = Resource.Error(errorMessage)
-                }
-
-            } catch (e: Exception) {
-                _addExerciseState.value = Resource.Error(e.message ?: "Error agregando múltiples ejercicios")
-            }
-        }
-    }
+    // ── Reordenar ─────────────────────────────────────────────────────────────
 
     fun reorderExercises(routineId: Long, exerciseIds: List<Long>) {
+        _reorderState.value = Resource.Loading()
         viewModelScope.launch {
-            _reorderExercisesState.value = Resource.Loading()
-            try {
-                val response = RoutineExerciseService.instance.reorderExercises(routineId, exerciseIds)
-                if (response.isSuccessful) {
-                    _reorderExercisesState.value = Resource.Success(Unit)
-                } else {
-                    _reorderExercisesState.value = Resource.Error(response.message())
-                }
-            } catch (e: Exception) {
-                _reorderExercisesState.value = Resource.Error(e.message ?: "Error reordering exercises")
-            }
+            _reorderState.value = repository.reorderExercises(routineId, exerciseIds)
         }
     }
 
-    fun clearDeleteState() {
-        _deleteState.postValue(null)
-    }
+    // ── Limpiar estados one-shot ──────────────────────────────────────────────
+
+    fun clearAddState() { _addExerciseState.value = null }
+    fun clearUpdateState() { _updateExerciseState.value = null }
+    fun clearDeleteState() { _deleteState.value = null }
+    fun clearReorderState() { _reorderState.value = null }
 }

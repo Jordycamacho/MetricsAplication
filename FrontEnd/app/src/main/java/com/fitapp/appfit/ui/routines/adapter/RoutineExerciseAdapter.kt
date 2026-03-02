@@ -2,6 +2,8 @@ package com.fitapp.appfit.ui.routines.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.databinding.ItemRoutineExerciseBinding
 import com.fitapp.appfit.response.routine.response.RoutineExerciseResponse
@@ -10,41 +12,59 @@ class RoutineExerciseAdapter(
     private val onEditClick: (RoutineExerciseResponse) -> Unit,
     private val onDeleteClick: (RoutineExerciseResponse) -> Unit,
     private val onAddSetClick: (RoutineExerciseResponse) -> Unit
-) : RecyclerView.Adapter<RoutineExerciseAdapter.ViewHolder>() {
+) : ListAdapter<RoutineExerciseResponse, RoutineExerciseAdapter.ViewHolder>(DiffCallback) {
 
-    private var exercises = listOf<RoutineExerciseResponse>()
+    companion object DiffCallback : DiffUtil.ItemCallback<RoutineExerciseResponse>() {
+        override fun areItemsTheSame(old: RoutineExerciseResponse, new: RoutineExerciseResponse) =
+            old.id == new.id
 
-    fun submitList(list: List<RoutineExerciseResponse>) {
-        exercises = list
-        notifyDataSetChanged()
+        override fun areContentsTheSame(old: RoutineExerciseResponse, new: RoutineExerciseResponse) =
+            old == new
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemRoutineExerciseBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemRoutineExerciseBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
         return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val exercise = exercises[position]
-        holder.bind(exercise)
-        holder.itemView.setOnClickListener { /* Podría abrir detalle */ }
-        holder.binding.btnEdit.setOnClickListener { onEditClick(exercise) }
-        holder.binding.btnDelete.setOnClickListener { onDeleteClick(exercise) }
-        holder.binding.btnAddSet.setOnClickListener { onAddSetClick(exercise) }
+        holder.bind(getItem(position))
     }
-
-    override fun getItemCount() = exercises.size
 
     inner class ViewHolder(val binding: ItemRoutineExerciseBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
         fun bind(exercise: RoutineExerciseResponse) {
             binding.tvExerciseName.text = exercise.exerciseName ?: "Ejercicio"
+
             binding.tvExerciseDetails.text = buildString {
-                exercise.sessionNumber?.let { append("Sesión $it · ") }
-                exercise.dayOfWeek?.let { append("${it} · ") }
-                append("Orden: ${exercise.sessionOrder ?: 1}")
+                val dayMap = mapOf(
+                    "MONDAY" to "Lun", "TUESDAY" to "Mar", "WEDNESDAY" to "Mié",
+                    "THURSDAY" to "Jue", "FRIDAY" to "Vie", "SATURDAY" to "Sáb", "SUNDAY" to "Dom"
+                )
+                exercise.sessionNumber?.let { append("Sesión $it") }
+                exercise.dayOfWeek?.let {
+                    if (isNotEmpty()) append(" · ")
+                    append(dayMap[it.toString()] ?: it.toString())
+                }
+                if (exercise.sessionOrder != null) {
+                    if (isNotEmpty()) append(" · ")
+                    append("Orden ${exercise.sessionOrder}")
+                }
+                if (exercise.restAfterExercise != null) {
+                    if (isNotEmpty()) append(" · ")
+                    append("${exercise.restAfterExercise}s descanso")
+                }
             }
-            binding.tvSetsInfo.text = "${exercise.sets ?: 0} sets"
+
+            val setsCount = exercise.sets ?: 0
+            binding.tvSetsInfo.text = if (setsCount == 0) "Sin sets" else "$setsCount set${if (setsCount != 1) "s" else ""}"
+
+            binding.btnEdit.setOnClickListener { onEditClick(exercise) }
+            binding.btnDelete.setOnClickListener { onDeleteClick(exercise) }
+            binding.btnAddSet.setOnClickListener { onAddSetClick(exercise) }
         }
     }
 }
