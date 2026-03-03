@@ -11,9 +11,22 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
 import com.fitapp.appfit.timer.RestTimer
+import com.fitapp.appfit.utils.WorkoutHaptics
 
+/**
+ * Adapter de sets durante el entrenamiento.
+ *
+ * Para ejercicios con parámetro DURATION actúa en secuencia automática:
+ *   1. Tap en el contador → arranca duración del set
+ *   2. Al terminar duración → arranca restAfterSet automáticamente + vibración
+ *   3. Al terminar descanso del set → arranca el siguiente set automáticamente + vibración
+ *
+ * Al terminar el último set notifica al adapter del ejercicio via [onSequenceComplete]
+ * para que arranque el descanso entre ejercicios.
+ */
 class WorkoutSetAdapter(
-    private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit
+    private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
+    private val onSequenceComplete: () -> Unit = {}   // llamado al acabar el último set de la secuencia
 ) : RecyclerView.Adapter<WorkoutSetAdapter.SetViewHolder>() {
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()
@@ -24,6 +37,9 @@ class WorkoutSetAdapter(
     private val paramLabel      = mutableMapOf<Long, String>()
     private val paramType       = mutableMapOf<Long, String>()
 
+    // Para la secuencia: índice del set activo
+    private var activeSequenceIndex = -1
+
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
         currentReps.clear()
@@ -31,24 +47,24 @@ class WorkoutSetAdapter(
         currentDuration.clear()
         paramLabel.clear()
         paramType.clear()
+        activeSequenceIndex = -1
         sets.forEach { set -> initSetState(set.id, set.parameters ?: emptyList()) }
         notifyDataSetChanged()
     }
 
+    /** ¿Todos los sets de este adapter son de tipo DURATION? */
+    fun isSequenceMode() = sets.isNotEmpty() && sets.all { currentDuration.containsKey(it.id) }
+
     private fun initSetState(setId: Long, params: List<RoutineSetParameterResponse>) {
-        // Reps
         params.firstOrNull { it.repetitions != null }?.let {
             currentReps[setId] = it.repetitions!!
         }
-
-        // Duración — durationValue llega en segundos
+        // durationValue en segundos directamente
         params.firstOrNull {
             it.parameterType?.uppercase() == "DURATION" && it.durationValue != null
         }?.let {
-            currentDuration[setId] = it.durationValue!!  // ya en segundos
+            currentDuration[setId] = it.durationValue!!
         }
-
-        // Parámetro numérico principal
         val numericParam = params.firstOrNull { p ->
             p.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
                     && (p.numericValue != null || p.integerValue != null)
@@ -80,7 +96,7 @@ class WorkoutSetAdapter(
     }
 
     override fun onBindViewHolder(holder: SetViewHolder, position: Int) {
-        holder.bind(sets[position], position + 1)
+        holder.bind(sets[position], position)
     }
 
     override fun onViewRecycled(holder: SetViewHolder) {
@@ -94,6 +110,25 @@ class WorkoutSetAdapter(
     }
 
     override fun getItemCount() = sets.size
+
+    // ── Secuencia automática ──────────────────────────────────────────────────
+
+    /**
+     * Llamado por SetViewHolder cuando termina el descanso del set en modo secuencia.
+     * Arranca el siguiente set, o notifica que la secuencia terminó.
+     */
+    private fun onSetRestFinished(finishedIndex: Int) {
+        val nextIndex = finishedIndex + 1
+        if (nextIndex < sets.size) {
+            activeSequenceIndex = nextIndex
+            notifyItemChanged(nextIndex)  // rebind → arrancará automáticamente
+        } else {
+            activeSequenceIndex = -1
+            onSequenceComplete()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -118,16 +153,17 @@ class WorkoutSetAdapter(
         private val btnDecParam: ImageButton  = itemView.findViewById(R.id.btn_decrease_weight)
         private val btnIncParam: ImageButton  = itemView.findViewById(R.id.btn_increase_weight)
 
-        // Contador de duración (tappable, sin botón play)
+        // Duración
         private val layoutDuration: View        = itemView.findViewById(R.id.layout_duration_container)
         private val tvDurationTimer: TextView   = itemView.findViewById(R.id.tv_duration_timer)
         private val btnDecDuration: ImageButton = itemView.findViewById(R.id.btn_decrease_duration)
         private val btnIncDuration: ImageButton = itemView.findViewById(R.id.btn_increase_duration)
 
-        // Rest timer del set
+        // Rest timer
         private val tvRestTimer: TextView     = itemView.findViewById(R.id.tv_rest_timer)
 
         private var currentSetId: Long = -1L
+        private var myIndex = -1
         private var restSeconds = 0
         private var restTimerActive = false
         private var durationTimerActive = false
@@ -141,6 +177,9 @@ class WorkoutSetAdapter(
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
                     updateRestLabel()
+                    WorkoutHaptics.restFinished(itemView.context)
+                    // Si estamos en secuencia, pasar al siguiente set
+                    if (isSequenceMode()) onSetRestFinished(myIndex)
                 }
             }
         )
@@ -153,8 +192,18 @@ class WorkoutSetAdapter(
             onFinish = {
                 if (durationTimerActive && itemView.isAttachedToWindow) {
                     durationTimerActive = false
-                    // Volver a mostrar el valor objetivo
                     tvDurationTimer.text = formatDuration(currentDuration[currentSetId] ?: 0L)
+                    WorkoutHaptics.setComplete(itemView.context)
+                    onValueChanged(sets[myIndex], "completed", 1.0)
+                    // Arrancar descanso automáticamente si es secuencia
+                    if (isSequenceMode() && restSeconds > 0) {
+                        restTimerActive = true
+                        tvRestTimer.text = "⏸  ${restSeconds}s"
+                        restTimer.start(restSeconds)
+                    } else if (isSequenceMode()) {
+                        // Sin descanso → pasar directo al siguiente
+                        onSetRestFinished(myIndex)
+                    }
                 }
             }
         )
@@ -166,20 +215,22 @@ class WorkoutSetAdapter(
             durationTimer.stop()
         }
 
-        fun bind(set: RoutineSetTemplateResponse, positionInList: Int) {
+        fun bind(set: RoutineSetTemplateResponse, position: Int) {
             stopAllTimers()
             currentSetId = set.id
-            bindHeader(set, positionInList)
+            myIndex = position
+
+            bindHeader(set, position)
             bindRepsBlock(set)
             bindParamBlock(set)
-            bindDurationBlock(set)
+            bindDurationBlock(set, position)
             bindRestTimer(set)
         }
 
         // ── Header ────────────────────────────────────────────────────────────
 
-        private fun bindHeader(set: RoutineSetTemplateResponse, positionInList: Int) {
-            tvSetNumber.text = "Serie $positionInList"
+        private fun bindHeader(set: RoutineSetTemplateResponse, position: Int) {
+            tvSetNumber.text = "Serie ${position + 1}"
             val (label, colorRes) = setTypeMeta(set.setType ?: "NORMAL")
             tvSetBadge.text = label
             tvSetBadge.backgroundTintList =
@@ -214,7 +265,6 @@ class WorkoutSetAdapter(
                 "DROP_SET"               -> "REPS ↓"
                 else                     -> "REPS"
             }
-
             btnDecReps.setOnClickListener {
                 val cur = currentReps[set.id] ?: 0
                 if (cur > 0) {
@@ -235,17 +285,13 @@ class WorkoutSetAdapter(
         // ── Param numérico ────────────────────────────────────────────────────
 
         private fun bindParamBlock(set: RoutineSetTemplateResponse) {
-            // Ocultar si el único parámetro es duración
             val onlyDuration = currentDuration.containsKey(set.id) &&
                     (set.parameters?.none {
                         it.parameterType?.uppercase() in listOf("NUMBER","INTEGER","DISTANCE","PERCENTAGE")
                     } == true)
 
             layoutParam.visibility = if (onlyDuration) View.GONE else View.VISIBLE
-            if (onlyDuration) {
-                viewDivider.visibility = View.GONE
-                return
-            }
+            if (onlyDuration) { viewDivider.visibility = View.GONE; return }
 
             val value = currentParam[set.id] ?: 0.0
             val unit  = paramLabel[set.id] ?: "KG"
@@ -279,9 +325,9 @@ class WorkoutSetAdapter(
             else                      -> 1.0
         }
 
-        // ── Contador de duración — tap para iniciar/parar ─────────────────────
+        // ── Contador de duración ──────────────────────────────────────────────
 
-        private fun bindDurationBlock(set: RoutineSetTemplateResponse) {
+        private fun bindDurationBlock(set: RoutineSetTemplateResponse, position: Int) {
             val hasDuration = currentDuration.containsKey(set.id)
             layoutDuration.visibility = if (hasDuration) View.VISIBLE else View.GONE
             if (!hasDuration) return
@@ -289,19 +335,26 @@ class WorkoutSetAdapter(
             val targetSecs = currentDuration[set.id] ?: 0L
             tvDurationTimer.text = formatDuration(targetSecs)
 
-            // Tap en el número → arranca o para
+            // Si este es el set activo en la secuencia, arrancarlo automáticamente
+            if (isSequenceMode() && activeSequenceIndex == position && !durationTimerActive) {
+                WorkoutHaptics.exerciseStart(itemView.context)
+                durationTimerActive = true
+                durationTimer.start(targetSecs.toInt())
+            }
+
+            // Tap manual: arranca o para (siempre disponible)
             tvDurationTimer.setOnClickListener {
                 if (durationTimerActive) {
                     durationTimerActive = false
                     durationTimer.stop()
                     tvDurationTimer.text = formatDuration(currentDuration[set.id] ?: 0L)
                 } else {
+                    WorkoutHaptics.exerciseStart(itemView.context)
                     durationTimerActive = true
                     durationTimer.start((currentDuration[set.id] ?: 0L).toInt())
                 }
             }
 
-            // Botones ±5s — solo cuando el timer está parado
             btnDecDuration.setOnClickListener {
                 if (durationTimerActive) return@setOnClickListener
                 val cur = currentDuration[set.id] ?: 0L

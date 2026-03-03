@@ -11,6 +11,7 @@ import com.fitapp.appfit.response.routine.response.RoutineExerciseResponse
 import com.fitapp.appfit.response.routine.response.RoutineResponse
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.timer.RestTimer
+import com.fitapp.appfit.utils.WorkoutHaptics
 import com.google.android.material.card.MaterialCardView
 
 class WorkoutExerciseAdapter(
@@ -64,18 +65,28 @@ class WorkoutExerciseAdapter(
         private val ivExpand: View                 = itemView.findViewById(R.id.iv_expand)
         private val layoutSets: View               = itemView.findViewById(R.id.layout_sets_container)
         private val recyclerSets: RecyclerView     = itemView.findViewById(R.id.recycler_sets)
-        // Al final del contenedor de sets
         private val tvExerciseRest: TextView       = itemView.findViewById(R.id.tv_exercise_rest)
-
-        private val setAdapter = WorkoutSetAdapter { set, valueType, newValue ->
-            currentExercise?.let { exercise ->
-                onSetValueChanged(exercise, set, valueType, newValue)
-            }
-        }
 
         private var currentExercise: RoutineExerciseResponse? = null
         private var restSeconds = 0
         private var restTimerActive = false
+
+        private val setAdapter = WorkoutSetAdapter(
+            onValueChanged = { set, valueType, newValue ->
+                currentExercise?.let { exercise ->
+                    onSetValueChanged(exercise, set, valueType, newValue)
+                }
+            },
+            onSequenceComplete = {
+                // Todos los sets de duración terminaron → arrancar descanso del ejercicio
+                if (restSeconds > 0) {
+                    WorkoutHaptics.exerciseComplete(itemView.context)
+                    tvExerciseRest.visibility = View.VISIBLE
+                    restTimerActive = true
+                    restTimer.start(restSeconds)
+                }
+            }
+        )
 
         private val restTimer = RestTimer(
             onTick = { seconds ->
@@ -85,6 +96,7 @@ class WorkoutExerciseAdapter(
             onFinish = {
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
+                    WorkoutHaptics.restFinished(itemView.context)
                     updateRestLabel()
                 }
             }
@@ -121,10 +133,8 @@ class WorkoutExerciseAdapter(
             currentExercise = exercise
             tvExerciseName.text = exercise.exerciseName ?: "Ejercicio ${exercise.position}"
 
-            // Timer de descanso del ejercicio — aparece al final del bloque de sets
             restSeconds = exercise.restAfterExercise ?: 0
             if (restSeconds > 0) {
-                tvExerciseRest.visibility = View.VISIBLE
                 updateRestLabel()
                 tvExerciseRest.setOnClickListener {
                     if (restTimerActive) {
@@ -152,6 +162,7 @@ class WorkoutExerciseAdapter(
         }
 
         private fun updateRestLabel() {
+            tvExerciseRest.visibility = View.VISIBLE
             tvExerciseRest.text = "▶  ${restSeconds}s descanso entre ejercicios"
         }
     }
