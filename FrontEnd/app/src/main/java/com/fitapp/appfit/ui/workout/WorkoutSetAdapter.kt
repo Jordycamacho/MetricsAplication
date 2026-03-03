@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -13,68 +14,43 @@ import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
 import com.fitapp.appfit.timer.RestTimer
 import com.fitapp.appfit.utils.WorkoutHaptics
 
-/**
- * Adapter de sets durante el entrenamiento.
- *
- * Para ejercicios con parámetro DURATION actúa en secuencia automática:
- *   1. Tap en el contador → arranca duración del set
- *   2. Al terminar duración → arranca restAfterSet automáticamente + vibración
- *   3. Al terminar descanso del set → arranca el siguiente set automáticamente + vibración
- *
- * Al terminar el último set notifica al adapter del ejercicio via [onSequenceComplete]
- * para que arranque el descanso entre ejercicios.
- */
 class WorkoutSetAdapter(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
-    private val onSequenceComplete: () -> Unit = {}   // llamado al acabar el último set de la secuencia
+    private val onSequenceComplete: () -> Unit = {}
 ) : RecyclerView.Adapter<WorkoutSetAdapter.SetViewHolder>() {
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()
-
     private val currentReps     = mutableMapOf<Long, Int>()
     private val currentParam    = mutableMapOf<Long, Double>()
-    private val currentDuration = mutableMapOf<Long, Long>()  // segundos
+    private val currentDuration = mutableMapOf<Long, Long>()
     private val paramLabel      = mutableMapOf<Long, String>()
     private val paramType       = mutableMapOf<Long, String>()
-
-    // Para la secuencia: índice del set activo
     private var activeSequenceIndex = -1
 
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
-        currentReps.clear()
-        currentParam.clear()
-        currentDuration.clear()
-        paramLabel.clear()
-        paramType.clear()
+        currentReps.clear(); currentParam.clear(); currentDuration.clear()
+        paramLabel.clear(); paramType.clear()
         activeSequenceIndex = -1
-        sets.forEach { set -> initSetState(set.id, set.parameters ?: emptyList()) }
+        sets.forEach { initSetState(it.id, it.parameters ?: emptyList()) }
         notifyDataSetChanged()
     }
 
-    /** ¿Todos los sets de este adapter son de tipo DURATION? */
     fun isSequenceMode() = sets.isNotEmpty() && sets.all { currentDuration.containsKey(it.id) }
 
     private fun initSetState(setId: Long, params: List<RoutineSetParameterResponse>) {
-        params.firstOrNull { it.repetitions != null }?.let {
-            currentReps[setId] = it.repetitions!!
-        }
-        // durationValue en segundos directamente
-        params.firstOrNull {
-            it.parameterType?.uppercase() == "DURATION" && it.durationValue != null
-        }?.let {
-            currentDuration[setId] = it.durationValue!!
-        }
+        params.firstOrNull { it.repetitions != null }
+            ?.let { currentReps[setId] = it.repetitions!! }
+        params.firstOrNull { it.parameterType?.uppercase() == "DURATION" && it.durationValue != null }
+            ?.let { currentDuration[setId] = it.durationValue!! }
         val numericParam = params.firstOrNull { p ->
-            p.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
+            p.parameterType?.uppercase() in listOf("NUMBER","INTEGER","DISTANCE","PERCENTAGE")
                     && (p.numericValue != null || p.integerValue != null)
         }
         if (numericParam != null) {
-            currentParam[setId] = numericParam.numericValue
-                ?: numericParam.integerValue?.toDouble() ?: 0.0
-            paramLabel[setId] = numericParam.unit
-                ?: inferUnit(numericParam.parameterType, numericParam.parameterName)
-            paramType[setId] = numericParam.parameterType?.lowercase() ?: "number"
+            currentParam[setId] = numericParam.numericValue ?: numericParam.integerValue?.toDouble() ?: 0.0
+            paramLabel[setId] = numericParam.unit ?: inferUnit(numericParam.parameterType, numericParam.parameterName)
+            paramType[setId]  = numericParam.parameterType?.lowercase() ?: "number"
         } else {
             currentParam[setId] = 0.0
             paramLabel[setId] = "KG"
@@ -83,84 +59,64 @@ class WorkoutSetAdapter(
     }
 
     private fun inferUnit(type: String?, name: String?): String = when (type?.uppercase()) {
-        "DISTANCE"   -> "M"
-        "PERCENTAGE" -> "%"
-        "INTEGER"    -> name?.take(3)?.uppercase() ?: "REP"
-        else         -> name?.take(3)?.uppercase() ?: "KG"
+        "DISTANCE" -> "M"; "PERCENTAGE" -> "%"; "INTEGER" -> name?.take(3)?.uppercase() ?: "REP"
+        else -> name?.take(3)?.uppercase() ?: "KG"
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SetViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_workout_set, parent, false)
-        return SetViewHolder(view)
+    private fun onSetRestFinished(index: Int) {
+        val next = index + 1
+        if (next < sets.size) { activeSequenceIndex = next; notifyItemChanged(next) }
+        else { activeSequenceIndex = -1; onSequenceComplete() }
     }
 
-    override fun onBindViewHolder(holder: SetViewHolder, position: Int) {
-        holder.bind(sets[position], position)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        SetViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_workout_set, parent, false))
 
-    override fun onViewRecycled(holder: SetViewHolder) {
-        super.onViewRecycled(holder)
-        holder.stopAllTimers()
-    }
-
-    override fun onViewDetachedFromWindow(holder: SetViewHolder) {
-        super.onViewDetachedFromWindow(holder)
-        holder.stopAllTimers()
-    }
-
+    override fun onBindViewHolder(h: SetViewHolder, pos: Int) = h.bind(sets[pos], pos)
     override fun getItemCount() = sets.size
-
-    // ── Secuencia automática ──────────────────────────────────────────────────
-
-    /**
-     * Llamado por SetViewHolder cuando termina el descanso del set en modo secuencia.
-     * Arranca el siguiente set, o notifica que la secuencia terminó.
-     */
-    private fun onSetRestFinished(finishedIndex: Int) {
-        val nextIndex = finishedIndex + 1
-        if (nextIndex < sets.size) {
-            activeSequenceIndex = nextIndex
-            notifyItemChanged(nextIndex)  // rebind → arrancará automáticamente
-        } else {
-            activeSequenceIndex = -1
-            onSequenceComplete()
-        }
-    }
+    override fun onViewRecycled(h: SetViewHolder) { super.onViewRecycled(h); h.stopAllTimers() }
+    override fun onViewDetachedFromWindow(h: SetViewHolder) { super.onViewDetachedFromWindow(h); h.stopAllTimers() }
 
     // ─────────────────────────────────────────────────────────────────────────
 
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         // Header
+        private val viewTypeStripe: View      = itemView.findViewById(R.id.view_type_stripe)
         private val tvSetBadge: TextView      = itemView.findViewById(R.id.tv_set_badge)
-        private val tvSetNumber: TextView     = itemView.findViewById(R.id.tv_set_number)
+        private val tvParamSummary: TextView  = itemView.findViewById(R.id.tv_param_summary)
 
-        // Reps
-        private val layoutReps: View          = itemView.findViewById(R.id.layout_reps_container)
+        // Columna izquierda
+        private val layoutReps: LinearLayout  = itemView.findViewById(R.id.layout_reps_container)
         private val tvRepsLabel: TextView     = itemView.findViewById(R.id.tv_reps_label)
         private val tvRepsValue: TextView     = itemView.findViewById(R.id.tv_reps_value)
         private val btnDecReps: ImageButton   = itemView.findViewById(R.id.btn_decrease_reps)
         private val btnIncReps: ImageButton   = itemView.findViewById(R.id.btn_increase_reps)
 
-        // Divider
         private val viewDivider: View         = itemView.findViewById(R.id.view_divider)
 
-        // Param numérico
-        private val layoutParam: View         = itemView.findViewById(R.id.layout_param_container)
+        // Columna derecha
+        private val layoutParam: LinearLayout = itemView.findViewById(R.id.layout_param_container)
         private val tvParamUnit: TextView     = itemView.findViewById(R.id.tv_weight_unit)
         private val tvParamValue: TextView    = itemView.findViewById(R.id.tv_weight_value)
         private val btnDecParam: ImageButton  = itemView.findViewById(R.id.btn_decrease_weight)
         private val btnIncParam: ImageButton  = itemView.findViewById(R.id.btn_increase_weight)
 
-        // Duración
-        private val layoutDuration: View        = itemView.findViewById(R.id.layout_duration_container)
-        private val tvDurationTimer: TextView   = itemView.findViewById(R.id.tv_duration_timer)
-        private val btnDecDuration: ImageButton = itemView.findViewById(R.id.btn_decrease_duration)
-        private val btnIncDuration: ImageButton = itemView.findViewById(R.id.btn_increase_duration)
+        // Bloque extra de duración (caso: reps + param + duración)
+        private val layoutDurationExtra: View        = itemView.findViewById(R.id.layout_duration_extra)
+        private val tvDurationTimer: TextView        = itemView.findViewById(R.id.tv_duration_timer)
+        private val btnDecDurationExtra: ImageButton = itemView.findViewById(R.id.btn_decrease_duration_extra)
+        private val btnIncDurationExtra: ImageButton = itemView.findViewById(R.id.btn_increase_duration_extra)
 
-        // Rest timer
+        // Descanso
+        private val layoutRestContainer: View = itemView.findViewById(R.id.layout_rest_container)
         private val tvRestTimer: TextView     = itemView.findViewById(R.id.tv_rest_timer)
+        private val tvRestHint: TextView      = itemView.findViewById(R.id.tv_rest_hint)
+
+        // ── PUNTERO al TextView que está mostrando el contador de duración ──
+        // Se asigna en bindControls según qué columna se usa para duración.
+        // El timer siempre actualiza ESTE TextView, nunca a ciegas los tres.
+        private var durationDisplayView: TextView? = null
 
         private var currentSetId: Long = -1L
         private var myIndex = -1
@@ -169,39 +125,42 @@ class WorkoutSetAdapter(
         private var durationTimerActive = false
 
         private val restTimer = RestTimer(
-            onTick = { seconds ->
-                if (restTimerActive && itemView.isAttachedToWindow)
-                    tvRestTimer.text = "⏸  ${seconds}s"
+            onTick = { s ->
+                if (restTimerActive && itemView.isAttachedToWindow) {
+                    tvRestTimer.text = "${s}s descanso"
+                    tvRestHint.text = "STOP"
+                }
             },
             onFinish = {
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
-                    updateRestLabel()
                     WorkoutHaptics.restFinished(itemView.context)
-                    // Si estamos en secuencia, pasar al siguiente set
+                    updateRestLabel()
                     if (isSequenceMode()) onSetRestFinished(myIndex)
                 }
             }
         )
 
         private val durationTimer = RestTimer(
-            onTick = { seconds ->
-                if (durationTimerActive && itemView.isAttachedToWindow)
-                    tvDurationTimer.text = formatDuration(seconds.toLong())
+            onTick = { s ->
+                if (durationTimerActive && itemView.isAttachedToWindow) {
+                    // Solo toca el TextView que realmente muestra el contador
+                    durationDisplayView?.text = formatDuration(s.toLong())
+                }
             },
             onFinish = {
                 if (durationTimerActive && itemView.isAttachedToWindow) {
                     durationTimerActive = false
-                    tvDurationTimer.text = formatDuration(currentDuration[currentSetId] ?: 0L)
+                    // Restaurar el valor objetivo en el display de duración
+                    durationDisplayView?.text = formatDuration(currentDuration[currentSetId] ?: 0L)
                     WorkoutHaptics.setComplete(itemView.context)
                     onValueChanged(sets[myIndex], "completed", 1.0)
-                    // Arrancar descanso automáticamente si es secuencia
                     if (isSequenceMode() && restSeconds > 0) {
                         restTimerActive = true
-                        tvRestTimer.text = "⏸  ${restSeconds}s"
+                        tvRestTimer.text = "${restSeconds}s descanso"
+                        tvRestHint.text = "STOP"
                         restTimer.start(restSeconds)
                     } else if (isSequenceMode()) {
-                        // Sin descanso → pasar directo al siguiente
                         onSetRestFinished(myIndex)
                     }
                 }
@@ -209,32 +168,32 @@ class WorkoutSetAdapter(
         )
 
         fun stopAllTimers() {
-            restTimerActive = false
-            durationTimerActive = false
-            restTimer.stop()
-            durationTimer.stop()
+            restTimerActive = false; durationTimerActive = false
+            restTimer.stop(); durationTimer.stop()
         }
 
         fun bind(set: RoutineSetTemplateResponse, position: Int) {
             stopAllTimers()
+            durationDisplayView = null
             currentSetId = set.id
             myIndex = position
-
-            bindHeader(set, position)
-            bindRepsBlock(set)
-            bindParamBlock(set)
-            bindDurationBlock(set, position)
+            bindTypeDecoration(set)
+            bindControls(set, position)
             bindRestTimer(set)
         }
 
-        // ── Header ────────────────────────────────────────────────────────────
+        // ── Decoración del tipo ───────────────────────────────────────────────
 
-        private fun bindHeader(set: RoutineSetTemplateResponse, position: Int) {
-            tvSetNumber.text = "Serie ${position + 1}"
+        private fun bindTypeDecoration(set: RoutineSetTemplateResponse) {
             val (label, colorRes) = setTypeMeta(set.setType ?: "NORMAL")
+            val color = ContextCompat.getColor(itemView.context, colorRes)
+            viewTypeStripe.setBackgroundColor(color)
             tvSetBadge.text = label
-            tvSetBadge.backgroundTintList =
-                ContextCompat.getColorStateList(itemView.context, colorRes)
+            tvSetBadge.backgroundTintList = ContextCompat.getColorStateList(itemView.context, colorRes)
+            tvSetBadge.setTextColor(
+                if (colorRes == R.color.set_type_normal) ContextCompat.getColor(itemView.context, R.color.background_dark)
+                else android.graphics.Color.WHITE
+            )
         }
 
         private fun setTypeMeta(type: String): Pair<String, Int> = when (type.uppercase()) {
@@ -251,164 +210,237 @@ class WorkoutSetAdapter(
             else              -> "Normal"          to R.color.set_type_normal
         }
 
-        // ── Reps ─────────────────────────────────────────────────────────────
+        // ── Controles ─────────────────────────────────────────────────────────
 
-        private fun bindRepsBlock(set: RoutineSetTemplateResponse) {
-            val hasReps = currentReps.containsKey(set.id)
-            layoutReps.visibility = if (hasReps) View.VISIBLE else View.GONE
-            viewDivider.visibility = if (hasReps) View.VISIBLE else View.GONE
-            if (!hasReps) return
+        private fun bindControls(set: RoutineSetTemplateResponse, position: Int) {
+            val hasReps     = currentReps.containsKey(set.id)
+            val hasDuration = currentDuration.containsKey(set.id)
+            val hasParam    = set.parameters?.any {
+                it.parameterType?.uppercase() in listOf("NUMBER","INTEGER","DISTANCE","PERCENTAGE")
+            } == true
 
-            tvRepsValue.text = currentReps[set.id].toString()
-            tvRepsLabel.text = when (set.setType?.uppercase()) {
-                "ISOMETRIC", "REST_PAUSE" -> "SERIES"
-                "DROP_SET"               -> "REPS ↓"
-                else                     -> "REPS"
-            }
-            btnDecReps.setOnClickListener {
-                val cur = currentReps[set.id] ?: 0
-                if (cur > 0) {
-                    val new = cur - 1
-                    currentReps[set.id] = new
-                    tvRepsValue.text = new.toString()
-                    onValueChanged(set, "reps", new.toDouble())
+            tvParamSummary.text = buildSummary(hasReps, hasDuration, hasParam, set.id)
+
+            // Reset visibilidad y weights antes de asignar
+            layoutReps.visibility = View.GONE
+            layoutParam.visibility = View.GONE
+            viewDivider.visibility = View.GONE
+            layoutDurationExtra.visibility = View.GONE
+            setColumnWeight(layoutReps, 1f)
+            setColumnWeight(layoutParam, 1f)
+
+            // Resetear estilos de texto que se puedan haber reutilizado para duración
+            tvRepsValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary_dark))
+            tvRepsValue.textSize = 38f
+            tvRepsValue.isClickable = false
+            tvRepsValue.isFocusable = false
+            tvRepsValue.setOnClickListener(null)
+            tvParamValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary_dark))
+            tvParamValue.textSize = 38f
+            tvParamValue.isClickable = false
+            tvParamValue.isFocusable = false
+            tvParamValue.setOnClickListener(null)
+
+            when {
+                // A: Reps + Param (sin duración)
+                hasReps && hasParam && !hasDuration -> {
+                    setupRepsColumn(set); setupParamColumn(set)
+                    viewDivider.visibility = View.VISIBLE
                 }
-            }
-            btnIncReps.setOnClickListener {
-                val new = (currentReps[set.id] ?: 0) + 1
-                currentReps[set.id] = new
-                tvRepsValue.text = new.toString()
-                onValueChanged(set, "reps", new.toDouble())
+                // B: Solo reps
+                hasReps && !hasParam && !hasDuration -> {
+                    setupRepsColumn(set)
+                    setColumnWeight(layoutReps, 2f)
+                }
+                // C: Duración + Param (sin reps)
+                !hasReps && hasDuration && hasParam -> {
+                    setupDurationInColumn(set, position, isLeft = true)
+                    setupParamColumn(set)
+                    viewDivider.visibility = View.VISIBLE
+                }
+                // D: Solo duración
+                !hasReps && hasDuration && !hasParam -> {
+                    setupDurationInColumn(set, position, isLeft = true)
+                    setColumnWeight(layoutReps, 2f)
+                }
+                // E: Reps + Duración (sin param numérico)
+                hasReps && hasDuration && !hasParam -> {
+                    setupRepsColumn(set)
+                    setupDurationInColumn(set, position, isLeft = false)
+                    viewDivider.visibility = View.VISIBLE
+                }
+                // F: Reps + Param + Duración (3 parámetros)
+                hasReps && hasParam && hasDuration -> {
+                    setupRepsColumn(set); setupParamColumn(set)
+                    viewDivider.visibility = View.VISIBLE
+                    setupDurationExtra(set, position)
+                }
             }
         }
 
-        // ── Param numérico ────────────────────────────────────────────────────
+        private fun setColumnWeight(layout: LinearLayout, weight: Float) {
+            val lp = layout.layoutParams as? LinearLayout.LayoutParams ?: return
+            lp.weight = weight
+            layout.layoutParams = lp
+        }
 
-        private fun bindParamBlock(set: RoutineSetTemplateResponse) {
-            val onlyDuration = currentDuration.containsKey(set.id) &&
-                    (set.parameters?.none {
-                        it.parameterType?.uppercase() in listOf("NUMBER","INTEGER","DISTANCE","PERCENTAGE")
-                    } == true)
+        private fun buildSummary(hasReps: Boolean, hasDuration: Boolean, hasParam: Boolean, setId: Long): String {
+            val unit = paramLabel[setId] ?: "KG"
+            return listOfNotNull(
+                if (hasReps) "REPS" else null,
+                if (hasDuration) "TIEMPO" else null,
+                if (hasParam) unit else null
+            ).joinToString(" · ")
+        }
 
-            layoutParam.visibility = if (onlyDuration) View.GONE else View.VISIBLE
-            if (onlyDuration) { viewDivider.visibility = View.GONE; return }
+        // ── Helpers de columna ────────────────────────────────────────────────
 
+        private fun setupRepsColumn(set: RoutineSetTemplateResponse) {
+            layoutReps.visibility = View.VISIBLE
+            tvRepsLabel.text = when (set.setType?.uppercase()) {
+                "ISOMETRIC", "REST_PAUSE" -> "SERIES"
+                "DROP_SET" -> "REPS ↓"
+                else -> "REPS"
+            }
+            tvRepsValue.text = currentReps[set.id].toString()
+            btnDecReps.setOnClickListener {
+                val cur = currentReps[set.id] ?: 0
+                if (cur > 0) { val n = cur-1; currentReps[set.id]=n; tvRepsValue.text=n.toString(); onValueChanged(set,"reps",n.toDouble()) }
+            }
+            btnIncReps.setOnClickListener {
+                val n=(currentReps[set.id]?:0)+1; currentReps[set.id]=n; tvRepsValue.text=n.toString(); onValueChanged(set,"reps",n.toDouble())
+            }
+        }
+
+        private fun setupParamColumn(set: RoutineSetTemplateResponse) {
+            layoutParam.visibility = View.VISIBLE
             val value = currentParam[set.id] ?: 0.0
             val unit  = paramLabel[set.id] ?: "KG"
             val type  = paramType[set.id] ?: "number"
+            tvParamUnit.text = unit
             tvParamValue.text = formatValue(value, type)
-            tvParamUnit.text  = unit
-
             val step = stepFor(unit, type)
             btnDecParam.setOnClickListener {
                 val cur = currentParam[set.id] ?: 0.0
-                if (cur >= step) {
-                    val new = cur - step
-                    currentParam[set.id] = new
-                    tvParamValue.text = formatValue(new, type)
-                    onValueChanged(set, "param", new)
-                }
+                if (cur >= step) { val n=cur-step; currentParam[set.id]=n; tvParamValue.text=formatValue(n,type); onValueChanged(set,"param",n) }
             }
             btnIncParam.setOnClickListener {
-                val new = (currentParam[set.id] ?: 0.0) + step
-                currentParam[set.id] = new
-                tvParamValue.text = formatValue(new, type)
-                onValueChanged(set, "param", new)
+                val n=(currentParam[set.id]?:0.0)+step; currentParam[set.id]=n; tvParamValue.text=formatValue(n,type); onValueChanged(set,"param",n)
             }
         }
 
-        private fun stepFor(unit: String, type: String): Double = when {
-            type == "percentage"      -> 5.0
-            type == "distance"        -> 1.0
-            unit.uppercase() == "KG" -> 2.5
-            unit.uppercase() == "LB" -> 5.0
-            else                      -> 1.0
+        /**
+         * Reutiliza la columna izquierda (isLeft=true → layoutReps/tvRepsValue)
+         * o la derecha (isLeft=false → layoutParam/tvParamValue) para mostrar duración.
+         * Asigna durationDisplayView al TextView correcto.
+         */
+        private fun setupDurationInColumn(set: RoutineSetTemplateResponse, position: Int, isLeft: Boolean) {
+            val layout  = if (isLeft) layoutReps  else layoutParam
+            val tvLabel = if (isLeft) tvRepsLabel  else tvParamUnit
+            val tvValue = if (isLeft) tvRepsValue  else tvParamValue
+            val btnDec  = if (isLeft) btnDecReps   else btnDecParam
+            val btnInc  = if (isLeft) btnIncReps   else btnIncParam
+
+            layout.visibility = View.VISIBLE
+            tvLabel.text = "TIEMPO"
+            tvValue.text = formatDuration(currentDuration[set.id] ?: 0L)
+            tvValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
+            tvValue.textSize = 32f
+            tvValue.isClickable = true
+            tvValue.isFocusable = true
+
+            // ← Aquí está la corrección: el timer usará ESTE view
+            durationDisplayView = tvValue
+
+            tvValue.setOnClickListener { toggleDuration(set, position) }
+            btnDec.setOnClickListener { adjustDuration(set, -5L) }
+            btnInc.setOnClickListener { adjustDuration(set, +5L) }
+
+            autoStartIfSequence(set, position)
         }
 
-        // ── Contador de duración ──────────────────────────────────────────────
+        /**
+         * Caso F (reps + param + duración): bloque extra debajo de la fila principal.
+         * tv_duration_timer es el display, durationDisplayView apunta a él.
+         */
+        private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
+            layoutDurationExtra.visibility = View.VISIBLE
+            tvDurationTimer.text = formatDuration(currentDuration[set.id] ?: 0L)
 
-        private fun bindDurationBlock(set: RoutineSetTemplateResponse, position: Int) {
-            val hasDuration = currentDuration.containsKey(set.id)
-            layoutDuration.visibility = if (hasDuration) View.VISIBLE else View.GONE
-            if (!hasDuration) return
+            // ← durationDisplayView apunta al TextView del bloque extra
+            durationDisplayView = tvDurationTimer
 
-            val targetSecs = currentDuration[set.id] ?: 0L
-            tvDurationTimer.text = formatDuration(targetSecs)
+            tvDurationTimer.setOnClickListener { toggleDuration(set, position) }
+            btnDecDurationExtra.setOnClickListener { adjustDuration(set, -5L) }
+            btnIncDurationExtra.setOnClickListener { adjustDuration(set, +5L) }
 
-            // Si este es el set activo en la secuencia, arrancarlo automáticamente
+            autoStartIfSequence(set, position)
+        }
+
+        private fun autoStartIfSequence(set: RoutineSetTemplateResponse, position: Int) {
             if (isSequenceMode() && activeSequenceIndex == position && !durationTimerActive) {
                 WorkoutHaptics.exerciseStart(itemView.context)
                 durationTimerActive = true
-                durationTimer.start(targetSecs.toInt())
-            }
-
-            // Tap manual: arranca o para (siempre disponible)
-            tvDurationTimer.setOnClickListener {
-                if (durationTimerActive) {
-                    durationTimerActive = false
-                    durationTimer.stop()
-                    tvDurationTimer.text = formatDuration(currentDuration[set.id] ?: 0L)
-                } else {
-                    WorkoutHaptics.exerciseStart(itemView.context)
-                    durationTimerActive = true
-                    durationTimer.start((currentDuration[set.id] ?: 0L).toInt())
-                }
-            }
-
-            btnDecDuration.setOnClickListener {
-                if (durationTimerActive) return@setOnClickListener
-                val cur = currentDuration[set.id] ?: 0L
-                if (cur > 5L) {
-                    currentDuration[set.id] = cur - 5L
-                    tvDurationTimer.text = formatDuration(currentDuration[set.id]!!)
-                    onValueChanged(set, "duration", currentDuration[set.id]!!.toDouble())
-                }
-            }
-            btnIncDuration.setOnClickListener {
-                if (durationTimerActive) return@setOnClickListener
-                val cur = currentDuration[set.id] ?: 0L
-                currentDuration[set.id] = cur + 5L
-                tvDurationTimer.text = formatDuration(currentDuration[set.id]!!)
-                onValueChanged(set, "duration", currentDuration[set.id]!!.toDouble())
+                durationTimer.start((currentDuration[set.id] ?: 0L).toInt())
             }
         }
 
-        // ── Rest timer del set ────────────────────────────────────────────────
+        private fun toggleDuration(set: RoutineSetTemplateResponse, position: Int) {
+            if (durationTimerActive) {
+                durationTimerActive = false
+                durationTimer.stop()
+                // Restaurar solo el display de duración, sin tocar el param del lado contrario
+                durationDisplayView?.text = formatDuration(currentDuration[set.id] ?: 0L)
+            } else {
+                WorkoutHaptics.exerciseStart(itemView.context)
+                durationTimerActive = true
+                durationTimer.start((currentDuration[set.id] ?: 0L).toInt())
+            }
+        }
+
+        private fun adjustDuration(set: RoutineSetTemplateResponse, delta: Long) {
+            if (durationTimerActive) return
+            val new = ((currentDuration[set.id] ?: 0L) + delta).coerceAtLeast(5L)
+            currentDuration[set.id] = new
+            // Solo actualiza el display correcto
+            durationDisplayView?.text = formatDuration(new)
+            onValueChanged(set, "duration", new.toDouble())
+        }
+
+        // ── Rest timer ────────────────────────────────────────────────────────
 
         private fun bindRestTimer(set: RoutineSetTemplateResponse) {
             restSeconds = set.restAfterSet ?: 0
+            if (restSeconds <= 0) { layoutRestContainer.visibility = View.GONE; return }
+            layoutRestContainer.visibility = View.VISIBLE
             updateRestLabel()
-            tvRestTimer.isClickable = restSeconds > 0
-            tvRestTimer.setOnClickListener {
-                if (restSeconds <= 0) return@setOnClickListener
-                if (restTimerActive) {
-                    restTimerActive = false
-                    restTimer.stop()
-                    updateRestLabel()
-                } else {
-                    restTimerActive = true
-                    restTimer.start(restSeconds)
-                }
+            layoutRestContainer.setOnClickListener {
+                if (restTimerActive) { restTimerActive=false; restTimer.stop(); updateRestLabel() }
+                else { restTimerActive=true; restTimer.start(restSeconds) }
             }
         }
 
         private fun updateRestLabel() {
-            tvRestTimer.text =
-                if (restSeconds > 0) "▶  ${restSeconds}s descanso" else "Sin descanso"
+            tvRestTimer.text = "${restSeconds}s descanso"
+            tvRestHint.text = "TAP"
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
+        private fun stepFor(unit: String, type: String): Double = when {
+            type == "percentage" -> 5.0; type == "distance" -> 1.0
+            unit.uppercase() == "KG" -> 2.5; unit.uppercase() == "LB" -> 5.0
+            else -> 1.0
+        }
+
         private fun formatValue(v: Double, type: String): String = when (type) {
-            "percentage" -> "%.0f".format(v)
-            "integer"    -> v.toInt().toString()
-            else         -> if (v % 1.0 == 0.0) v.toInt().toString() else "%.1f".format(v)
+            "percentage" -> "%.0f".format(v); "integer" -> v.toInt().toString()
+            else -> if (v % 1.0 == 0.0) v.toInt().toString() else "%.1f".format(v)
         }
 
         private fun formatDuration(seconds: Long): String {
-            val m = seconds / 60
-            val s = seconds % 60
-            return if (m > 0) "${m}m ${s.toString().padStart(2, '0')}s" else "${s}s"
+            val m = seconds / 60; val s = seconds % 60
+            return if (m > 0) "${m}m ${s.toString().padStart(2,'0')}s" else "${s}s"
         }
     }
 }

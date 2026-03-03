@@ -3,6 +3,7 @@ package com.fitapp.appfit.ui.workout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -12,7 +13,6 @@ import com.fitapp.appfit.response.routine.response.RoutineResponse
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.timer.RestTimer
 import com.fitapp.appfit.utils.WorkoutHaptics
-import com.google.android.material.card.MaterialCardView
 
 class WorkoutExerciseAdapter(
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit
@@ -21,91 +21,74 @@ class WorkoutExerciseAdapter(
     private var exercises: List<RoutineExerciseResponse> = emptyList()
     private val expandedPositions = mutableSetOf<Int>()
 
-    fun submitExercises(exercises: List<RoutineExerciseResponse>) {
-        this.exercises = exercises.sortedBy { it.position }
-        expandedPositions.clear()
-        notifyDataSetChanged()
+    fun submitExercises(list: List<RoutineExerciseResponse>) {
+        exercises = list.sortedBy { it.position }; expandedPositions.clear(); notifyDataSetChanged()
     }
 
     fun submitRoutine(routine: RoutineResponse) {
         exercises = routine.exercises
-            ?.sortedWith(compareBy<RoutineExerciseResponse> { it.dayOfWeek ?: "" }
-                .thenBy { it.position })
+            ?.sortedWith(compareBy<RoutineExerciseResponse> { it.dayOfWeek ?: "" }.thenBy { it.position })
             ?: emptyList()
-        expandedPositions.clear()
-        notifyDataSetChanged()
+        expandedPositions.clear(); notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_workout_exercise, parent, false)
-        return ExerciseViewHolder(view)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        ExerciseViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_workout_exercise, parent, false))
 
-    override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
-        holder.bind(exercises[position], position)
-    }
-
+    override fun onBindViewHolder(h: ExerciseViewHolder, pos: Int) = h.bind(exercises[pos], pos)
     override fun getItemCount() = exercises.size
-
-    override fun onViewRecycled(holder: ExerciseViewHolder) {
-        super.onViewRecycled(holder)
-        holder.stopTimer()
-    }
-
-    override fun onViewDetachedFromWindow(holder: ExerciseViewHolder) {
-        super.onViewDetachedFromWindow(holder)
-        holder.stopTimer()
-    }
+    override fun onViewRecycled(h: ExerciseViewHolder) { super.onViewRecycled(h); h.stopTimer() }
+    override fun onViewDetachedFromWindow(h: ExerciseViewHolder) { super.onViewDetachedFromWindow(h); h.stopTimer() }
 
     inner class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        private val cardExercise: MaterialCardView = itemView.findViewById(R.id.card_exercise)
+        private val cardExercise: View             = itemView.findViewById(R.id.card_exercise)
         private val tvExerciseName: TextView       = itemView.findViewById(R.id.tv_exercise_name)
         private val ivExpand: View                 = itemView.findViewById(R.id.iv_expand)
         private val layoutSets: View               = itemView.findViewById(R.id.layout_sets_container)
         private val recyclerSets: RecyclerView     = itemView.findViewById(R.id.recycler_sets)
+        private val layoutExerciseRest: LinearLayout = itemView.findViewById(R.id.layout_exercise_rest)
         private val tvExerciseRest: TextView       = itemView.findViewById(R.id.tv_exercise_rest)
+        private val tvExerciseRestHint: TextView   = itemView.findViewById(R.id.tv_exercise_rest_hint)
 
         private var currentExercise: RoutineExerciseResponse? = null
         private var restSeconds = 0
         private var restTimerActive = false
 
         private val setAdapter = WorkoutSetAdapter(
-            onValueChanged = { set, valueType, newValue ->
-                currentExercise?.let { exercise ->
-                    onSetValueChanged(exercise, set, valueType, newValue)
-                }
+            onValueChanged = { set, type, value ->
+                currentExercise?.let { onSetValueChanged(it, set, type, value) }
             },
             onSequenceComplete = {
-                // Todos los sets de duración terminaron → arrancar descanso del ejercicio
-                if (restSeconds > 0) {
+                // Al terminar la secuencia de sets, activar descanso del ejercicio
+                if (restSeconds > 0 && itemView.isAttachedToWindow) {
                     WorkoutHaptics.exerciseComplete(itemView.context)
-                    tvExerciseRest.visibility = View.VISIBLE
                     restTimerActive = true
+                    tvExerciseRest.text = "${restSeconds}s"
+                    tvExerciseRestHint.text = "STOP"
                     restTimer.start(restSeconds)
                 }
             }
         )
 
         private val restTimer = RestTimer(
-            onTick = { seconds ->
-                if (restTimerActive && itemView.isAttachedToWindow)
-                    tvExerciseRest.text = "⏸  ${seconds}s"
+            onTick = { s ->
+                if (restTimerActive && itemView.isAttachedToWindow) {
+                    tvExerciseRest.text = "${s}s"
+                    tvExerciseRestHint.text = "STOP"
+                }
             },
             onFinish = {
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
                     WorkoutHaptics.restFinished(itemView.context)
-                    updateRestLabel()
+                    tvExerciseRest.text = "${restSeconds}s"
+                    tvExerciseRestHint.text = "TAP"
                 }
             }
         )
 
-        fun stopTimer() {
-            restTimerActive = false
-            restTimer.stop()
-        }
+        fun stopTimer() { restTimerActive = false; restTimer.stop() }
 
         init {
             recyclerSets.layoutManager = LinearLayoutManager(itemView.context)
@@ -116,13 +99,9 @@ class WorkoutExerciseAdapter(
                 val pos = adapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
                     if (expandedPositions.contains(pos)) {
-                        expandedPositions.remove(pos)
-                        layoutSets.visibility = View.GONE
-                        ivExpand.rotation = 0f
+                        expandedPositions.remove(pos); layoutSets.visibility = View.GONE; ivExpand.rotation = 0f
                     } else {
-                        expandedPositions.add(pos)
-                        layoutSets.visibility = View.VISIBLE
-                        ivExpand.rotation = 180f
+                        expandedPositions.add(pos); layoutSets.visibility = View.VISIBLE; ivExpand.rotation = 180f
                     }
                 }
             }
@@ -135,35 +114,29 @@ class WorkoutExerciseAdapter(
 
             restSeconds = exercise.restAfterExercise ?: 0
             if (restSeconds > 0) {
-                updateRestLabel()
-                tvExerciseRest.setOnClickListener {
+                // Siempre visible — no depende de la secuencia
+                layoutExerciseRest.visibility = View.VISIBLE
+                tvExerciseRest.text = "${restSeconds}s"
+                tvExerciseRestHint.text = "TAP"
+                layoutExerciseRest.setOnClickListener {
                     if (restTimerActive) {
-                        restTimerActive = false
-                        restTimer.stop()
-                        updateRestLabel()
+                        restTimerActive = false; restTimer.stop()
+                        tvExerciseRest.text = "${restSeconds}s"; tvExerciseRestHint.text = "TAP"
                     } else {
-                        restTimerActive = true
-                        restTimer.start(restSeconds)
+                        restTimerActive = true; restTimer.start(restSeconds)
                     }
                 }
             } else {
-                tvExerciseRest.visibility = View.GONE
+                layoutExerciseRest.visibility = View.GONE
             }
 
             setAdapter.submitList(exercise.setsTemplate ?: emptyList())
 
             if (expandedPositions.contains(position)) {
-                layoutSets.visibility = View.VISIBLE
-                ivExpand.rotation = 180f
+                layoutSets.visibility = View.VISIBLE; ivExpand.rotation = 180f
             } else {
-                layoutSets.visibility = View.GONE
-                ivExpand.rotation = 0f
+                layoutSets.visibility = View.GONE; ivExpand.rotation = 0f
             }
-        }
-
-        private fun updateRestLabel() {
-            tvExerciseRest.visibility = View.VISIBLE
-            tvExerciseRest.text = "▶  ${restSeconds}s descanso entre ejercicios"
         }
     }
 }
