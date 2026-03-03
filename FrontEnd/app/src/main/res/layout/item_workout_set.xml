@@ -4,37 +4,61 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="3dp"
-    app:cardBackgroundColor="@color/surface_dark">
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/surface_dark"
+    app:strokeWidth="1dp"
+    app:strokeColor="#2A2A2A">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="14dp">
 
-        <!-- Título de la serie -->
-        <TextView
-            android:id="@+id/tv_set_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Serie 1 · NORMAL"
-            android:textSize="11sp"
-            android:textAllCaps="true"
-            android:letterSpacing="0.08"
-            android:textColor="@color/gold_primary"
-            android:layout_marginBottom="10dp"/>
-
-        <!-- Fila de controles -->
+        <!-- ── HEADER ── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
 
-            <!-- Bloque REPS -->
+            <TextView
+                android:id="@+id/tv_set_number"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Serie 1"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary_dark"/>
+
+            <TextView
+                android:id="@+id/tv_set_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Normal"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:background="@drawable/bg_badge_rounded"/>
+
+        </LinearLayout>
+
+        <!-- ── FILA: REPS + DIVISOR + PARAM ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
+
+            <!-- REPS -->
             <LinearLayout
                 android:id="@+id/layout_reps_container"
                 android:layout_width="0dp"
@@ -44,6 +68,7 @@
                 android:gravity="center">
 
                 <TextView
+                    android:id="@+id/tv_reps_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="REPS"
@@ -61,51 +86,45 @@
 
                     <ImageButton
                         android:id="@+id/btn_decrease_reps"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
                         android:src="@drawable/ic_remove"
-                        android:background="@drawable/bg_circle_button"
+                        android:background="@drawable/bg_circle_button_outline"
+                        android:contentDescription="Disminuir repeticiones"
                         app:tint="@color/gold_primary"/>
 
                     <TextView
                         android:id="@+id/tv_reps_value"
-                        android:layout_width="40dp"
+                        android:layout_width="46dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="10"
-                        android:textSize="20sp"
+                        android:textSize="26sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary_dark"/>
 
                     <ImageButton
                         android:id="@+id/btn_increase_reps"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
                         android:src="@drawable/ic_add"
-                        android:background="@drawable/bg_circle_button"
+                        android:background="@drawable/bg_circle_button_outline"
+                        android:contentDescription="Aumentar repeticiones"
                         app:tint="@color/gold_primary"/>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Divisor con id para ocultar -->
+            <!-- DIVISOR -->
             <View
                 android:id="@+id/view_divider"
                 android:layout_width="1dp"
-                android:layout_height="40dp"
-                android:background="@color/text_secondary_dark"
-                android:alpha="0.3"
-                android:layout_marginHorizontal="8dp"/>
+                android:layout_height="44dp"
+                android:background="@color/divider_dark"
+                android:layout_marginHorizontal="10dp"/>
 
-            <!-- Divisor -->
-            <View
-                android:layout_width="1dp"
-                android:layout_height="40dp"
-                android:background="@color/text_secondary_dark"
-                android:alpha="0.3"
-                android:layout_marginHorizontal="8dp"/>
-
-            <!-- Bloque PARÁMETRO (peso/tiempo/etc) -->
+            <!-- PARAM NUMÉRICO -->
             <LinearLayout
+                android:id="@+id/layout_param_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -131,46 +150,107 @@
 
                     <ImageButton
                         android:id="@+id/btn_decrease_weight"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
                         android:src="@drawable/ic_remove"
-                        android:background="@drawable/bg_circle_button"
+                        android:background="@drawable/bg_circle_button_outline"
+                        android:contentDescription="Disminuir valor"
                         app:tint="@color/gold_primary"/>
 
                     <TextView
                         android:id="@+id/tv_weight_value"
-                        android:layout_width="52dp"
+                        android:layout_width="54dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="26sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary_dark"/>
 
                     <ImageButton
                         android:id="@+id/btn_increase_weight"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
                         android:src="@drawable/ic_add"
-                        android:background="@drawable/bg_circle_button"
+                        android:background="@drawable/bg_circle_button_outline"
+                        android:contentDescription="Aumentar valor"
                         app:tint="@color/gold_primary"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Timer de descanso -->
+        <!-- ── CONTADOR DE DURACIÓN (tap para iniciar/parar, ±5s) ── -->
+        <!-- Solo visible cuando parameterType == DURATION              -->
+        <LinearLayout
+            android:id="@+id/layout_duration_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_duration_block"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TIEMPO"
+                android:textSize="9sp"
+                android:textColor="@color/text_secondary_dark"
+                android:textAllCaps="true"
+                android:letterSpacing="0.06"
+                android:layout_marginEnd="8dp"/>
+
+            <ImageButton
+                android:id="@+id/btn_decrease_duration"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@drawable/ic_remove"
+                android:background="@drawable/bg_circle_button_outline"
+                android:contentDescription="-5s"
+                app:tint="@color/gold_primary"/>
+
+            <!-- Tap aquí para iniciar/parar el timer -->
+            <TextView
+                android:id="@+id/tv_duration_timer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="1m 00s"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/gold_primary"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"/>
+
+            <ImageButton
+                android:id="@+id/btn_increase_duration"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@drawable/ic_add"
+                android:background="@drawable/bg_circle_button_outline"
+                android:contentDescription="+5s"
+                app:tint="@color/gold_primary"/>
+
+        </LinearLayout>
+
+        <!-- ── TIMER DE DESCANSO DEL SET ── -->
         <TextView
             android:id="@+id/tv_rest_timer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="▶  60s descanso"
             android:textSize="12sp"
-            android:textColor="@color/gold_primary"
+            android:textColor="@color/text_secondary_dark"
             android:gravity="center"
-            android:paddingTop="10dp"
-            android:paddingBottom="2dp"
+            android:paddingVertical="8dp"
             android:clickable="true"
-            android:focusable="true"/>
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"/>
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

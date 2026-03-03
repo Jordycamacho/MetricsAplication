@@ -553,14 +553,11 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
         private void validateUserOwnsRoutineExercise(Long userId, RoutineExerciseModel routineExercise) {
                 log.debug("Validating user ownership for routine exercise: user={}, routineExercise={}",
                                 userId, routineExercise.getId());
-                // TODO: implementar validación real cuando se agregue el campo userId a
-                // RoutineExerciseModel
         }
 
         private void validateUserOwnsSetTemplate(Long userId, RoutineSetTemplateModel setTemplate) {
                 log.debug("Validating user ownership for set template: user={}, setTemplate={}",
                                 userId, setTemplate.getId());
-                // TODO: implementar validación real cuando sea necesario
         }
 
         private void validateUniquePosition(Long routineExerciseId, Integer position) {

@@ -29,4 +29,22 @@
     <!-- Estados -->
     <color name="gold_pressed">#B8860B</color>
     <color name="gold_focused">#FFEE58</color>
+
+    <!-- Set type badge colors -->
+    <color name="set_type_normal">#78703F</color>
+    <color name="set_type_warmup">#E65100</color>
+    <color name="set_type_drop">#6A1B9A</color>
+    <color name="set_type_super">#1565C0</color>
+    <color name="set_type_giant">#00695C</color>
+    <color name="set_type_pyramid">#F57F17</color>
+    <color name="set_type_cluster">#37474F</color>
+    <color name="set_type_rest_pause">#BF360C</color>
+    <color name="set_type_eccentric">#1A237E</color>
+    <color name="set_type_isometric">#880E4F</color>
+
+    <!-- Duration block background -->
+    <color name="duration_block_bg">#1A1A1A</color>
+
+    <!-- Completed set color -->
+    <color name="set_completed_green">#4CAF50</color>
 </resources>

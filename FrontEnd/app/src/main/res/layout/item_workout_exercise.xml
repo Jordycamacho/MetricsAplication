@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:layout_marginBottom="8dp">
 
+    <!-- Card con nombre del ejercicio + flecha -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_exercise"
         android:layout_width="match_parent"
@@ -24,54 +25,58 @@
             android:padding="16dp"
             android:gravity="center_vertical">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_exercise_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tv_exercise_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Press Banca"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tv_exercise_rest"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Descanso: 90s"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
-            </LinearLayout>
+                android:text="Press Banca"
+                android:textColor="@color/text_primary_dark"
+                android:textSize="17sp"
+                android:textStyle="bold"/>
 
             <ImageView
                 android:id="@+id/iv_expand"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/ic_arrow_down"
-                app:tint="@color/text_secondary_dark" />
+                app:tint="@color/text_secondary_dark"/>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Contenedor de sets — desplegable -->
     <LinearLayout
         android:id="@+id/layout_sets_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="8dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="8dp"
         android:visibility="gone">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_sets"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" />
+            android:nestedScrollingEnabled="false"/>
+
+        <!-- Descanso del ejercicio — al final de los sets, solo si > 0 -->
+        <TextView
+            android:id="@+id/tv_exercise_rest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="▶  90s descanso entre ejercicios"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary_dark"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:layout_marginTop="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:visibility="gone"/>
+
     </LinearLayout>
+
 </LinearLayout>
