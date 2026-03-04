@@ -1,6 +1,7 @@
 package com.fitapp.backend.application.ports.input;
 
 import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
+import com.fitapp.backend.application.dto.RoutineSetTemplate.request.BulkUpdateSetParametersRequest;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.CreateSetTemplateRequest;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.UpdateSetTemplateRequest;
 
@@ -23,4 +24,6 @@ public interface RoutineSetTemplateUseCase {
     RoutineSetTemplateModel reorderSetTemplates(Long routineExerciseId, List<Long> setTemplateIds, String userEmail);
     
     List<RoutineSetTemplateModel> getSetTemplatesByGroup(Long routineExerciseId, String groupId, String userEmail);
+
+    void bulkUpdateSetParameters(BulkUpdateSetParametersRequest request, String userEmail);
 }

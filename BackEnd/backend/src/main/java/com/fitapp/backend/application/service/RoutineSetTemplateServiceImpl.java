@@ -1,5 +1,6 @@
 package com.fitapp.backend.application.service;
 
+import com.fitapp.backend.application.dto.RoutineSetTemplate.request.BulkUpdateSetParametersRequest;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.CreateSetTemplateRequest;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.UpdateSetTemplateRequest;
 import com.fitapp.backend.application.logging.SetTemplateServiceLogger;
@@ -207,6 +208,54 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
                 }
         }
 
+        @Override
+        @Transactional
+        public void bulkUpdateSetParameters(BulkUpdateSetParametersRequest request, String userEmail) {
+                log.info("BULK_UPDATE_SET_PARAMETERS_START | user={} | sets={}", userEmail,
+                                request.getSetResults().size());
+
+                UserModel user = userPersistencePort.findByEmail(userEmail)
+                                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
+
+                for (BulkUpdateSetParametersRequest.SetResultRequest setResult : request.getSetResults()) {
+
+                        RoutineSetTemplateModel setTemplate = setTemplatePersistencePort
+                                        .findById(setResult.getSetTemplateId())
+                                        .orElseThrow(() -> new SetTemplateNotFoundException(
+                                                        setResult.getSetTemplateId()));
+
+                        validateUserOwnsSetTemplate(user.getId(), setTemplate);
+
+                        // Carga los parámetros actuales y los indexa por parameterId
+                        List<RoutineSetParameterModel> existing = setParameterPersistencePort
+                                        .findBySetTemplateId(setResult.getSetTemplateId());
+
+                        Map<Long, RoutineSetParameterModel> existingByParamId = existing.stream()
+                                        .collect(Collectors.toMap(RoutineSetParameterModel::getParameterId,
+                                                        Function.identity()));
+
+                        // Actualiza solo los campos de valor — nunca crea ni borra parámetros
+                        List<RoutineSetParameterModel> toSave = new ArrayList<>();
+                        for (BulkUpdateSetParametersRequest.ParameterResultRequest pr : setResult.getParameters()) {
+                                RoutineSetParameterModel param = existingByParamId.get(pr.getParameterId());
+                                if (param == null) {
+                                        log.warn("BULK_UPDATE_PARAM_NOT_FOUND | setTemplateId={} | parameterId={}",
+                                                        setResult.getSetTemplateId(), pr.getParameterId());
+                                        continue;
+                                }
+                                param.setRepetitions(pr.getRepetitions());
+                                param.setNumericValue(pr.getNumericValue());
+                                param.setDurationValue(pr.getDurationValue());
+                                param.setIntegerValue(pr.getIntegerValue());
+                                toSave.add(param);
+                        }
+
+                        setParameterPersistencePort.saveAll(toSave);
+                }
+
+                log.info("BULK_UPDATE_SET_PARAMETERS_DONE | user={} | sets={}", userEmail,
+                                request.getSetResults().size());
+        }
         // ─────────────────────────────────────────────────────────────────────────
         // READ
         // ─────────────────────────────────────────────────────────────────────────
