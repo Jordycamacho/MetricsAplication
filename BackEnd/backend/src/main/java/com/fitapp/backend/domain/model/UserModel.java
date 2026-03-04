@@ -2,20 +2,17 @@ package com.fitapp.backend.domain.model;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
-
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
@@ -37,6 +34,17 @@ public class UserModel {
     private Integer maxRoutines;
     private SubscriptionModel subscription;
 
+    // ── Verificación de correo ──────────────────────────────────────────────────
+    @Builder.Default
+    private boolean emailVerified = false;
+    private String emailVerificationToken;
+    private LocalDateTime emailVerificationTokenExpiresAt;
+
+    // ── Soft delete ─────────────────────────────────────────────────────────────
+    private LocalDateTime deletedAt;
+
+    // ── Métodos de dominio ──────────────────────────────────────────────────────
+
     public void activate() {
         this.isActive = true;
     }
@@ -47,6 +55,21 @@ public class UserModel {
 
     public void updateLastLogin() {
         this.lastLogin = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+        this.isActive = false;
+    }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
+        this.emailVerificationToken = null;
+        this.emailVerificationTokenExpiresAt = null;
     }
 
     public List<SimpleGrantedAuthority> getGrantedAuthorities() {

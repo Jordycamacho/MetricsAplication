@@ -54,7 +54,6 @@ public class UserEntity {
     @Column(name = "full_name", length = 255)
     private String fullName;
 
-    // no se va a usar
     @Column(name = "profile_image", length = 512)
     private String profileImage;
 
@@ -72,6 +71,22 @@ public class UserEntity {
     @Builder.Default
     private boolean isActive = true;
 
+    // ── Verificación de correo ──────────────────────────────────────────────────
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    @Column(name = "email_verification_token", length = 128)
+    private String emailVerificationToken;
+
+    @Column(name = "email_verification_token_expires_at")
+    private LocalDateTime emailVerificationTokenExpiresAt;
+
+    // ── Soft delete ─────────────────────────────────────────────────────────────
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // ── Suscripción y rutinas ───────────────────────────────────────────────────
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "subscription_id")
     private SubscriptionEntity subscription;

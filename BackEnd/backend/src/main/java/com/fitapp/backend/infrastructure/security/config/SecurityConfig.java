@@ -29,6 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.HttpMethod;
 
 import com.fitapp.backend.infrastructure.security.auth.converter.JwtAuthConverter;
+import com.fitapp.backend.infrastructure.security.auth.filter.JwtBlacklistFilter;
 import com.fitapp.backend.infrastructure.security.auth.handler.OAuth2SuccessHandler;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -36,6 +37,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -50,16 +52,21 @@ public class SecurityConfig {
         private final UserDetailsService userDetailsService;
         private final RSAPrivateKey privateKey;
         private final RSAPublicKey publicKey;
+        private final JwtBlacklistFilter jwtBlacklistFilter;
 
         public SecurityConfig(JwtAuthConverter jwtAuthConverter,
                         @Lazy OAuth2SuccessHandler oAuth2SuccessHandler,
-                        UserDetailsService userDetailsService, RSAPrivateKey privateKey,
-                        RSAPublicKey publicKey) throws IOException, GeneralSecurityException {
+                        UserDetailsService userDetailsService,
+                        RSAPrivateKey privateKey,
+                        RSAPublicKey publicKey,
+                        JwtBlacklistFilter jwtBlacklistFilter)
+                        throws IOException, GeneralSecurityException {
                 this.jwtAuthConverter = jwtAuthConverter;
                 this.oAuth2SuccessHandler = oAuth2SuccessHandler;
                 this.userDetailsService = userDetailsService;
                 this.privateKey = privateKey;
                 this.publicKey = publicKey;
+                this.jwtBlacklistFilter = jwtBlacklistFilter;
         }
 
         @Bean
@@ -67,6 +74,8 @@ public class SecurityConfig {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(Customizer.withDefaults())
+                                // Registra el filtro de blacklist ANTES del procesamiento JWT
+                                .addFilterBefore(jwtBlacklistFilter, UsernamePasswordAuthenticationFilter.class)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/api/auth/**",
@@ -79,8 +88,9 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/api/premium/**").hasAnyRole("PREMIUM_USER", "ADMIN")
                                                 .requestMatchers("/api/coach/**").hasAnyRole("COACH", "ADMIN")
-                                                .requestMatchers(HttpMethod.GET, "/api/routines/**").authenticated() // GET públicas para rutinas
-                                                .requestMatchers(HttpMethod.POST, "/api/routines").hasAnyRole("USER", "PREMIUM_USER", "COACH", "ADMIN")
+                                                .requestMatchers(HttpMethod.GET, "/api/routines/**").authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/api/routines")
+                                                .hasAnyRole("USER", "PREMIUM_USER", "COACH", "ADMIN")
                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
                                                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
@@ -92,14 +102,14 @@ public class SecurityConfig {
 
                 return http.build();
         }
-        
+
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder();
         }
 
         @Bean
-        public JwtDecoder jwtDecoder() throws Exception {
+        public JwtDecoder jwtDecoder() {
                 return NimbusJwtDecoder.withPublicKey(publicKey).build();
         }
 
@@ -115,14 +125,13 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-
-                configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", 
-                                                                "https://appfit.prod", 
-                                                                "http://10.0.2.2:8080", 
-                                                                "http://localhost:8080"));
+                configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:3000",
+                                "https://appfit.prod",
+                                "http://10.0.2.2:8080",
+                                "http://localhost:8080"));
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-                configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Auth-Token"));
                 configuration.setExposedHeaders(Arrays.asList("X-Auth-Token", "Authorization"));
                 configuration.setAllowCredentials(true);
                 configuration.setMaxAge(3600L);

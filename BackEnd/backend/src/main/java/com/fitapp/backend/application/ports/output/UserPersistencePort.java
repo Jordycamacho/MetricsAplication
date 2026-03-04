@@ -11,4 +11,5 @@ public interface UserPersistencePort {
     void deleteById(Long id);
     Optional<UserModel> findByEmail(String email);
     UserModel save(UserModel user);
+    Optional<UserModel> findByEmailVerificationToken(String token);
 }
