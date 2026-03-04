@@ -28,9 +28,8 @@ public class UserConverter {
                 .updatedAt(entity.getUpdatedAt())
                 .version(entity.getVersion());
 
-        // Manejar suscripción
         if (entity.getSubscription() != null) {
-            builder.subscription(SubscriptionConverter.toDomain(entity.getSubscription()));
+            //sin suscripcion por el momento
         }
 
         return builder.build();
@@ -54,8 +53,7 @@ public class UserConverter {
         entity.setCreatedAt(model.getCreatedAt());
         entity.setUpdatedAt(model.getUpdatedAt());
         entity.setVersion(model.getVersion());
-        
-        // NOTA: La suscripción se manejará por separado en el adapter
+
         return entity;
     }
 }

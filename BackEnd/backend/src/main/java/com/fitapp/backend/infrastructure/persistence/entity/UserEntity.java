@@ -54,6 +54,7 @@ public class UserEntity {
     @Column(name = "full_name", length = 255)
     private String fullName;
 
+    // no se va a usar
     @Column(name = "profile_image", length = 512)
     private String profileImage;
 
