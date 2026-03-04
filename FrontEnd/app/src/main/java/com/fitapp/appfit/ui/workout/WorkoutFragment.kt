@@ -86,7 +86,7 @@ class WorkoutFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
     }
-    
+
     private fun initSetState(
         params: List<RoutineSetParameterResponse>
     ): MutableMap<Long, MutableMap<String, Any?>> {

@@ -1,6 +1,212 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ── HEADER ─────────────────────────────────────── -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="@color/surface_dark">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_gravity="bottom"
+                    android:background="@color/gold_primary"
+                    android:alpha="0.5" />
+
+                <View
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="end|top"
+                    android:layout_marginTop="-60dp"
+                    android:layout_marginEnd="-60dp"
+                    android:background="@drawable/shape_circle_gold_outline"
+                    android:alpha="0.07" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingTop="24dp">
+
+                    <FrameLayout
+                        android:layout_width="76dp"
+                        android:layout_height="76dp">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/iv_avatar"
+                            android:layout_width="76dp"
+                            android:layout_height="76dp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_profile"
+                            app:shapeAppearanceOverlay="@style/CircleImageView"
+                            app:strokeColor="@color/gold_primary"
+                            app:strokeWidth="2dp" />
+
+                        <TextView
+                            android:id="@+id/tv_plan_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="18dp"
+                            android:layout_gravity="bottom|end"
+                            android:paddingHorizontal="6dp"
+                            android:text="FREE"
+                            android:textColor="#121212"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_badge_gold"
+                            android:gravity="center" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tv_full_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Nombre Apellido"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="correo@ejemplo.com"
+                        android:textColor="#666666"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- ── STATS ──────────────────────────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:orientation="horizontal"
+                android:background="#161616"
+                android:weightSum="3">
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tv_stat_routines" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:text="0"
+                        android:textColor="@color/gold_primary" android:textSize="20sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Rutinas" android:textColor="#666666" android:textSize="11sp" android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="32dp"
+                    android:layout_gravity="center_vertical" android:background="#333333" />
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tv_stat_plan" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:text="FREE"
+                        android:textColor="@color/gold_primary" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Plan" android:textColor="#666666" android:textSize="11sp" android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <View android:layout_width="1dp" android:layout_height="32dp"
+                    android:layout_gravity="center_vertical" android:background="#333333" />
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent"
+                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                    <TextView android:id="@+id/tv_stat_max_routines" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:text="1"
+                        android:textColor="@color/gold_primary" android:textSize="20sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Máx. rutinas" android:textColor="#666666" android:textSize="11sp" android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ── CUENTA ─────────────────────────────────────── -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="CUENTA" android:textColor="@color/gold_primary" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_dark">
+
+                <include android:id="@+id/row_edit_profile" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_change_password" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_verify_email" layout="@layout/item_profile_row" />
+
+            </LinearLayout>
+
+            <!-- ── SUSCRIPCIÓN ────────────────────────────────── -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="SUSCRIPCIÓN" android:textColor="@color/gold_primary" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_dark">
+                <include android:id="@+id/row_subscription" layout="@layout/item_profile_row" />
+            </LinearLayout>
+
+            <!-- ── SESIÓN ─────────────────────────────────────── -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="SESIÓN" android:textColor="@color/gold_primary" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_dark">
+                <include android:id="@+id/row_logout" layout="@layout/item_profile_row" />
+            </LinearLayout>
+
+            <!-- ── ZONA DE PELIGRO ────────────────────────────── -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="ZONA DE PELIGRO" android:textColor="#E53935" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_danger">
+                <include android:id="@+id/row_delete_account" layout="@layout/item_profile_row" />
+            </LinearLayout>
+
+            <!-- Versión -->
+            <TextView
+                android:id="@+id/tv_version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="AppFit v1.0.0"
+                android:textColor="#3A3A3A"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:layout_marginTop="28dp"
+                android:layout_marginBottom="32dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

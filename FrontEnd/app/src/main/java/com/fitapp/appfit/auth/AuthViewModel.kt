@@ -5,13 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.repository.AuthRepository
+import com.fitapp.appfit.repository.UserRepository
 import com.fitapp.appfit.response.AuthResponse
 import com.fitapp.appfit.utils.Resource
-import com.fitapp.appfit.utils.SessionManager
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
+
     private val authRepository = AuthRepository()
+    private val userRepository = UserRepository()
 
     private val _loginState = MutableLiveData<Resource<AuthResponse>>()
     val loginState: LiveData<Resource<AuthResponse>> = _loginState
@@ -19,8 +21,8 @@ class AuthViewModel : ViewModel() {
     private val _registerState = MutableLiveData<Resource<AuthResponse>>()
     val registerState: LiveData<Resource<AuthResponse>> = _registerState
 
-    private val _logoutEvent = MutableLiveData<Boolean>()
-    val logoutEvent: LiveData<Boolean> = _logoutEvent
+    private val _logoutState = MutableLiveData<Resource<Unit>>()
+    val logoutState: LiveData<Resource<Unit>> = _logoutState
 
     fun login(email: String, password: String) {
         _loginState.value = Resource.Loading()
@@ -37,7 +39,9 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logout() {
-        SessionManager.clearSession()
-        _logoutEvent.value = true
+        _logoutState.value = Resource.Loading()
+        viewModelScope.launch {
+            _logoutState.value = userRepository.logout()
+        }
     }
 }

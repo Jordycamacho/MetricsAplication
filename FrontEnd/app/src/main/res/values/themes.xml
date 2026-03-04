@@ -79,4 +79,37 @@
         <item name="boxStrokeColor">#333333</item>
         <item name="hintTextColor">#666666</item>
     </style>
+
+
+    <!-- Agregar en res/values/styles.xml (o themes.xml) -->
+
+    <!-- Avatar circular con ShapeableImageView -->
+    <style name="CircleImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- BottomSheetDialog con fondo oscuro (para los diálogos de perfil) -->
+    <style name="DarkBottomSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="bottomSheetStyle">@style/DarkBottomSheet</item>
+    </style>
+
+    <style name="DarkBottomSheet" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@color/surface_dark</item>
+        <item name="android:backgroundTint">@color/surface_dark</item>
+    </style>
+
+    <!-- MaterialAlertDialog con tema oscuro -->
+    <style name="DarkAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="android:background">@color/surface_dark</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/text_primary_dark</item>
+        <item name="buttonBarPositiveButtonStyle">@style/GoldButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/GhostButton</item>
+    </style>
+
+    <style name="GhostButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/text_secondary_dark</item>
+    </style>
 </resources>
