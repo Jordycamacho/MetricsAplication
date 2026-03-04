@@ -4,6 +4,7 @@ import com.fitapp.appfit.network.ApiClient
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.response.sets.request.CreateSetTemplateRequest
 import com.fitapp.appfit.response.sets.request.UpdateSetTemplateRequest
+import com.fitapp.appfit.response.sets.request.BulkUpdateSetParametersRequest
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -49,6 +50,11 @@ interface RoutineSetTemplateService {
     suspend fun deleteSetTemplatesByRoutineExercise(
         @Path("routineExerciseId") routineExerciseId: Long
     ): Response<Void>
+
+    @PATCH("api/routine-set-templates/bulk-save")
+    suspend fun bulkSaveSetParameters(
+        @Body request: BulkUpdateSetParametersRequest
+  ): Response<Unit>
 
     companion object {
         val instance: RoutineSetTemplateService by lazy {
