@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.ksp)                           // ← KSP en vez de kapt (Kotlin 2.0+)
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
@@ -53,15 +54,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
-    implementation("com.jakewharton.timber:timber:5.0.1")
-    implementation(libs.androidx.room.ktx)
+    // Navigation
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
 
-    // Testing
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // Logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
     // Network
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -69,17 +67,28 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    // ViewModel
+    // ViewModel + Fragment KTX
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 
-    // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // ── OFFLINE: Room ─────────────────────────────────────────
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)                         // genera el código de Room
 
-    implementation("com.google.android.material:material:1.11.0")
+    // ── OFFLINE: WorkManager ──────────────────────────────────
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // ── OFFLINE: Gson (serializar cola de sync) ───────────────
+    implementation(libs.gson)
+
+    // Testing
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

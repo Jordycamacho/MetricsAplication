@@ -1,5 +1,6 @@
 package com.fitapp.appfit.network
 
+import com.fitapp.appfit.service.RoutineService
 import com.fitapp.appfit.utils.TokenInterceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -10,7 +11,6 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
     private const val BASE_URL = "http://192.168.1.14:8080/"
 
-    //10.0.2.2
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(TokenInterceptor())
         .authenticator(TokenAuthenticator())
@@ -28,5 +28,8 @@ object ApiClient {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+    val routineService: RoutineService by lazy {
+        instance.create(RoutineService::class.java)
     }
 }

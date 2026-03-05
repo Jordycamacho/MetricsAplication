@@ -16,9 +16,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.databinding.FragmentWorkoutBinding
 import com.fitapp.appfit.model.RoutineViewModel
-import com.fitapp.appfit.response.sets.request.BulkUpdateSetParametersRequest
+import com.fitapp.appfit.repository.WorkoutRepository
 import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
-import com.fitapp.appfit.service.RoutineSetTemplateService
 import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 
@@ -29,9 +28,20 @@ class WorkoutFragment : Fragment() {
     private val args: WorkoutFragmentArgs by navArgs()
     private val viewModel: RoutineViewModel by viewModels()
     private lateinit var adapter: WorkoutDayAdapter
-    private val setTemplateService = RoutineSetTemplateService.instance
+
+    // Valores que el usuario modifica durante el workout
+    // setTemplateId → (parameterId → { reps, numericValue, ... })
     private val setParamState =
         mutableMapOf<Long, MutableMap<Long, MutableMap<String, Any?>>>()
+
+    // Timestamp de cuando el usuario empieza a entrenar
+    private var workoutStartedAt: Long = System.currentTimeMillis()
+
+    // ID del usuario autenticado — reemplazar con tu fuente real (prefs, sesión, etc.)
+    private var currentUserId: String = ""
+
+    // Repositorio offline-first para guardar y sincronizar el workout
+    private lateinit var workoutRepository: WorkoutRepository
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -42,9 +52,18 @@ class WorkoutFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        workoutRepository = WorkoutRepository(requireContext())
+        workoutStartedAt = System.currentTimeMillis()
+
+        // TODO: obtén el userId real de tu capa de sesión/preferencias
+        // Ejemplo: currentUserId = sessionManager.getUserId()
+        currentUserId = "usuario_temporal"
+
         setupRecyclerView()
         observeData()
         loadRoutine()
+
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
     }
 
@@ -100,44 +119,49 @@ class WorkoutFragment : Fragment() {
         }.toMutableMap()
     }
 
+    /**
+     * Guarda el workout usando WorkoutRepository:
+     *  - Siempre persiste localmente (historial offline)
+     *  - Si hay conexión, sincroniza con el back de inmediato
+     *  - Si no hay conexión, queda pendiente para WorkoutSyncManager
+     */
     private fun saveWorkout() {
         if (setParamState.isEmpty()) return
 
-        val setResults = setParamState.map { (setTemplateId, paramMap) ->
-            BulkUpdateSetParametersRequest.SetResultRequest(
-                setTemplateId = setTemplateId,
-                parameters = paramMap.map { (parameterId, values) ->
-                    BulkUpdateSetParametersRequest.ParameterResultRequest(
-                        parameterId   = parameterId,
-                        repetitions   = values["repetitions"] as? Int,
-                        numericValue  = values["numericValue"] as? Double,
-                        durationValue = values["durationValue"] as? Long,
-                        integerValue  = values["integerValue"] as? Int
-                    )
-                }
-            )
-        }
-
         binding.fabSaveWorkout.isEnabled = false
+        binding.progressBar.isVisible = true
 
         lifecycleScope.launch {
-            try {
-                val response = setTemplateService.bulkSaveSetParameters(
-                    BulkUpdateSetParametersRequest(setResults)
-                )
-                if (response.isSuccessful) {
+            val result = workoutRepository.saveWorkout(
+                routineId  = args.routineId,
+                userId     = currentUserId,
+                setParamState = setParamState,
+                startedAt  = workoutStartedAt
+            )
+
+            binding.progressBar.isVisible = false
+            binding.fabSaveWorkout.isEnabled = true
+
+            result.fold(
+                onSuccess = { sessionId ->
                     setParamState.clear()
                     binding.fabSaveWorkout.isInvisible = true
-                    Toast.makeText(requireContext(), "Entrenamiento guardado ✓", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "Error al guardar. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
+                    Log.i("WorkoutFragment", "Workout guardado, sessionId=$sessionId")
+                    Toast.makeText(
+                        requireContext(),
+                        "Entrenamiento guardado ✓",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                onFailure = { error ->
+                    Log.e("WorkoutFragment", "Error guardando workout: ${error.message}", error)
+                    Toast.makeText(
+                        requireContext(),
+                        "Error al guardar. Intenta de nuevo.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            } catch (e: Exception) {
-                Log.e("Workout", "bulkSave error: ${e.message}", e)
-                Toast.makeText(requireContext(), "Sin conexión. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
-            } finally {
-                binding.fabSaveWorkout.isEnabled = true
-            }
+            )
         }
     }
 
@@ -154,6 +178,7 @@ class WorkoutFragment : Fragment() {
                     binding.recyclerView.isVisible = true
                     resource.data?.let { routine ->
                         setParamState.clear()
+                        workoutStartedAt = System.currentTimeMillis()
                         binding.fabSaveWorkout.isInvisible = true
                         adapter.submitRoutine(routine)
                     }

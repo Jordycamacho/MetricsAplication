@@ -1,8 +1,9 @@
 package com.fitapp.appfit.model
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.repository.RoutineRepository
 import com.fitapp.appfit.response.routine.request.*
@@ -11,9 +12,17 @@ import com.fitapp.appfit.response.page.PageResponse
 import com.fitapp.appfit.utils.Resource
 import kotlinx.coroutines.launch
 
-class RoutineViewModel : ViewModel() {
+/**
+ * Cambiado de ViewModel a AndroidViewModel para poder pasar el Application context
+ * al RoutineRepository, que lo necesita para acceder a Room en el fallback offline.
+ *
+ * En los Fragment/Activity que usaban:
+ *   val viewModel: RoutineViewModel by viewModels()
+ * No cambia nada — viewModels() detecta automáticamente AndroidViewModel.
+ */
+class RoutineViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = RoutineRepository()
+    private val repository = RoutineRepository(application)
 
     // ── Estados LiveData ──────────────────────────────────────────────────────
 
@@ -53,7 +62,6 @@ class RoutineViewModel : ViewModel() {
     private val _routineStatisticsState = MutableLiveData<Resource<RoutineStatisticsResponse>>()
     val routineStatisticsState: LiveData<Resource<RoutineStatisticsResponse>> = _routineStatisticsState
 
-    // Evento único para que la lista se recargue tras cualquier mutación
     private val _anyUpdateEvent = MutableLiveData<Unit>()
     val anyUpdateEvent: LiveData<Unit> = _anyUpdateEvent
 
@@ -73,7 +81,9 @@ class RoutineViewModel : ViewModel() {
 
     fun getRoutine(id: Long) = launch(_routineDetailState) { repository.getRoutine(id) }
 
-    fun getRoutineForTraining(id: Long) = launch(_workoutRoutineState) { repository.getRoutineForTraining(id) }
+    fun getRoutineForTraining(id: Long) = launch(_workoutRoutineState) {
+        repository.getRoutineForTraining(id)
+    }
 
     fun updateRoutine(id: Long, request: UpdateRoutineRequest) = launch(_updateRoutineState) {
         repository.updateRoutine(id, request).also { if (it is Resource.Success) _anyUpdateEvent.postValue(Unit) }
@@ -123,13 +133,10 @@ class RoutineViewModel : ViewModel() {
         repository.getRoutineStatistics()
     }
 
-    // ── Helpers de navegación ─────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     fun notifyAnyUpdate() { _anyUpdateEvent.value = Unit }
-    fun clearAllUpdateStates() { /* mantenido por compatibilidad con RoutinesFragment */ }
-
-    // ── Función genérica para lanzar corrutinas ───────────────────────────────
-    // Pone Loading, ejecuta el bloque suspend, asigna el resultado al LiveData
+    fun clearAllUpdateStates() { }
 
     private fun <T> launch(
         liveData: MutableLiveData<Resource<T>>,
