@@ -30,6 +30,13 @@ public class UserPersistenceAdapter implements UserPersistencePort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<UserModel> findByGoogleId(String googleId) {
+        return springDataUserRepository.findByGoogleId(googleId)
+                .map(userConverter::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<UserModel> findAll(Pageable pageable) {
         return springDataUserRepository.findAll(pageable)
                 .map(userConverter::toDomain);

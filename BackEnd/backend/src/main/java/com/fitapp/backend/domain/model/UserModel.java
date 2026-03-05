@@ -21,6 +21,8 @@ import java.util.List;
 @AllArgsConstructor
 public class UserModel {
     private Long id;
+    private String googleId;
+    private String provider;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserPersistencePort {
     Optional<UserModel> findById(Long id);
+    Optional<UserModel> findByGoogleId(String googleId);
     Page<UserModel> findAll(Pageable pageable);
     void deleteById(Long id);
     Optional<UserModel> findByEmail(String email);

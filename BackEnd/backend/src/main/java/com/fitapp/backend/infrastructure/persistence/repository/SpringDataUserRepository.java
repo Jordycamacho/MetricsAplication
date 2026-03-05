@@ -17,4 +17,6 @@ public interface SpringDataUserRepository extends JpaRepository<UserEntity, Long
     Optional<UserEntity> findById(Long id);
 
     Optional<UserEntity> findByEmailVerificationToken(String token);
+
+    Optional<UserEntity> findByGoogleId(String googleId);
 }

@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,73 +36,86 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         private final UserPersistencePort userRepository;
         private final PasswordEncoder passwordEncoder;
 
+        @Value("${app.oauth2.redirect-uri:myapp://auth/callback}")
+        private String redirectUri;
+
         @Override
         public void onAuthenticationSuccess(HttpServletRequest request,
                         HttpServletResponse response,
                         Authentication authentication) throws IOException {
 
                 OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
-                String email = oauthUser.getAttribute("email");
 
-                UserModel user = userRepository.findByEmail(email)
-                                .orElseGet(() -> createUserFromOAuth(oauthUser, email));
+                String email = oauthUser.getAttribute("email");
+                String googleId = oauthUser.getAttribute("sub");
+                String name = oauthUser.getAttribute("name");
+                String picture = oauthUser.getAttribute("picture");
+
+                UserModel user = userRepository.findByGoogleId(googleId)
+                                .orElseGet(() -> userRepository.findByEmail(email)
+                                                .map(existing -> linkGoogleToExistingUser(existing, googleId, picture))
+                                                .orElseGet(() -> createAndSaveOAuthUser(email, name, picture,
+                                                                googleId)));
 
                 String token = generateAppToken(user);
-                String redirectUrl = String.format("http://localhost:3000/auth/callback?token=%s", token);
-                response.sendRedirect(redirectUrl);
+
+                response.sendRedirect("http://192.168.1.14:8080/api/auth/oauth2/success?token=" + token);
+
+        }
+
+        private UserModel linkGoogleToExistingUser(UserModel user, String googleId, String picture) {
+                user.setGoogleId(googleId);
+                user.setProvider("GOOGLE");
+                if (user.getProfileImage() == null) {
+                        user.setProfileImage(picture);
+                }
+                return userRepository.save(user);
+        }
+
+        private UserModel createAndSaveOAuthUser(String email, String name,
+                        String picture, String googleId) {
+                UserModel newUser = UserModel.builder()
+                                .email(email)
+                                .fullName(name)
+                                .profileImage(picture)
+                                .googleId(googleId)
+                                .provider("GOOGLE")
+                                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                                .role(Role.USER)
+                                .isActive(true)
+                                .emailVerified(true)
+                                .maxRoutines(1)
+                                .subscription(FreeSubscriptionModel.builder()
+                                                .startDate(LocalDate.now())
+                                                .endDate(LocalDate.now().plusYears(1))
+                                                .maxRoutines(1)
+                                                .build())
+                                .build();
+
+                return userRepository.save(newUser);
         }
 
         private String generateAppToken(UserModel user) {
                 Instant now = Instant.now();
 
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("userId", user.getId());
-
-                SubscriptionType subType = user.getSubscription() != null ? user.getSubscription().getType()
+                SubscriptionType subType = user.getSubscription() != null
+                                ? user.getSubscription().getType()
                                 : SubscriptionType.FREE;
-
-                claims.put("subscription", subType.name());
-                claims.put("maxRoutines", user.getMaxRoutines());
-
-                List<String> roles = user.getGrantedAuthorities().stream()
-                                .map(GrantedAuthority::getAuthority)
-                                .collect(Collectors.toList());
-
-                claims.put("roles", roles);
 
                 JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                                 .issuer("AppFit")
                                 .issuedAt(now)
                                 .expiresAt(now.plus(12, ChronoUnit.HOURS))
                                 .subject(user.getEmail())
+                                .claim("userId", user.getId())
                                 .claim("email", user.getEmail())
-                                .claims(c -> c.putAll(claims))
+                                .claim("subscription", subType.name())
+                                .claim("maxRoutines", user.getMaxRoutines())
+                                .claim("roles", user.getGrantedAuthorities().stream()
+                                                .map(GrantedAuthority::getAuthority)
+                                                .collect(Collectors.toList()))
                                 .build();
 
                 return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
-        }
-
-        private UserModel createUserFromOAuth(OAuth2User oauthUser, String email) {
-
-                String name = oauthUser.getAttribute("name");
-                String picture = oauthUser.getAttribute("picture");
-
-                return UserModel.builder()
-                                .email(email)
-                                .fullName(name)
-                                .profileImage(picture)
-                                .password(passwordEncoder.encode("tempPassword"))
-                                .role(Role.USER)
-                                .isActive(true)
-                                .maxRoutines(1)
-                                .subscription(createFreeSubscription())
-                                .build();
-        }
-
-        private FreeSubscriptionModel createFreeSubscription() {
-                return FreeSubscriptionModel.builder()
-                                .startDate(LocalDate.now())
-                                .endDate(LocalDate.now().plusYears(1))
-                                .build();
         }
 }

@@ -14,6 +14,8 @@ public class UserConverter {
 
         return UserModel.builder()
                 .id(entity.getId())
+                .googleId(entity.getGoogleId())
+                .provider(entity.getProvider())
                 .email(entity.getEmail())
                 .fullName(entity.getFullName())
                 .profileImage(entity.getProfileImage())
@@ -36,6 +38,8 @@ public class UserConverter {
 
         UserEntity entity = new UserEntity();
         entity.setId(model.getId());
+        entity.setGoogleId(model.getGoogleId());
+        entity.setProvider(model.getProvider());
         entity.setEmail(model.getEmail());
         entity.setFullName(model.getFullName());
         entity.setProfileImage(model.getProfileImage());
@@ -57,6 +61,8 @@ public class UserConverter {
     /** Actualiza una entidad existente desde un modelo (para evitar perder relaciones JPA). */
     public void updateEntityFromModel(UserEntity entity, UserModel model) {
         entity.setEmail(model.getEmail());
+        entity.setGoogleId(model.getGoogleId());
+        entity.setProvider(model.getProvider());
         entity.setFullName(model.getFullName());
         entity.setProfileImage(model.getProfileImage());
         entity.setPassword(model.getPassword());

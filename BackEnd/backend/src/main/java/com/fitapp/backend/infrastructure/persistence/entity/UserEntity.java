@@ -48,11 +48,18 @@ public class UserEntity {
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     private Long id;
 
+    @Column(name = "google_id", length = 128)
+    private String googleId;
+
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
     @Column(name = "full_name", length = 255)
     private String fullName;
+
+    @Column(name = "provider", length = 32)
+    @Builder.Default
+    private String provider = "LOCAL";
 
     @Column(name = "profile_image", length = 512)
     private String profileImage;
@@ -92,7 +99,7 @@ public class UserEntity {
     private SubscriptionEntity subscription;
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
     private List<RoutineEntity> routines = new ArrayList<>();
 

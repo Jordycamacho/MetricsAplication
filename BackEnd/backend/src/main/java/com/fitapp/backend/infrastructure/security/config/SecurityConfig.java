@@ -74,11 +74,12 @@ public class SecurityConfig {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(Customizer.withDefaults())
-                                // Registra el filtro de blacklist ANTES del procesamiento JWT
                                 .addFilterBefore(jwtBlacklistFilter, UsernamePasswordAuthenticationFilter.class)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/api/auth/**",
+                                                                "/login/oauth2/**",
+                                                                "/oauth2/authorization/**",
                                                                 "/api-docs/**",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
