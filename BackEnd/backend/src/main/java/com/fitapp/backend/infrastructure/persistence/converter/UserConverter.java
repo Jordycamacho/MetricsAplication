@@ -18,7 +18,6 @@ public class UserConverter {
                 .fullName(entity.getFullName())
                 .profileImage(entity.getProfileImage())
                 .password(entity.getPassword())
-                .maxRoutines(entity.getMaxRoutines())
                 .role(entity.getRole())
                 .lastLogin(entity.getLastLogin())
                 .isActive(entity.isActive())
@@ -44,7 +43,6 @@ public class UserConverter {
         entity.setRole(model.getRole());
         entity.setLastLogin(model.getLastLogin());
         entity.setActive(model.isActive());
-        entity.setMaxRoutines(model.getMaxRoutines());
         entity.setEmailVerified(model.isEmailVerified());
         entity.setEmailVerificationToken(model.getEmailVerificationToken());
         entity.setEmailVerificationTokenExpiresAt(model.getEmailVerificationTokenExpiresAt());
@@ -65,7 +63,6 @@ public class UserConverter {
         entity.setRole(model.getRole());
         entity.setLastLogin(model.getLastLogin());
         entity.setActive(model.isActive());
-        entity.setMaxRoutines(model.getMaxRoutines());
         entity.setEmailVerified(model.isEmailVerified());
         entity.setEmailVerificationToken(model.getEmailVerificationToken());
         entity.setEmailVerificationTokenExpiresAt(model.getEmailVerificationTokenExpiresAt());

@@ -91,10 +91,6 @@ public class UserEntity {
     @JoinColumn(name = "subscription_id")
     private SubscriptionEntity subscription;
 
-    @Column(name = "max_routines", nullable = false)
-    @Builder.Default
-    private int maxRoutines = 1;
-
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
