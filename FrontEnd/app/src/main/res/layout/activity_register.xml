@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="#121212">
 
-    <!-- Header con back + título -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -57,6 +57,62 @@
             android:paddingTop="28dp"
             android:paddingBottom="32dp">
 
+            <!--
+                Botón Google al principio del registro — es más natural
+                que el usuario lo vea antes de rellenar el formulario.
+            -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_google_register"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="8dp"
+                android:text="Registrarse con Google"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp"
+                android:letterSpacing="0.02"
+                app:icon="@drawable/ic_google"
+                app:iconGravity="textStart"
+                app:iconTint="@null"
+                app:iconSize="20dp"
+                app:iconPadding="12dp"
+                app:strokeColor="#333333"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                app:rippleColor="#1A78703F"
+                android:backgroundTint="#1E1E1E" />
+
+            <!-- Separador "o regístrate con correo" -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#2A2A2A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  o con correo  "
+                    android:textColor="#555555"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.04" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#2A2A2A" />
+
+            </LinearLayout>
+
             <!-- Nombre completo -->
             <TextView
                 android:layout_width="wrap_content"
@@ -91,6 +147,7 @@
                     android:textColor="#FFFFFF"
                     android:inputType="textPersonName"
                     android:paddingVertical="14dp" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Email -->
@@ -127,6 +184,7 @@
                     android:textColor="#FFFFFF"
                     android:inputType="textEmailAddress"
                     android:paddingVertical="14dp" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Contraseña -->
@@ -165,9 +223,10 @@
                     android:textColor="#FFFFFF"
                     android:inputType="textPassword"
                     android:paddingVertical="14dp" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Botón registrarse -->
+            <!-- Botón crear cuenta -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_register"
                 android:layout_width="match_parent"

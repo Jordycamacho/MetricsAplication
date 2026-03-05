@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="#121212">
 
+    <!-- Header: logo + slogan (40% pantalla) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -51,7 +52,7 @@
         android:background="@color/gold_primary"
         android:layout_marginBottom="32dp" />
 
-    <!-- Formulario (60% de pantalla) -->
+    <!-- Formulario (60% pantalla) -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -101,6 +102,7 @@
                     android:textColorHint="#555555"
                     android:inputType="textEmailAddress"
                     android:paddingVertical="14dp" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Contraseña -->
@@ -117,7 +119,7 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="28dp"
                 app:boxBackgroundMode="outline"
                 app:boxBackgroundColor="#1E1E1E"
                 app:boxCornerRadiusTopStart="10dp"
@@ -139,6 +141,7 @@
                     android:textColor="#FFFFFF"
                     android:inputType="textPassword"
                     android:paddingVertical="14dp" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Botón iniciar sesión -->
@@ -154,6 +157,63 @@
                 app:backgroundTint="@color/gold_primary"
                 app:cornerRadius="12dp"
                 android:elevation="0dp" />
+
+            <!-- Separador "o continúa con" -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="16dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#2A2A2A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  o continúa con  "
+                    android:textColor="#555555"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.04" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#2A2A2A" />
+
+            </LinearLayout>
+
+            <!--
+                Botón Google — estética OutlinedButton con borde dorado.
+                El ícono ic_google debe estar en res/drawable/ic_google.xml
+                (SVG del logo de Google, lo puedes descargar de Material Icons
+                 o del Brand Resources de Google).
+            -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_google_login"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Continuar con Google"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp"
+                android:letterSpacing="0.02"
+                app:icon="@drawable/ic_google"
+                app:iconGravity="textStart"
+                app:iconTint="@null"
+                app:iconSize="20dp"
+                app:iconPadding="12dp"
+                app:strokeColor="#333333"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                app:rippleColor="#1A78703F"
+                android:backgroundTint="#1E1E1E" />
 
             <ProgressBar
                 android:id="@+id/progress_bar"

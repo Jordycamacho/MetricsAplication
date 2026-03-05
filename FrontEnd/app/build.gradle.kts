@@ -60,6 +60,7 @@ dependencies {
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
+    implementation("androidx.browser:browser:1.8.0")
 
     // Network
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

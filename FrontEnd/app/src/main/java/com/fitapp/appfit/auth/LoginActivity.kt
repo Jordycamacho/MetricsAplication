@@ -24,14 +24,28 @@ class LoginActivity : AppCompatActivity() {
 
         SessionManager.initialize(applicationContext)
 
-        // Si ya tiene sesión válida, ir directo a MainActivity
         if (SessionManager.isTokenValid()) {
             navigateToMain()
             return
         }
 
+        handleDeepLinkIfPresent(intent)
+
         setupObservers()
         setupClickListeners()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleDeepLinkIfPresent(intent)
+    }
+
+    private fun handleDeepLinkIfPresent(intent: Intent?) {
+        val data = intent?.data
+        if (data != null && data.scheme == "fitapp" && data.host == "auth") {
+            viewModel.handleGoogleCallback(data)
+        }
     }
 
     private fun setupClickListeners() {
@@ -46,6 +60,10 @@ class LoginActivity : AppCompatActivity() {
         binding.tvRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
+
+        binding.btnGoogleLogin.setOnClickListener {
+            viewModel.openGoogleLogin(this)
+        }
     }
 
     private fun setupObservers() {
@@ -54,7 +72,6 @@ class LoginActivity : AppCompatActivity() {
                 is Resource.Loading -> showLoading(true)
                 is Resource.Success -> {
                     showLoading(false)
-                    // Pequeño delay para que SessionManager termine de guardar el token
                     binding.root.post { navigateToMain() }
                 }
                 is Resource.Error -> {
@@ -67,6 +84,20 @@ class LoginActivity : AppCompatActivity() {
                         else -> resource.message ?: "Error al iniciar sesión"
                     }
                     showError(message)
+                }
+            }
+        }
+
+        viewModel.googleLoginState.observe(this) { resource ->
+            when (resource) {
+                is Resource.Loading -> showLoading(true)
+                is Resource.Success -> {
+                    showLoading(false)
+                    navigateToMain()
+                }
+                is Resource.Error -> {
+                    showLoading(false)
+                    showError(resource.message ?: "Error con Google Login")
                 }
             }
         }
