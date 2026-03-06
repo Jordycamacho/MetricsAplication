@@ -33,7 +33,6 @@ public class UserModel {
     private Role role;
     private LocalDateTime lastLogin;
     private boolean isActive;
-    private Integer maxRoutines;
     private SubscriptionModel subscription;
 
     // ── Verificación de correo ──────────────────────────────────────────────────

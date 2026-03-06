@@ -2,7 +2,8 @@ package com.fitapp.backend.application.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
-import com.fitapp.backend.application.dto.subscription.SubscriptionResponse;
+
+import com.fitapp.backend.application.dto.subscription.response.SubscriptionResponse;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,9 +31,6 @@ public class UserResponse {
     
     @JsonProperty("isActive")
     private boolean isActive;
-    
-    @JsonProperty("maxRoutines")
-    private Integer maxRoutines;
     
     @JsonProperty("subscription")
     private SubscriptionResponse subscription;

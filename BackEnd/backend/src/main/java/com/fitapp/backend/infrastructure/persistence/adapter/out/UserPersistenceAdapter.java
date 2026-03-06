@@ -69,7 +69,11 @@ public class UserPersistenceAdapter implements UserPersistencePort {
             entity = userConverter.toEntity(userModel);
         }
 
-        return userConverter.toDomain(springDataUserRepository.save(entity));
+        UserEntity saved = springDataUserRepository.save(entity);
+
+        return springDataUserRepository.findById(saved.getId())
+                .map(userConverter::toDomain)
+                .orElseThrow(() -> new UserNotFoundException(saved.getId()));
     }
 
     @Override

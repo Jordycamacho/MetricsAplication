@@ -1,6 +1,6 @@
 package com.fitapp.backend.infrastructure.controller;
 
-import com.fitapp.backend.application.dto.subscription.SubscriptionResponse;
+import com.fitapp.backend.application.dto.subscription.response.SubscriptionResponse;
 import com.fitapp.backend.application.dto.user.ChangePasswordRequest;
 import com.fitapp.backend.application.dto.user.UserResponse;
 import com.fitapp.backend.application.dto.user.UserUpdateRequest;
@@ -123,11 +123,6 @@ public class UserController {
 
     // ── Helper: extrae userId del claim JWT ─────────────────────────────────
 
-    /**
-     * Lee el claim "userId" del JWT directamente.
-     * Evita depender de @AuthenticationPrincipal o details que pueden ser null
-     * dependiendo de cómo Spring resuelva el principal en el resource server.
-     */
     private Long extractUserId(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
@@ -139,7 +134,6 @@ public class UserController {
             if (claim instanceof Number n)
                 return n.longValue();
         }
-        // Fallback para OAuth2 donde details sí es CustomUserDetails
         if (authentication.getDetails() instanceof CustomUserDetails cd) {
             return cd.getUserId();
         }
@@ -155,7 +149,6 @@ public class UserController {
                 .fullName(u.getFullName())
                 .role(u.getRole())
                 .isActive(u.isActive())
-                .maxRoutines(u.getMaxRoutines())
                 .createdAt(u.getCreatedAt())
                 .updatedAt(u.getUpdatedAt());
         if (u.getSubscription() != null) {
@@ -168,9 +161,15 @@ public class UserController {
         return SubscriptionResponse.builder()
                 .id(s.getId())
                 .type(s.getType())
+                .status(s.getStatus())
                 .startDate(s.getStartDate())
                 .endDate(s.getEndDate())
                 .maxRoutines(s.getMaxRoutines())
+                .canExportRoutines(s.canExportRoutines())
+                .canAccessMarketplace(s.canAccessMarketplace())
+                .canSellOnMarketplace(s.canSellOnMarketplace())
+                .advancedAnalytics(s.getLimits() != null && s.getLimits().isAdvancedAnalytics())
+                .autoRenew(s.isAutoRenew())
                 .build();
     }
 }

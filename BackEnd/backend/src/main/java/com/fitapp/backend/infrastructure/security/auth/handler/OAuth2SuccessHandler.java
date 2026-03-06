@@ -2,12 +2,13 @@ package com.fitapp.backend.infrastructure.security.auth.handler;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,25 +19,35 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+import com.fitapp.backend.application.ports.input.SubscriptionUseCase;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
-import com.fitapp.backend.domain.model.FreeSubscriptionModel;
+import com.fitapp.backend.domain.model.SubscriptionModel;
 import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         private final JwtEncoder jwtEncoder;
         private final UserPersistencePort userRepository;
         private final PasswordEncoder passwordEncoder;
+        private final SubscriptionUseCase subscriptionUseCase;
 
-        @Value("${app.oauth2.redirect-uri:myapp://auth/callback}")
+        public OAuth2SuccessHandler(JwtEncoder jwtEncoder,
+                        UserPersistencePort userRepository,
+                        PasswordEncoder passwordEncoder,
+                        @Lazy SubscriptionUseCase subscriptionUseCase) {
+                this.jwtEncoder = jwtEncoder;
+                this.userRepository = userRepository;
+                this.passwordEncoder = passwordEncoder;
+                this.subscriptionUseCase = subscriptionUseCase;
+        }
+
+        @Value("${app.oauth2.redirect-uri:fitapp://auth/callback}")
         private String redirectUri;
 
         @Override
@@ -45,55 +56,58 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                         Authentication authentication) throws IOException {
 
                 OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
-
                 String email = oauthUser.getAttribute("email");
                 String googleId = oauthUser.getAttribute("sub");
                 String name = oauthUser.getAttribute("name");
-                String picture = oauthUser.getAttribute("picture");
 
-                UserModel user = userRepository.findByGoogleId(googleId)
-                                .orElseGet(() -> userRepository.findByEmail(email)
-                                                .map(existing -> linkGoogleToExistingUser(existing, googleId, picture))
-                                                .orElseGet(() -> createAndSaveOAuthUser(email, name, picture,
-                                                                googleId)));
+                UserModel user = resolveUser(email, googleId, name);
+
+                if (user.getSubscription() == null) {
+                        SubscriptionModel sub = subscriptionUseCase.createFreeSubscription(user.getId());
+                        user.setSubscription(sub);
+                }
 
                 String token = generateAppToken(user);
-
                 response.sendRedirect("http://192.168.1.14:8080/api/auth/oauth2/success?token=" + token);
-
         }
 
-        private UserModel linkGoogleToExistingUser(UserModel user, String googleId, String picture) {
+        // ── Resolución de usuario ────────────────────────────────────────────────
+
+        private UserModel resolveUser(String email, String googleId, String name) {
+                Optional<UserModel> byGoogle = userRepository.findByGoogleId(googleId);
+                if (byGoogle.isPresent()) {
+                        return byGoogle.get();
+                }
+
+                Optional<UserModel> byEmail = userRepository.findByEmail(email);
+                if (byEmail.isPresent()) {
+                        return linkGoogleToExistingUser(byEmail.get(), googleId);
+                }
+
+                return createOAuthUser(email, name, googleId);
+        }
+
+        private UserModel linkGoogleToExistingUser(UserModel user, String googleId) {
                 user.setGoogleId(googleId);
                 user.setProvider("GOOGLE");
-                if (user.getProfileImage() == null) {
-                        user.setProfileImage(picture);
-                }
                 return userRepository.save(user);
         }
 
-        private UserModel createAndSaveOAuthUser(String email, String name,
-                        String picture, String googleId) {
+        private UserModel createOAuthUser(String email, String name, String googleId) {
                 UserModel newUser = UserModel.builder()
                                 .email(email)
                                 .fullName(name)
-                                .profileImage(picture)
                                 .googleId(googleId)
                                 .provider("GOOGLE")
                                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                                 .role(Role.USER)
                                 .isActive(true)
                                 .emailVerified(true)
-                                .maxRoutines(1)
-                                .subscription(FreeSubscriptionModel.builder()
-                                                .startDate(LocalDate.now())
-                                                .endDate(LocalDate.now().plusYears(1))
-                                                .maxRoutines(1)
-                                                .build())
                                 .build();
-
                 return userRepository.save(newUser);
         }
+
+        // ── JWT ──────────────────────────────────────────────────────────────────
 
         private String generateAppToken(UserModel user) {
                 Instant now = Instant.now();
@@ -102,7 +116,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                                 ? user.getSubscription().getType()
                                 : SubscriptionType.FREE;
 
-                JwtClaimsSet claimsSet = JwtClaimsSet.builder()
+                JwtClaimsSet claims = JwtClaimsSet.builder()
                                 .issuer("AppFit")
                                 .issuedAt(now)
                                 .expiresAt(now.plus(12, ChronoUnit.HOURS))
@@ -110,12 +124,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                                 .claim("userId", user.getId())
                                 .claim("email", user.getEmail())
                                 .claim("subscription", subType.name())
-                                .claim("maxRoutines", user.getMaxRoutines())
                                 .claim("roles", user.getGrantedAuthorities().stream()
                                                 .map(GrantedAuthority::getAuthority)
                                                 .collect(Collectors.toList()))
                                 .build();
 
-                return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
+                return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
         }
 }

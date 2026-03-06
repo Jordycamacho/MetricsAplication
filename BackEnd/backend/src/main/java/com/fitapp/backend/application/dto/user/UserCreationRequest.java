@@ -27,7 +27,5 @@ public class UserCreationRequest {
     @Builder.Default
     @JsonProperty("isActive")
     private boolean isActive = true;
-    
-    @JsonProperty("maxRoutines")
-    private Integer maxRoutines;
+
 }

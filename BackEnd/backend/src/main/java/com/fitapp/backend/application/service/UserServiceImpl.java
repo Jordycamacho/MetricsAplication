@@ -2,28 +2,31 @@ package com.fitapp.backend.application.service;
 
 import com.fitapp.backend.application.dto.user.UserCreationRequest;
 import com.fitapp.backend.application.dto.user.UserUpdateRequest;
+import com.fitapp.backend.application.ports.input.SubscriptionUseCase;
 import com.fitapp.backend.application.ports.input.UserUseCase;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.exception.EmailAlreadyExistsException;
 import com.fitapp.backend.domain.exception.UserNotFoundException;
-import com.fitapp.backend.domain.model.FreeSubscriptionModel;
+import com.fitapp.backend.domain.model.SubscriptionModel;
 import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserUseCase {
 
+    @Lazy
+    private final SubscriptionUseCase subscriptionUseCase;
     private final UserPersistencePort userPersistence;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -87,18 +90,15 @@ public class UserServiceImpl implements UserUseCase {
                 .fullName(request.getFullName())
                 .role(request.getRole() != null ? request.getRole() : Role.USER)
                 .isActive(request.isActive())
-                .maxRoutines(request.getMaxRoutines() != null ? request.getMaxRoutines() : 1)
                 .emailVerified(false)
                 .build();
 
-        FreeSubscriptionModel freeSubscription = FreeSubscriptionModel.builder()
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusYears(1))
-                .maxRoutines(1)
-                .build();
+        UserModel saved = userPersistence.save(userModel);
 
-        userModel.setSubscription(freeSubscription);
-        return userPersistence.save(userModel);
+        SubscriptionModel subscription = subscriptionUseCase.createFreeSubscription(saved.getId());
+
+        saved.setSubscription(subscription);
+        return userPersistence.save(saved);
     }
 
     @Override
@@ -112,8 +112,6 @@ public class UserServiceImpl implements UserUseCase {
             user.setRole(updateRequest.getRole());
         if (updateRequest.getIsActive() != null)
             user.setActive(updateRequest.getIsActive());
-        if (updateRequest.getMaxRoutines() != null)
-            user.setMaxRoutines(updateRequest.getMaxRoutines());
 
         return userPersistence.save(user);
     }

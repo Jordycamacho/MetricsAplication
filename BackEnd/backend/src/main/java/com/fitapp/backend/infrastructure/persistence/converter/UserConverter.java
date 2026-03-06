@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserConverter {
 
+    private final SubscriptionConverter subscriptionConverter;
+
     public UserModel toDomain(UserEntity entity) {
         if (entity == null) return null;
 
-        return UserModel.builder()
+        UserModel model = UserModel.builder()
                 .id(entity.getId())
                 .googleId(entity.getGoogleId())
                 .provider(entity.getProvider())
@@ -31,6 +33,12 @@ public class UserConverter {
                 .updatedAt(entity.getUpdatedAt())
                 .version(entity.getVersion())
                 .build();
+
+        if (entity.getSubscription() != null) {
+            model.setSubscription(subscriptionConverter.toDomain(entity.getSubscription()));
+        }
+
+        return model;
     }
 
     public UserEntity toEntity(UserModel model) {
@@ -51,14 +59,9 @@ public class UserConverter {
         entity.setEmailVerificationToken(model.getEmailVerificationToken());
         entity.setEmailVerificationTokenExpiresAt(model.getEmailVerificationTokenExpiresAt());
         entity.setDeletedAt(model.getDeletedAt());
-        entity.setCreatedAt(model.getCreatedAt());
-        entity.setUpdatedAt(model.getUpdatedAt());
-        entity.setVersion(model.getVersion());
-
         return entity;
     }
 
-    /** Actualiza una entidad existente desde un modelo (para evitar perder relaciones JPA). */
     public void updateEntityFromModel(UserEntity entity, UserModel model) {
         entity.setEmail(model.getEmail());
         entity.setGoogleId(model.getGoogleId());

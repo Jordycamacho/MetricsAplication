@@ -112,7 +112,6 @@ public class AuthServiceImpl implements AuthUseCase {
                 .fullName(request.getFullName())
                 .role(Role.USER)
                 .isActive(true)
-                .maxRoutines(1)
                 .build());
 
         sendVerificationEmail(userModel);
