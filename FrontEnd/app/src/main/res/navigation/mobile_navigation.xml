@@ -275,4 +275,16 @@
             app:argType="long" />
     </fragment>
 
+    <fragment
+        android:id="@+id/navigation_subscription"
+        android:name="com.fitapp.appfit.ui.subscription.SubscriptionFragment"
+        android:label="Mi suscripción"
+        tools:layout="@layout/fragment_subscription" />
+
+    <fragment
+        android:id="@+id/navigation_plans"
+        android:name="com.fitapp.appfit.ui.subscription.PlansFragment"
+        android:label="Planes"
+        tools:layout="@layout/fragment_plans" />
+
 </navigation>

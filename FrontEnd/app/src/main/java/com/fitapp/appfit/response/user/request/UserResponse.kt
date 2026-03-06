@@ -9,7 +9,6 @@ data class UserResponse(
     @SerializedName("fullName") val fullName: String?,
     @SerializedName("role") val role: String,
     @SerializedName("isActive") val isActive: Boolean,
-    @SerializedName("maxRoutines") val maxRoutines: Int,
     @SerializedName("emailVerified") val emailVerified: Boolean = false,
     @SerializedName("subscription") val subscription: SubscriptionResponse?
 )

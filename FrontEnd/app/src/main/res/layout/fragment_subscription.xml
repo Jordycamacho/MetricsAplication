@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- Header plan actual -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@color/surface_dark"
+                android:paddingVertical="32dp"
+                android:paddingHorizontal="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TU PLAN ACTUAL"
+                    android:textColor="#666666"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.12"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_current_plan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="FREE"
+                    android:textColor="@color/gold_primary"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_plan_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="ACTIVE"
+                    android:textColor="#4CAF50"
+                    android:textSize="12sp" />
+
+                <!-- Fechas -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="20dp"
+                    android:weightSum="2">
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="INICIO" android:textColor="#555555" android:textSize="10sp"
+                            android:letterSpacing="0.1" />
+                        <TextView android:id="@+id/tv_start_date" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:text="-"
+                            android:textColor="#CCCCCC" android:textSize="13sp" android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="VENCE" android:textColor="#555555" android:textSize="10sp"
+                            android:letterSpacing="0.1" />
+                        <TextView android:id="@+id/tv_end_date" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:text="-"
+                            android:textColor="#CCCCCC" android:textSize="13sp" android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Límites y features -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="TUS LÍMITES" android:textColor="@color/gold_primary" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_dark" android:padding="16dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Rutinas máximas"
+                        android:textColor="#CCCCCC" android:textSize="14sp" />
+                    <TextView android:id="@+id/tv_max_routines" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:text="2"
+                        android:textColor="@color/gold_primary" android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginVertical="12dp" />
+
+                <TextView android:id="@+id/tv_feature_analytics" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="✗  Analytics avanzado"
+                    android:textSize="13sp" android:layout_marginBottom="8dp" />
+                <TextView android:id="@+id/tv_feature_export" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="✗  Exportar rutinas"
+                    android:textSize="13sp" android:layout_marginBottom="8dp" />
+                <TextView android:id="@+id/tv_feature_marketplace" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="✗  Marketplace"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <!-- Planes disponibles -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="PLANES DISPONIBLES" android:textColor="@color/gold_primary"
+                android:textSize="11sp" android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- FREE -->
+            <LinearLayout android:id="@+id/card_free" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:layout_marginHorizontal="16dp" android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_plan_card" android:padding="16dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="FREE"
+                        android:textColor="#AAAAAA" android:textSize="18sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tv_badge_free" android:layout_width="wrap_content"
+                        android:layout_height="20dp" android:text="ACTUAL" android:textSize="10sp"
+                        android:textStyle="bold" android:paddingHorizontal="8dp" android:gravity="center"
+                        android:background="@drawable/bg_badge_gold" android:textColor="#121212"
+                        android:visibility="gone" />
+                    <Button android:id="@+id/btn_upgrade_free" android:layout_width="wrap_content"
+                        android:layout_height="32dp" android:text="Bajar plan" android:textSize="11sp"
+                        android:backgroundTint="#333333" android:visibility="gone" />
+                </LinearLayout>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="• 2 rutinas\n• 30 días de historial\n• Analytics básico"
+                    android:textColor="#777777" android:textSize="12sp" android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <!-- STANDARD -->
+            <LinearLayout android:id="@+id/card_standard" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:layout_marginHorizontal="16dp" android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_plan_card" android:padding="16dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="STANDARD"
+                        android:textColor="@color/blue_500" android:textSize="18sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tv_badge_standard" android:layout_width="wrap_content"
+                        android:layout_height="20dp" android:text="ACTUAL" android:textSize="10sp"
+                        android:textStyle="bold" android:paddingHorizontal="8dp" android:gravity="center"
+                        android:background="@drawable/bg_badge_gold" android:textColor="#121212"
+                        android:visibility="gone" />
+                    <Button android:id="@+id/btn_upgrade_standard" android:layout_width="wrap_content"
+                        android:layout_height="32dp" android:text="Próximamente" android:textSize="11sp"
+                        android:backgroundTint="#333333" android:enabled="false" />
+                </LinearLayout>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="• 10 rutinas\n• 180 días de historial\n• Export/import\n• Marketplace (lectura)"
+                    android:textColor="#777777" android:textSize="12sp" android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <!-- PREMIUM -->
+            <LinearLayout android:id="@+id/card_premium" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:layout_marginHorizontal="16dp" android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_plan_card" android:padding="16dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="PREMIUM"
+                        android:textColor="@color/gold_primary" android:textSize="18sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tv_badge_premium" android:layout_width="wrap_content"
+                        android:layout_height="20dp" android:text="ACTUAL" android:textSize="10sp"
+                        android:textStyle="bold" android:paddingHorizontal="8dp" android:gravity="center"
+                        android:background="@drawable/bg_badge_gold" android:textColor="#121212"
+                        android:visibility="gone" />
+                    <Button android:id="@+id/btn_upgrade_premium" android:layout_width="wrap_content"
+                        android:layout_height="32dp" android:text="Próximamente" android:textSize="11sp"
+                        android:backgroundTint="@color/gold_primary" android:enabled="false" />
+                </LinearLayout>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="• Rutinas ilimitadas\n• Historial ilimitado\n• Analytics avanzado\n• Marketplace completo"
+                    android:textColor="#777777" android:textSize="12sp" android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_view_plans"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:text="Ver planes y precios"
+                android:textStyle="bold"
+                app:backgroundTint="@color/gold_primary"
+                app:cornerRadius="10dp" />
+
+            <!-- Botón cancelar -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel_subscription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:text="Cancelar suscripción"
+                app:strokeColor="#E53935"
+                app:strokeWidth="1dp"
+                android:textColor="#E53935"
+                app:backgroundTint="@android:color/transparent"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sda"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:text="..."
+                android:textStyle="bold"
+                app:backgroundTint="@color/gold_primary"
+                app:cornerRadius="10dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

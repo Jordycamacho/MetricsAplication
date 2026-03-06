@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.R
 import com.fitapp.appfit.auth.LoginActivity
 import com.fitapp.appfit.databinding.FragmentProfileBinding
@@ -73,9 +74,11 @@ class ProfileFragment : Fragment() {
             ivRowIcon.setImageResource(R.drawable.ic_crown)
             ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
             tvRowTitle.text = "Mi suscripción"
-            tvRowSubtitle.text = "Plan FREE activo"
+            tvRowSubtitle.text = "Cargando..."
             tvRowSubtitle.visibility = View.VISIBLE
-            // TODO: navegar a suscripción cuando esté disponible
+            root.setOnClickListener {
+                findNavController().navigate(R.id.navigation_subscription)
+            }
         }
 
         with(binding.rowLogout) {
@@ -152,7 +155,6 @@ class ProfileFragment : Fragment() {
         binding.tvFullName.text = user.fullName?.takeIf { it.isNotBlank() } ?: "Sin nombre"
         binding.tvEmail.text = user.email
         binding.tvStatPlan.text = user.subscription?.type ?: "FREE"
-        binding.tvStatMaxRoutines.text = user.maxRoutines.toString()
         binding.tvPlanBadge.text = user.subscription?.type ?: "FREE"
 
         // Estado de verificación de correo
