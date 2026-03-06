@@ -36,6 +36,8 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     private final CustomParameterPersistencePort parameterPersistencePort;
     private final UserPersistencePort userPersistencePort;
     private final ParameterServiceLogger parameterLogger;
+    private final SubscriptionLimitChecker limitChecker;
+
 
     @Override
     @Transactional(readOnly = true)
@@ -100,12 +102,13 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
     @Transactional
     public CustomParameterModel createParameter(CustomParameterRequest request, String userEmail) {
         parameterLogger.logParameterCreationStart(userEmail, request.getName());
-        parameterLogger.logServiceEntry("createParameter", request, userEmail);
-
-        request.logRequestData();
 
         var user = userPersistencePort.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userEmail));
+
+        // Verificar límite de parámetros personalizados
+        long currentCount = parameterPersistencePort.countByOwnerId(user.getId());
+        limitChecker.checkCustomParameterLimit(userEmail, currentCount);
 
         boolean exists = parameterPersistencePort
                 .findByNameAndOwnerIdAndSportId(request.getName(), user.getId())
@@ -129,11 +132,9 @@ public class CustomParameterServiceImpl implements CustomParameterUseCase {
         model.setUsageCount(0);
 
         model.validateFormat();
-        model.logModelData("CREATING");
 
         CustomParameterModel savedModel = parameterPersistencePort.save(model);
         parameterLogger.logParameterCreationSuccess(savedModel.getId(), userEmail);
-        parameterLogger.logServiceExit("createParameter", savedModel.getId());
         return savedModel;
     }
 

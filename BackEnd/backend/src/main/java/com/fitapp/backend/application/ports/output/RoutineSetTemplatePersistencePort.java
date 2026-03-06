@@ -16,6 +16,7 @@ public interface RoutineSetTemplatePersistencePort {
     List<RoutineSetTemplateModel> saveAll(List<RoutineSetTemplateModel> models);
     RoutineSetTemplateModel save(RoutineSetTemplateModel model);
     void deleteByRoutineExerciseId(Long routineExerciseId);
+    long countByRoutineExerciseId(Long routineExerciseId);
     Optional<RoutineSetTemplateModel> findById(Long id);
     void deleteById(Long id);
 }

@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface CustomParameterPersistencePort {
     Optional<CustomParameterModel> findById(Long id);
+    long countByOwnerId(Long userId);
     List<CustomParameterModel> findAll();
     Page<CustomParameterModel> findAll(Pageable pageable);
     Page<CustomParameterModel> findByFilters(CustomParameterFilterRequest filters, Pageable pageable);

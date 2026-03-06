@@ -62,6 +62,7 @@ public class RoutineServiceImpl implements RoutineUseCase {
     private final SportPersistencePort sportPersistencePort;
     private final CustomParameterPersistencePort customParameterPersistencePort;
     private final RoutineServiceLogger serviceLogger;
+    private final SubscriptionLimitChecker limitChecker;
 
     // ── CRUD ──────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,9 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 .collect(Collectors.toSet());
 
         UserModel user = findUser(userEmail);
+
+        long currentCount = routinePersistencePort.countByUserId(user.getId());
+        limitChecker.checkRoutineLimit(userEmail, currentCount);
 
         RoutineModel routine = new RoutineModel();
         routine.setName(request.getName());

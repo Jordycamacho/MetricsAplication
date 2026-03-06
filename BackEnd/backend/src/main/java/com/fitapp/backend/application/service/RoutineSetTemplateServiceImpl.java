@@ -34,13 +34,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase {
 
-        private final RoutineSetTemplatePersistencePort setTemplatePersistencePort;
         private final RoutineSetParameterPersistencePort setParameterPersistencePort;
         private final RoutineExercisePersistencePort routineExercisePersistencePort;
         private final CustomParameterPersistencePort customParameterPersistencePort;
-        private final UserPersistencePort userPersistencePort;
+        private final RoutineSetTemplatePersistencePort setTemplatePersistencePort;
         private final ExercisePersistencePort exercisePersistencePort;
+        private final UserPersistencePort userPersistencePort;
         private final SetTemplateServiceLogger serviceLogger;
+        private final SubscriptionLimitChecker limitChecker;
         private final SetTemplateMetrics metrics;
 
         // ─────────────────────────────────────────────────────────────────────────
@@ -91,6 +92,12 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
 
                         validateUserOwnsRoutineExercise(user.getId(), routineExercise);
                         validateUniquePosition(request.getRoutineExerciseId(), request.getPosition());
+
+                        long setCount = setTemplatePersistencePort
+                                        .countByRoutineExerciseId(request.getRoutineExerciseId());
+                        log.info("SET_LIMIT_CHECK | routineExerciseId={} | currentCount={} | user={}",
+                                        request.getRoutineExerciseId(), setCount, userEmail);
+                        limitChecker.checkSetsPerExerciseLimit(userEmail, setCount);
 
                         RoutineSetTemplateModel model = new RoutineSetTemplateModel();
                         model.setRoutineExerciseId(request.getRoutineExerciseId());

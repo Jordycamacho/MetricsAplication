@@ -48,6 +48,12 @@ public class SubscriptionLimitsEntity {
     @Column(name = "max_custom_exercises")
     private Integer maxCustomExercises;
 
+    @Column(name = "max_exercises_per_routine")
+    private Integer maxExercisesPerRoutine;
+
+    @Column(name = "max_sets_per_exercise")
+    private Integer maxSetsPerExercise;
+
     // ── Historial ────────────────────────────────────────────────────────────
     // Días de historial de sesiones accesibles. NULL = ilimitado.
     @Column(name = "history_days")

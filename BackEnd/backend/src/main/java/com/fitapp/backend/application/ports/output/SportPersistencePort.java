@@ -10,6 +10,7 @@ import java.util.Set;
 
 public interface SportPersistencePort {
     Optional<SportModel> findById(Long id);
+    long countByCreatedBy(Long userId);
     List<SportModel> findAll();
     Page<SportModel> findAll(Pageable pageable);
     Page<SportModel> findByFilters(SportFilterRequest filters, Pageable pageable);

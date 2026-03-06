@@ -46,6 +46,7 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
         private final RoutinePersistencePort routinePersistencePort;
         private final RoutineExercisePersistencePort routineExercisePersistencePort;
         private final UserPersistencePort userPersistencePort;
+        private final SubscriptionLimitChecker limitChecker;
         private final ExercisePersistencePort exercisePersistencePort;
         private final RoutineConverter routineConverter;
         private final RoutineRepository routineRepository;
@@ -79,6 +80,9 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                 if (exerciseName == null) {
                         throw new RuntimeException("Exercise not found: " + request.getExerciseId());
                 }
+
+                long exerciseCount = routineEntity.getExercises() != null ? routineEntity.getExercises().size() : 0;
+                limitChecker.checkExercisesPerRoutineLimit(userEmail, exerciseCount);
 
                 RoutineExerciseEntity routineExercise = routineConverter.addExerciseToRoutine(
                                 routineEntity, request, request.getExerciseId());

@@ -36,6 +36,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
     private final ExerciseCategoryPersistencePort categoryPersistencePort;
     private final UserPersistencePort userPersistencePort;
     private final CacheService cacheService;
+    private final SubscriptionLimitChecker limitChecker;
 
     // ── CRUD ──────────────────────────────────────────────────────────────────
 
@@ -45,14 +46,14 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_CREATE_CATEGORY_START | user={} | name={}", userEmail, request.getName());
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> {
-                    log.error("USER_NOT_FOUND_FOR_CATEGORY | email={}", userEmail);
-                    return new com.fitapp.backend.domain.exception.UserNotFoundException(
-                            "Usuario no encontrado: " + userEmail);
-                });
+                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                        "Usuario no encontrado: " + userEmail));
+
+        // Verificar límite de categorías personalizadas
+        long currentCount = categoryPersistencePort.countByOwnerId(user.getId());
+        limitChecker.checkCustomCategoryLimit(userEmail, currentCount);
 
         if (categoryPersistencePort.findByNameAndOwnerId(request.getName(), user.getId()).isPresent()) {
-            log.warn("CATEGORY_NAME_DUPLICATE | user={} | name={}", userEmail, request.getName());
             throw new CategoryDuplicateException(request.getName(), userEmail);
         }
 
@@ -72,7 +73,6 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         model.validate();
 
         ExerciseCategoryModel saved = categoryPersistencePort.save(model);
-
         cacheService.clearUserCategoryCache(saved.getId(), userEmail);
         log.info("SERVICE_CREATE_CATEGORY_SUCCESS | id={} | user={}", saved.getId(), userEmail);
         return saved;

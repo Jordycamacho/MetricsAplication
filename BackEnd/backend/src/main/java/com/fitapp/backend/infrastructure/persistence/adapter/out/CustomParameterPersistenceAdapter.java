@@ -187,4 +187,10 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
+    @Override
+    public long countByOwnerId(Long userId) {
+        log.debug("PERSISTENCE_COUNT_PARAMETERS_BY_OWNER | ownerId={}", userId);
+        return customParameterRepository.countByOwnerId(userId);
+    }
 }

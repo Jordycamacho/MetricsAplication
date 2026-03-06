@@ -13,16 +13,18 @@ public class SubscriptionLimitsModel {
     private String tier;
 
     // ── Rutinas ─────────────────────────────────────────────────────────────
-    private Integer maxRoutines;           // null = ilimitado
+    private Integer maxRoutines; // null = ilimitado
 
     // ── Contenido personalizado ──────────────────────────────────────────────
     private Integer maxCustomSports;
+    private Integer maxExercisesPerRoutine;
+    private Integer maxSetsPerExercise;
     private Integer maxCustomParameters;
     private Integer maxCustomCategories;
     private Integer maxCustomExercises;
 
     // ── Historial ────────────────────────────────────────────────────────────
-    private Integer historyDays;           // null = ilimitado
+    private Integer historyDays; // null = ilimitado
 
     // ── Features booleanas ───────────────────────────────────────────────────
     private boolean basicAnalytics;
@@ -35,6 +37,16 @@ public class SubscriptionLimitsModel {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    public boolean isWithinLimit(Integer current, Integer max) {
+        if (max == null)
+            return true;
+        return current < max;
+    }
+
+    public boolean isUnlimited(Integer value) {
+        return value == null;
+    }
+    
     public boolean routinesUnlimited() {
         return maxRoutines == null;
     }

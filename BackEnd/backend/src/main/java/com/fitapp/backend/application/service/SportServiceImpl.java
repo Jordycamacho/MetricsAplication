@@ -39,6 +39,7 @@ public class SportServiceImpl implements SportUseCase {
     private final SportPersistencePort sportPersistencePort;
     private final UserPersistencePort userPersistencePort;
     private final SportServiceLogger sportLogger;
+    private final SubscriptionLimitChecker limitChecker;
 
     @Override
     @Transactional(readOnly = true)
@@ -170,6 +171,9 @@ public class SportServiceImpl implements SportUseCase {
         log.info("SPORT_CREATION_START | user={} | name={}", userEmail, sportRequest.getName());
         var user = userPersistencePort.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
+
+        long currentCount = sportPersistencePort.countByCreatedBy(user.getId());
+        limitChecker.checkCustomSportLimit(userEmail, currentCount);
 
         SportModel model = new SportModel();
         model.setName(sportRequest.getName());

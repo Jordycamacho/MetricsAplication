@@ -43,6 +43,11 @@ public class RoutineSetTemplatePersistenceAdapter implements RoutineSetTemplateP
     }
 
     @Override
+    public long countByRoutineExerciseId(Long routineExerciseId) {
+        return setTemplateRepository.countByRoutineExerciseId(routineExerciseId);
+    }
+
+    @Override
     @Transactional
     @CacheEvict(value = { "setTemplates", "setTemplatesByExercise" }, allEntries = true)
     public List<RoutineSetTemplateModel> saveAll(List<RoutineSetTemplateModel> models) {

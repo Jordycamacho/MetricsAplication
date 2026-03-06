@@ -31,6 +31,7 @@ public class ExerciseServiceImpl implements ExerciseUseCase {
     private final ExercisePersistencePort exercisePersistencePort;
     private final UserPersistencePort userPersistencePort;
     private final SportPersistencePort sportPersistencePort;
+    private final SubscriptionLimitChecker limitChecker;
 
     @Override
     @Transactional(readOnly = true)
@@ -93,6 +94,10 @@ public class ExerciseServiceImpl implements ExerciseUseCase {
     @Transactional
     public ExerciseModel createExercise(ExerciseRequest request, String userEmail) {
         UserModel user = getUser(userEmail);
+
+        long currentCount = exercisePersistencePort.countByUser(user.getId());
+        limitChecker.checkCustomExerciseLimit(userEmail, currentCount);
+
         exercisePersistencePort.findByNameAndCreatedById(request.getName(), user.getId())
                 .ifPresent(e -> {
                     throw new ExerciseAlreadyExistsException(request.getName());

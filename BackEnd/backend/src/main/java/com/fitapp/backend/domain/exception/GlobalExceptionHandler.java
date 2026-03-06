@@ -283,4 +283,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                 .correlationId(MDC.get("correlationId"))
                                                 .build());
         }
+
+        @ExceptionHandler(SubscriptionLimitException.class)
+        public ResponseEntity<ErrorResponse> handleSubscriptionLimit(SubscriptionLimitException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(ErrorResponse.builder()
+                                                .code("BAD_REQUEST")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
 }

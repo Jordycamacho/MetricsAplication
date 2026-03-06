@@ -18,47 +18,49 @@ import java.util.Optional;
 @Repository
 public interface SportRepository extends JpaRepository<SportEntity, Long>, JpaSpecificationExecutor<SportEntity> {
 
-    @Query("SELECT s FROM SportEntity s WHERE " +
-            "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
-            "(:isPredefined IS NULL OR s.isPredefined = :isPredefined) AND " +
-            "(:sourceType IS NULL OR s.sourceType = :sourceType)")
-    Page<SportEntity> findByFilters(
-            @Param("search") String search,
-            @Param("isPredefined") Boolean isPredefined,
-            @Param("sourceType") SportSourceType sourceType,
-            Pageable pageable);
+        long countByCreatedById(Long createdById);
 
-    @Query("SELECT s FROM SportEntity s WHERE " +
-            "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<SportEntity> searchSports(
-            @Param("search") String search,
-            Pageable pageable);
+        @Query("SELECT s FROM SportEntity s WHERE " +
+                        "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+                        "(:isPredefined IS NULL OR s.isPredefined = :isPredefined) AND " +
+                        "(:sourceType IS NULL OR s.sourceType = :sourceType)")
+        Page<SportEntity> findByFilters(
+                        @Param("search") String search,
+                        @Param("isPredefined") Boolean isPredefined,
+                        @Param("sourceType") SportSourceType sourceType,
+                        Pageable pageable);
 
-    @Query("SELECT s FROM SportEntity s WHERE " +
-            "s.isPredefined = true AND " +
-            "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<SportEntity> findPredefinedWithSearch(
-            @Param("search") String search,
-            Pageable pageable);
+        @Query("SELECT s FROM SportEntity s WHERE " +
+                        "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+        Page<SportEntity> searchSports(
+                        @Param("search") String search,
+                        Pageable pageable);
 
-    @Query("SELECT s FROM SportEntity s WHERE " +
-            "s.createdBy.id = :userId AND " +
-            "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<SportEntity> findByUserWithSearch(
-            @Param("userId") Long userId,
-            @Param("search") String search,
-            Pageable pageable);
+        @Query("SELECT s FROM SportEntity s WHERE " +
+                        "s.isPredefined = true AND " +
+                        "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+        Page<SportEntity> findPredefinedWithSearch(
+                        @Param("search") String search,
+                        Pageable pageable);
 
-    @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
-    List<SportEntity> findByIsPredefinedTrue();
+        @Query("SELECT s FROM SportEntity s WHERE " +
+                        "s.createdBy.id = :userId AND " +
+                        "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+        Page<SportEntity> findByUserWithSearch(
+                        @Param("userId") Long userId,
+                        @Param("search") String search,
+                        Pageable pageable);
 
-    @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
-    List<SportEntity> findByCreatedById(Long userId);
+        @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
+        List<SportEntity> findByIsPredefinedTrue();
 
-    @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
-    @Override
-    Page<SportEntity> findAll(Pageable pageable);
+        @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
+        List<SportEntity> findByCreatedById(Long userId);
 
-    @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
-    Optional<SportEntity> findById(Long id);
+        @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
+        @Override
+        Page<SportEntity> findAll(Pageable pageable);
+
+        @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
+        Optional<SportEntity> findById(Long id);
 }
