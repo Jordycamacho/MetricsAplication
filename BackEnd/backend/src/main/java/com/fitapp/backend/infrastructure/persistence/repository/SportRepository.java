@@ -58,6 +58,9 @@ public interface SportRepository extends JpaRepository<SportEntity, Long>, JpaSp
         List<SportEntity> findByCreatedById(Long userId);
 
         @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
+        Optional<SportEntity> findByName(String name);
+
+        @EntityGraph(attributePaths = { "createdBy", "createdBy.subscription" })
         @Override
         Page<SportEntity> findAll(Pageable pageable);
 

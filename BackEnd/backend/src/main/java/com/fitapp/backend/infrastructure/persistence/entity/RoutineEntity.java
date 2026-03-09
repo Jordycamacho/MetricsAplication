@@ -97,25 +97,25 @@ public class RoutineEntity {
      */
     @Column(name = "is_template", nullable = false)
     @Builder.Default
-    private Boolean isTemplate = false;
+    private Boolean isTemplate = false;// todavia no se usa
 
     /** Visible en el marketplace público. Requiere isTemplate = true. */
     @Column(name = "is_public", nullable = false)
     @Builder.Default
-    private Boolean isPublic = false;
+    private Boolean isPublic = false;// todavia no se usa
 
     /** NULL = gratis. Solo aplica si isPublic = true. */
     @Column(name = "price", precision = 10, scale = 2)
-    private BigDecimal price;
+    private BigDecimal price;// todavia no se usa
 
     @Column(name = "currency", length = 3)
     @Builder.Default
-    private String currency = "USD";
+    private String currency = "USD";// todavia no se usa
 
     /** Número de veces que se ha comprado o importado. */
     @Column(name = "times_purchased", nullable = false)
     @Builder.Default
-    private Integer timesPurchased = 0;
+    private Integer timesPurchased = 0;// todavia no se usa
 
     /**
      * Si esta rutina es copia de otra (template comprada o importada),
@@ -123,19 +123,19 @@ public class RoutineEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "original_routine_id")
-    private RoutineEntity originalRoutine;
+    private RoutineEntity originalRoutine;// todavia no se usa
 
     /**
      * Versión del template. Ej: "1.2.0".
      * NULL si no es template o no se versiona.
      */
     @Column(name = "version", length = 20)
-    private String version;
+    private String version;// todavia no se usa
 
     /** Si pertenece a un pack distribuible. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "package_id")
-    private PackageEntity pack;
+    private PackageEntity pack;// todavia no se usa
 
     /**
      * UUID para compartir la rutina via link sin necesidad de cuenta.
@@ -143,7 +143,7 @@ public class RoutineEntity {
      * Ej: fitapp.com/import/550e8400-e29b-41d4-a716-446655440000
      */
     @Column(name = "export_key", unique = true, updatable = false)
-    private UUID exportKey;
+    private UUID exportKey;// todavia no se usa
 
     // ── Timestamps ───────────────────────────────────────────────────────────
 

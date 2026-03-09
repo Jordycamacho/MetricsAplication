@@ -2,40 +2,111 @@ package com.fitapp.backend.infrastructure.config.data;
 
 import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
 import com.fitapp.backend.infrastructure.persistence.repository.CustomParameterRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
-import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-@Component
-@RequiredArgsConstructor
+
 @Slf4j
-public class ParameterDataLoader {
+@Component
+@Order(3)
+@RequiredArgsConstructor
+public class ParameterDataLoader implements ApplicationRunner {
+
     private final CustomParameterRepository customParameterRepository;
     private final SportRepository sportRepository;
 
-    @PostConstruct
+    @Override
     @Transactional
-    public void loadDefaultParameters() {
-        // Verificar si ya existen parámetros globales usando un método que sí existe
-        List<CustomParameterEntity> existingGlobalParams = 
-            customParameterRepository.findByIsGlobalTrue(Pageable.unpaged()).getContent();
-        
-        if (existingGlobalParams.isEmpty()) {
-            log.info("LOADING_DEFAULT_PARAMETERS | Starting to load default parameters");
-            createDefaultParameters();
-            log.info("LOADING_DEFAULT_PARAMETERS_SUCCESS | Default parameters loaded successfully");
-        } else {
-            log.debug("LOADING_DEFAULT_PARAMETERS | Default parameters already exist in database: {}", 
-                     existingGlobalParams.size());
+    public void run(ApplicationArguments args) {
+        long existing = customParameterRepository.countByIsGlobalTrue();
+        if (existing > 0) {
+            log.info("Parámetros globales ya inicializados ({}), saltando seed.", existing);
+            return;
         }
+
+        log.info("Inicializando parámetros globales predefinidos...");
+
+        List<CustomParameterEntity> params = List.of(
+
+                // ── Repeticiones ─────────────────────────────────────────────────────
+                CustomParameterEntity.builder()
+                        .name("Repeticiones")
+                        .description("Número de repeticiones por serie")
+                        .parameterType(ParameterType.INTEGER)
+                        .unit("reps")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .isTrackable(true)
+                        .metricAggregation(MetricAggregation.MAX)
+                        .owner(null)
+                        .build(),
+
+                // ── Peso ─────────────────────────────────────────────────────────────
+                CustomParameterEntity.builder()
+                        .name("Peso")
+                        .description("Carga utilizada en el ejercicio")
+                        .parameterType(ParameterType.NUMBER)
+                        .unit("kg")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .isTrackable(true)
+                        .metricAggregation(MetricAggregation.MAX)
+                        .owner(null)
+                        .build(),
+
+                // ── Duración ──────────────────────────────────────────────────────────
+                CustomParameterEntity.builder()
+                        .name("Duración")
+                        .description("Tiempo de ejecución del ejercicio o serie")
+                        .parameterType(ParameterType.DURATION)
+                        .unit("seg")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .isTrackable(true)
+                        .metricAggregation(MetricAggregation.MAX)
+                        .owner(null)
+                        .build(),
+
+                // ── Distancia ─────────────────────────────────────────────────────────
+                CustomParameterEntity.builder()
+                        .name("Distancia")
+                        .description("Distancia recorrida durante el ejercicio")
+                        .parameterType(ParameterType.DISTANCE)
+                        .unit("m")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .isTrackable(true)
+                        .metricAggregation(MetricAggregation.MAX)
+                        .owner(null)
+                        .build(),
+
+                // ── Velocidad ─────────────────────────────────────────────────────────
+                CustomParameterEntity.builder()
+                        .name("Velocidad")
+                        .description("Velocidad media o máxima alcanzada durante el ejercicio")
+                        .parameterType(ParameterType.NUMBER)
+                        .unit("km/h")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .isTrackable(true)
+                        .metricAggregation(MetricAggregation.MAX)
+                        .owner(null)
+                        .build());
+
+        customParameterRepository.saveAll(params);
+        log.info("Parámetros globales inicializados correctamente: {} parámetros", params.size());
     }
 
     private void createDefaultParameters() {
@@ -48,7 +119,7 @@ public class ParameterDataLoader {
 
             createGlobalParameters();
 
-            log.info("CREATED_DEFAULT_PARAMETERS | Total parameters created: {}", 
+            log.info("CREATED_DEFAULT_PARAMETERS | Total parameters created: {}",
                     customParameterRepository.count());
         } catch (Exception e) {
             log.error("ERROR_LOADING_PARAMETERS | Error: {}", e.getMessage(), e);
@@ -58,7 +129,6 @@ public class ParameterDataLoader {
     private void createParametersForSport(SportEntity sport) {
         String sportName = sport.getName();
         log.debug("CREATING_PARAMETERS_FOR_SPORT | sport={}", sportName);
-        
 
         switch (sportName) {
             case "Gimnasio":
@@ -389,13 +459,12 @@ public class ParameterDataLoader {
         log.debug("CREATED_BASKETBALL_PARAMETERS | sport={} | count=2", sport.getName());
     }
 
-
     private void createGlobalParameters() {
         // Verificar si ya existen parámetros globales sin deporte
-        List<CustomParameterEntity> existingGlobalParams = 
-            customParameterRepository.findByFilters(null, null, true, true, null, null, null)
+        List<CustomParameterEntity> existingGlobalParams = customParameterRepository
+                .findByFilters(null, null, true, true, null, null, null)
                 .getContent();
-        
+
         if (!existingGlobalParams.isEmpty()) {
             log.debug("SKIPPING_GLOBAL_PARAMETERS | already exist: {}", existingGlobalParams.size());
             return;
@@ -403,51 +472,50 @@ public class ParameterDataLoader {
 
         // Parámetros globales (no asociados a un deporte específico)
         List<CustomParameterEntity> globalParameters = List.of(
-            CustomParameterEntity.builder()
-                    .name("heartRate")
-                    .description("Frecuencia cardíaca durante el ejercicio")
-                    .parameterType(ParameterType.INTEGER)
-                    .unit("bpm")
-                    .isGlobal(true)
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .usageCount(0)
-                    .build(),
-            CustomParameterEntity.builder()
-                    .name("calories")
-                    .description("Calorías quemadas")
-                    .parameterType(ParameterType.NUMBER)
-                    .unit("kcal")
-                    .isGlobal(true)
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .usageCount(0)
-                    .build(),
-            CustomParameterEntity.builder()
-                    .name("intensity")
-                    .description("Nivel de intensidad percibida")
-                    .parameterType(ParameterType.PERCENTAGE)
-                    .unit("%")
-                    .isGlobal(true)
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .usageCount(0)
-                    .build(),
-            CustomParameterEntity.builder()
-                    .name("notes")
-                    .description("Observaciones adicionales")
-                    .parameterType(ParameterType.TEXT)
-                    .unit("texto")
-                    .isGlobal(true)
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .usageCount(0)
-                    .build()
-        );
+                CustomParameterEntity.builder()
+                        .name("heartRate")
+                        .description("Frecuencia cardíaca durante el ejercicio")
+                        .parameterType(ParameterType.INTEGER)
+                        .unit("bpm")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .usageCount(0)
+                        .build(),
+                CustomParameterEntity.builder()
+                        .name("calories")
+                        .description("Calorías quemadas")
+                        .parameterType(ParameterType.NUMBER)
+                        .unit("kcal")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .usageCount(0)
+                        .build(),
+                CustomParameterEntity.builder()
+                        .name("intensity")
+                        .description("Nivel de intensidad percibida")
+                        .parameterType(ParameterType.PERCENTAGE)
+                        .unit("%")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .usageCount(0)
+                        .build(),
+                CustomParameterEntity.builder()
+                        .name("notes")
+                        .description("Observaciones adicionales")
+                        .parameterType(ParameterType.TEXT)
+                        .unit("texto")
+                        .isGlobal(true)
+                        .isActive(true)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .usageCount(0)
+                        .build());
 
         saveParameters(globalParameters);
         log.debug("CREATED_GLOBAL_PARAMETERS | count={}", globalParameters.size());
@@ -458,7 +526,7 @@ public class ParameterDataLoader {
             customParameterRepository.saveAll(parameters);
         } catch (Exception e) {
             log.error("ERROR_SAVING_PARAMETERS | Error: {}", e.getMessage(), e);
-            // Continuar con otros parámetros
+            
         }
     }
 }

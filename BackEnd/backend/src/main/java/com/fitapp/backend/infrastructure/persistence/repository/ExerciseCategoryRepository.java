@@ -50,6 +50,7 @@ public interface ExerciseCategoryRepository extends JpaRepository<ExerciseCatego
     // Para validación de unicidad
     Optional<ExerciseCategoryEntity> findByNameAndOwnerId(String name, Long ownerId);
     Optional<ExerciseCategoryEntity> findByNameAndIsPredefinedTrue(String name);
+    Optional<ExerciseCategoryEntity> findByName(String name);
     
     // Categorías disponibles para un usuario
     @Query("SELECT ec FROM ExerciseCategoryEntity ec WHERE " +

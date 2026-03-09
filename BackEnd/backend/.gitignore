@@ -18,6 +18,7 @@ target/
 *.iws
 *.iml
 *.ipr
+*.swp
 
 ### NetBeans ###
 /nbproject/private/
@@ -32,5 +33,36 @@ build/
 ### VS Code ###
 .vscode/
 
-*.properties
-hola.txt
+# ══════════════════════════════════════════════════════════
+# .gitignore — raíz del proyecto
+# ══════════════════════════════════════════════════════════
+
+# ── Secretos — NUNCA en Git ────────────────────────────────
+.env
+*.env.local
+application-prod.properties
+application-dev.properties
+**/certs/private_key.pem
+**/certs/public_key.pem
+
+# ── Build artifacts ────────────────────────────────────────
+**/target/
+**/build/
+**/.gradle/
+*.war
+*.class
+
+
+# ── Android ───────────────────────────────────────────────
+**/local.properties
+**/google-services.json
+**/*.keystore
+**/*.jks
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/

@@ -37,6 +37,10 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
         @EntityGraph(attributePaths = "owner")
         Page<CustomParameterEntity> findByIsActiveTrue(Pageable pageable);
 
+        @EntityGraph(attributePaths = "owner")
+        Optional<CustomParameterEntity> findByNameAndIsGlobalTrue(String name);
+
+
         @Query("SELECT cp FROM CustomParameterEntity cp " +
                         "LEFT JOIN FETCH cp.owner " +
                         "WHERE (:search IS NULL OR LOWER(cp.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
@@ -64,4 +68,6 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
 
         @Query("SELECT cp FROM CustomParameterEntity cp LEFT JOIN FETCH cp.owner WHERE cp.isActive = true AND (cp.isGlobal = true OR cp.owner.id = :userId)")
         Page<CustomParameterEntity> findAvailableForUser(@Param("userId") Long userId, Pageable pageable);
+
+        long countByIsGlobalTrue();
 }
