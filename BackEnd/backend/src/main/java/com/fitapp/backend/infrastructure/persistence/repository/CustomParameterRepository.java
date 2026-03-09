@@ -19,6 +19,9 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
 
         long countByOwnerId(Long ownerId);
 
+        @Query("SELECT cp.id FROM CustomParameterEntity cp WHERE cp.name = :name AND cp.isGlobal = true")
+        Optional<Long> findIdByNameAndIsGlobalTrue(@Param("name") String name);
+
         @EntityGraph(attributePaths = "owner")
         Optional<CustomParameterEntity> findById(Long id);
 

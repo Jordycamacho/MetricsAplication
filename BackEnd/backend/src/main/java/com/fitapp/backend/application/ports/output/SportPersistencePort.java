@@ -13,6 +13,7 @@ public interface SportPersistencePort {
     long countByCreatedBy(Long userId);
     List<SportModel> findAll();
     Page<SportModel> findAll(Pageable pageable);
+    Optional<Long> findIdByName(String name);
     Page<SportModel> findByFilters(SportFilterRequest filters, Pageable pageable);
     Page<SportModel> searchSports(String search, Pageable pageable);
     List<SportModel> findByIsPredefinedTrue();

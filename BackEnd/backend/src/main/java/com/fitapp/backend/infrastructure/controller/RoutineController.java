@@ -1,6 +1,7 @@
 package com.fitapp.backend.infrastructure.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,8 @@ import com.fitapp.backend.application.dto.routine.response.RoutineResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineStatisticsResponse;
 import com.fitapp.backend.application.dto.routine.response.RoutineSummaryResponse;
 import com.fitapp.backend.application.ports.input.RoutineUseCase;
+import com.fitapp.backend.application.service.defaults.DefaultRoutineService;
+import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Routines", description = "Routine management endpoints")
 public class RoutineController {
     private final RoutineUseCase routineUseCase;
+    private final DefaultRoutineService defaultRoutineService;
 
     @Operation(summary = "Create a new routine", description = "Creates a personalized workout routine for the authenticated user", responses = {
             @ApiResponse(responseCode = "200", description = "Routine created successfully", content = @Content(schema = @Schema(implementation = RoutineResponse.class))),
@@ -89,6 +93,23 @@ public class RoutineController {
         PageResponse<RoutineSummaryResponse> response = routineUseCase.getUserRoutines(
                 userEmail, page, size, sortBy, sortDirection);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/generate-default")
+    public ResponseEntity<Map<String, Long>> generateDefault(
+            @RequestParam String type,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String userEmail = jwt.getClaimAsString("email");
+
+        RoutineModel routine = switch (type.toUpperCase()) {
+            case "GYM" -> defaultRoutineService.generateGymRoutine(userEmail);
+            case "BOXING" -> defaultRoutineService.generateBoxingRoutine(userEmail);
+            default -> throw new IllegalArgumentException("Tipo no soportado: " + type);
+        };
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("routineId", routine.getId()));
     }
 
     @Operation(summary = "Obtener rutina para entrenamiento", description = "Devuelve la rutina completa con ejercicios, sets y parámetros, lista para ser ejecutada en un entrenamiento")

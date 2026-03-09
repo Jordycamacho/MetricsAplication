@@ -12,6 +12,7 @@ public interface ExercisePersistencePort {
 
     // --- Queries ---
     Optional<ExerciseModel> findById(Long id);
+    Optional<Long> findIdByName(String name);
     String findNameById(Long exerciseId);
     Page<ExerciseModel> findAll(Pageable pageable);
     Page<ExerciseModel> findByFilters(ExerciseFilterRequest filters, Pageable pageable);

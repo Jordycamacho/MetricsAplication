@@ -42,6 +42,11 @@ public class ExercisePersistenceAdapter implements ExercisePersistencePort {
     }
 
     @Override
+    public Optional<Long> findIdByName(String name) {
+        return exerciseRepository.findIdByName(name);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<ExerciseModel> findAll(Pageable pageable) {
         return exerciseRepository.findAll(pageable).map(exerciseConverter::toDomain);

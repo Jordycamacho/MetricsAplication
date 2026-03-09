@@ -18,7 +18,11 @@ import java.util.Optional;
 @Repository
 public interface SportRepository extends JpaRepository<SportEntity, Long>, JpaSpecificationExecutor<SportEntity> {
 
+        @Query("SELECT COUNT(s) FROM SportEntity s WHERE s.createdBy.id = :createdById")
         long countByCreatedById(Long createdById);
+
+        @Query("SELECT s.id FROM SportEntity s WHERE s.name = :name")
+        Optional<Long> findIdByName(@Param("name") String name);
 
         @Query("SELECT s FROM SportEntity s WHERE " +
                         "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +

@@ -13,6 +13,7 @@ public interface CustomParameterPersistencePort {
     Optional<CustomParameterModel> findById(Long id);
     long countByOwnerId(Long userId);
     List<CustomParameterModel> findAll();
+    Optional<Long> findIdByNameAndGlobal(String name);
     Page<CustomParameterModel> findAll(Pageable pageable);
     Page<CustomParameterModel> findByFilters(CustomParameterFilterRequest filters, Pageable pageable);
     Optional<CustomParameterModel> findByNameAndOwnerIdAndSportId(String name, Long ownerId);

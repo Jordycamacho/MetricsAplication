@@ -22,6 +22,8 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, J
 
         long countByUserId(Long userId);
 
+        boolean existsByName(String name);
+
         @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
         Optional<RoutineEntity> findByIdAndUserId(Long id, Long userId);
 

@@ -193,4 +193,10 @@ public class CustomParameterPersistenceAdapter implements CustomParameterPersist
         log.debug("PERSISTENCE_COUNT_PARAMETERS_BY_OWNER | ownerId={}", userId);
         return customParameterRepository.countByOwnerId(userId);
     }
+
+    @Override
+    public Optional<Long> findIdByNameAndGlobal(String name) {
+        log.debug("PERSISTENCE_FIND_PARAMETER_ID_BY_NAME_AND_GLOBAL | name={}", name);
+        return customParameterRepository.findIdByNameAndIsGlobalTrue(name);
+    }
 }
