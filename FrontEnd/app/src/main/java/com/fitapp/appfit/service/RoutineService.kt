@@ -24,6 +24,11 @@ interface RoutineService {
     @DELETE("api/routines/{id}")
     suspend fun deleteRoutine(@Path("id") id: Long): Response<Unit>
 
+    @POST("api/routines/generate-default")
+    suspend fun generateDefaultRoutine(
+        @Query("type") type: String
+    ): Response<Map<String, Long>>
+
     // Listados
     @GET("api/routines")
     suspend fun getRoutines(

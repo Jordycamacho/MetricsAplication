@@ -62,6 +62,9 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
     private val _routineStatisticsState = MutableLiveData<Resource<RoutineStatisticsResponse>>()
     val routineStatisticsState: LiveData<Resource<RoutineStatisticsResponse>> = _routineStatisticsState
 
+    private val _generateDefaultState = MutableLiveData<Resource<Map<String, Long>>>()
+    val generateDefaultState: LiveData<Resource<Map<String, Long>>> = _generateDefaultState
+
     private val _anyUpdateEvent = MutableLiveData<Unit>()
     val anyUpdateEvent: LiveData<Unit> = _anyUpdateEvent
 
@@ -91,6 +94,12 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
 
     fun deleteRoutine(id: Long) = launch(_deleteRoutineState) {
         repository.deleteRoutine(id).also { if (it is Resource.Success) _anyUpdateEvent.postValue(Unit) }
+    }
+
+    fun generateDefaultRoutine(type: String) = launch(_generateDefaultState) {
+        repository.generateDefaultRoutine(type).also {
+            if (it is Resource.Success) _anyUpdateEvent.postValue(Unit)
+        }
     }
 
     // ── Listados ──────────────────────────────────────────────────────────────

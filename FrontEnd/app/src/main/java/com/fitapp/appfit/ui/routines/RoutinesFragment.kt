@@ -82,6 +82,12 @@ class RoutinesFragment : Fragment() {
         binding.fabCreateRoutine.setOnClickListener {
             findNavController().navigate(R.id.navigation_create_routine)
         }
+        binding.btnGenerateGym.setOnClickListener {
+            routineViewModel.generateDefaultRoutine("GYM")
+        }
+        binding.btnGenerateBoxing.setOnClickListener {
+            routineViewModel.generateDefaultRoutine("BOXING")
+        }
     }
 
     // ── Observadores ─────────────────────────────────────────────────────────
@@ -110,9 +116,31 @@ class RoutinesFragment : Fragment() {
             }
         }
 
-        // Recarga automática tras cualquier mutación (crear, editar, eliminar, toggle)
         routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
             loadRoutines()
+        }
+
+        routineViewModel.generateDefaultState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Loading -> {
+                    showLoading()
+                    binding.btnGenerateGym.isEnabled = false
+                    binding.btnGenerateBoxing.isEnabled = false
+                }
+                is Resource.Success -> {
+                    hideLoading()
+                    binding.btnGenerateGym.isEnabled = true
+                    binding.btnGenerateBoxing.isEnabled = true
+                    Toast.makeText(requireContext(), "Rutina creada", Toast.LENGTH_SHORT).show()
+                    loadRoutines()
+                }
+                is Resource.Error -> {
+                    hideLoading()
+                    binding.btnGenerateGym.isEnabled = true
+                    binding.btnGenerateBoxing.isEnabled = true
+                    Toast.makeText(requireContext(), resource.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -169,13 +197,18 @@ class RoutinesFragment : Fragment() {
     private fun showList(routines: List<RoutineSummaryResponse>) {
         binding.recyclerRoutines.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
+        binding.btnGenerateGym.visibility = View.GONE
+        binding.btnGenerateBoxing.visibility = View.GONE
         routineAdapter.updateRoutines(routines)
     }
 
     private fun showEmpty() {
         binding.recyclerRoutines.visibility = View.GONE
         binding.layoutEmptyState.visibility = View.VISIBLE
+        binding.btnGenerateGym.visibility = View.VISIBLE
+        binding.btnGenerateBoxing.visibility = View.VISIBLE
     }
+
 
     override fun onResume() {
         super.onResume()

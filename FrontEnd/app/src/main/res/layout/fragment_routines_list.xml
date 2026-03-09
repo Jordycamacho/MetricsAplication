@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="@color/background_dark">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1E1E1E"
+            android:background="@color/surface_dark"
             android:paddingHorizontal="16dp"
             android:paddingTop="16dp"
             android:paddingBottom="12dp">
@@ -25,25 +25,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Rutinas"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary_dark"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp" />
 
-            <!-- Buscador -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#121212"
+                app:boxBackgroundColor="@color/background_dark"
                 app:boxCornerRadiusTopStart="10dp"
                 app:boxCornerRadiusTopEnd="10dp"
                 app:boxCornerRadiusBottomStart="10dp"
                 app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333"
+                app:boxStrokeColor="@color/divider_dark"
                 app:boxStrokeWidth="1dp"
                 app:startIconDrawable="@android:drawable/ic_menu_search"
-                app:startIconTint="#78703F"
+                app:startIconTint="@color/gold_primary"
                 android:hint="Buscar rutinas..."
                 app:hintTextColor="#666666"
                 android:layout_marginBottom="4dp">
@@ -52,7 +51,7 @@
                     android:id="@+id/et_search_routines"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary_dark"
                     android:textColorHint="#666666"
                     android:inputType="text"
                     android:imeOptions="actionSearch"
@@ -64,7 +63,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#78703F"
+            android:background="@color/gold_primary"
             android:alpha="0.3" />
 
         <ProgressBar
@@ -74,7 +73,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="32dp"
             android:visibility="gone"
-            android:indeterminateTint="#78703F" />
+            android:indeterminateTint="@color/gold_primary" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_routines"
@@ -83,7 +82,8 @@
             android:paddingTop="8dp"
             android:paddingBottom="80dp"
             android:clipToPadding="false"
-            android:overScrollMode="never" />
+            android:overScrollMode="never"
+            android:visibility="gone" />
 
         <!-- Estado vacío -->
         <LinearLayout
@@ -92,6 +92,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
+            android:paddingHorizontal="32dp"
             android:visibility="gone">
 
             <TextView
@@ -99,25 +100,151 @@
                 android:layout_height="wrap_content"
                 android:text="○"
                 android:textColor="#333333"
-                android:textSize="48sp"
+                android:textSize="56sp"
                 android:layout_marginBottom="12dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sin rutinas"
-                android:textColor="#666666"
-                android:textSize="15sp"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="18sp"
+                android:textStyle="bold"
                 android:gravity="center" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pulsa + para crear la primera"
-                android:textColor="#444444"
+                android:text="Crea una desde cero o empieza con una rutina predefinida"
+                android:textColor="#555555"
                 android:textSize="13sp"
                 android:gravity="center"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="32dp" />
+
+            <!-- Separador con texto -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="20dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#2A2A2A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  SUGERENCIAS  "
+                    android:textColor="#444444"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#2A2A2A" />
+            </LinearLayout>
+
+            <!-- Tarjeta Gym -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Push / Pull / Legs"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="5 días · Musculación · Hipertrofia y fuerza"
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_generate_gym"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:text="Generar esta rutina"
+                        android:textColor="#121212"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/gold_primary"
+                        app:cornerRadius="10dp"
+                        android:elevation="0dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Tarjeta Boxeo -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Boxeo — Técnica y Acondicionamiento"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4 días · Boxeo · Técnica y resistencia"
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_generate_boxing"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:text="Generar esta rutina"
+                        android:textColor="@color/gold_primary"
+                        android:textSize="13sp"
+                        app:strokeColor="@color/gold_primary"
+                        app:strokeWidth="1dp"
+                        app:cornerRadius="10dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
@@ -131,7 +258,7 @@
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="80dp"
         android:contentDescription="Crear rutina"
-        app:backgroundTint="#78703F"
+        app:backgroundTint="@color/gold_primary"
         app:tint="#121212"
         android:src="@android:drawable/ic_input_add"
         app:elevation="8dp" />

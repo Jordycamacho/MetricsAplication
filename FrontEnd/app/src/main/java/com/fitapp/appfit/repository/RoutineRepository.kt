@@ -15,18 +15,7 @@ import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 
-/**
- * RoutineRepository con fallback offline.
- *
- * Estrategia por método:
- *  - getRoutines / getLastUsedRoutines / getActiveRoutines → back primero, Room si falla
- *  - getRoutineForTraining → back primero, Room si falla (reconstruye RoutineResponse completa)
- *  - getRoutineStatistics → back primero, Room si falla (calcula local)
- *  - create / update / delete / toggleActive → solo back (gestionado por SyncWorker offline)
- *
- * IMPORTANTE: el constructor requiere Context para acceder a Room.
- * Actualiza RoutineViewModel para pasarlo: RoutineRepository(application)
- */
+
 class RoutineRepository(private val context: Context) {
 
     private val service = RoutineService.instance
@@ -52,6 +41,9 @@ class RoutineRepository(private val context: Context) {
 
     suspend fun toggleRoutineActiveStatus(id: Long, active: Boolean) =
         callUnit { service.toggleRoutineActiveStatus(id, active) }
+
+    suspend fun generateDefaultRoutine(type: String) =
+        call { service.generateDefaultRoutine(type) }
 
     suspend fun markRoutineAsUsed(id: Long) =
         callUnit { service.markRoutineAsUsed(id) }
