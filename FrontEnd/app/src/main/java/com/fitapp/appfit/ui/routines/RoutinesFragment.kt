@@ -18,6 +18,7 @@ import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.response.routine.response.RoutineSummaryResponse
 import com.fitapp.appfit.ui.routines.adapter.RoutineAdapter
 import com.fitapp.appfit.utils.Resource
+import java.util.concurrent.atomic.AtomicBoolean
 
 class RoutinesFragment : Fragment() {
 
@@ -26,6 +27,8 @@ class RoutinesFragment : Fragment() {
 
     private val routineViewModel: RoutineViewModel by viewModels()
     private lateinit var routineAdapter: RoutineAdapter
+
+    private val generationLock = AtomicBoolean(false)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -43,8 +46,6 @@ class RoutinesFragment : Fragment() {
         setupNavigationResults()
     }
 
-    // ── RecyclerView ──────────────────────────────────────────────────────────
-
     private fun setupRecyclerView() {
         routineAdapter = RoutineAdapter(
             onItemClick = { navigateToExercises(it) },
@@ -59,49 +60,54 @@ class RoutinesFragment : Fragment() {
         }
     }
 
-    // ── Búsqueda ──────────────────────────────────────────────────────────────
-
     private fun setupSearch() {
         binding.etSearchRoutines.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 val query = s?.toString()?.trim() ?: ""
-                if (query.isEmpty()) {
-                    loadRoutines()
-                } else {
-                    routineViewModel.getRoutinesWithFilters(name = query)
-                }
+                if (query.isEmpty()) routineViewModel.getRoutines(0, 20)
+                else routineViewModel.getRoutinesWithFilters(name = query)
             }
         })
     }
-
-    // ── FAB ───────────────────────────────────────────────────────────────────
 
     private fun setupFab() {
         binding.fabCreateRoutine.setOnClickListener {
             findNavController().navigate(R.id.navigation_create_routine)
         }
         binding.btnGenerateGym.setOnClickListener {
-            routineViewModel.generateDefaultRoutine("GYM")
+            if (generationLock.compareAndSet(false, true)) {
+                lockGenerateButtons()
+                routineViewModel.generateDefaultRoutine("GYM")
+            }
         }
         binding.btnGenerateBoxing.setOnClickListener {
-            routineViewModel.generateDefaultRoutine("BOXING")
+            if (generationLock.compareAndSet(false, true)) {
+                lockGenerateButtons()
+                routineViewModel.generateDefaultRoutine("BOXING")
+            }
         }
     }
 
-    // ── Observadores ─────────────────────────────────────────────────────────
-
     private fun setupObservers() {
+
         routineViewModel.routinesListState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
-                is Resource.Loading -> showLoading()
+                is Resource.Loading -> {
+                    if (!generationLock.get()) {
+                        binding.progressBar.visibility = View.VISIBLE
+                        binding.recyclerRoutines.visibility = View.GONE
+                        binding.layoutEmptyState.visibility = View.GONE
+                    }
+                }
                 is Resource.Success -> {
-                    hideLoading()
+                    generationLock.set(false)
                     val list = resource.data?.content ?: emptyList()
                     if (list.isEmpty()) showEmpty() else showList(list)
                 }
                 is Resource.Error -> {
+                    generationLock.set(false)
                     hideLoading()
                     showEmpty()
                     Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
@@ -110,81 +116,97 @@ class RoutinesFragment : Fragment() {
         }
 
         routineViewModel.filteredRoutinesState.observe(viewLifecycleOwner) { resource ->
-            if (resource is Resource.Success) {
-                val list = resource.data?.content ?: emptyList()
-                if (list.isEmpty()) showEmpty() else showList(list)
+            when (resource) {
+                is Resource.Success -> {
+                    val list = resource.data?.content ?: emptyList()
+                    if (list.isEmpty()) showEmpty() else showList(list)
+                }
+                is Resource.Error -> {
+                    hideLoading()
+                    Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
             }
-        }
-
-        routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
-            loadRoutines()
         }
 
         routineViewModel.generateDefaultState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Loading -> {
-                    showLoading()
-                    binding.btnGenerateGym.isEnabled = false
-                    binding.btnGenerateBoxing.isEnabled = false
+                    binding.progressBar.visibility = View.VISIBLE
                 }
                 is Resource.Success -> {
-                    hideLoading()
-                    binding.btnGenerateGym.isEnabled = true
-                    binding.btnGenerateBoxing.isEnabled = true
-                    Toast.makeText(requireContext(), "Rutina creada", Toast.LENGTH_SHORT).show()
-                    loadRoutines()
+                    binding.layoutEmptyState.visibility = View.GONE
+                    binding.btnGenerateGym.visibility = View.GONE
+                    binding.btnGenerateBoxing.visibility = View.GONE
+                    binding.progressBar.visibility = View.VISIBLE
+                    Toast.makeText(requireContext(), "✓ Rutina creada", Toast.LENGTH_SHORT).show()
                 }
                 is Resource.Error -> {
+                    generationLock.set(false)
                     hideLoading()
-                    binding.btnGenerateGym.isEnabled = true
-                    binding.btnGenerateBoxing.isEnabled = true
-                    Toast.makeText(requireContext(), resource.message, Toast.LENGTH_SHORT).show()
+                    unlockGenerateButtons()
+                    Toast.makeText(requireContext(), resource.message ?: "Error al generar", Toast.LENGTH_LONG).show()
                 }
             }
+        }
+
+        routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
+            routineViewModel.getRoutines(0, 20)
         }
     }
 
-    // ── Resultados de navegación (desde EditRoutine vía SavedStateHandle) ─────
-
     private fun setupNavigationResults() {
         val handle = findNavController().currentBackStackEntry?.savedStateHandle
-
         handle?.getLiveData<Boolean>(NavigationKeys.ROUTINE_UPDATED)?.observe(viewLifecycleOwner) { updated ->
             if (updated == true) {
-                loadRoutines()
+                routineViewModel.getRoutines(0, 20)
                 handle.remove<Boolean>(NavigationKeys.ROUTINE_UPDATED)
             }
         }
-
         handle?.getLiveData<Boolean>(NavigationKeys.ROUTINE_DELETED)?.observe(viewLifecycleOwner) { deleted ->
             if (deleted == true) {
-                loadRoutines()
+                routineViewModel.getRoutines(0, 20)
                 handle.remove<Boolean>(NavigationKeys.ROUTINE_DELETED)
             }
         }
     }
 
-    // ── Navegación ────────────────────────────────────────────────────────────
-
     private fun editRoutine(routine: RoutineSummaryResponse) {
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationEditRoutine(routine.id)
-        findNavController().navigate(action)
+        findNavController().navigate(
+            RoutinesFragmentDirections.actionNavigationRoutinesToNavigationEditRoutine(routine.id)
+        )
     }
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
         routineViewModel.markRoutineAsUsed(routine.id)
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToNavigationWorkout(routine.id)
-        findNavController().navigate(action)
+        findNavController().navigate(
+            RoutinesFragmentDirections.actionNavigationRoutinesToNavigationWorkout(routine.id)
+        )
     }
 
     private fun navigateToExercises(routine: RoutineSummaryResponse) {
-        val action = RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
-        findNavController().navigate(action)
+        findNavController().navigate(
+            RoutinesFragmentDirections.actionNavigationRoutinesToRoutineExercises(routine.id)
+        )
     }
 
-    // ── UI helpers ────────────────────────────────────────────────────────────
+    private fun lockGenerateButtons() {
+        binding.btnGenerateGym.isEnabled = false
+        binding.btnGenerateBoxing.isEnabled = false
+        binding.btnGenerateGym.alpha = 0.4f
+        binding.btnGenerateBoxing.alpha = 0.4f
+        binding.btnGenerateGym.text = "Generando..."
+        binding.btnGenerateBoxing.text = "Generando..."
+    }
 
-    private fun loadRoutines() { routineViewModel.getRoutines(page = 0, size = 20) }
+    private fun unlockGenerateButtons() {
+        binding.btnGenerateGym.isEnabled = true
+        binding.btnGenerateBoxing.isEnabled = true
+        binding.btnGenerateGym.alpha = 1f
+        binding.btnGenerateBoxing.alpha = 1f
+        binding.btnGenerateGym.text = "Generar esta rutina"
+        binding.btnGenerateBoxing.text = "Generar esta rutina"
+    }
 
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
@@ -192,9 +214,12 @@ class RoutinesFragment : Fragment() {
         binding.layoutEmptyState.visibility = View.GONE
     }
 
-    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
+    }
 
     private fun showList(routines: List<RoutineSummaryResponse>) {
+        binding.progressBar.visibility = View.GONE
         binding.recyclerRoutines.visibility = View.VISIBLE
         binding.layoutEmptyState.visibility = View.GONE
         binding.btnGenerateGym.visibility = View.GONE
@@ -203,16 +228,19 @@ class RoutinesFragment : Fragment() {
     }
 
     private fun showEmpty() {
+        binding.progressBar.visibility = View.GONE
         binding.recyclerRoutines.visibility = View.GONE
-        binding.layoutEmptyState.visibility = View.VISIBLE
-        binding.btnGenerateGym.visibility = View.VISIBLE
-        binding.btnGenerateBoxing.visibility = View.VISIBLE
+        if (!generationLock.get()) {
+            binding.layoutEmptyState.visibility = View.VISIBLE
+            unlockGenerateButtons()
+            binding.btnGenerateGym.visibility = View.VISIBLE
+            binding.btnGenerateBoxing.visibility = View.VISIBLE
+        }
     }
-
 
     override fun onResume() {
         super.onResume()
-        loadRoutines()
+        routineViewModel.getRoutines(0, 20)
     }
 
     override fun onDestroyView() {
