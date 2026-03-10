@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.ksp)                           // ← KSP en vez de kapt (Kotlin 2.0+)
+    alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
@@ -19,15 +19,41 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // ── Entornos ──────────────────────────────────────────────────────────────
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.14:8080/\"")
+        }
+        create("local") {
+            dimension = "environment"
+            applicationIdSuffix = ".local"
+            versionNameSuffix = "-local"
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.14:8082/\"")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE_URL", "\"https://api.jnobfit.online/\"")
+        }
+    }
+
+    // ── Tipos de build ────────────────────────────────────────────────────────
     buildTypes {
+        debug {
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -77,15 +103,15 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 
-    // ── OFFLINE: Room ─────────────────────────────────────────
+    // ── OFFLINE: Room ──────────────────────────────────────────────────────────
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)                         // genera el código de Room
+    ksp(libs.androidx.room.compiler)
 
-    // ── OFFLINE: WorkManager ──────────────────────────────────
+    // ── OFFLINE: WorkManager ───────────────────────────────────────────────────
     implementation(libs.androidx.work.runtime.ktx)
 
-    // ── OFFLINE: Gson (serializar cola de sync) ───────────────
+    // ── OFFLINE: Gson ──────────────────────────────────────────────────────────
     implementation(libs.gson)
 
     // Testing

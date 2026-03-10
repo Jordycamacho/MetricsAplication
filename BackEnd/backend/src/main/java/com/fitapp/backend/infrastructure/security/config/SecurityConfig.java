@@ -5,6 +5,8 @@ import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +49,9 @@ public class SecurityConfig {
         @Value("${jwt.secret}")
         private String jwtSecret;
 
+        @Value("${cors.allowed-origins}")
+        private String allowedOrigins;
+
         private final JwtAuthConverter jwtAuthConverter;
         private final OAuth2SuccessHandler oAuth2SuccessHandler;
         private final UserDetailsService userDetailsService;
@@ -84,6 +89,7 @@ public class SecurityConfig {
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
                                                                 "/actuator/health",
+                                                                "/actuator/prometheus",
                                                                 "/error")
                                                 .permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -126,12 +132,11 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:3000",
-                                "https://appfit.prod",
-                                "http://10.0.2.2:8080",
-                                "http://localhost:8080"));
-                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                
+                List<String> origins = Arrays.asList(allowedOrigins.split(","));
+                configuration.setAllowedOrigins(origins);
+
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                 configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
                 configuration.setExposedHeaders(Arrays.asList("X-Auth-Token", "Authorization"));
                 configuration.setAllowCredentials(true);
