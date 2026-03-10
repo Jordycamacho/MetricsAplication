@@ -40,7 +40,6 @@ build/
 # ── Secretos — NUNCA en Git ────────────────────────────────
 .env
 *.env.local
-application-prod.properties
 application-dev.properties
 **/certs/private_key.pem
 **/certs/public_key.pem
