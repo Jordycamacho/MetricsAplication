@@ -1,0 +1,60 @@
+version: '3.9'
+services:
+  # ── Base de datos PostgreSQL ───────────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: fitapp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fitapp_prod
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d fitapp_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fitapp-network
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: fitapp-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fitapp-network
+
+  # ── Backend Spring Boot ────────────────────────────────────────────────────
+  app:
+    build: .
+    container_name: fitapp-backend
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8082:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fitapp-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  fitapp-network:
+    driver: bridge
