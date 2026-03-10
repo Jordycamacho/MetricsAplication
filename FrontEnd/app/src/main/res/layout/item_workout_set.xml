@@ -281,7 +281,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="@drawable/bg_rest_timer_block"
+                android:background="@drawable/bg_badge_gold"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="9dp"
                 android:clickable="true"
@@ -294,7 +294,7 @@
                     android:layout_weight="1"
                     android:text="60s descanso"
                     android:textSize="13sp"
-                    android:textColor="@color/text_secondary_dark"
+                    android:textColor="@color/black"
                     android:textStyle="bold"/>
 
                 <TextView
@@ -303,7 +303,7 @@
                     android:layout_height="wrap_content"
                     android:text="TAP"
                     android:textSize="9sp"
-                    android:textColor="@color/gold_primary"
+                    android:textColor="@color/black"
                     android:textAllCaps="true"
                     android:letterSpacing="0.10"
                     android:alpha="0.7"/>
