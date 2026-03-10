@@ -57,62 +57,6 @@
             android:paddingTop="28dp"
             android:paddingBottom="32dp">
 
-            <!--
-                Botón Google al principio del registro — es más natural
-                que el usuario lo vea antes de rellenar el formulario.
-            -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_google_register"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginBottom="8dp"
-                android:text="Registrarse con Google"
-                android:textColor="#CCCCCC"
-                android:textSize="14sp"
-                android:letterSpacing="0.02"
-                app:icon="@drawable/ic_google"
-                app:iconGravity="textStart"
-                app:iconTint="@null"
-                app:iconSize="20dp"
-                app:iconPadding="12dp"
-                app:strokeColor="#333333"
-                app:strokeWidth="1dp"
-                app:cornerRadius="12dp"
-                app:rippleColor="#1A78703F"
-                android:backgroundTint="#1E1E1E" />
-
-            <!-- Separador "o regístrate con correo" -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="24dp">
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#2A2A2A" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="  o con correo  "
-                    android:textColor="#555555"
-                    android:textSize="12sp"
-                    android:letterSpacing="0.04" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#2A2A2A" />
-
-            </LinearLayout>
-
             <!-- Nombre completo -->
             <TextView
                 android:layout_width="wrap_content"
@@ -125,6 +69,7 @@
                 android:layout_marginBottom="6dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_full_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
@@ -137,15 +82,18 @@
                 app:boxStrokeColor="#333333"
                 app:boxStrokeWidth="1dp"
                 app:hintTextColor="#666666"
-                android:hint="Tu nombre"
-                app:errorEnabled="true">
+                android:hint="Tu nombre completo"
+                app:errorEnabled="true"
+                app:counterEnabled="true"
+                app:counterMaxLength="50">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_full_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#FFFFFF"
-                    android:inputType="textPersonName"
+                    android:inputType="textPersonName|textCapWords"
+                    android:maxLength="50"
                     android:paddingVertical="14dp" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -162,6 +110,7 @@
                 android:layout_marginBottom="6dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
@@ -199,9 +148,10 @@
                 android:layout_marginBottom="6dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="20dp"
                 app:boxBackgroundMode="outline"
                 app:boxBackgroundColor="#1E1E1E"
                 app:boxCornerRadiusTopStart="10dp"
@@ -214,10 +164,52 @@
                 android:hint="Mínimo 6 caracteres"
                 app:passwordToggleEnabled="true"
                 app:passwordToggleTint="#78703F"
-                app:errorEnabled="true">
+                app:errorEnabled="true"
+                app:helperText="Usa letras y números para mayor seguridad"
+                app:helperTextTextColor="#555555">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textPassword"
+                    android:paddingVertical="14dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Confirmar contraseña -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CONFIRMAR CONTRASEÑA"
+                android:textColor="@color/gold_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_confirm_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="#1E1E1E"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxStrokeColor="#333333"
+                app:boxStrokeWidth="1dp"
+                app:hintTextColor="#666666"
+                android:hint="Repite tu contraseña"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="#78703F"
+                app:errorEnabled="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_confirm_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#FFFFFF"

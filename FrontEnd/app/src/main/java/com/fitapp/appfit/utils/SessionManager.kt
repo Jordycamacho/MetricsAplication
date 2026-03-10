@@ -63,7 +63,7 @@ object SessionManager {
             Timber.e(e, "Error parseando expiresAt: ${authResponse.expiresAt}")
             0L
         }
-        Timber.i("Sesión guardada - Token expira en: ${Date(authResponse.expiresAt)}")
+        Timber.i("Sesión guardada - Token expira en: ${Date(tokenExpiration)}")
     }
 
     fun shouldRefresh(): Boolean {
