@@ -4,6 +4,9 @@ import com.fitapp.backend.application.ports.output.*;
 import com.fitapp.backend.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,28 +21,35 @@ import java.util.stream.Collectors;
  * al generator — así el modelo de dominio solo trabaja con IDs, sin nombres.
  *
  * Flujo (igual que el manual del usuario):
- *   1. Crear rutina base              → RoutinePersistencePort.save
- *   2. Crear cada RoutineExercise     → RoutineExercisePersistencePort.save
- *   3. Crear sets + parámetros        → setTemplatePersistencePort + setParameterPersistencePort
+ * 1. Crear rutina base → RoutinePersistencePort.save
+ * 2. Crear cada RoutineExercise → RoutineExercisePersistencePort.save
+ * 3. Crear sets + parámetros → setTemplatePersistencePort +
+ * setParameterPersistencePort
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DefaultRoutineService {
 
-    private final RoutinePersistencePort             routinePersistencePort;
-    private final RoutineExercisePersistencePort     routineExercisePersistencePort;
-    private final RoutineSetTemplatePersistencePort  setTemplatePersistencePort;
+    private final RoutinePersistencePort routinePersistencePort;
+    private final RoutineExercisePersistencePort routineExercisePersistencePort;
+    private final RoutineSetTemplatePersistencePort setTemplatePersistencePort;
     private final RoutineSetParameterPersistencePort setParameterPersistencePort;
-    private final ExercisePersistencePort            exercisePersistencePort;
-    private final SportPersistencePort               sportPersistencePort;
-    private final CustomParameterPersistencePort     parameterPersistencePort;
-    private final UserPersistencePort                userPersistencePort;
-    private final DefaultRoutineGenerator            generator;
+    private final ExercisePersistencePort exercisePersistencePort;
+    private final SportPersistencePort sportPersistencePort;
+    private final CustomParameterPersistencePort parameterPersistencePort;
+    private final UserPersistencePort userPersistencePort;
+    private final DefaultRoutineGenerator generator;
 
     // ── API pública ───────────────────────────────────────────────────────────
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true)
+    })
     public RoutineModel generateGymRoutine(String userEmail) {
         log.info("GENERATE_GYM_ROUTINE | userEmail={}", userEmail);
 
@@ -47,7 +57,7 @@ public class DefaultRoutineService {
         Long gymSportId = sportPersistencePort.findIdByName("Musculación")
                 .orElseThrow(() -> new IllegalStateException("Sport 'Musculación' no encontrado"));
 
-        Map<String, Long> paramIds    = resolveParamIds("Repeticiones", "Peso", "Duración");
+        Map<String, Long> paramIds = resolveParamIds("Repeticiones", "Peso", "Duración");
         Map<String, Long> exerciseIds = resolveExerciseIds(GYM_EXERCISE_NAMES);
 
         RoutineModel saved = persistRoutine(
@@ -58,6 +68,12 @@ public class DefaultRoutineService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true)
+    })
     public RoutineModel generateBoxingRoutine(String userEmail) {
         log.info("GENERATE_BOXING_ROUTINE | userEmail={}", userEmail);
 
@@ -65,7 +81,7 @@ public class DefaultRoutineService {
         Long boxeoSportId = sportPersistencePort.findIdByName("Boxeo")
                 .orElseThrow(() -> new IllegalStateException("Sport 'Boxeo' no encontrado"));
 
-        Map<String, Long> paramIds    = resolveParamIds("Repeticiones", "Peso", "Duración");
+        Map<String, Long> paramIds = resolveParamIds("Repeticiones", "Peso", "Duración");
         Map<String, Long> exerciseIds = resolveExerciseIds(BOXING_EXERCISE_NAMES);
 
         RoutineModel saved = persistRoutine(
@@ -137,7 +153,6 @@ public class DefaultRoutineService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
     }
 
-
     private Map<String, Long> resolveParamIds(String... names) {
         return java.util.Arrays.stream(names).collect(Collectors.toMap(
                 name -> name,
@@ -168,8 +183,7 @@ public class DefaultRoutineService {
             "Encogimientos de Hombros con Mancuernas",
             "Tijeras", "Plancha Lateral", "Elevación de Piernas Colgado",
             "Sentadilla Búlgara", "Curl Femoral Acostado", "Dominadas",
-            "Pullover con Mancuerna", "Remo en Máquina"
-    );
+            "Pullover con Mancuerna", "Remo en Máquina");
 
     private static final List<String> BOXING_EXERCISE_NAMES = List.of(
             "Salto a la Comba", "Shadowboxing", "Jab – Cross",
@@ -178,6 +192,5 @@ public class DefaultRoutineService {
             "Burpees", "Rounds de Saco (Cardio)", "Planchas con Rotación",
             "Medicine Ball Slam", "Mountain Climbers",
             "Combinaciones en Saco", "Defensa y Contraataque", "Sprints de Velocidad",
-            "Press Militar con Barra", "Dominadas"
-    );
+            "Press Militar con Barra", "Dominadas");
 }

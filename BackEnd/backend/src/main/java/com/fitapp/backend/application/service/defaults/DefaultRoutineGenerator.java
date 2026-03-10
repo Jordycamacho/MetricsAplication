@@ -16,6 +16,13 @@ import java.util.*;
  *
  * exerciseIds → Map<nombreEjercicio, exerciseId>
  * paramIds → Map<nombreParámetro, parameterId>
+ *
+ * Regla de descanso:
+ * - Sets intermedios → descanso definido por tipo (90s normal, 45s circuito,
+ * etc.)
+ * - Último set de un ejercicio → null (el descanso lo gestiona
+ * restAfterExercise)
+ * - restAfterExercise = 0 → se sustituye por 120s
  */
 @Component
 public class DefaultRoutineGenerator {
@@ -49,16 +56,14 @@ public class DefaultRoutineGenerator {
                                 weightedSets(4, 6, 60.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Press Inclinado con Barra", DayOfWeek.MONDAY, 2, 90,
                                 weightedSets(4, 8, 50.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Fondos en Paralelas", DayOfWeek.MONDAY, 3, 90,
-                                bodySets(3, 8, repsId)));
+                exercises.add(ex(exerciseIds, "Fondos en Paralelas", DayOfWeek.MONDAY, 3, 90, bodySets(3, 8, repsId)));
                 exercises.add(ex(exerciseIds, "Fly con Mancuernas", DayOfWeek.MONDAY, 4, 60,
                                 weightedSets(3, 10, 14.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Skull Crushers", DayOfWeek.MONDAY, 5, 75,
                                 weightedSets(4, 8, 20.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Jalón de Tríceps con Cuerda", DayOfWeek.MONDAY, 6, 60,
                                 dropSets(4, 12, 15.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Fondos en Banco", DayOfWeek.MONDAY, 7, 0,
-                                bodySets(3, 12, repsId)));
+                exercises.add(ex(exerciseIds, "Fondos en Banco", DayOfWeek.MONDAY, 7, 120, bodySets(3, 12, repsId)));
 
                 // ── Martes: Pierna + Abdomen (circuito) ───────────────────────────────
                 exercises.add(ex(exerciseIds, "Sentadilla con Barra", DayOfWeek.TUESDAY, 1, 120,
@@ -73,11 +78,10 @@ public class DefaultRoutineGenerator {
                                 weightedSets(4, 15, 20.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Crunch Declinado con Peso", DayOfWeek.TUESDAY, 6, 90,
                                 circuitWeightedSets(3, 15, 5.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Plancha", DayOfWeek.TUESDAY, 7, 60,
-                                plankSets(3, 60L, duracionId)));
+                exercises.add(ex(exerciseIds, "Plancha", DayOfWeek.TUESDAY, 7, 60, plankSets(3, 60L, duracionId)));
                 exercises.add(ex(exerciseIds, "Rueda Abdominal", DayOfWeek.TUESDAY, 8, 60,
                                 circuitBodySets(3, 10, repsId)));
-                exercises.add(ex(exerciseIds, "Crunch Lateral", DayOfWeek.TUESDAY, 9, 0,
+                exercises.add(ex(exerciseIds, "Crunch Lateral", DayOfWeek.TUESDAY, 9, 120,
                                 circuitBodySets(3, 15, repsId)));
 
                 // ── Miércoles: Espalda + Bíceps ───────────────────────────────────────
@@ -93,7 +97,7 @@ public class DefaultRoutineGenerator {
                                 weightedSets(4, 8, 30.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Curl con Mancuernas Tipo Martillo", DayOfWeek.WEDNESDAY, 6, 60,
                                 weightedSets(3, 10, 12.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Curl Inclinado con Mancuernas", DayOfWeek.WEDNESDAY, 7, 0,
+                exercises.add(ex(exerciseIds, "Curl Inclinado con Mancuernas", DayOfWeek.WEDNESDAY, 7, 120,
                                 weightedSets(3, 12, 10.0, repsId, pesoId)));
 
                 // ── Jueves: Hombros + Abdomen (circuito) ──────────────────────────────
@@ -105,11 +109,10 @@ public class DefaultRoutineGenerator {
                                 weightedSets(3, 12, 8.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Encogimientos de Hombros con Mancuernas", DayOfWeek.THURSDAY, 4, 45,
                                 weightedSets(4, 15, 20.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Tijeras", DayOfWeek.THURSDAY, 5, 75,
-                                circuitBodySets(3, 20, repsId)));
+                exercises.add(ex(exerciseIds, "Tijeras", DayOfWeek.THURSDAY, 5, 75, circuitBodySets(3, 20, repsId)));
                 exercises.add(ex(exerciseIds, "Plancha Lateral", DayOfWeek.THURSDAY, 6, 60,
                                 plankSets(3, 45L, duracionId)));
-                exercises.add(ex(exerciseIds, "Elevación de Piernas Colgado", DayOfWeek.THURSDAY, 7, 0,
+                exercises.add(ex(exerciseIds, "Elevación de Piernas Colgado", DayOfWeek.THURSDAY, 7, 120,
                                 circuitBodySets(3, 10, repsId)));
 
                 // ── Viernes: Pierna + Espalda ─────────────────────────────────────────
@@ -121,13 +124,12 @@ public class DefaultRoutineGenerator {
                                 weightedSets(4, 8, 120.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Elevación de Talones de Pie", DayOfWeek.FRIDAY, 4, 45,
                                 weightedSets(4, 15, 20.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Dominadas", DayOfWeek.FRIDAY, 5, 90,
-                                bodySets(4, 8, repsId)));
+                exercises.add(ex(exerciseIds, "Dominadas", DayOfWeek.FRIDAY, 5, 90, bodySets(4, 8, repsId)));
                 exercises.add(ex(exerciseIds, "Remo con Barra", DayOfWeek.FRIDAY, 6, 75,
                                 weightedSets(4, 6, 60.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Pullover con Mancuerna", DayOfWeek.FRIDAY, 7, 60,
                                 weightedSets(3, 10, 18.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Remo en Máquina", DayOfWeek.FRIDAY, 8, 0,
+                exercises.add(ex(exerciseIds, "Remo en Máquina", DayOfWeek.FRIDAY, 8, 120,
                                 weightedSets(3, 10, 40.0, repsId, pesoId)));
 
                 routine.setExercises(exercises);
@@ -159,31 +161,28 @@ public class DefaultRoutineGenerator {
                 // ── Lunes: Técnica + Fuerza Upper Body ───────────────────────────────
                 exercises.add(ex(exerciseIds, "Salto a la Comba", DayOfWeek.MONDAY, 1, 60,
                                 roundSets(3, 180L, duracionId)));
-                exercises.add(ex(exerciseIds, "Shadowboxing", DayOfWeek.MONDAY, 2, 60,
-                                roundSets(3, 180L, duracionId)));
-                exercises.add(ex(exerciseIds, "Jab – Cross", DayOfWeek.MONDAY, 3, 60,
-                                techniqueSets(4, 20, repsId)));
+                exercises.add(ex(exerciseIds, "Shadowboxing", DayOfWeek.MONDAY, 2, 60, roundSets(3, 180L, duracionId)));
+                exercises.add(ex(exerciseIds, "Jab – Cross", DayOfWeek.MONDAY, 3, 60, techniqueSets(4, 20, repsId)));
                 exercises.add(ex(exerciseIds, "Combo 1-2-3-2 (Jab-Cross-Hook-Cross)", DayOfWeek.MONDAY, 4, 60,
                                 techniqueSets(4, 15, repsId)));
                 exercises.add(ex(exerciseIds, "Press de Banca con Mancuernas", DayOfWeek.MONDAY, 5, 75,
                                 weightedSets(4, 10, 22.0, repsId, pesoId)));
                 exercises.add(ex(exerciseIds, "Remo con Mancuernas (Boxeo)", DayOfWeek.MONDAY, 6, 60,
                                 weightedSets(3, 12, 18.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Flexiones Explosivas", DayOfWeek.MONDAY, 7, 0,
+                exercises.add(ex(exerciseIds, "Flexiones Explosivas", DayOfWeek.MONDAY, 7, 120,
                                 circuitBodySets(3, 8, repsId)));
 
                 // ── Martes: Acondicionamiento + Core ─────────────────────────────────
                 exercises.add(ex(exerciseIds, "Salto a la Comba", DayOfWeek.TUESDAY, 1, 30,
                                 roundSets(4, 120L, duracionId)));
-                exercises.add(ex(exerciseIds, "Burpees", DayOfWeek.TUESDAY, 2, 60,
-                                hiitSets(4, 10, repsId)));
+                exercises.add(ex(exerciseIds, "Burpees", DayOfWeek.TUESDAY, 2, 60, hiitSets(4, 10, repsId)));
                 exercises.add(ex(exerciseIds, "Rounds de Saco (Cardio)", DayOfWeek.TUESDAY, 3, 60,
                                 roundSets(3, 120L, duracionId)));
                 exercises.add(ex(exerciseIds, "Planchas con Rotación", DayOfWeek.TUESDAY, 4, 90,
                                 circuitBodySets(3, 12, repsId)));
                 exercises.add(ex(exerciseIds, "Medicine Ball Slam", DayOfWeek.TUESDAY, 5, 75,
                                 weightedSets(3, 15, 6.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Mountain Climbers", DayOfWeek.TUESDAY, 6, 0,
+                exercises.add(ex(exerciseIds, "Mountain Climbers", DayOfWeek.TUESDAY, 6, 120,
                                 timedCircuitSets(3, 30L, duracionId)));
 
                 // ── Jueves: Técnica Avanzada + Saco ──────────────────────────────────
@@ -197,21 +196,19 @@ public class DefaultRoutineGenerator {
                                 roundSets(3, 120L, duracionId)));
                 exercises.add(ex(exerciseIds, "Sprints de Velocidad", DayOfWeek.THURSDAY, 5, 90,
                                 sprintSets(4, 30L, duracionId)));
-                exercises.add(ex(exerciseIds, "Planchas con Rotación", DayOfWeek.THURSDAY, 6, 0,
+                exercises.add(ex(exerciseIds, "Planchas con Rotación", DayOfWeek.THURSDAY, 6, 120,
                                 circuitBodySets(3, 15, repsId)));
 
                 // ── Viernes: Fuerza Full Body + Resistencia ───────────────────────────
                 exercises.add(ex(exerciseIds, "Press Militar con Barra", DayOfWeek.FRIDAY, 1, 90,
                                 weightedSets(4, 8, 35.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Dominadas", DayOfWeek.FRIDAY, 2, 90,
-                                bodySets(4, 8, repsId)));
+                exercises.add(ex(exerciseIds, "Dominadas", DayOfWeek.FRIDAY, 2, 90, bodySets(4, 8, repsId)));
                 exercises.add(ex(exerciseIds, "Medicine Ball Slam", DayOfWeek.FRIDAY, 3, 60,
                                 weightedSets(3, 12, 6.0, repsId, pesoId)));
-                exercises.add(ex(exerciseIds, "Burpees", DayOfWeek.FRIDAY, 4, 60,
-                                hiitSets(3, 10, repsId)));
+                exercises.add(ex(exerciseIds, "Burpees", DayOfWeek.FRIDAY, 4, 60, hiitSets(3, 10, repsId)));
                 exercises.add(ex(exerciseIds, "Rounds de Saco (Cardio)", DayOfWeek.FRIDAY, 5, 60,
                                 roundSets(3, 180L, duracionId)));
-                exercises.add(ex(exerciseIds, "Salto a la Comba", DayOfWeek.FRIDAY, 6, 0,
+                exercises.add(ex(exerciseIds, "Salto a la Comba", DayOfWeek.FRIDAY, 6, 120,
                                 roundSets(2, 120L, duracionId)));
 
                 routine.setExercises(exercises);
@@ -238,7 +235,7 @@ public class DefaultRoutineGenerator {
                 re.setDayOfWeek(day);
                 re.setPosition(position);
                 re.setSessionNumber(1);
-                re.setRestAfterExercise(restAfterExercise > 0 ? restAfterExercise : null);
+                re.setRestAfterExercise(restAfterExercise > 0 ? restAfterExercise : 120);
                 re.setSets(sets);
                 return re;
         }
@@ -246,9 +243,8 @@ public class DefaultRoutineGenerator {
         // ── Constructores de sets ─────────────────────────────────────────────────
 
         /**
-         * Drop set descendente: cada set reduce el peso un 20% aprox.
-         * Sin descanso entre sets (es la esencia del drop) — descanso solo al terminar
-         * el ejercicio.
+         * Drop set descendente: sin descanso entre sets intermedios (esencia del drop).
+         * Solo el último set deja null para que tome el restAfterExercise.
          */
         private List<RoutineSetTemplateModel> dropSets(int n, int reps, double kgInicial,
                         Long repsId, Long pesoId) {
@@ -256,10 +252,11 @@ public class DefaultRoutineGenerator {
                 double kg = kgInicial;
                 for (int i = 1; i <= n; i++) {
                         RoutineSetTemplateModel s = set(i, SetType.DROP_SET.name(), i < n ? 0 : null);
-                        s.setParameters(List.of(repsParam(repsId, reps),
+                        s.setParameters(List.of(
+                                        repsParam(repsId, reps),
                                         weightParam(pesoId, Math.round(kg * 2) / 2.0)));
                         list.add(s);
-                        kg *= 0.80; // -20% cada drop
+                        kg *= 0.80;
                 }
                 return list;
         }
@@ -268,7 +265,7 @@ public class DefaultRoutineGenerator {
                         Long repsId, Long pesoId) {
                 List<RoutineSetTemplateModel> list = new ArrayList<>();
                 for (int i = 1; i <= n; i++) {
-                        RoutineSetTemplateModel s = set(i, SetType.NORMAL.name(), i < n ? 0 : null);
+                        RoutineSetTemplateModel s = set(i, SetType.NORMAL.name(), i < n ? 90 : null);
                         s.setParameters(List.of(repsParam(repsId, reps), weightParam(pesoId, kg)));
                         list.add(s);
                 }
@@ -278,7 +275,7 @@ public class DefaultRoutineGenerator {
         private List<RoutineSetTemplateModel> bodySets(int n, int reps, Long repsId) {
                 List<RoutineSetTemplateModel> list = new ArrayList<>();
                 for (int i = 1; i <= n; i++) {
-                        RoutineSetTemplateModel s = set(i, SetType.NORMAL.name(), i < n ? 0 : null);
+                        RoutineSetTemplateModel s = set(i, SetType.NORMAL.name(), i < n ? 90 : null);
                         s.setParameters(List.of(repsParam(repsId, reps)));
                         list.add(s);
                 }
