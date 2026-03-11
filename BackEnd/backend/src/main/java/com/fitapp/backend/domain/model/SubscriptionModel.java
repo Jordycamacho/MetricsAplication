@@ -17,7 +17,7 @@ public class SubscriptionModel {
     private Long id;
 
     private Long userId;
-    
+
     // ── Tipo y estado ────────────────────────────────────────────────────────
     private SubscriptionType type;
 
@@ -76,7 +76,9 @@ public class SubscriptionModel {
 
     /** Shortcut usado en UserModel.getGrantedAuthorities() y controllers */
     public Integer getMaxRoutines() {
-        return limits != null ? limits.getMaxRoutines() : 1;
+        if (limits == null)
+            return 1;
+        return limits.getMaxRoutines();
     }
 
     public boolean isWithinRoutineLimit(int currentCount) {
