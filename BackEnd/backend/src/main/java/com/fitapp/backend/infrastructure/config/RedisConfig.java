@@ -20,18 +20,24 @@ public class RedisConfig {
     @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration serverConfig =
-                new RedisStandaloneConfiguration(redisHost, redisPort);
+        RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
+
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            serverConfig.setPassword(redisPassword);
+        }
 
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofMillis(500))   // tiempo máximo por comando
+                .commandTimeout(Duration.ofMillis(500))
                 .shutdownTimeout(Duration.ofMillis(100))
                 .build();
 
         LettuceConnectionFactory factory = new LettuceConnectionFactory(serverConfig, clientConfig);
-        factory.setValidateConnection(false); // no lanza error al arrancar si Redis está caído
+        factory.setValidateConnection(false);
         return factory;
     }
 
