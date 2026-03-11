@@ -19,15 +19,27 @@ object SessionManager {
     private lateinit var sharedPreferences: EncryptedSharedPreferences
 
     fun initialize(context: Context) {
-        val cryptoManager = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-
-        sharedPreferences = EncryptedSharedPreferences.create(
-            "fitapp_secure_prefs",
-            cryptoManager,
-            context,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        ) as EncryptedSharedPreferences
+        try {
+            val cryptoManager = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            sharedPreferences = EncryptedSharedPreferences.create(
+                "fitapp_secure_prefs",
+                cryptoManager,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            ) as EncryptedSharedPreferences
+        } catch (e: Exception) {
+            Timber.w("EncryptedSharedPreferences corrupto, recreando...")
+            context.deleteSharedPreferences("fitapp_secure_prefs")
+            val cryptoManager = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            sharedPreferences = EncryptedSharedPreferences.create(
+                "fitapp_secure_prefs",
+                cryptoManager,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            ) as EncryptedSharedPreferences
+        }
     }
 
     var accessToken: String?
