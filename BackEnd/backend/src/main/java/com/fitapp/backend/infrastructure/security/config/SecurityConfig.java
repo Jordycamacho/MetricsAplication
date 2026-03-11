@@ -105,7 +105,9 @@ public class SecurityConfig {
                                                 .successHandler(oAuth2SuccessHandler))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .userDetailsService(userDetailsService);
+                                .userDetailsService(userDetailsService)
+                                .formLogin(AbstractHttpConfigurer::disable)
+                                .httpBasic(AbstractHttpConfigurer::disable);
 
                 return http.build();
         }
@@ -132,7 +134,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                
+
                 List<String> origins = Arrays.asList(allowedOrigins.split(","));
                 configuration.setAllowedOrigins(origins);
 
