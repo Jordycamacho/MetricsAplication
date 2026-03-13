@@ -40,8 +40,7 @@ class AuthViewModel : ViewModel() {
         val result = googleAuthRepository.extractTokenFromUri(uri)
         when (result) {
             is Resource.Success -> {
-                SessionManager.accessToken = result.data
-                SessionManager.tokenExpiration = System.currentTimeMillis() + (12 * 60 * 60 * 1000)
+                result.data?.let { SessionManager.saveSession(it) }
                 _googleLoginState.value = Resource.Success(Unit)
             }
             is Resource.Error -> {

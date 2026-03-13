@@ -3,6 +3,7 @@ package com.fitapp.appfit.repository
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.fitapp.appfit.response.AuthResponse
 import com.fitapp.appfit.utils.Resource
 
 class GoogleAuthRepository {
@@ -16,12 +17,15 @@ class GoogleAuthRepository {
         context.startActivity(intent)
     }
 
-    fun extractTokenFromUri(uri: Uri?): Resource<String> {
+    fun extractTokenFromUri(uri: Uri?): Resource<AuthResponse> {
         if (uri == null) return Resource.Error("URI nula")
 
         val token = uri.getQueryParameter("token")
+        val refreshToken = uri.getQueryParameter("refreshToken") ?: ""
+        val expiresAt = uri.getQueryParameter("expiresAt") ?: ""
+
         return if (!token.isNullOrBlank()) {
-            Resource.Success(token)
+            Resource.Success(AuthResponse(token, refreshToken, expiresAt))
         } else {
             Resource.Error("No se encontró el token en la URL")
         }
