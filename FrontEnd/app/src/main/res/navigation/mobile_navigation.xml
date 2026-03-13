@@ -10,7 +10,21 @@
         android:id="@+id/navigation_home"
         android:name="com.fitapp.appfit.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_home_to_workout"
+            app:destination="@id/navigation_workout" />
+
+        <action
+            android:id="@+id/action_home_to_edit_routine"
+            app:destination="@id/navigation_edit_routine" />
+
+        <action
+            android:id="@+id/action_home_to_routine_exercises"
+            app:destination="@id/navigation_routine_exercises" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_training"

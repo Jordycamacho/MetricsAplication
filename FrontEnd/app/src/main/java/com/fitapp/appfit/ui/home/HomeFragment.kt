@@ -48,7 +48,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupHeader() {
-        // Saludo según hora del día
         val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         binding.tvGreeting.text = when {
             hour < 12 -> "Buenos días"
@@ -56,10 +55,8 @@ class HomeFragment : Fragment() {
             else -> "Buenas noches"
         }
 
-        // Fecha formateada: "Lunes, 24 de febrero"
         val dateFormat = SimpleDateFormat("EEEE, d 'de' MMMM", Locale("es", "ES"))
         val dateStr = dateFormat.format(Date())
-        // Primera letra en mayúscula
         binding.tvDate.text = dateStr.replaceFirstChar { it.uppercase() }
     }
 
@@ -67,7 +64,11 @@ class HomeFragment : Fragment() {
         routineAdapter = RoutineAdapter(
             onItemClick = { routine -> navigateToRoutineDetail(routine) },
             onEditClick = { routine -> navigateToEditRoutine(routine) },
-            onStartClick = { routine -> startWorkout(routine) }
+            onStartClick = { routine -> startWorkout(routine) },
+            onAddExercisesClick = { routine ->
+                val action = HomeFragmentDirections.actionHomeToRoutineExercises(routine.id)
+                findNavController().navigate(action)
+            }
         )
         binding.recyclerRecentRoutines.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -87,7 +88,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        // Estadísticas
         routineViewModel.routineStatisticsState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Success -> resource.data?.let { updateStats(it) }
@@ -96,7 +96,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Rutinas recientes
         routineViewModel.lastUsedRoutinesState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Loading -> showRoutinesLoading()
@@ -114,7 +113,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Recargar si hubo cambios en otras pantallas
         routineViewModel.anyUpdateEvent.observe(viewLifecycleOwner) {
             Handler(Looper.getMainLooper()).postDelayed({ loadData() }, 400)
         }
@@ -166,15 +164,18 @@ class HomeFragment : Fragment() {
 
     private fun startWorkout(routine: RoutineSummaryResponse) {
         routineViewModel.markRoutineAsUsed(routine.id)
-        // TODO: navegar a pantalla de entrenamiento cuando exista
+        val action = HomeFragmentDirections.actionHomeToWorkout(routine.id)
+        findNavController().navigate(action)
     }
 
     private fun navigateToRoutineDetail(routine: RoutineSummaryResponse) {
-        // TODO: navegar a detalle cuando exista
+        val action = HomeFragmentDirections.actionHomeToRoutineExercises(routine.id)
+        findNavController().navigate(action)
     }
 
     private fun navigateToEditRoutine(routine: RoutineSummaryResponse) {
-        // TODO: navegar a editar cuando exista
+        val action = HomeFragmentDirections.actionHomeToEditRoutine(routine.id)
+        findNavController().navigate(action)
     }
 
     // ==================== Lifecycle ====================
