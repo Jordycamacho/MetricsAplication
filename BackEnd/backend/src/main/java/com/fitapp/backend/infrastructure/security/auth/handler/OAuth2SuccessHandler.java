@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -61,7 +63,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 String name = oauthUser.getAttribute("name");
 
                 UserModel user = resolveUser(email, googleId, name);
-                
+
                 String accessToken = generateAppToken(user);
                 String refreshToken = generateRefreshRefToken(user);
                 String expiresAt = Instant.now().plus(12, ChronoUnit.HOURS).toString();
@@ -72,9 +74,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 }
 
                 response.sendRedirect(
-                                redirectUri + "?token=" + accessToken
-                                                + "&refreshToken=" + refreshToken
-                                                + "&expiresAt=" + expiresAt);
+                                redirectUri
+                                                + "?token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
+                                                + "&refreshToken="
+                                                + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
+                                                + "&expiresAt=" + URLEncoder.encode(expiresAt, StandardCharsets.UTF_8));
         }
 
         // ── Resolución de usuario ────────────────────────────────────────────────
