@@ -3,12 +3,13 @@ package com.fitapp.appfit.repository
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.fitapp.appfit.BuildConfig
 import com.fitapp.appfit.response.AuthResponse
 import com.fitapp.appfit.utils.Resource
 
 class GoogleAuthRepository {
 
-    private val googleLoginUrl = "http://192.168.1.14:8080/oauth2/authorization/google"
+    private val googleLoginUrl = "${BuildConfig.API_BASE_URL}oauth2/authorization/google"
 
     fun openGoogleLogin(context: Context) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(googleLoginUrl)).apply {

@@ -72,7 +72,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 }
 
                 response.sendRedirect(
-                                "http://192.168.1.14:8080/api/auth/oauth2/success?token=" + accessToken
+                                redirectUri + "?token=" + accessToken
                                                 + "&refreshToken=" + refreshToken
                                                 + "&expiresAt=" + expiresAt);
         }

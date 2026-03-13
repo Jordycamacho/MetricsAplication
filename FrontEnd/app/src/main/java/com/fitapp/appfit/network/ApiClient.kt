@@ -10,7 +10,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    //private const val BASE_URL = "http://192.168.1.14:8080/"
     private const val BASE_URL = BuildConfig.API_BASE_URL
 
     private val okHttpClient = OkHttpClient.Builder()
