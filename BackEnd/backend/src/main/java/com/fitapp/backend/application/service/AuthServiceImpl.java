@@ -33,7 +33,7 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthUseCase {
 
     private final UserUseCase userUseCase;
-    private final UserPersistencePort userPersistence; // acceso directo para persistir tokens de verificación
+    private final UserPersistencePort userPersistence;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final JwtDecoder jwtDecoder;
@@ -145,9 +145,18 @@ public class AuthServiceImpl implements AuthUseCase {
     public AuthResponse refreshAccessToken(String refreshToken) {
         try {
             Jwt jwt = jwtDecoder.decode(refreshToken);
+
+            String type = jwt.getClaimAsString("type");
+            if (!"refresh".equals(type)) {
+                throw new BadCredentialsException("Token proporcionado no es un refresh token");
+            }
+
             UserModel user = userUseCase.findByEmail(jwt.getSubject())
                     .orElseThrow(() -> new BadCredentialsException("Token inválido"));
+
             return generateAuthResponse(user);
+        } catch (BadCredentialsException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Fallo al refrescar token: {}", e.getMessage());
             throw new BadCredentialsException("Token de refresco inválido o expirado");

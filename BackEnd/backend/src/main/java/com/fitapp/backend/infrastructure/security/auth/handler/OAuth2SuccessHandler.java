@@ -61,14 +61,20 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 String name = oauthUser.getAttribute("name");
 
                 UserModel user = resolveUser(email, googleId, name);
+                
+                String accessToken = generateAppToken(user);
+                String refreshToken = generateRefreshRefToken(user);
+                String expiresAt = Instant.now().plus(12, ChronoUnit.HOURS).toString();
 
                 if (user.getSubscription() == null) {
                         SubscriptionModel sub = subscriptionUseCase.createFreeSubscription(user.getId());
                         user.setSubscription(sub);
                 }
 
-                String token = generateAppToken(user);
-                response.sendRedirect("http://192.168.1.14:8080/api/auth/oauth2/success?token=" + token);
+                response.sendRedirect(
+                                "http://192.168.1.14:8080/api/auth/oauth2/success?token=" + accessToken
+                                                + "&refreshToken=" + refreshToken
+                                                + "&expiresAt=" + expiresAt);
         }
 
         // ── Resolución de usuario ────────────────────────────────────────────────
@@ -108,6 +114,23 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         }
 
         // ── JWT ──────────────────────────────────────────────────────────────────
+
+        private String generateRefreshRefToken(UserModel user) {
+                Instant now = Instant.now();
+                JwtClaimsSet claims = JwtClaimsSet.builder()
+                                .issuer("AppFit")
+                                .issuedAt(now)
+                                .expiresAt(now.plus(7, ChronoUnit.DAYS))
+                                .subject(user.getEmail())
+                                .claim("userId", user.getId())
+                                .claim("email", user.getEmail())
+                                .claim("type", "refresh")
+                                .claim("roles", user.getGrantedAuthorities().stream()
+                                                .map(GrantedAuthority::getAuthority)
+                                                .collect(Collectors.toList()))
+                                .build();
+                return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        }
 
         private String generateAppToken(UserModel user) {
                 Instant now = Instant.now();

@@ -24,23 +24,24 @@ public class JwtServiceImpl implements JwtService {
     private final JwtEncoder jwtEncoder;
     
     public String generateToken(UserModel user) {
-        return buildToken(user, 12 * 60);
+        return buildToken(user, 12 * 60, "access");
     }
     
     public String generateRefreshToken(UserModel user) {
-        return buildToken(user, 7 * 24 * 60);
+        return buildToken(user, 7 * 24 * 60, "refresh");
     }
     
-    private String buildToken(UserModel user, long expirationMinutes) {
+    private String buildToken(UserModel user, long expirationMinutes, String type) {
         Instant now = Instant.now();
         
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("email", user.getEmail());
         claims.put("roles", getRoles(user));
+        claims.put("type", type);
         
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
-            .issuer("AppFit")
+            .issuer("JnobFit")
             .issuedAt(now)
             .expiresAt(now.plus(expirationMinutes, ChronoUnit.MINUTES))
             .subject(user.getEmail())

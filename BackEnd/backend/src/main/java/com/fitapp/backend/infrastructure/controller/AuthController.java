@@ -93,11 +93,16 @@ public class AuthController {
         return ResponseEntity.ok(authUseCase.refreshAccessToken(request.refreshToken()));
     }
 
-    @Operation(summary = "Página puente OAuth2 → deep link Android")
     @GetMapping("/oauth2/success")
     public void oauth2Success(
             @RequestParam("token") String token,
+            @RequestParam("refreshToken") String refreshToken,
+            @RequestParam("expiresAt") String expiresAt,
             HttpServletResponse response) throws IOException {
+
+        String deepLink = "fitapp://auth/callback?token=" + token
+                + "&refreshToken=" + refreshToken
+                + "&expiresAt=" + expiresAt;
 
         String html = """
                 <!DOCTYPE html>
@@ -128,8 +133,8 @@ public class AuthController {
                         .dot:nth-child(3) { animation-delay: 0.4s; }
                         .dots { display: flex; gap: 8px; }
                         @keyframes pulse {
-                            0%, 100% { opacity: 0.3; transform: scale(0.8); }
-                            50% { opacity: 1; transform: scale(1.2); }
+                            0%%, 100%% { opacity: 0.3; transform: scale(0.8); }
+                            50%% { opacity: 1; transform: scale(1.2); }
                         }
                         p { color: #78703F; font-size: 15px; letter-spacing: 0.05em; }
                         .hint { color: #444; font-size: 12px; margin-top: 8px; }
@@ -144,12 +149,11 @@ public class AuthController {
                     <p>Abriendo AppFit...</p>
                     <span class="hint">Puedes cerrar este navegador</span>
                     <script>
-                        // Abre el deep link — Android lo captura en onNewIntent()
-                        window.location.href = 'fitapp://auth/callback?token=%s';
+                        window.location.href = '%s';
                     </script>
                 </body>
                 </html>
-                """.formatted(token);
+                """.formatted(deepLink);
 
         response.setContentType("text/html;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
