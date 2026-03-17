@@ -24,7 +24,7 @@ class RoutineExercisesFragment : Fragment() {
 
     private val args: RoutineExercisesFragmentArgs by navArgs()
     private val viewModel: RoutineExerciseViewModel by viewModels()
-
+    private var routineTrainingDays: String = ""
     private lateinit var adapter: RoutineExerciseAdapter
 
     override fun onCreateView(
@@ -80,6 +80,11 @@ class RoutineExercisesFragment : Fragment() {
                     val list = resource.data ?: emptyList()
                     adapter.submitList(list)
                     showEmptyState(list.isEmpty())
+
+                    routineTrainingDays = list
+                        .mapNotNull { it.dayOfWeek }
+                        .distinct()
+                        .joinToString(",")
                 }
                 is Resource.Error -> {
                     hideLoading()
@@ -113,7 +118,16 @@ class RoutineExercisesFragment : Fragment() {
 
     private fun navigateToEdit(exercise: RoutineExerciseResponse) {
         val action = RoutineExercisesFragmentDirections
-            .actionRoutineExercisesToEditExercise(args.routineId, exercise.id)
+            .actionRoutineExercisesToEditExercise(
+                routineId         = args.routineId,
+                routineExerciseId = exercise.id,
+                exerciseId        = exercise.exerciseId,
+                exerciseName      = exercise.exerciseName ?: "",
+                dayOfWeek         = exercise.dayOfWeek ?: "",
+                sessionOrder      = exercise.sessionOrder ?: 1,
+                restAfterExercise = exercise.restAfterExercise ?: 60,
+                trainingDays      = routineTrainingDays
+            )
         findNavController().navigate(action)
     }
 

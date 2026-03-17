@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:paddingBottom="16dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="#1E1E1E"
+                app:navigationIcon="@drawable/ic_arrow_back"
+                app:navigationIconTint="#78703F"
+                app:title="Editar Ejercicio"
+                app:titleTextColor="#FFFFFF" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="4dp"
+                app:cardBackgroundColor="#121212"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#78703F"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="EJERCICIO"
+                        android:textColor="#78703F"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.1"
+                        android:layout_marginEnd="12dp" />
+
+                    <TextView
+                        android:id="@+id/tv_exercise_name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <!-- Separador dorado -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#78703F"
+            android:alpha="0.4" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="100dp">
+
+                <!-- Día -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="DÍA DE ENTRENAMIENTO"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:layout_marginBottom="20dp">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_days"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_monday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Lun" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_tuesday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Mar" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_wednesday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Mié" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_thursday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Jue" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_friday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Vie" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_saturday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Sáb" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_sunday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/DayChip"
+                            android:text="Dom" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                </HorizontalScrollView>
+
+                <!-- Separador -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#333333"
+                    android:layout_marginBottom="20dp" />
+
+                <!-- Parámetros -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="PARÁMETROS"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        app:boxBackgroundMode="outline"
+                        app:boxBackgroundColor="#1E1E1E"
+                        app:boxCornerRadiusTopStart="10dp"
+                        app:boxCornerRadiusTopEnd="10dp"
+                        app:boxCornerRadiusBottomStart="10dp"
+                        app:boxCornerRadiusBottomEnd="10dp"
+                        app:boxStrokeColor="#333333"
+                        app:hintTextColor="#B3B3B3"
+                        android:hint="Orden en sesión">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_session_order"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="#FFFFFF"
+                            android:inputType="number"
+                            android:paddingVertical="12dp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:boxBackgroundMode="outline"
+                        app:boxBackgroundColor="#1E1E1E"
+                        app:boxCornerRadiusTopStart="10dp"
+                        app:boxCornerRadiusTopEnd="10dp"
+                        app:boxCornerRadiusBottomStart="10dp"
+                        app:boxCornerRadiusBottomEnd="10dp"
+                        app:boxStrokeColor="#333333"
+                        app:hintTextColor="#B3B3B3"
+                        android:hint="Descanso (s)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_rest_after"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="#FFFFFF"
+                            android:inputType="number"
+                            android:paddingVertical="12dp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/btn_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="100dp"
+        android:text="Guardar cambios"
+        android:textColor="#121212"
+        app:icon="@drawable/ic_check"
+        app:iconTint="#121212"
+        app:backgroundTint="#78703F" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

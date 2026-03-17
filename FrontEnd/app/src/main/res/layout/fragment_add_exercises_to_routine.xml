@@ -113,92 +113,78 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="CONFIGURACIÓN"
+                android:text="DÍA DE ENTRENAMIENTO"
                 android:textColor="#78703F"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="10dp" />
 
-            <RadioGroup
-                android:id="@+id/rg_organization"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:scrollbars="none"
+                android:layout_marginBottom="20dp">
 
-                <RadioButton
-                    android:id="@+id/rb_by_session"
-                    android:layout_width="0dp"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_days"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Por Sesión"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:buttonTint="#78703F" />
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
 
-                <RadioButton
-                    android:id="@+id/rb_by_day"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Por Día"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:buttonTint="#78703F" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_monday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Lun" />
 
-            </RadioGroup>
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_tuesday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Mar" />
 
-            <LinearLayout
-                android:id="@+id/layout_session"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_wednesday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Mié" />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="SESIÓN"
-                    android:textColor="#B3B3B3"
-                    android:textSize="12sp" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_thursday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Jue" />
 
-                <Spinner
-                    android:id="@+id/spinner_session"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="2"
-                    android:backgroundTint="#78703F" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_friday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Vie" />
 
-            </LinearLayout>
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_saturday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Sáb" />
 
-            <LinearLayout
-                android:id="@+id/layout_day"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp"
-                android:visibility="gone">
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_sunday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/DayChip"
+                        android:text="Dom" />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="DÍA"
-                    android:textColor="#B3B3B3"
-                    android:textSize="12sp" />
+                </com.google.android.material.chip.ChipGroup>
 
-                <Spinner
-                    android:id="@+id/spinner_day"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="2"
-                    android:backgroundTint="#78703F" />
-
-            </LinearLayout>
+            </HorizontalScrollView>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -303,7 +289,6 @@
         app:backgroundTint="#78703F"
         android:visibility="gone" />
 
-    <!-- Referencia oculta para btn_clear_search -->
     <View
         android:id="@+id/btn_clear_search"
         android:layout_width="0dp"

@@ -112,4 +112,14 @@
     <style name="GhostButton" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="android:textColor">@color/text_secondary_dark</item>
     </style>
+
+    <style name="DayChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="android:textColor">@color/day_chip_text</item>
+        <item name="chipBackgroundColor">@color/day_chip_background</item>
+        <item name="chipStrokeColor">@color/day_chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>
