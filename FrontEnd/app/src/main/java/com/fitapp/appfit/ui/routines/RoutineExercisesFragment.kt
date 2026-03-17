@@ -79,12 +79,15 @@ class RoutineExercisesFragment : Fragment() {
                     hideLoading()
                     val list = resource.data ?: emptyList()
                     adapter.submitList(list)
-                    binding.tvEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
-                    binding.recyclerView.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
+                    showEmptyState(list.isEmpty())
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Snackbar.make(binding.root, resource.message ?: "Error cargando ejercicios", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(
+                        binding.root,
+                        resource.message ?: "Error cargando ejercicios",
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 }
                 else -> {}
             }
@@ -95,7 +98,11 @@ class RoutineExercisesFragment : Fragment() {
                 is Resource.Success ->
                     Snackbar.make(binding.root, "Ejercicio eliminado", Snackbar.LENGTH_SHORT).show()
                 is Resource.Error ->
-                    Snackbar.make(binding.root, resource.message ?: "Error al eliminar", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(
+                        binding.root,
+                        resource.message ?: "Error al eliminar",
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 else -> {}
             }
             if (resource != null) viewModel.clearDeleteState()
@@ -139,6 +146,11 @@ class RoutineExercisesFragment : Fragment() {
 
     private fun hideLoading() {
         binding.progressBar.visibility = View.GONE
+    }
+
+    private fun showEmptyState(isEmpty: Boolean) {
+        binding.tvEmpty.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
     override fun onDestroyView() {
