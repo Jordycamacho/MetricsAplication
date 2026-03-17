@@ -1,5 +1,5 @@
 package com.fitapp.backend.infrastructure.security.config;
-
+/* 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,10 +9,10 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
-
-@Configuration
+*/
+//@Configuration
 public class OAuth2ClientConfig {
-
+/*
     @Value("${google.client-id}")
     private String clientId;
 
@@ -42,5 +42,5 @@ public class OAuth2ClientConfig {
                 .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
                 .clientName("Google")
                 .build();
-    }
+    }*/
 }

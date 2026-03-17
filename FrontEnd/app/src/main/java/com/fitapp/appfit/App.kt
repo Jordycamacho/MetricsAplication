@@ -5,10 +5,11 @@ import com.fitapp.appfit.utils.SessionManager
 import timber.log.Timber
 
 class App : Application() {
+
     override fun onCreate() {
         super.onCreate()
         SessionManager.initialize(this)
-        if (android.util.Log.isLoggable("AppFit", android.util.Log.DEBUG)) {
+        if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
     }

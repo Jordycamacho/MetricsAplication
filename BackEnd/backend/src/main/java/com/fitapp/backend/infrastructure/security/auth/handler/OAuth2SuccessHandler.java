@@ -49,7 +49,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 this.subscriptionUseCase = subscriptionUseCase;
         }
 
-        @Value("${app.oauth2.redirect-uri:fitapp://auth/callback}")
+        @Value("${app.oauth2.redirect-uri}")
         private String redirectUri;
 
         @Override
@@ -64,21 +64,21 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
                 UserModel user = resolveUser(email, googleId, name);
 
-                String accessToken = generateAppToken(user);
-                String refreshToken = generateRefreshRefToken(user);
-                String expiresAt = Instant.now().plus(12, ChronoUnit.HOURS).toString();
-
                 if (user.getSubscription() == null) {
                         SubscriptionModel sub = subscriptionUseCase.createFreeSubscription(user.getId());
                         user.setSubscription(sub);
                 }
 
-                response.sendRedirect(
-                                redirectUri
-                                                + "?token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
-                                                + "&refreshToken="
-                                                + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
-                                                + "&expiresAt=" + URLEncoder.encode(expiresAt, StandardCharsets.UTF_8));
+                String accessToken = generateAppToken(user);
+                String refreshToken = generateRefreshRefToken(user);
+                String expiresAt = Instant.now().plus(12, ChronoUnit.HOURS).toString();
+
+                String targetUrl = redirectUri
+                                + "?token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
+                                + "&refreshToken=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
+                                + "&expiresAt=" + URLEncoder.encode(expiresAt, StandardCharsets.UTF_8);
+
+                response.sendRedirect(targetUrl);
         }
 
         // ── Resolución de usuario ────────────────────────────────────────────────

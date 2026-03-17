@@ -10,6 +10,7 @@ import com.fitapp.appfit.auth.LoginActivity
 import com.fitapp.appfit.databinding.ActivityMainBinding
 import com.fitapp.appfit.model.ProfileViewModel
 import com.fitapp.appfit.utils.Resource
+import com.fitapp.appfit.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -28,16 +29,42 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         navView.setupWithNavController(navController)
 
+        setupSessionExpirationHandler()
         showBetaWarningIfNeeded()
 
         profileViewModel.logoutState.observe(this) { resource ->
             if (resource is Resource.Success) {
-                startActivity(Intent(this, LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                })
-                finish()
+                navigateToLogin()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        SessionManager.onSessionExpired = null
+    }
+
+    private fun setupSessionExpirationHandler() {
+        SessionManager.onSessionExpired = {
+            runOnUiThread {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Sesión expirada")
+                    .setMessage("Tu sesión ha expirado. Por favor inicia sesión de nuevo.")
+                    .setPositiveButton("Iniciar sesión") { dialog, _ ->
+                        dialog.dismiss()
+                        navigateToLogin()
+                    }
+                    .setCancelable(false)
+                    .show()
+            }
+        }
+    }
+
+    private fun navigateToLogin() {
+        startActivity(Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
     }
 
     private fun showBetaWarningIfNeeded() {
@@ -54,9 +81,8 @@ class MainActivity : AppCompatActivity() {
                         "• Tu feedback es muy valioso para mejorar la app.\n\n" +
                         "¡Gracias por ser parte de esta etapa!"
             )
-            .setPositiveButton("Entendido") { dialog, _ ->
+            .setPositiveButton("Entendido") { _, _ ->
                 prefs.edit().putBoolean("beta_warning_shown", true).apply()
-                dialog.dismiss()
             }
             .setCancelable(false)
             .show()

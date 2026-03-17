@@ -20,14 +20,16 @@ class TokenInterceptor : Interceptor {
             return chain.proceed(originalRequest)
         }
 
-        if (SessionManager.shouldRefresh()) {
-            SessionManager.refreshTokenIfNeeded()
+        val token = SessionManager.accessToken
+
+        if (token.isNullOrEmpty()) {
+            return chain.proceed(originalRequest)
         }
 
-        val token = SessionManager.accessToken
-        val request = originalRequest.newBuilder()
-            .addHeader("Authorization", "Bearer $token")
+        val authenticatedRequest = originalRequest.newBuilder()
+            .header("Authorization", "Bearer $token")
             .build()
-        return chain.proceed(request)
+
+        return chain.proceed(authenticatedRequest)
     }
 }

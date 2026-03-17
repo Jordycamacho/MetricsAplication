@@ -7,23 +7,19 @@ import com.fitapp.appfit.response.AuthResponse
 import timber.log.Timber
 import java.time.Instant
 import java.util.Date
-import kotlinx.coroutines.runBlocking
-import com.fitapp.appfit.network.AuthService
-import com.fitapp.appfit.response.RefreshTokenRequest
 
 object SessionManager {
     private const val ACCESS_TOKEN_KEY = "fitapp_access_token"
     private const val REFRESH_TOKEN_KEY = "fitapp_refresh_token"
     private const val EXPIRATION_KEY = "fitapp_expiration"
-
     private lateinit var sharedPreferences: EncryptedSharedPreferences
 
     fun initialize(context: Context) {
         try {
-            val cryptoManager = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
             sharedPreferences = EncryptedSharedPreferences.create(
                 "fitapp_secure_prefs",
-                cryptoManager,
+                masterKey,
                 context,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
@@ -31,10 +27,10 @@ object SessionManager {
         } catch (e: Exception) {
             Timber.w("EncryptedSharedPreferences corrupto, recreando...")
             context.deleteSharedPreferences("fitapp_secure_prefs")
-            val cryptoManager = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
             sharedPreferences = EncryptedSharedPreferences.create(
                 "fitapp_secure_prefs",
-                cryptoManager,
+                masterKey,
                 context,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
@@ -66,6 +62,8 @@ object SessionManager {
             }
         }
 
+    var onSessionExpired: (() -> Unit)? = null
+
     fun saveSession(authResponse: AuthResponse) {
         accessToken = authResponse.token
         refreshToken = authResponse.refreshToken
@@ -75,12 +73,7 @@ object SessionManager {
             Timber.e(e, "Error parseando expiresAt: ${authResponse.expiresAt}")
             0L
         }
-        Timber.i("Sesión guardada - Token expira en: ${Date(tokenExpiration)}")
-    }
-
-    fun shouldRefresh(): Boolean {
-        val expiration = tokenExpiration
-        return expiration > 0 && System.currentTimeMillis() > expiration - (5 * 60 * 1000)
+        Timber.i("Sesión guardada - Token expira: ${Date(tokenExpiration)}")
     }
 
     fun isTokenValid(): Boolean {
@@ -89,31 +82,8 @@ object SessionManager {
         return !accessToken.isNullOrEmpty() && System.currentTimeMillis() < expirationTime
     }
 
-    fun refreshTokenIfNeeded(): Boolean {
-        if (!shouldRefresh()) return true
-
-        val currentRefreshToken = refreshToken ?: return false
-
-        return try {
-            runBlocking {
-                val response = AuthService.instance.refreshToken(RefreshTokenRequest(currentRefreshToken))
-                if (response.isSuccessful) {
-                    response.body()?.let { authResponse ->
-                        saveSession(authResponse)
-                        Timber.i("Token refrescado preventivamente")
-                        true
-                    } ?: false
-                } else {
-                    Timber.e("Error al refrescar token: ${response.code()}")
-                    clearSession()
-                    false
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Excepción al refrescar token")
-            clearSession()
-            false
-        }
+    fun hasSession(): Boolean {
+        return !accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()
     }
 
     fun clearSession() {
@@ -125,6 +95,7 @@ object SessionManager {
                 apply()
             }
             Timber.w("Sesión eliminada")
+            onSessionExpired?.invoke()
         }
     }
 }
