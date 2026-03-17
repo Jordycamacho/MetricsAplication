@@ -1,6 +1,8 @@
 package com.fitapp.appfit.ui.workout
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -25,23 +27,28 @@ class WorkoutFragment : Fragment() {
 
     private var _binding: FragmentWorkoutBinding? = null
     private val binding get() = _binding!!
+
     private val args: WorkoutFragmentArgs by navArgs()
     private val viewModel: RoutineViewModel by viewModels()
     private lateinit var adapter: WorkoutDayAdapter
 
-    // Valores que el usuario modifica durante el workout
-    // setTemplateId → (parameterId → { reps, numericValue, ... })
     private val setParamState =
         mutableMapOf<Long, MutableMap<Long, MutableMap<String, Any?>>>()
 
-    // Timestamp de cuando el usuario empieza a entrenar
     private var workoutStartedAt: Long = System.currentTimeMillis()
-
-    // ID del usuario autenticado — reemplazar con tu fuente real (prefs, sesión, etc.)
     private var currentUserId: String = ""
-
-    // Repositorio offline-first para guardar y sincronizar el workout
     private lateinit var workoutRepository: WorkoutRepository
+
+    // ── Cronómetro ────────────────────────────────────────────────────────────
+    private val timerHandler = Handler(Looper.getMainLooper())
+    private var elapsedSeconds = 0
+    private val timerRunnable = object : Runnable {
+        override fun run() {
+            elapsedSeconds++
+            updateTimerDisplay()
+            timerHandler.postDelayed(this, 1000)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -55,31 +62,66 @@ class WorkoutFragment : Fragment() {
 
         workoutRepository = WorkoutRepository(requireContext())
         workoutStartedAt = System.currentTimeMillis()
-
-        // TODO: obtén el userId real de tu capa de sesión/preferencias
-        // Ejemplo: currentUserId = sessionManager.getUserId()
         currentUserId = "usuario_temporal"
 
         setupRecyclerView()
+        setupRibbon()
         observeData()
         loadRoutine()
+        startTimer()
 
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
     }
 
+    // ── Cronómetro ────────────────────────────────────────────────────────────
+
+    private fun startTimer() {
+        elapsedSeconds = 0
+        timerHandler.removeCallbacks(timerRunnable)
+        timerHandler.postDelayed(timerRunnable, 1000)
+    }
+
+    private fun updateTimerDisplay() {
+        val h = elapsedSeconds / 3600
+        val m = (elapsedSeconds % 3600) / 60
+        val s = elapsedSeconds % 60
+        binding.tvTimer.text = if (h > 0) {
+            "%d:%02d:%02d".format(h, m, s)
+        } else {
+            "%02d:%02d".format(m, s)
+        }
+    }
+
+    // ── Ribbon ────────────────────────────────────────────────────────────────
+
+    private fun setupRibbon() {
+        binding.btnExpandAll.setOnClickListener {
+            adapter.expandAll()
+        }
+        binding.btnCollapseAll.setOnClickListener {
+            adapter.collapseAll()
+        }
+        binding.btnNotes.setOnClickListener {
+            Toast.makeText(requireContext(), "Notas — próximamente", Toast.LENGTH_SHORT).show()
+        }
+        binding.btnHistory.setOnClickListener {
+            Toast.makeText(requireContext(), "Progreso — próximamente", Toast.LENGTH_SHORT).show()
+        }
+        binding.btnRestSettings.setOnClickListener {
+            Toast.makeText(requireContext(), "Descanso global — próximamente", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ── RecyclerView ──────────────────────────────────────────────────────────
+
     private fun setupRecyclerView() {
         adapter = WorkoutDayAdapter { exercise, set, valueType, newValue ->
-
             if (!setParamState.containsKey(set.id)) {
                 setParamState[set.id] = initSetState(set.parameters ?: emptyList())
             }
-
             val paramMap = setParamState[set.id]!!
-
             when (valueType) {
-                "reps" -> {
-                    paramMap.values.forEach { it["repetitions"] = newValue.toInt() }
-                }
+                "reps" -> paramMap.values.forEach { it["repetitions"] = newValue.toInt() }
                 "param" -> {
                     set.parameters?.forEach { param ->
                         val type = param.parameterType?.uppercase() ?: return@forEach
@@ -98,7 +140,6 @@ class WorkoutFragment : Fragment() {
                     }
                 }
             }
-
             binding.fabSaveWorkout.isInvisible = false
         }
 
@@ -119,51 +160,7 @@ class WorkoutFragment : Fragment() {
         }.toMutableMap()
     }
 
-    /**
-     * Guarda el workout usando WorkoutRepository:
-     *  - Siempre persiste localmente (historial offline)
-     *  - Si hay conexión, sincroniza con el back de inmediato
-     *  - Si no hay conexión, queda pendiente para WorkoutSyncManager
-     */
-    private fun saveWorkout() {
-        if (setParamState.isEmpty()) return
-
-        binding.fabSaveWorkout.isEnabled = false
-        binding.progressBar.isVisible = true
-
-        lifecycleScope.launch {
-            val result = workoutRepository.saveWorkout(
-                routineId  = args.routineId,
-                userId     = currentUserId,
-                setParamState = setParamState,
-                startedAt  = workoutStartedAt
-            )
-
-            binding.progressBar.isVisible = false
-            binding.fabSaveWorkout.isEnabled = true
-
-            result.fold(
-                onSuccess = { sessionId ->
-                    setParamState.clear()
-                    binding.fabSaveWorkout.isInvisible = true
-                    Log.i("WorkoutFragment", "Workout guardado, sessionId=$sessionId")
-                    Toast.makeText(
-                        requireContext(),
-                        "Entrenamiento guardado ✓",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                },
-                onFailure = { error ->
-                    Log.e("WorkoutFragment", "Error guardando workout: ${error.message}", error)
-                    Toast.makeText(
-                        requireContext(),
-                        "Error al guardar. Intenta de nuevo.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            )
-        }
-    }
+    // ── Datos ─────────────────────────────────────────────────────────────────
 
     private fun observeData() {
         viewModel.workoutRoutineState.observe(viewLifecycleOwner) { resource ->
@@ -180,6 +177,7 @@ class WorkoutFragment : Fragment() {
                         setParamState.clear()
                         workoutStartedAt = System.currentTimeMillis()
                         binding.fabSaveWorkout.isInvisible = true
+                        binding.tvRoutineName.text = routine.name ?: "Entrenamiento"
                         adapter.submitRoutine(routine)
                     }
                 }
@@ -198,8 +196,40 @@ class WorkoutFragment : Fragment() {
         viewModel.markRoutineAsUsed(args.routineId)
     }
 
+    // ── Guardar ───────────────────────────────────────────────────────────────
+
+    private fun saveWorkout() {
+        if (setParamState.isEmpty()) return
+        binding.fabSaveWorkout.isEnabled = false
+        binding.progressBar.isVisible = true
+
+        lifecycleScope.launch {
+            val result = workoutRepository.saveWorkout(
+                routineId     = args.routineId,
+                userId        = currentUserId,
+                setParamState = setParamState,
+                startedAt     = workoutStartedAt
+            )
+            binding.progressBar.isVisible = false
+            binding.fabSaveWorkout.isEnabled = true
+            result.fold(
+                onSuccess = { sessionId ->
+                    setParamState.clear()
+                    binding.fabSaveWorkout.isInvisible = true
+                    Log.i("WorkoutFragment", "Workout guardado, sessionId=$sessionId")
+                    Toast.makeText(requireContext(), "Entrenamiento guardado ✓", Toast.LENGTH_SHORT).show()
+                },
+                onFailure = { error ->
+                    Log.e("WorkoutFragment", "Error guardando workout: ${error.message}", error)
+                    Toast.makeText(requireContext(), "Error al guardar. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        timerHandler.removeCallbacks(timerRunnable)
         _binding = null
     }
 }

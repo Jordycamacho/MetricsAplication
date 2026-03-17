@@ -22,22 +22,45 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/tv_day_title"
+            <!-- Barra de color izquierda -->
+            <View
+                android:layout_width="3dp"
+                android:layout_height="24dp"
+                android:background="@color/gold_primary"
+                android:layout_marginEnd="10dp" />
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="LUNES"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:textColor="@color/text_primary_dark"/>
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_day_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lunes"
+                    android:textStyle="bold"
+                    android:textSize="17sp"
+                    android:textColor="@color/text_primary_dark" />
+
+                <TextView
+                    android:id="@+id/tv_exercise_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3 ejercicios"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary_dark" />
+
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/iv_expand_day"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_arrow_down"
-                app:tint="@color/gold_primary"/>
+                app:tint="@color/gold_primary" />
+
         </LinearLayout>
 
         <!-- CONTENEDOR DESPLEGABLE -->
@@ -52,7 +75,9 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_exercises"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
         </LinearLayout>
 
     </LinearLayout>

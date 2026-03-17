@@ -20,6 +20,33 @@ class WorkoutDayAdapter(
     private var days: List<WorkoutDay> = emptyList()
     private val expandedDays = mutableSetOf<Int>()
 
+    companion object {
+        private val DAY_ORDER = mapOf(
+            "MONDAY" to 1, "TUESDAY" to 2, "WEDNESDAY" to 3,
+            "THURSDAY" to 4, "FRIDAY" to 5, "SATURDAY" to 6, "SUNDAY" to 7
+        )
+        private val DAY_NAMES_ES = mapOf(
+            "MONDAY"    to "Lunes",
+            "TUESDAY"   to "Martes",
+            "WEDNESDAY" to "Miércoles",
+            "THURSDAY"  to "Jueves",
+            "FRIDAY"    to "Viernes",
+            "SATURDAY"  to "Sábado",
+            "SUNDAY"    to "Domingo",
+            "SIN_DIA"   to "Sin día"
+        )
+    }
+
+    fun expandAll() {
+        for (i in days.indices) expandedDays.add(i)
+        notifyDataSetChanged()
+    }
+
+    fun collapseAll() {
+        expandedDays.clear()
+        notifyDataSetChanged()
+    }
+
     fun submitRoutine(routine: RoutineResponse) {
         val grouped = routine.exercises
             .orEmpty()
@@ -27,10 +54,10 @@ class WorkoutDayAdapter(
             .map { (day, exercises) ->
                 WorkoutDay(
                     dayOfWeek = day,
-                    exercises = exercises.sortedBy { it.position }
+                    exercises = exercises.sortedBy { it.sessionOrder ?: it.position }
                 )
             }
-            .sortedBy { it.dayOfWeek }
+            .sortedBy { DAY_ORDER[it.dayOfWeek] ?: 99 }
 
         days = grouped
         expandedDays.clear()
@@ -50,34 +77,39 @@ class WorkoutDayAdapter(
     override fun getItemCount() = days.size
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         private val tvDay: TextView = itemView.findViewById(R.id.tv_day_title)
         private val ivExpand: ImageView = itemView.findViewById(R.id.iv_expand_day)
         private val recyclerExercises: RecyclerView = itemView.findViewById(R.id.recycler_exercises)
         private val container: View = itemView.findViewById(R.id.layout_day_container)
+        private val tvExerciseCount: TextView = itemView.findViewById(R.id.tv_exercise_count)
 
         private val exerciseAdapter = WorkoutExerciseAdapter(onSetValueChanged)
 
         init {
             recyclerExercises.layoutManager = LinearLayoutManager(itemView.context)
             recyclerExercises.adapter = exerciseAdapter
+            recyclerExercises.isNestedScrollingEnabled = false
 
             itemView.setOnClickListener {
                 val pos = adapterPosition
+                if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
                 if (expandedDays.contains(pos)) {
                     expandedDays.remove(pos)
                     container.visibility = View.GONE
-                    ivExpand.rotation = 0f
+                    ivExpand.animate().rotation(0f).setDuration(200).start()
                 } else {
                     expandedDays.add(pos)
                     container.visibility = View.VISIBLE
-                    ivExpand.rotation = 180f
+                    ivExpand.animate().rotation(180f).setDuration(200).start()
                 }
             }
         }
 
-
         fun bind(day: WorkoutDay, position: Int) {
-            tvDay.text = day.dayOfWeek
+            tvDay.text = DAY_NAMES_ES[day.dayOfWeek] ?: day.dayOfWeek
+            val count = day.exercises.size
+            tvExerciseCount.text = "$count ejercicio${if (count != 1) "s" else ""}"
             exerciseAdapter.submitExercises(day.exercises)
 
             if (expandedDays.contains(position)) {
