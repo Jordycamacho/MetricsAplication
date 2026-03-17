@@ -20,6 +20,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -97,12 +102,19 @@ public class AuthController {
     public void oauth2Success(
             @RequestParam("token") String token,
             @RequestParam("refreshToken") String refreshToken,
-            @RequestParam("expiresAt") String expiresAt,
+            @RequestParam(value = "expiresAt", required = false) String expiresAt,
             HttpServletResponse response) throws IOException {
 
-        String deepLink = "fitapp://auth/callback?token=" + token
-                + "&refreshToken=" + refreshToken
-                + "&expiresAt=" + expiresAt;
+        String decodedToken = URLDecoder.decode(token, StandardCharsets.UTF_8);
+        String decodedRefreshToken = URLDecoder.decode(refreshToken, StandardCharsets.UTF_8);
+        String decodedExpiresAt = expiresAt != null
+                ? URLDecoder.decode(expiresAt, StandardCharsets.UTF_8)
+                : Instant.now().plus(12, ChronoUnit.HOURS).toString();
+
+        String deepLink = "fitapp://auth/callback"
+                + "?token=" + URLEncoder.encode(decodedToken, StandardCharsets.UTF_8)
+                + "&refreshToken=" + URLEncoder.encode(decodedRefreshToken, StandardCharsets.UTF_8)
+                + "&expiresAt=" + URLEncoder.encode(decodedExpiresAt, StandardCharsets.UTF_8);
 
         String html = """
                 <!DOCTYPE html>
@@ -125,7 +137,7 @@ public class AuthController {
                         }
                         .dot {
                             width: 12px; height: 12px;
-                            border-radius: 50%;
+                            border-radius: 50%%;
                             background: #78703F;
                             animation: pulse 1.2s ease-in-out infinite;
                         }
