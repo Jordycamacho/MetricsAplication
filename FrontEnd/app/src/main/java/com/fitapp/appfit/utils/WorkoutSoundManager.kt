@@ -29,7 +29,6 @@ object WorkoutSoundManager {
                 .setAudioAttributes(attrs)
                 .build()
 
-            // Usamos ToneGenerator para generar sonidos sin archivos de audio
             initialized = true
             Timber.d("WorkoutSoundManager inicializado")
         } catch (e: Exception) {
@@ -38,15 +37,10 @@ object WorkoutSoundManager {
     }
 
     fun playRestFinished(context: Context) {
-        android.util.Log.d("SoundManager", "playRestFinished called, soundEnabled=${WorkoutPreferences.isSoundEnabled(context)}")
-        if (!WorkoutPreferences.isSoundEnabled(context)) {
-            android.util.Log.d("SoundManager", "Sound disabled, returning")
-            return
-        }
+        if (!WorkoutPreferences.isSoundEnabled(context)) return
         try {
             val type = WorkoutPreferences.getSoundType(context)
-            android.util.Log.d("SoundManager", "Playing sound type=$type")
-            val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 60)
+            val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 90)
             when (type) {
                 WorkoutPreferences.SoundType.BEEP -> {
                     toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 200)
@@ -64,14 +58,13 @@ object WorkoutSoundManager {
             toneGen.release()
         } catch (e: Exception) {
             Timber.e(e, "Error reproduciendo sonido")
-            android.util.Log.e("SoundManager", "Error: ${e.message}", e)
         }
     }
 
     fun playSetComplete(context: Context) {
         if (!WorkoutPreferences.isSoundEnabled(context)) return
         try {
-            val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 40)
+            val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 70)
             toneGen.startTone(ToneGenerator.TONE_PROP_ACK, 150)
             Thread.sleep(300)
             toneGen.release()

@@ -46,9 +46,11 @@ class WorkoutFragment : Fragment() {
     private var currentUserId: String = ""
     private lateinit var workoutRepository: WorkoutRepository
 
-    // ── Cronómetro de entrenamiento ───────────────────────────────────────────
+    // ── Cronómetro ────────────────────────────────────────────────────────────
     private val timerHandler = Handler(Looper.getMainLooper())
     private var elapsedSeconds = 0
+    private var timerRunning = false
+
     private val timerRunnable = object : Runnable {
         override fun run() {
             elapsedSeconds++
@@ -63,16 +65,9 @@ class WorkoutFragment : Fragment() {
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-            val localBinder = binder as? RestTimerService.LocalBinder
-            restTimerService = localBinder?.getService()
+            restTimerService = (binder as? RestTimerService.LocalBinder)?.getService()
             serviceBound = true
-
-            // Cuando el fragment vuelve a primer plano, recibe los ticks del service
-            // para actualizar cualquier UI en tiempo real si fuera necesario
-            restTimerService?.onTick = { _ -> }
-            restTimerService?.onFinish = { }
         }
-
         override fun onServiceDisconnected(name: ComponentName?) {
             restTimerService = null
             serviceBound = false
@@ -92,24 +87,33 @@ class WorkoutFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         workoutRepository = WorkoutRepository(requireContext())
-        workoutStartedAt = System.currentTimeMillis()
         currentUserId = "usuario_temporal"
-
         WorkoutNotificationManager.createChannel(requireContext())
 
         setupRecyclerView()
         setupRibbon()
         observeData()
-        loadRoutine()
-        startTimer()
+
+        val alreadyLoaded = viewModel.workoutRoutineState.value is Resource.Success
+        if (!alreadyLoaded) {
+            workoutStartedAt = System.currentTimeMillis()
+            elapsedSeconds = 0
+            loadRoutine()
+        } else {
+            val routine = (viewModel.workoutRoutineState.value as Resource.Success).data
+            binding.tvRoutineName.text = routine?.name ?: "Entrenamiento"
+            binding.recyclerView.isVisible = true
+            binding.progressBar.isVisible = false
+            binding.fabSaveWorkout.isInvisible = setParamState.isEmpty()
+        }
+
+        resumeTimer()
 
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
     }
 
     override fun onStart() {
         super.onStart()
-        // Enlazar con el service si está corriendo
-        // Si no está activo, bindService simplemente no conecta — sin crash
         val intent = Intent(requireContext(), RestTimerService::class.java)
         requireContext().bindService(intent, serviceConnection, 0)
     }
@@ -125,18 +129,22 @@ class WorkoutFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         timerHandler.removeCallbacks(timerRunnable)
+        timerRunning = false
         _binding = null
     }
 
-    // ── Cronómetro de entrenamiento ───────────────────────────────────────────
+    // ── Cronómetro ────────────────────────────────────────────────────────────
 
-    private fun startTimer() {
-        elapsedSeconds = 0
+    private fun resumeTimer() {
+        if (timerRunning) return
+        timerRunning = true
         timerHandler.removeCallbacks(timerRunnable)
         timerHandler.postDelayed(timerRunnable, 1000)
+        updateTimerDisplay()
     }
 
     private fun updateTimerDisplay() {
+        if (_binding == null) return
         val h = elapsedSeconds / 3600
         val m = (elapsedSeconds % 3600) / 60
         val s = elapsedSeconds % 60
@@ -150,19 +158,14 @@ class WorkoutFragment : Fragment() {
     // ── Ribbon ────────────────────────────────────────────────────────────────
 
     private fun setupRibbon() {
-        binding.btnExpandAll.setOnClickListener {
-            adapter.expandAll()
-        }
-        binding.btnCollapseAll.setOnClickListener {
-            adapter.collapseAll()
-        }
+        binding.btnExpandAll.setOnClickListener { adapter.expandAll() }
+        binding.btnCollapseAll.setOnClickListener { adapter.collapseAll() }
         binding.btnNotes.setOnClickListener {
             Toast.makeText(requireContext(), "Notas — próximamente", Toast.LENGTH_SHORT).show()
         }
         binding.btnHistory.setOnClickListener {
             Toast.makeText(requireContext(), "Progreso — próximamente", Toast.LENGTH_SHORT).show()
         }
-        // Navegar a configuración de vibración/sonido
         binding.btnRestSettings.setOnClickListener {
             findNavController().navigate(
                 WorkoutFragmentDirections.actionWorkoutToPreferences()
@@ -232,11 +235,11 @@ class WorkoutFragment : Fragment() {
                     binding.progressBar.isVisible = false
                     binding.recyclerView.isVisible = true
                     resource.data?.let { routine ->
-                        setParamState.clear()
-                        workoutStartedAt = System.currentTimeMillis()
-                        binding.fabSaveWorkout.isInvisible = true
                         binding.tvRoutineName.text = routine.name ?: "Entrenamiento"
-                        adapter.submitRoutine(routine)
+                        if (adapter.itemCount == 0) {
+                            adapter.submitRoutine(routine)
+                        }
+                        binding.fabSaveWorkout.isInvisible = setParamState.isEmpty()
                     }
                 }
                 is Resource.Error -> {
