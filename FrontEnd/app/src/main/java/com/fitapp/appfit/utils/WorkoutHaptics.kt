@@ -8,10 +8,6 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.annotation.RequiresPermission
 
-/**
- * Vibraciones y sonidos para el flujo de entrenamiento.
- * Usa VibrationEffect para API 26+, fallback para anteriores.
- */
 object WorkoutHaptics {
 
     private fun vibrator(context: Context): Vibrator? =
@@ -24,22 +20,29 @@ object WorkoutHaptics {
         }
 
     /** Ejercicio iniciado — pulso corto doble */
-    @RequiresPermission(Manifest.permission.VIBRATE)
-    fun exerciseStart(context: Context) =  vibrate(context, longArrayOf(0, 80, 60, 80))
+    fun exerciseStart(context: Context) {
+        if (!WorkoutPreferences.isVibrationEnabled(context)) return
+        vibrate(context, longArrayOf(0, 80, 60, 80))
+    }
 
     /** Serie/duración completada — pulso medio */
-    @RequiresPermission(Manifest.permission.VIBRATE)
-    fun setComplete(context: Context) = vibrate(context, longArrayOf(0, 150))
+    fun setComplete(context: Context) {
+        if (!WorkoutPreferences.isVibrationEnabled(context)) return
+        vibrate(context, longArrayOf(0, 150))
+    }
 
-    /** Descanso terminado, siguiente serie — pulso triple */
-    @RequiresPermission(Manifest.permission.VIBRATE)
-    fun restFinished(context: Context) = vibrate(context, longArrayOf(0, 100, 80, 100, 80, 100))
+    /** Descanso terminado — pulso triple */
+    fun restFinished(context: Context) {
+        if (!WorkoutPreferences.isVibrationEnabled(context)) return
+        vibrate(context, longArrayOf(0, 100, 80, 100, 80, 100))
+    }
 
     /** Ejercicio completo — pulso largo */
-    @RequiresPermission(Manifest.permission.VIBRATE)
-    fun exerciseComplete(context: Context) = vibrate(context, longArrayOf(0, 400))
+    fun exerciseComplete(context: Context) {
+        if (!WorkoutPreferences.isVibrationEnabled(context)) return
+        vibrate(context, longArrayOf(0, 400))
+    }
 
-    @RequiresPermission(Manifest.permission.VIBRATE)
     private fun vibrate(context: Context, pattern: LongArray) {
         val v = vibrator(context) ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

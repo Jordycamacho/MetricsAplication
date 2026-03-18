@@ -1,7 +1,12 @@
 package com.fitapp.appfit.ui.workout
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,7 +25,9 @@ import com.fitapp.appfit.databinding.FragmentWorkoutBinding
 import com.fitapp.appfit.model.RoutineViewModel
 import com.fitapp.appfit.repository.WorkoutRepository
 import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
+import com.fitapp.appfit.service.RestTimerService
 import com.fitapp.appfit.utils.Resource
+import com.fitapp.appfit.utils.WorkoutNotificationManager
 import kotlinx.coroutines.launch
 
 class WorkoutFragment : Fragment() {
@@ -39,7 +46,7 @@ class WorkoutFragment : Fragment() {
     private var currentUserId: String = ""
     private lateinit var workoutRepository: WorkoutRepository
 
-    // ── Cronómetro ────────────────────────────────────────────────────────────
+    // ── Cronómetro de entrenamiento ───────────────────────────────────────────
     private val timerHandler = Handler(Looper.getMainLooper())
     private var elapsedSeconds = 0
     private val timerRunnable = object : Runnable {
@@ -49,6 +56,30 @@ class WorkoutFragment : Fragment() {
             timerHandler.postDelayed(this, 1000)
         }
     }
+
+    // ── Conexión con RestTimerService ─────────────────────────────────────────
+    private var restTimerService: RestTimerService? = null
+    private var serviceBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+            val localBinder = binder as? RestTimerService.LocalBinder
+            restTimerService = localBinder?.getService()
+            serviceBound = true
+
+            // Cuando el fragment vuelve a primer plano, recibe los ticks del service
+            // para actualizar cualquier UI en tiempo real si fuera necesario
+            restTimerService?.onTick = { _ -> }
+            restTimerService?.onFinish = { }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            restTimerService = null
+            serviceBound = false
+        }
+    }
+
+    // ── Ciclo de vida ─────────────────────────────────────────────────────────
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -64,6 +95,8 @@ class WorkoutFragment : Fragment() {
         workoutStartedAt = System.currentTimeMillis()
         currentUserId = "usuario_temporal"
 
+        WorkoutNotificationManager.createChannel(requireContext())
+
         setupRecyclerView()
         setupRibbon()
         observeData()
@@ -73,7 +106,29 @@ class WorkoutFragment : Fragment() {
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
     }
 
-    // ── Cronómetro ────────────────────────────────────────────────────────────
+    override fun onStart() {
+        super.onStart()
+        // Enlazar con el service si está corriendo
+        // Si no está activo, bindService simplemente no conecta — sin crash
+        val intent = Intent(requireContext(), RestTimerService::class.java)
+        requireContext().bindService(intent, serviceConnection, 0)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (serviceBound) {
+            requireContext().unbindService(serviceConnection)
+            serviceBound = false
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        timerHandler.removeCallbacks(timerRunnable)
+        _binding = null
+    }
+
+    // ── Cronómetro de entrenamiento ───────────────────────────────────────────
 
     private fun startTimer() {
         elapsedSeconds = 0
@@ -107,8 +162,11 @@ class WorkoutFragment : Fragment() {
         binding.btnHistory.setOnClickListener {
             Toast.makeText(requireContext(), "Progreso — próximamente", Toast.LENGTH_SHORT).show()
         }
+        // Navegar a configuración de vibración/sonido
         binding.btnRestSettings.setOnClickListener {
-            Toast.makeText(requireContext(), "Descanso global — próximamente", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(
+                WorkoutFragmentDirections.actionWorkoutToPreferences()
+            )
         }
     }
 
@@ -225,11 +283,5 @@ class WorkoutFragment : Fragment() {
                 }
             )
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        timerHandler.removeCallbacks(timerRunnable)
-        _binding = null
     }
 }

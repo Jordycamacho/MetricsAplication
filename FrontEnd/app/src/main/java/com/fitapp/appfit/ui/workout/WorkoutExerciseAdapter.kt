@@ -13,6 +13,7 @@ import com.fitapp.appfit.response.routine.response.RoutineResponse
 import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.timer.RestTimer
 import com.fitapp.appfit.utils.WorkoutHaptics
+import com.fitapp.appfit.utils.WorkoutSoundManager
 
 class WorkoutExerciseAdapter(
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit
@@ -81,7 +82,10 @@ class WorkoutExerciseAdapter(
             onFinish = {
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
+
                     WorkoutHaptics.restFinished(itemView.context)
+                    Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
+
                     tvExerciseRest.text = "${restSeconds}s"
                     tvExerciseRestHint.text = "TAP"
                 }

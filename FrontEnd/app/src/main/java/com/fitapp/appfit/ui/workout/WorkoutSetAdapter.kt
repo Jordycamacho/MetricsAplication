@@ -13,6 +13,7 @@ import com.fitapp.appfit.response.routine.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
 import com.fitapp.appfit.timer.RestTimer
 import com.fitapp.appfit.utils.WorkoutHaptics
+import com.fitapp.appfit.utils.WorkoutSoundManager
 
 class WorkoutSetAdapter(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
@@ -112,10 +113,6 @@ class WorkoutSetAdapter(
         private val layoutRestContainer: View = itemView.findViewById(R.id.layout_rest_container)
         private val tvRestTimer: TextView     = itemView.findViewById(R.id.tv_rest_timer)
         private val tvRestHint: TextView      = itemView.findViewById(R.id.tv_rest_hint)
-
-        // ── PUNTERO al TextView que está mostrando el contador de duración ──
-        // Se asigna en bindControls según qué columna se usa para duración.
-        // El timer siempre actualiza ESTE TextView, nunca a ciegas los tres.
         private var durationDisplayView: TextView? = null
 
         private var currentSetId: Long = -1L
@@ -134,7 +131,11 @@ class WorkoutSetAdapter(
             onFinish = {
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
+
                     WorkoutHaptics.restFinished(itemView.context)
+
+                    Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
+
                     updateRestLabel()
                     if (isSequenceMode()) onSetRestFinished(myIndex)
                 }
@@ -144,16 +145,18 @@ class WorkoutSetAdapter(
         private val durationTimer = RestTimer(
             onTick = { s ->
                 if (durationTimerActive && itemView.isAttachedToWindow) {
-                    // Solo toca el TextView que realmente muestra el contador
                     durationDisplayView?.text = formatDuration(s.toLong())
                 }
             },
             onFinish = {
                 if (durationTimerActive && itemView.isAttachedToWindow) {
                     durationTimerActive = false
-                    // Restaurar el valor objetivo en el display de duración
                     durationDisplayView?.text = formatDuration(currentDuration[currentSetId] ?: 0L)
+
                     WorkoutHaptics.setComplete(itemView.context)
+
+                    Thread { WorkoutSoundManager.playSetComplete(itemView.context) }.start()
+
                     onValueChanged(sets[myIndex], "completed", 1.0)
                     if (isSequenceMode() && restSeconds > 0) {
                         restTimerActive = true
@@ -329,11 +332,6 @@ class WorkoutSetAdapter(
             }
         }
 
-        /**
-         * Reutiliza la columna izquierda (isLeft=true → layoutReps/tvRepsValue)
-         * o la derecha (isLeft=false → layoutParam/tvParamValue) para mostrar duración.
-         * Asigna durationDisplayView al TextView correcto.
-         */
         private fun setupDurationInColumn(set: RoutineSetTemplateResponse, position: Int, isLeft: Boolean) {
             val layout  = if (isLeft) layoutReps  else layoutParam
             val tvLabel = if (isLeft) tvRepsLabel  else tvParamUnit
@@ -359,10 +357,7 @@ class WorkoutSetAdapter(
             autoStartIfSequence(set, position)
         }
 
-        /**
-         * Caso F (reps + param + duración): bloque extra debajo de la fila principal.
-         * tv_duration_timer es el display, durationDisplayView apunta a él.
-         */
+
         private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
             layoutDurationExtra.visibility = View.VISIBLE
             tvDurationTimer.text = formatDuration(currentDuration[set.id] ?: 0L)
@@ -402,7 +397,6 @@ class WorkoutSetAdapter(
             if (durationTimerActive) return
             val new = ((currentDuration[set.id] ?: 0L) + delta).coerceAtLeast(5L)
             currentDuration[set.id] = new
-            // Solo actualiza el display correcto
             durationDisplayView?.text = formatDuration(new)
             onValueChanged(set, "duration", new.toDouble())
         }

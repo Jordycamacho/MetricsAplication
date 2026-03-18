@@ -12,7 +12,6 @@ import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.R
 import com.fitapp.appfit.auth.LoginActivity
 import com.fitapp.appfit.databinding.FragmentProfileBinding
-import com.fitapp.appfit.databinding.ItemProfileRowBinding
 import com.fitapp.appfit.model.ProfileViewModel
 import com.fitapp.appfit.response.user.request.UserResponse
 import com.fitapp.appfit.utils.Resource
@@ -42,8 +41,7 @@ class ProfileFragment : Fragment() {
         viewModel.loadProfile()
     }
 
-    // ── Configuración de filas ───────────────────────────────────────────────
-    // Los include con id generan bindings anidados: binding.rowEditProfile es ItemProfileRowBinding
+    // ── Filas ────────────────────────────────────────────────────────────────
 
     private fun setupRows() {
         with(binding.rowEditProfile) {
@@ -81,6 +79,18 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // ── NUEVO: Ajustes de entrenamiento ───────────────────────────────
+        with(binding.rowWorkoutSettings) {
+            ivRowIcon.setImageResource(R.drawable.ic_add)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Ajustes de entrenamiento"
+            tvRowSubtitle.text = "Vibración, sonido y alertas"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener {
+                findNavController().navigate(R.id.navigation_workout_preferences)
+            }
+        }
+
         with(binding.rowLogout) {
             ivRowIcon.setImageResource(R.drawable.ic_logout)
             ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
@@ -106,7 +116,7 @@ class ProfileFragment : Fragment() {
     private fun setupObservers() {
         viewModel.profileState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
-                is Resource.Loading -> { /* opcional: shimmer o skeleton */ }
+                is Resource.Loading -> {}
                 is Resource.Success -> populateProfile(resource.data!!)
                 is Resource.Error   -> showSnackbar(resource.message ?: "Error al cargar perfil")
             }
@@ -157,7 +167,6 @@ class ProfileFragment : Fragment() {
         binding.tvStatPlan.text = user.subscription?.type ?: "FREE"
         binding.tvPlanBadge.text = user.subscription?.type ?: "FREE"
 
-        // Estado de verificación de correo
         with(binding.rowVerifyEmail) {
             if (user.emailVerified) {
                 ivRowIcon.setImageResource(R.drawable.ic_check)
@@ -171,7 +180,6 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        // Subtítulo de suscripción
         user.subscription?.endDate?.let { endDate ->
             binding.rowSubscription.tvRowSubtitle.text = "Expira: $endDate"
             binding.rowSubscription.tvRowSubtitle.visibility = View.VISIBLE

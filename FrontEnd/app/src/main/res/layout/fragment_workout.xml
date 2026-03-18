@@ -232,7 +232,6 @@
                             android:background="#2A2A2A"
                             android:layout_marginHorizontal="4dp" />
 
-                        <!-- Acción: Descanso global (visual) -->
                         <LinearLayout
                             android:id="@+id/btn_rest_settings"
                             android:layout_width="wrap_content"
@@ -248,13 +247,13 @@
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:src="@drawable/ic_add"
+                                android:src="@drawable/ic_edit"
                                 app:tint="#78703F" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Descanso"
+                                android:text="Ajustes"
                                 android:textColor="#B3B3B3"
                                 android:textSize="9sp"
                                 android:layout_marginTop="3dp" />

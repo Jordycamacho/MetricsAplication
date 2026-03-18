@@ -38,7 +38,11 @@
         android:id="@+id/navigation_profile"
         android:name="com.fitapp.appfit.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_workout_preferences"
+            app:destination="@id/navigation_workout_preferences" />
+    </fragment>
 
     <!-- Rutinas -->
     <fragment
@@ -137,7 +141,16 @@
         <argument
             android:name="routineId"
             app:argType="long" />
+        <action
+            android:id="@+id/action_workout_to_preferences"
+            app:destination="@id/navigation_workout_preferences" />
     </fragment>
+
+    <fragment
+        android:id="@+id/navigation_workout_preferences"
+        android:name="com.fitapp.appfit.ui.workout.WorkoutPreferencesFragment"
+        android:label="Configuración"
+        tools:layout="@layout/fragment_workout_preferences" />
 
     <fragment
         android:id="@+id/navigation_routine_sets"
