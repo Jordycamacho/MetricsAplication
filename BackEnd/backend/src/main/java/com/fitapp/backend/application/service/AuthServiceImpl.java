@@ -46,21 +46,23 @@ public class AuthServiceImpl implements AuthUseCase {
 
     @Override
     public void logout(String bearerToken) {
+        log.info("[AUTH] Solicitud de logout recibida");
         if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+            log.warn("[AUTH] FALLO logout: header inválido='{}'", bearerToken);
             throw new BadCredentialsException("Token inválido");
         }
 
         String token = bearerToken.substring(7);
-
         try {
             Jwt jwt = jwtDecoder.decode(token);
             Instant expiry = jwt.getExpiresAt();
             long ttl = expiry != null ? Instant.now().until(expiry, ChronoUnit.SECONDS) : 0;
+            log.info("[AUTH] Token a blacklistear: subject={} expiresAt={} ttlRestante={}s",
+                    jwt.getSubject(), expiry, ttl);
             tokenBlacklistPort.blacklist(token, ttl);
-            log.info("Logout exitoso - token invalidado");
+            log.info("[AUTH] Logout exitoso - token invalidado en Redis");
         } catch (Exception e) {
-            // Token ya expirado o malformado: logout igualmente seguro
-            log.warn("Logout con token ya inválido: {}", e.getMessage());
+            log.warn("[AUTH] Logout con token ya inválido o expirado: {}", e.getMessage());
         }
     }
 
@@ -125,17 +127,22 @@ public class AuthServiceImpl implements AuthUseCase {
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        log.info("Intento de login para email: {}", request.email());
+        log.info("[AUTH] Intento de login para email: {}", request.email());
 
         UserModel userModel = userUseCase.findByEmail(request.email())
-                .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
+                .orElseThrow(() -> {
+                    log.warn("[AUTH] FALLO login: email no encontrado={}", request.email());
+                    return new BadCredentialsException("Credenciales inválidas");
+                });
 
         if (!passwordEncoder.matches(request.password(), userModel.getPassword())) {
+            log.warn("[AUTH] FALLO login: contraseña incorrecta para email={}", request.email());
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
         userUseCase.updateLastLogin(userModel.getId());
-        log.info("Login exitoso userId={}", userModel.getId());
+        log.info("[AUTH] Login exitoso userId={} roles={}",
+                userModel.getId(), userModel.getGrantedAuthorities());
         return generateAuthResponse(userModel);
     }
 
@@ -143,22 +150,34 @@ public class AuthServiceImpl implements AuthUseCase {
 
     @Override
     public AuthResponse refreshAccessToken(String refreshToken) {
+        log.info("[AUTH] Intento de refresh con token: {}...",
+                refreshToken.length() > 20 ? refreshToken.substring(0, 20) : refreshToken);
         try {
             Jwt jwt = jwtDecoder.decode(refreshToken);
+            log.info("[AUTH] Refresh token decodificado OK. subject={} expiresAt={}",
+                    jwt.getSubject(), jwt.getExpiresAt());
 
             String type = jwt.getClaimAsString("type");
+            log.info("[AUTH] Tipo de token recibido en /refresh: '{}'", type);
+
             if (!"refresh".equals(type)) {
+                log.warn("[AUTH] FALLO refresh: el token tiene type='{}', se esperaba 'refresh'", type);
                 throw new BadCredentialsException("Token proporcionado no es un refresh token");
             }
 
             UserModel user = userUseCase.findByEmail(jwt.getSubject())
-                    .orElseThrow(() -> new BadCredentialsException("Token inválido"));
+                    .orElseThrow(() -> {
+                        log.warn("[AUTH] FALLO refresh: usuario no encontrado para email={}", jwt.getSubject());
+                        return new BadCredentialsException("Token inválido");
+                    });
 
+            log.info("[AUTH] Refresh exitoso para userId={} email={}", user.getId(), user.getEmail());
             return generateAuthResponse(user);
         } catch (BadCredentialsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Fallo al refrescar token: {}", e.getMessage());
+            log.error("[AUTH] EXCEPCIÓN en refreshAccessToken: tipo={} mensaje={}",
+                    e.getClass().getSimpleName(), e.getMessage());
             throw new BadCredentialsException("Token de refresco inválido o expirado");
         }
     }
