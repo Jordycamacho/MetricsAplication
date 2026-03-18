@@ -1,7 +1,7 @@
-package com.fitapp.appfit.network
+package com.fitapp.appfit.utils
 
+import com.fitapp.appfit.network.AuthService
 import com.fitapp.appfit.response.RefreshTokenRequest
-import com.fitapp.appfit.utils.SessionManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -11,54 +11,50 @@ import timber.log.Timber
 
 class TokenAuthenticator : Authenticator {
 
-    companion object {
-        private const val RETRY_HEADER = "X-Retry-After-Refresh"
-    }
-
     override fun authenticate(route: Route?, response: Response): Request? {
-
-        if (response.request.header(RETRY_HEADER) != null) {
-            Timber.w("Token sigue inválido tras refresh, cerrando sesión")
+        if (response.request.header("X-Retry-With-Refresh") != null) {
+            Timber.w("[AUTHENTICATOR] Ya se intentó refresh, abortando - sesión expirada")
             SessionManager.clearSession()
             return null
         }
+
+        Timber.i("[AUTHENTICATOR] 401 recibido en ${response.request.url}, intentando refresh...")
 
         val refreshToken = SessionManager.refreshToken
         if (refreshToken.isNullOrEmpty()) {
-            Timber.w("No hay refresh token disponible, cerrando sesión")
+            Timber.w("[AUTHENTICATOR] No hay refresh token guardado, limpiando sesión")
             SessionManager.clearSession()
             return null
         }
 
-        return synchronized(this) {
+        Timber.i("[AUTHENTICATOR] Refresh token encontrado, llamando a /api/auth/refresh")
+
+        return runBlocking {
             try {
-                Timber.i("Token expirado, intentando refresh...")
+                val authService = AuthService.instance
+                val refreshResponse = authService.refreshToken(RefreshTokenRequest(refreshToken))
 
-                val newAuthResponse = runBlocking {
-                    AuthService.instance.refreshToken(RefreshTokenRequest(refreshToken))
-                }
-
-                if (newAuthResponse.isSuccessful) {
-                    val authResponse = newAuthResponse.body()
-                    if (authResponse != null) {
-                        SessionManager.saveSession(authResponse)
-                        Timber.i("Token refrescado exitosamente, reintentando request")
+                if (refreshResponse.isSuccessful) {
+                    val newAuth = refreshResponse.body()
+                    if (newAuth != null) {
+                        Timber.i("[AUTHENTICATOR] Refresh exitoso - nuevo token guardado, reintentando request original")
+                        SessionManager.saveSession(newAuth)
                         response.request.newBuilder()
-                            .header("Authorization", "Bearer ${authResponse.token}")
-                            .header(RETRY_HEADER, "true")
+                            .header("Authorization", "Bearer ${newAuth.token}")
+                            .header("X-Retry-With-Refresh", "true")
                             .build()
                     } else {
-                        Timber.e("Cuerpo de respuesta de refresh vacío")
+                        Timber.e("[AUTHENTICATOR] Refresh devolvió body null")
                         SessionManager.clearSession()
                         null
                     }
                 } else {
-                    Timber.e("Refresh falló con código: ${newAuthResponse.code()}")
+                    Timber.e("[AUTHENTICATOR] Refresh FALLÓ - código ${refreshResponse.code()}: ${refreshResponse.errorBody()?.string()}")
                     SessionManager.clearSession()
                     null
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Excepción durante el refresh de token")
+                Timber.e(e, "[AUTHENTICATOR] Excepción durante refresh: ${e.message}")
                 SessionManager.clearSession()
                 null
             }

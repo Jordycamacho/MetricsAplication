@@ -2,6 +2,7 @@ package com.fitapp.appfit.network
 
 import com.fitapp.appfit.BuildConfig
 import com.fitapp.appfit.service.RoutineService
+import com.fitapp.appfit.utils.TokenAuthenticator
 import com.fitapp.appfit.utils.TokenInterceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
