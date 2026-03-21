@@ -1,4 +1,4 @@
-package com.fitapp.appfit.response.routine.request
+package com.fitapp.appfit.feature.routine.model.rutinexercise.request
 
 import com.google.gson.annotations.SerializedName
 

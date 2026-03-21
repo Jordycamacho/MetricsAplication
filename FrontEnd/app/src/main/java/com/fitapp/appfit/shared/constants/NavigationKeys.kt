@@ -1,4 +1,4 @@
-package com.fitapp.appfit.constants
+package com.fitapp.appfit.shared.constants
 
 object NavigationKeys {
     const val ROUTINE_UPDATED = "routine_updated"

@@ -8,7 +8,7 @@
     <!-- Menú principal -->
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.fitapp.appfit.ui.home.HomeFragment"
+        android:name="com.fitapp.appfit.feature.home.ui.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home">
         <action
@@ -24,19 +24,19 @@
 
     <fragment
         android:id="@+id/navigation_training"
-        android:name="com.fitapp.appfit.ui.training.TrainingFragment"
+        android:name="com.fitapp.appfit.feature.training.ui.TrainingFragment"
         android:label="@string/title_training"
         tools:layout="@layout/fragment_training" />
 
     <fragment
         android:id="@+id/navigation_metrics"
-        android:name="com.fitapp.appfit.ui.metrics.MetricsFragment"
+        android:name="com.fitapp.appfit.feature.metrics.ui.MetricsFragment"
         android:label="@string/title_metrics"
         tools:layout="@layout/fragment_metrics" />
 
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.fitapp.appfit.ui.profile.ProfileFragment"
+        android:name="com.fitapp.appfit.feature.profile.ui.ProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile">
         <action
@@ -47,7 +47,7 @@
     <!-- Rutinas -->
     <fragment
         android:id="@+id/navigation_routines"
-        android:name="com.fitapp.appfit.ui.routines.RoutinesFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.list.RoutinesFragment"
         android:label="@string/title_routines"
         tools:layout="@layout/fragment_routines_list">
         <action
@@ -64,7 +64,7 @@
     <!-- Lista de ejercicios de la rutina -->
     <fragment
         android:id="@+id/navigation_routine_exercises"
-        android:name="com.fitapp.appfit.ui.routines.RoutineExercisesFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.exercises.RoutineExercisesFragment"
         android:label="Ejercicios de la rutina"
         tools:layout="@layout/fragment_routine_exercises">
         <argument
@@ -84,7 +84,7 @@
     <!-- Editar ejercicio dentro de una rutina -->
     <fragment
         android:id="@+id/navigation_edit_exercise_in_routine"
-        android:name="com.fitapp.appfit.ui.routines.create.EditExerciseInRoutineFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.exercises.EditExerciseInRoutineFragment"
         android:label="Editar Ejercicio"
         tools:layout="@layout/fragment_edit_exercise_in_routine">
         <argument
@@ -121,7 +121,7 @@
     <!-- Añadir ejercicios a rutina -->
     <fragment
         android:id="@+id/navigation_add_exercises_to_routine"
-        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesToRoutineFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.exercises.AddExercisesToRoutineFragment"
         android:label="Agregar Ejercicio"
         tools:layout="@layout/fragment_add_exercises_to_routine">
         <argument
@@ -135,7 +135,7 @@
 
     <fragment
         android:id="@+id/navigation_workout"
-        android:name="com.fitapp.appfit.ui.workout.WorkoutFragment"
+        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutFragment"
         android:label="Entrenamiento"
         tools:layout="@layout/fragment_workout">
         <argument
@@ -148,13 +148,13 @@
 
     <fragment
         android:id="@+id/navigation_workout_preferences"
-        android:name="com.fitapp.appfit.ui.workout.WorkoutPreferencesFragment"
+        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutPreferencesFragment"
         android:label="Configuración"
         tools:layout="@layout/fragment_workout_preferences" />
 
     <fragment
         android:id="@+id/navigation_routine_sets"
-        android:name="com.fitapp.appfit.ui.routines.sets.RoutineSetsFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.sets.RoutineSetsFragment"
         android:label="Sets del ejercicio"
         tools:layout="@layout/fragment_routine_sets">
         <argument
@@ -170,7 +170,7 @@
 
     <fragment
         android:id="@+id/navigation_add_edit_set"
-        android:name="com.fitapp.appfit.ui.routines.sets.AddEditSetFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.sets.AddEditSetFragment"
         android:label="Nuevo Set"
         tools:layout="@layout/fragment_add_edit_set">
         <argument
@@ -187,14 +187,14 @@
 
     <fragment
         android:id="@+id/navigation_sports"
-        android:name="com.fitapp.appfit.ui.sports.SportsFragment"
+        android:name="com.fitapp.appfit.feature.sport.ui.SportsFragment"
         android:label="@string/title_sports"
         tools:layout="@layout/fragment_sports" />
 
     <!-- EJERCICIOS -->
     <fragment
         android:id="@+id/navigation_exercises"
-        android:name="com.fitapp.appfit.ui.exercises.ExercisesFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.list.ExercisesFragment"
         android:label="@string/title_exercises"
         tools:layout="@layout/fragment_exercises">
         <action
@@ -218,13 +218,13 @@
 
     <fragment
         android:id="@+id/navigation_create_exercise"
-        android:name="com.fitapp.appfit.ui.exercises.create.CreateExerciseFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.form.CreateExerciseFragment"
         android:label="Crear Ejercicio"
         tools:layout="@layout/fragment_create_exercise" />
 
     <fragment
         android:id="@+id/navigation_edit_exercise"
-        android:name="com.fitapp.appfit.ui.exercises.create.EditExerciseFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.form.EditExerciseFragment"
         android:label="Editar Ejercicio"
         tools:layout="@layout/fragment_edit_exercise">
         <argument
@@ -234,7 +234,7 @@
 
     <fragment
         android:id="@+id/navigation_exercise_detail"
-        android:name="com.fitapp.appfit.ui.exercises.detail.ExerciseDetailFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.detail.ExerciseDetailFragment"
         android:label="Detalle Ejercicio"
         tools:layout="@layout/fragment_exercise_detail">
         <argument
@@ -251,25 +251,25 @@
 
     <fragment
         android:id="@+id/navigation_import_export"
-        android:name="com.fitapp.appfit.ui.importexport.ImportExportFragment"
+        android:name="com.fitapp.appfit.feature.importexport.ui.ImportExportFragment"
         android:label="@string/title_import_export"
         tools:layout="@layout/fragment_import_export" />
 
     <fragment
         android:id="@+id/navigation_create_routine"
-        android:name="com.fitapp.appfit.ui.routines.create.CreateRoutineFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.form.CreateRoutineFragment"
         android:label="@string/title_create_routine"
         tools:layout="@layout/fragment_create_routine" />
 
     <fragment
         android:id="@+id/navigation_add_exercises"
-        android:name="com.fitapp.appfit.ui.routines.create.AddExercisesToRoutineFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.exercises.AddExercisesToRoutineFragment"
         android:label="@string/title_add_exercises"
         tools:layout="@layout/fragment_add_exercises_to_routine" />
 
     <fragment
         android:id="@+id/navigation_edit_routine"
-        android:name="com.fitapp.appfit.ui.routines.create.EditRoutineFragment"
+        android:name="com.fitapp.appfit.feature.routine.ui.form.EditRoutineFragment"
         android:label="@string/title_edit_routine"
         tools:layout="@layout/fragment_edit_routine">
         <argument
@@ -279,19 +279,19 @@
 
     <fragment
         android:id="@+id/navigation_exercise_params"
-        android:name="com.fitapp.appfit.ui.exercises.params.ExerciseParamsFragment"
+        android:name="com.fitapp.appfit.feature.parameter.ui.ExerciseParamsFragment"
         android:label="Parámetros"
         tools:layout="@layout/fragment_exercise_params" />
 
     <fragment
         android:id="@+id/navigation_create_parameter"
-        android:name="com.fitapp.appfit.ui.exercises.params.create.CreateParameterFragment"
+        android:name="com.fitapp.appfit.feature.parameter.ui.CreateParameterFragment"
         android:label="@string/title_create_parameter"
         tools:layout="@layout/fragment_create_parameter" />
 
     <fragment
         android:id="@+id/navigation_edit_parameter"
-        android:name="com.fitapp.appfit.ui.exercises.params.create.EditParameterFragment"
+        android:name="com.fitapp.appfit.feature.parameter.ui.EditParameterFragment"
         android:label="@string/title_edit_parameter"
         tools:layout="@layout/fragment_edit_parameter">
         <argument
@@ -301,19 +301,19 @@
 
     <fragment
         android:id="@+id/navigation_exercise_categories"
-        android:name="com.fitapp.appfit.ui.categories.ExerciseCategoriesFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.category.ExerciseCategoriesFragment"
         android:label="Categorías"
         tools:layout="@layout/fragment_exercise_categories" />
 
     <fragment
         android:id="@+id/navigation_create_category"
-        android:name="com.fitapp.appfit.ui.categories.create.CreateCategoryFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.category.CreateCategoryFragment"
         android:label="Crear Categoría"
         tools:layout="@layout/fragment_create_category" />
 
     <fragment
         android:id="@+id/navigation_edit_category"
-        android:name="com.fitapp.appfit.ui.categories.create.EditCategoryFragment"
+        android:name="com.fitapp.appfit.feature.exercise.ui.category.EditCategoryFragment"
         android:label="Editar Categoría"
         tools:layout="@layout/fragment_edit_category">
         <argument
@@ -323,13 +323,13 @@
 
     <fragment
         android:id="@+id/navigation_subscription"
-        android:name="com.fitapp.appfit.ui.subscription.SubscriptionFragment"
+        android:name="com.fitapp.appfit.feature.subscription.ui.SubscriptionFragment"
         android:label="Mi suscripción"
         tools:layout="@layout/fragment_subscription" />
 
     <fragment
         android:id="@+id/navigation_plans"
-        android:name="com.fitapp.appfit.ui.subscription.PlansFragment"
+        android:name="com.fitapp.appfit.feature.subscription.ui.PlansFragment"
         android:label="Planes"
         tools:layout="@layout/fragment_plans" />
 

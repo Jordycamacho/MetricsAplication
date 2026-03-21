@@ -6,11 +6,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
-import com.fitapp.appfit.auth.LoginActivity
+import com.fitapp.appfit.feature.auth.ui.LoginActivity
 import com.fitapp.appfit.databinding.ActivityMainBinding
-import com.fitapp.appfit.model.ProfileViewModel
-import com.fitapp.appfit.utils.Resource
-import com.fitapp.appfit.utils.SessionManager
+import com.fitapp.appfit.feature.profile.ProfileViewModel
+import com.fitapp.appfit.core.util.Resource
+import com.fitapp.appfit.core.session.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 

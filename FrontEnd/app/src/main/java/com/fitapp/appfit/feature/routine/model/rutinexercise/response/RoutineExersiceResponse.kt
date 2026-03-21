@@ -1,6 +1,6 @@
-package com.fitapp.appfit.response.routine.response
+package com.fitapp.appfit.feature.routine.model.rutinexercise.response
 
-import com.fitapp.appfit.response.sets.response.RoutineSetParameterResponse
+import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.google.gson.annotations.SerializedName
 
 data class RoutineExerciseResponse(

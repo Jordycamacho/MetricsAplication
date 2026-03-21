@@ -1,4 +1,4 @@
-package com.fitapp.appfit.utils
+package com.fitapp.appfit.core.util
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

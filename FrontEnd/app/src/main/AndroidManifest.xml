@@ -25,7 +25,7 @@
         >
 
         <activity
-            android:name=".auth.LoginActivity"
+            android:name=".feature.auth.ui.LoginActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:launchMode="singleTop">
@@ -49,7 +49,7 @@
         </activity>
 
         <activity
-            android:name=".auth.RegisterActivity"
+            android:name=".feature.auth.ui.RegisterActivity"
             android:exported="false" />
 
         <activity

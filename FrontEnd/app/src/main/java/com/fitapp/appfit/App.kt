@@ -1,7 +1,7 @@
 package com.fitapp.appfit
 
 import android.app.Application
-import com.fitapp.appfit.utils.SessionManager
+import com.fitapp.appfit.core.session.SessionManager
 import timber.log.Timber
 
 class App : Application() {
