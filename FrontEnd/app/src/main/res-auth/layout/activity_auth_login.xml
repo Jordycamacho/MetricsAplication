@@ -15,33 +15,6 @@
         android:gravity="center"
         android:paddingHorizontal="32dp">
 
-        <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_gravity="center_horizontal"
-            android:src="@drawable/logo_app"
-            app:tint="@color/gold_primary"
-            android:layout_marginBottom="20dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="AppFit"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05"
-            android:layout_gravity="center_horizontal" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tu entrenamiento, tu progreso"
-            android:textColor="#666666"
-            android:textSize="13sp"
-            android:layout_marginTop="6dp"
-            android:layout_gravity="center_horizontal" />
-
     </LinearLayout>
 
     <!-- Línea dorada decorativa -->

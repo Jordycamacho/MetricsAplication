@@ -12,18 +12,18 @@ import androidx.core.widget.doAfterTextChanged
 import com.fitapp.appfit.MainActivity
 import com.fitapp.appfit.core.session.SessionManager
 import com.fitapp.appfit.core.util.Resource
-import com.fitapp.appfit.databinding.ActivityRegisterBinding
+import com.fitapp.appfit.databinding.ActivityAuthRegisterBinding
 import com.fitapp.appfit.feature.auth.AuthViewModel
 import com.google.android.material.snackbar.Snackbar
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityRegisterBinding
+    private lateinit var binding: ActivityAuthRegisterBinding
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityRegisterBinding.inflate(layoutInflater)
+        binding = ActivityAuthRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         SessionManager.initialize(applicationContext)

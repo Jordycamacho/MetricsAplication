@@ -9,18 +9,18 @@ import androidx.appcompat.app.AppCompatActivity
 import com.fitapp.appfit.MainActivity
 import com.fitapp.appfit.core.session.SessionManager
 import com.fitapp.appfit.core.util.Resource
-import com.fitapp.appfit.databinding.ActivityLoginBinding
+import com.fitapp.appfit.databinding.ActivityAuthLoginBinding
 import com.fitapp.appfit.feature.auth.AuthViewModel
 import com.google.android.material.snackbar.Snackbar
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityLoginBinding
+    private lateinit var binding: ActivityAuthLoginBinding
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityLoginBinding.inflate(layoutInflater)
+        binding = ActivityAuthLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         SessionManager.initialize(applicationContext)

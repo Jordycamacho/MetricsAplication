@@ -15,8 +15,31 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // ── Source Sets ───────────────────────────────────────────────────────────
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res-shared",
+                "src/main/res-auth",
+                "src/main/res-home",
+                "src/main/res-routine",
+                "src/main/res-exercise",
+                "src/main/res-workout",
+                "src/main/res-profile",
+                "src/main/res-subscription",
+                "src/main/res-sport",
+                "src/main/res-parameter",
+                "src/main/res-training",
+                "src/main/res-importexport",
+                "src/main/res-metrics",
+                "src/main/res-marketplace",
+                "src/main/res-category"
+            )
+        }
     }
 
     // ── Entornos ──────────────────────────────────────────────────────────────

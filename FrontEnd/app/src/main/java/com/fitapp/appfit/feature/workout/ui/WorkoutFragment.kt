@@ -160,9 +160,6 @@ class WorkoutFragment : Fragment() {
     private fun setupRibbon() {
         binding.btnExpandAll.setOnClickListener { adapter.expandAll() }
         binding.btnCollapseAll.setOnClickListener { adapter.collapseAll() }
-        binding.btnNotes.setOnClickListener {
-            Toast.makeText(requireContext(), "Notas — próximamente", Toast.LENGTH_SHORT).show()
-        }
         binding.btnHistory.setOnClickListener {
             Toast.makeText(requireContext(), "Progreso — próximamente", Toast.LENGTH_SHORT).show()
         }

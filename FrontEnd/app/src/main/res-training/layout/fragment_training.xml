@@ -136,7 +136,7 @@
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
-                            android:src="@drawable/ic_training"
+                            android:src="@drawable/ic_exercise_24"
                             app:tint="@color/gold_primary"
                             android:layout_marginBottom="10dp" />
 
@@ -195,7 +195,7 @@
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
-                            android:src="@drawable/ic_training"
+                            android:src="@drawable/ic_sport_24"
                             app:tint="@color/gold_primary"
                             android:layout_marginBottom="10dp" />
 
@@ -245,7 +245,7 @@
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
-                            android:src="@drawable/ic_training"
+                            android:src="@drawable/ic_category_24"
                             app:tint="@color/gold_primary"
                             android:layout_marginBottom="10dp" />
 
@@ -303,7 +303,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@drawable/ic_training"
+                            android:src="@drawable/ic_parameter_24"
                             app:tint="#121212" />
 
                     </LinearLayout>
@@ -372,7 +372,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@drawable/ic_training"
+                            android:src="@drawable/ic_import_24"
                             app:tint="#121212" />
 
                     </LinearLayout>

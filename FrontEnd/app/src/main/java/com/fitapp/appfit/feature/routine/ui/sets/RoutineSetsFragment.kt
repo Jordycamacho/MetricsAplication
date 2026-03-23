@@ -13,7 +13,6 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentRoutineSetsBinding
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.ui.RoutineSetTemplateViewModel
-import com.fitapp.appfit.feature.routine.ui.sets.SetTemplateAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 

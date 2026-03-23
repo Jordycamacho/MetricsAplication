@@ -15,8 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentExerciseParamsBinding
-import com.fitapp.appfit.feature.parameter.ui.ParameterAdapter
-import com.fitapp.appfit.feature.parameter.ui.ParameterDetailBottomSheet
 import com.fitapp.appfit.feature.parameter.ParameterViewModel
 import com.fitapp.appfit.feature.parameter.model.request.CustomParameterFilterRequest
 import com.fitapp.appfit.feature.parameter.model.response.CustomParameterPageResponse

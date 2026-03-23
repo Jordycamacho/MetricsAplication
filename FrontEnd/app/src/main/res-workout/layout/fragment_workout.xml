@@ -103,7 +103,7 @@
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:src="@drawable/ic_arrow_down"
+                                android:src="@drawable/ic_drop_down_24"
                                 app:tint="#78703F" />
 
                             <TextView
@@ -137,10 +137,9 @@
                             android:background="?attr/selectableItemBackgroundBorderless">
 
                             <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_arrow_back"
-                                android:rotation="-90"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_drop_up_24"
                                 app:tint="#78703F" />
 
                             <TextView
@@ -160,34 +159,6 @@
                             android:background="#2A2A2A"
                             android:layout_marginHorizontal="4dp" />
 
-                        <!-- Acción: Notas (visual, sin función aún) -->
-                        <LinearLayout
-                            android:id="@+id/btn_notes"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:minWidth="60dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:background="?attr/selectableItemBackgroundBorderless">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_edit"
-                                app:tint="#78703F" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Notas"
-                                android:textColor="#B3B3B3"
-                                android:textSize="9sp"
-                                android:layout_marginTop="3dp" />
-
-                        </LinearLayout>
 
                         <!-- Separador -->
                         <View
@@ -247,7 +218,7 @@
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:src="@drawable/ic_edit"
+                                android:src="@drawable/ic_settings_24"
                                 app:tint="#78703F" />
 
                             <TextView
