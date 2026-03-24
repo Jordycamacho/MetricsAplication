@@ -4,190 +4,284 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="#0A0A0A">
 
-    <!-- Header: logo + slogan (40% pantalla) -->
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingHorizontal="32dp">
+        android:layout_weight="2.2">
 
-    </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_login_hero" />
 
-    <!-- Línea dorada decorativa -->
-    <View
-        android:layout_width="48dp"
-        android:layout_height="2dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/gold_primary"
-        android:layout_marginBottom="32dp" />
+        <View
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="-60dp"
+            android:background="@drawable/bg_circle_gold_faint" />
 
-    <!-- Formulario (60% pantalla) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingHorizontal="32dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JNOBFIT"
+                android:textColor="#C8B560"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.28"
+                android:includeFontPadding="false" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="12dp">
+
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="1dp"
+                    android:background="#C8B560"
+                    android:alpha="0.5" />
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_diamond_gold"
+                    android:layout_marginHorizontal="8dp" />
+
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="1dp"
+                    android:background="#C8B560"
+                    android:alpha="0.5" />
+
+            </LinearLayout>
+
+            <!-- Slogan -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Entrena. Progresa. Domina."
+                android:textColor="#888888"
+                android:textSize="13sp"
+                android:letterSpacing="0.06" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- ══════════════════════════════════════════════
+         PANEL DE FORMULARIO
+         ══════════════════════════════════════════════ -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
         android:overScrollMode="never"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:background="@drawable/bg_form_panel">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="28dp"
-            android:paddingBottom="32dp">
+            android:paddingTop="32dp"
+            android:paddingBottom="40dp">
 
-            <!-- Email -->
+            <!-- Título sección -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bienvenido de nuevo"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.01"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accede a tu cuenta para continuar"
+                android:textColor="#555555"
+                android:textSize="13sp"
+                android:layout_marginBottom="28dp" />
+
+            <!-- ── EMAIL ── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="CORREO"
-                android:textColor="@color/gold_primary"
-                android:textSize="11sp"
+                android:textColor="#C8B560"
+                android:textSize="10sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="6dp" />
+                android:letterSpacing="0.14"
+                android:layout_marginBottom="7dp" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxCornerRadiusTopStart="10dp"
-                app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp"
-                app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333"
+                app:boxBackgroundColor="#131313"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="#272727"
                 app:boxStrokeWidth="1dp"
-                app:hintTextColor="#666666"
-                android:hint="correo@ejemplo.com"
-                app:errorEnabled="true">
+                app:boxStrokeWidthFocused="1.5dp"
+                app:hintEnabled="false"
+                app:errorEnabled="true"
+                app:startIconDrawable="@drawable/ic_email"
+                app:startIconTint="#444444">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#FFFFFF"
-                    android:textColorHint="#555555"
+                    android:hint="correo@ejemplo.com"
+                    android:textColorHint="#3A3A3A"
                     android:inputType="textEmailAddress"
-                    android:paddingVertical="14dp" />
+                    android:paddingVertical="15dp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Contraseña -->
+            <!-- ── CONTRASEÑA ── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="CONTRASEÑA"
-                android:textColor="@color/gold_primary"
-                android:textSize="11sp"
+                android:textColor="#C8B560"
+                android:textSize="10sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="6dp" />
+                android:letterSpacing="0.14"
+                android:layout_marginBottom="7dp" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="28dp"
+                android:layout_marginBottom="10dp"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxCornerRadiusTopStart="10dp"
-                app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp"
-                app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333"
+                app:boxBackgroundColor="#131313"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="#272727"
                 app:boxStrokeWidth="1dp"
-                app:hintTextColor="#666666"
-                android:hint="Mínimo 6 caracteres"
+                app:boxStrokeWidthFocused="1.5dp"
+                app:hintEnabled="false"
                 app:passwordToggleEnabled="true"
-                app:passwordToggleTint="#78703F"
-                app:errorEnabled="true">
+                app:passwordToggleTint="#555555"
+                app:errorEnabled="true"
+                app:startIconDrawable="@drawable/ic_lock"
+                app:startIconTint="#444444">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#FFFFFF"
+                    android:hint="Mínimo 6 caracteres"
+                    android:textColorHint="#3A3A3A"
                     android:inputType="textPassword"
-                    android:paddingVertical="14dp" />
+                    android:paddingVertical="15dp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Botón iniciar sesión -->
+            <!-- ¿Olvidaste tu contraseña? -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="¿Olvidaste tu contraseña?"
+                android:textColor="#C8B560"
+                android:textSize="12sp"
+                android:alpha="0.75"
+                android:padding="4dp"
+                android:layout_marginBottom="28dp" />
+
+            <!-- ── BOTÓN PRINCIPAL ── -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_login"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="54dp"
                 android:text="INICIAR SESIÓN"
-                android:textColor="#121212"
-                android:textSize="14sp"
+                android:textColor="#0A0A0A"
+                android:textSize="13.5sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.08"
-                app:backgroundTint="@color/gold_primary"
-                app:cornerRadius="12dp"
-                android:elevation="0dp" />
+                android:letterSpacing="0.12"
+                app:backgroundTint="#C8B560"
+                app:cornerRadius="14dp"
+                android:elevation="0dp"
+                android:layout_marginBottom="20dp" />
 
-            <!-- Separador "o continúa con" -->
+            <!-- ── SEPARADOR ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="20dp">
 
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#2A2A2A" />
+                    android:background="#1E1E1E" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="  o continúa con  "
-                    android:textColor="#555555"
-                    android:textSize="12sp"
+                    android:textColor="#3A3A3A"
+                    android:textSize="11.5sp"
                     android:letterSpacing="0.04" />
 
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#2A2A2A" />
+                    android:background="#1E1E1E" />
 
             </LinearLayout>
 
-            <!--
-                Botón Google — estética OutlinedButton con borde dorado.
-                El ícono ic_google debe estar en res/drawable/ic_google.xml
-                (SVG del logo de Google, lo puedes descargar de Material Icons
-                 o del Brand Resources de Google).
-            -->
+            <!-- ── BOTÓN GOOGLE ── -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_google_login"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="50dp"
                 android:text="Continuar con Google"
-                android:textColor="#CCCCCC"
-                android:textSize="14sp"
+                android:textColor="#AAAAAA"
+                android:textSize="13.5sp"
                 android:letterSpacing="0.02"
                 app:icon="@drawable/ic_google"
                 app:iconGravity="textStart"
                 app:iconTint="@null"
                 app:iconSize="20dp"
                 app:iconPadding="12dp"
-                app:strokeColor="#333333"
+                app:strokeColor="#222222"
                 app:strokeWidth="1dp"
-                app:cornerRadius="12dp"
-                app:rippleColor="#1A78703F"
-                android:backgroundTint="#1E1E1E" />
+                app:cornerRadius="14dp"
+                app:rippleColor="#12C8B560"
+                android:backgroundTint="#111111" />
 
+            <!-- ProgressBar -->
             <ProgressBar
                 android:id="@+id/progress_bar"
                 android:layout_width="wrap_content"
@@ -195,21 +289,21 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
                 android:visibility="gone"
-                android:indeterminateTint="@color/gold_primary" />
+                android:indeterminateTint="#C8B560" />
 
-            <!-- Link registro -->
+            <!-- ── LINK REGISTRO ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginTop="24dp">
+                android:layout_marginTop="28dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="¿No tienes cuenta? "
-                    android:textColor="#666666"
+                    android:textColor="#444444"
                     android:textSize="14sp" />
 
                 <TextView
@@ -217,7 +311,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Regístrate"
-                    android:textColor="@color/gold_primary"
+                    android:textColor="#C8B560"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:padding="4dp" />
