@@ -17,6 +17,9 @@ class RoutineSetTemplateViewModel : ViewModel() {
 
     // ── Estados ──────────────────────────────────────────────────────────────
 
+    private val _setCountState = MutableLiveData<Int?>()
+    val setCountState: LiveData<Int?> = _setCountState
+
     private val _setsState = MutableLiveData<Resource<List<RoutineSetTemplateResponse>>>()
     val setsState: LiveData<Resource<List<RoutineSetTemplateResponse>>> = _setsState
 
@@ -38,6 +41,16 @@ class RoutineSetTemplateViewModel : ViewModel() {
         _setsState.value = Resource.Loading()
         viewModelScope.launch {
             _setsState.value = repository.getSetTemplatesByRoutineExercise(routineExerciseId)
+        }
+    }
+
+    fun loadSetCountForExercise(routineExerciseId: Long) {
+        viewModelScope.launch {
+            val result = repository.getSetTemplatesByRoutineExercise(routineExerciseId)
+            _setCountState.value = when (result) {
+                is Resource.Success -> result.data?.size ?: 0
+                else -> 0
+            }
         }
     }
 
@@ -78,8 +91,8 @@ class RoutineSetTemplateViewModel : ViewModel() {
 
     // ── Limpiar one-shots ─────────────────────────────────────────────────────
 
-    fun clearSaveState() { _saveState.value = null }
-    fun clearDeleteState() { _deleteState.value = null }
+    fun clearSaveState()      { _saveState.value      = null }
+    fun clearDeleteState()    { _deleteState.value    = null }
     fun clearDeleteAllState() { _deleteAllState.value = null }
-    fun clearDetailState() { _setDetailState.value = null }
+    fun clearDetailState()    { _setDetailState.value = null }
 }

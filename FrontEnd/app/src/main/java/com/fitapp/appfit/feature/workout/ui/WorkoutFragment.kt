@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -38,7 +39,8 @@ class WorkoutFragment : Fragment() {
     private val args: WorkoutFragmentArgs by navArgs()
     private val viewModel: RoutineViewModel by viewModels()
     private lateinit var adapter: WorkoutDayAdapter
-
+    private var backPressedOnce = false
+    private val backHandler = Handler(Looper.getMainLooper())
     private val setParamState =
         mutableMapOf<Long, MutableMap<Long, MutableMap<String, Any?>>>()
 
@@ -110,8 +112,50 @@ class WorkoutFragment : Fragment() {
         resumeTimer()
 
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
-    }
 
+        var backPressedOnce = false
+        val handler = Handler(Looper.getMainLooper())
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+
+            if (backPressedOnce) {
+
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Salir del entrenamiento")
+                    .setMessage("Si sales ahora perderás el progreso. ¿Seguro?")
+                    .setPositiveButton("Salir") { _, _ ->
+
+                        if (setParamState.isNotEmpty()) {
+                            lifecycleScope.launch {
+                                workoutRepository.saveWorkout(
+                                    routineId     = args.routineId,
+                                    userId        = currentUserId,
+                                    setParamState = setParamState,
+                                    startedAt     = workoutStartedAt
+                                )
+                            }
+                        }
+
+                        findNavController().navigateUp()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+
+            } else {
+                backPressedOnce = true
+
+                com.google.android.material.snackbar.Snackbar.make(
+                    binding.root,
+                    "Pulsa otra vez para salir",
+                    com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                ).show()
+
+                handler.postDelayed({
+                    backPressedOnce = false
+                }, 2000)
+            }
+        }
+    }
     override fun onStart() {
         super.onStart()
         val intent = Intent(requireContext(), RestTimerService::class.java)

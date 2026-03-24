@@ -5,259 +5,309 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="#0D0D0D">
 
-    <!-- Header -->
+    <!-- ══ TOP BAR ══ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#1E1E1E">
+        android:background="#131313">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#1E1E1E"
+            android:background="@android:color/transparent"
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="#78703F"
+            app:navigationIconTint="#C8B560"
             app:title="Nuevo Set"
-            app:titleTextColor="#FFFFFF" />
+            app:titleTextColor="#FFFFFF"
+            app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+
+        <!-- Golden accent line -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1.5dp"
+            android:background="#C8B560"
+            android:alpha="0.35" />
 
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#78703F"
-        android:alpha="0.4" />
 
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:indeterminateTint="#78703F"
+        android:indeterminateTint="#C8B560"
         android:visibility="gone" />
 
-    <!-- Contenido scrollable -->
+    <!-- ══ SCROLL CONTENT ══ -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:overScrollMode="never">
+        android:overScrollMode="never"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingHorizontal="18dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="32dp">
 
-            <!-- ── Sección: información del set ── -->
+            <!-- ══ BADGE: contador de set actual ══ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:id="@+id/tv_set_counter_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SET #1"
+                    android:textColor="#0D0D0D"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.12"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="6dp"
+                    android:background="@drawable/bg_badge_gold" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#C8B560"
+                    android:alpha="0.2"
+                    android:layout_marginStart="10dp" />
+
+            </LinearLayout>
+
+            <!-- ══ SECCIÓN: INFORMACIÓN DEL SET ══ -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="INFORMACIÓN DEL SET"
-                android:textColor="#78703F"
-                android:textSize="11sp"
+                android:textColor="#C8B560"
+                android:textSize="10.5sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp" />
+                android:letterSpacing="0.15"
+                android:layout_marginBottom="14dp" />
 
-            <!-- Posición + Tipo -->
-            <LinearLayout
+            <!-- Card: Posición + Tipo -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    app:boxBackgroundMode="outline"
-                    app:boxBackgroundColor="#1E1E1E"
-                    app:boxCornerRadiusTopStart="10dp"
-                    app:boxCornerRadiusTopEnd="10dp"
-                    app:boxCornerRadiusBottomStart="10dp"
-                    app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxStrokeColor="#333333"
-                    app:hintTextColor="#B3B3B3"
-                    android:hint="Posición">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_set_position"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="1"
-                        android:textColor="#FFFFFF"
-                        android:inputType="number"
-                        android:paddingVertical="14dp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
+                android:layout_marginBottom="10dp"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
+                    <!-- Posición (read-only, auto) -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="TIPO"
-                        android:textColor="#B3B3B3"
-                        android:textSize="11sp"
-                        android:layout_marginBottom="4dp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="12dp">
 
-                    <Spinner
-                        android:id="@+id/spinner_set_type"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:backgroundTint="#78703F" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="POSICIÓN"
+                            android:textColor="#666666"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.1"
+                            android:layout_marginBottom="6dp" />
+
+                        <TextView
+                            android:id="@+id/et_set_position"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:gravity="center"
+                            android:text="1"
+                            android:textColor="#C8B560"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/bg_card_dark"
+                            android:inputType="number"
+                            android:focusable="false"
+                            android:clickable="false" />
+
+                    </LinearLayout>
+
+                    <!-- Tipo -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2.2"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TIPO"
+                            android:textColor="#666666"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.1"
+                            android:layout_marginBottom="6dp" />
+
+                        <Spinner
+                            android:id="@+id/spinner_set_type"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_card_dark"
+                            android:paddingHorizontal="12dp"
+                            android:popupBackground="#1E1E1E" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>>
 
-            <!-- Descanso + Sub-set -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    app:boxBackgroundMode="outline"
-                    app:boxBackgroundColor="#1E1E1E"
-                    app:boxCornerRadiusTopStart="10dp"
-                    app:boxCornerRadiusTopEnd="10dp"
-                    app:boxCornerRadiusBottomStart="10dp"
-                    app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxStrokeColor="#333333"
-                    app:hintTextColor="#B3B3B3"
-                    android:hint="Descanso (s)">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_rest_after_set"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#FFFFFF"
-                        android:inputType="number"
-                        android:paddingVertical="14dp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:boxBackgroundMode="outline"
-                    app:boxBackgroundColor="#1E1E1E"
-                    app:boxCornerRadiusTopStart="10dp"
-                    app:boxCornerRadiusTopEnd="10dp"
-                    app:boxCornerRadiusBottomStart="10dp"
-                    app:boxCornerRadiusBottomEnd="10dp"
-                    app:boxStrokeColor="#333333"
-                    app:hintTextColor="#B3B3B3"
-                    android:hint="Sub-set">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_sub_set_number"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#FFFFFF"
-                        android:inputType="number"
-                        android:paddingVertical="14dp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- Grupo (drop sets, super sets) -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxCornerRadiusTopStart="10dp"
-                app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp"
-                app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333"
-                app:hintTextColor="#B3B3B3"
-                android:hint="Grupo (ej: DROP_1, SUPER_A)">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_group_id"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:paddingVertical="14dp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- ── Sección: parámetros seleccionados ── -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="PARÁMETROS"
-                android:textColor="#78703F"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp" />
-
-            <TextView
-                android:id="@+id/tv_no_selected_parameters"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="No hay parámetros añadidos"
-                android:textColor="#B3B3B3"
-                android:textSize="13sp"
-                android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:id="@+id/layout_selected_parameters"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginBottom="8dp">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chip_group_selected"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_add_parameter"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="+ Añadir parámetro"
-                android:textColor="#78703F"
-                app:strokeColor="#78703F"
-                app:cornerRadius="10dp"
-                android:layout_marginBottom="24dp" />
-
-            <!-- ── Sección: seleccionar parámetros (oculta inicialmente) ── -->
+            <!-- Card: Descanso + Sub-set -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/layout_parameter_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <!-- Descanso -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DESCANSO (s)"
+                            android:textColor="#666666"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.1"
+                            android:layout_marginBottom="6dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="#0D0D0D"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxStrokeColor="#2E2E2E"
+                            app:hintEnabled="false">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_rest_after_set"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:textColorHint="#444444"
+                                android:hint="60"
+                                android:inputType="number"
+                                android:paddingVertical="13dp"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                    <!-- Sub-set (auto-incremental) -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="6dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="SUB-SET"
+                                android:textColor="#666666"
+                                android:textSize="10sp"
+                                android:letterSpacing="0.1" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=" AUTO"
+                                android:textColor="#C8B560"
+                                android:textSize="9sp"
+                                android:letterSpacing="0.08"
+                                android:alpha="0.7" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="#0D0D0D"
+                            app:boxCornerRadiusTopStart="10dp"
+                            app:boxCornerRadiusTopEnd="10dp"
+                            app:boxCornerRadiusBottomStart="10dp"
+                            app:boxCornerRadiusBottomEnd="10dp"
+                            app:boxStrokeColor="#2E2E2E"
+                            app:hintEnabled="false">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_sub_set_number"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:hint="—"
+                                android:textColorHint="#444444"
+                                android:inputType="number"
+                                android:paddingVertical="13dp"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card: Grupo (drop sets, super sets) -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="#1E1E1E"
-                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp">
 
                 <LinearLayout
@@ -266,154 +316,320 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Header panel -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="SELECCIONAR PARÁMETRO"
-                            android:textColor="#78703F"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
+                            android:text="GRUPO"
+                            android:textColor="#666666"
+                            android:textSize="10sp"
                             android:letterSpacing="0.1" />
 
-                        <ImageButton
-                            android:id="@+id/btn_close_parameters"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_close"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:padding="4dp"
-                            app:tint="#B3B3B3" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DROP_1 · SUPER_A · GIANT_1"
+                            android:textColor="#444444"
+                            android:textSize="9sp"
+                            android:letterSpacing="0.04" />
 
                     </LinearLayout>
 
-                    <!-- Búsqueda -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
                         app:boxBackgroundMode="outline"
-                        app:boxBackgroundColor="#121212"
+                        app:boxBackgroundColor="#0D0D0D"
                         app:boxCornerRadiusTopStart="10dp"
                         app:boxCornerRadiusTopEnd="10dp"
                         app:boxCornerRadiusBottomStart="10dp"
                         app:boxCornerRadiusBottomEnd="10dp"
-                        app:boxStrokeColor="#333333"
-                        app:startIconDrawable="@android:drawable/ic_menu_search"
-                        app:startIconTint="#78703F"
-                        android:hint="Buscar..."
-                        app:hintTextColor="#666666">
+                        app:boxStrokeColor="#2E2E2E"
+                        app:hintEnabled="false">
 
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_parameter_search"
+                            android:id="@+id/et_group_id"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="#FFFFFF"
-                            android:textColorHint="#666666"
-                            android:inputType="text"
-                            android:imeOptions="actionSearch"
-                            android:paddingVertical="10dp" />
+                            android:hint="ej: DROP_1"
+                            android:textColorHint="#444444"
+                            android:paddingVertical="13dp"
+                            android:textSize="15sp" />
 
                     </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Botón limpiar búsqueda (oculto por defecto) -->
-                    <ImageButton
-                        android:id="@+id/btn_clear_search"
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:visibility="gone" />
-
-                    <!-- Filtros -->
-                    <com.google.android.material.chip.ChipGroup
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        app:singleSelection="true"
-                        app:selectionRequired="true">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_all"
-                            style="@style/FilterChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="Todos"
-                            android:textSize="12sp"
-                            android:checked="true" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_my"
-                            style="@style/FilterChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="Míos"
-                            android:textSize="12sp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_number"
-                            style="@style/FilterChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="Número"
-                            android:textSize="12sp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_integer"
-                            style="@style/FilterChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="Entero"
-                            android:textSize="12sp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_duration"
-                            style="@style/FilterChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="32dp"
-                            android:text="Tiempo"
-                            android:textSize="12sp" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                    <TextView
-                        android:id="@+id/tv_no_parameters"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Sin parámetros disponibles"
-                        android:textColor="#B3B3B3"
-                        android:textSize="13sp"
-                        android:gravity="center"
-                        android:padding="16dp"
-                        android:visibility="gone" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recycler_parameters"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="true" />
 
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
 
-            <!-- ── Botón guardar ── -->
+            <!-- ══ SECCIÓN: PARÁMETROS ══ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="PARÁMETROS"
+                android:textColor="#C8B560"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.15"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Texto "sin parámetros" (requerido por el Fragment) -->
+            <TextView
+                android:id="@+id/tv_no_selected_parameters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sin parámetros añadidos"
+                android:textColor="#555555"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Chips de parámetros seleccionados -->
+            <LinearLayout
+                android:id="@+id/layout_selected_parameters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="10dp">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_selected"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <!-- Botón añadir parámetro -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_parameter"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:text="+ Añadir parámetro"
+                android:textColor="#C8B560"
+                android:textSize="13sp"
+                android:letterSpacing="0.06"
+                app:strokeColor="#C8B560"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- ══ PANEL SELECTOR DE PARÁMETROS ══ -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/layout_parameter_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#141414"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+
+                <!-- Golden top accent line -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="2dp"
+                        android:background="#C8B560"
+                        android:alpha="0.5" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <!-- Header panel -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="14dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="SELECCIONAR PARÁMETRO"
+                                android:textColor="#C8B560"
+                                android:textSize="10.5sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.12" />
+
+                            <ImageButton
+                                android:id="@+id/btn_close_parameters"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:src="@drawable/ic_close"
+                                android:background="@drawable/bg_card_danger"
+                                android:padding="5dp"
+                                app:tint="#999999" />
+
+                        </LinearLayout>
+
+                        <!-- Búsqueda -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="#0D0D0D"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxStrokeColor="#2A2A2A"
+                            app:startIconDrawable="@android:drawable/ic_menu_search"
+                            app:startIconTint="#C8B560"
+                            android:hint="Buscar parámetro…"
+                            app:hintTextColor="#555555">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_parameter_search"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:textColorHint="#555555"
+                                android:inputType="text"
+                                android:imeOptions="actionSearch"
+                                android:paddingVertical="10dp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <ImageButton
+                            android:id="@+id/btn_clear_search"
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:visibility="gone" />
+
+                        <!-- Filtros -->
+                        <com.google.android.material.chip.ChipGroup
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            app:singleSelection="true"
+                            app:selectionRequired="true">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_all"
+                                style="@style/FilterChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:text="Todos"
+                                android:textSize="11.5sp"
+                                android:checked="true" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_my"
+                                style="@style/FilterChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:text="Míos"
+                                android:textSize="11.5sp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_number"
+                                style="@style/FilterChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:text="Número"
+                                android:textSize="11.5sp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_integer"
+                                style="@style/FilterChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:text="Entero"
+                                android:textSize="11.5sp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_duration"
+                                style="@style/FilterChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:text="Tiempo"
+                                android:textSize="11.5sp" />
+
+                        </com.google.android.material.chip.ChipGroup>
+
+                        <TextView
+                            android:id="@+id/tv_no_parameters"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Sin parámetros disponibles"
+                            android:textColor="#555555"
+                            android:textSize="13sp"
+                            android:gravity="center"
+                            android:padding="16dp"
+                            android:visibility="gone" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/recycler_parameters"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- ══ BOTONES ══ -->
+
+            <!-- Guardar y crear otro (acción principal) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_save_set"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="GUARDAR SET"
-                android:textColor="#121212"
+                android:layout_height="54dp"
+                android:text="GUARDAR Y CONTINUAR"
+                android:textColor="#0D0D0D"
+                android:textSize="13.5sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.08"
-                app:backgroundTint="#78703F"
-                app:cornerRadius="12dp" />
+                android:letterSpacing="0.1"
+                app:backgroundTint="#C8B560"
+                app:cornerRadius="14dp"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Guardar y salir (acción secundaria) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_and_exit"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:text="Guardar y salir"
+                android:textColor="#888888"
+                android:textSize="13sp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp"
+                app:cornerRadius="14dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btwadit"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:text="Guardar y salir"
+                android:textColor="#888888"
+                android:textSize="13sp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp"
+                app:cornerRadius="14dp" />
 
         </LinearLayout>
 
