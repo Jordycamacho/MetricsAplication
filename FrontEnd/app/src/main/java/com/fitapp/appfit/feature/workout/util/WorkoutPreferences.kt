@@ -8,8 +8,10 @@ object WorkoutPreferences {
     private const val KEY_VIBRATION_ENABLED = "vibration_enabled"
     private const val KEY_SOUND_ENABLED = "sound_enabled"
     private const val KEY_SOUND_TYPE = "sound_type"
+    private const val KEY_SET_VIEW_TYPE = "set_view_type"
 
     enum class SoundType { BEEP, BELL, CHIME }
+    enum class SetViewType { CLASSIC, MODERN }
 
     fun isVibrationEnabled(context: Context): Boolean =
         prefs(context).getBoolean(KEY_VIBRATION_ENABLED, true)
@@ -22,6 +24,11 @@ object WorkoutPreferences {
             prefs(context).getString(KEY_SOUND_TYPE, SoundType.BEEP.name) ?: SoundType.BEEP.name
         )
 
+    fun getSetViewType(context: Context): SetViewType =
+        SetViewType.valueOf(
+            prefs(context).getString(KEY_SET_VIEW_TYPE, SetViewType.MODERN.name) ?: SetViewType.MODERN.name
+        )
+
     fun setVibrationEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_VIBRATION_ENABLED, enabled).commit()
     }
@@ -32,6 +39,10 @@ object WorkoutPreferences {
 
     fun setSoundType(context: Context, type: SoundType) {
         prefs(context).edit().putString(KEY_SOUND_TYPE, type.name).commit()
+    }
+
+    fun setSetViewType(context: Context, type: SetViewType) {
+        prefs(context).edit().putString(KEY_SET_VIEW_TYPE, type.name).commit()
     }
 
     private fun prefs(context: Context) =

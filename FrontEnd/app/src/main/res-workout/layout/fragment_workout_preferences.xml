@@ -245,6 +245,76 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- ⭐ NUEVA SECCIÓN: Vista de sets -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="VISTA DE SETS"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#333333"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Estilo de visualización"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="12dp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_set_view_type"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/rb_view_classic"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Clásica — botones tradicionales"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="6dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_view_modern"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Moderna — botón circular flotante"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="6dp" />
+
+                        </RadioGroup>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- Nota informativa -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"

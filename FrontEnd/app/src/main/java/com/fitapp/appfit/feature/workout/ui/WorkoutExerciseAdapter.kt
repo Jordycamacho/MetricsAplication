@@ -12,8 +12,8 @@ import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.core.util.RestTimer
-import com.fitapp.appfit.feature.workout.ui.WorkoutSetAdapter
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
+import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutExerciseAdapter(
@@ -57,20 +57,44 @@ class WorkoutExerciseAdapter(
         private var restSeconds = 0
         private var restTimerActive = false
 
-        private val setAdapter = WorkoutSetAdapter(
-            onValueChanged = { set, type, value ->
-                currentExercise?.let { onSetValueChanged(it, set, type, value) }
-            },
-            onSequenceComplete = {
-                if (restSeconds > 0 && itemView.isAttachedToWindow) {
-                    WorkoutHaptics.exerciseComplete(itemView.context)
-                    restTimerActive = true
-                    tvExerciseRest.text = "${restSeconds}s"
-                    tvExerciseRestHint.text = "STOP"
-                    restTimer.start(restSeconds)
+        // ⭐ NUEVO: Crear adapter según preferencia
+        private val setAdapter: RecyclerView.Adapter<*> by lazy {
+            val viewType = WorkoutPreferences.getSetViewType(itemView.context)
+            when (viewType) {
+                WorkoutPreferences.SetViewType.CLASSIC -> {
+                    WorkoutSetAdapterClassic(
+                        onValueChanged = { set, type, value ->
+                            currentExercise?.let { onSetValueChanged(it, set, type, value) }
+                        },
+                        onSequenceComplete = {
+                            if (restSeconds > 0 && itemView.isAttachedToWindow) {
+                                WorkoutHaptics.exerciseComplete(itemView.context)
+                                restTimerActive = true
+                                tvExerciseRest.text = "${restSeconds}s"
+                                tvExerciseRestHint.text = "STOP"
+                                restTimer.start(restSeconds)
+                            }
+                        }
+                    )
+                }
+                WorkoutPreferences.SetViewType.MODERN -> {
+                    WorkoutSetAdapter(
+                        onValueChanged = { set, type, value ->
+                            currentExercise?.let { onSetValueChanged(it, set, type, value) }
+                        },
+                        onSequenceComplete = {
+                            if (restSeconds > 0 && itemView.isAttachedToWindow) {
+                                WorkoutHaptics.exerciseComplete(itemView.context)
+                                restTimerActive = true
+                                tvExerciseRest.text = "${restSeconds}s"
+                                tvExerciseRestHint.text = "STOP"
+                                restTimer.start(restSeconds)
+                            }
+                        }
+                    )
                 }
             }
-        )
+        }
 
         private val restTimer = RestTimer(
             onTick = { s ->
@@ -96,7 +120,7 @@ class WorkoutExerciseAdapter(
 
         init {
             recyclerSets.layoutManager = LinearLayoutManager(itemView.context)
-            recyclerSets.adapter = setAdapter
+            recyclerSets.adapter = setAdapter as RecyclerView.Adapter<RecyclerView.ViewHolder>
             recyclerSets.isNestedScrollingEnabled = false
 
             cardExercise.setOnClickListener {
@@ -133,7 +157,11 @@ class WorkoutExerciseAdapter(
                 layoutExerciseRest.visibility = View.GONE
             }
 
-            setAdapter.submitList(exercise.setsTemplate ?: emptyList())
+            // ⭐ Enviar lista según tipo de adapter
+            when (setAdapter) {
+                is WorkoutSetAdapterClassic -> (setAdapter as WorkoutSetAdapterClassic).submitList(exercise.setsTemplate ?: emptyList())
+                is WorkoutSetAdapter -> (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList())
+            }
 
             if (expandedPositions.contains(position)) {
                 layoutSets.visibility = View.VISIBLE; ivExpand.rotation = 180f

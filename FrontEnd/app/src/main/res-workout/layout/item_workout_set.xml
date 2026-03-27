@@ -9,7 +9,7 @@
     android:layout_marginEnd="4dp"
     android:layout_marginBottom="6dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="8dp"
+    app:cardElevation="4dp"
     app:cardBackgroundColor="@color/surface_dark">
 
     <LinearLayout
@@ -22,7 +22,7 @@
             android:id="@+id/view_type_stripe"
             android:layout_width="match_parent"
             android:layout_height="3dp"
-            android:background="@color/set_type_normal"/>
+            android:background="@color/set_type_normal" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -33,13 +33,13 @@
             android:paddingTop="12dp"
             android:paddingBottom="10dp">
 
-            <!-- ── HEADER: resumen tipo + badge ── -->
+            <!-- ── HEADER ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="14dp">
+                android:layout_marginBottom="12dp">
 
                 <TextView
                     android:id="@+id/tv_param_summary"
@@ -50,7 +50,7 @@
                     android:textSize="11sp"
                     android:textColor="@color/text_secondary_dark"
                     android:textAllCaps="true"
-                    android:letterSpacing="0.10"/>
+                    android:letterSpacing="0.10" />
 
                 <TextView
                     android:id="@+id/tv_set_badge"
@@ -64,22 +64,11 @@
                     android:letterSpacing="0.08"
                     android:paddingHorizontal="9dp"
                     android:paddingVertical="4dp"
-                    android:background="@drawable/bg_badge_rounded"/>
+                    android:background="@drawable/bg_badge_rounded" />
 
             </LinearLayout>
 
-            <!-- ══════════════════════════════════════════════════════
-                 FILA DE CONTROLES
-                 Hasta 2 columnas horizontales separadas por divisor.
-                 Cada columna: + arriba / valor grande / - abajo.
-
-                 Casos:
-                   A) Reps + Param        → col izq: REPS,  col der: PARAM
-                   B) Solo Reps           → col izq: REPS,  col der: oculta
-                   C) Duración + Param    → col izq: TIEMPO, col der: PARAM
-                   D) Solo Duración       → col izq ocupa todo el ancho (weight=2)
-                   E) Reps + Duración     → col izq: REPS,  col der: TIEMPO
-                ══════════════════════════════════════════════════════ -->
+            <!-- ══ FILA DE PICKERS ══ -->
             <LinearLayout
                 android:id="@+id/layout_controls_row"
                 android:layout_width="match_parent"
@@ -88,14 +77,15 @@
                 android:gravity="center"
                 android:layout_marginBottom="14dp">
 
-                <!-- COLUMNA IZQUIERDA: REPS (si hay reps) -->
+                <!-- ── COLUMNA IZQUIERDA: REPS / TIEMPO ── -->
                 <LinearLayout
                     android:id="@+id/layout_reps_container"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tv_reps_label"
@@ -106,59 +96,144 @@
                         android:textColor="@color/text_secondary_dark"
                         android:textAllCaps="true"
                         android:letterSpacing="0.08"
-                        android:layout_marginBottom="6dp"/>
+                        android:layout_marginBottom="6dp" />
 
-                    <ImageButton
-                        android:id="@+id/btn_increase_reps"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/arrow_up"
-                        android:background="@drawable/bg_circle_button_gold_filled"
-                        android:contentDescription="+"
-                        android:layout_marginBottom="2dp"
-                        app:tint="@color/background_dark"/>
+                    <!-- Contenedor para picker y contador -->
+                    <FrameLayout
+                        android:layout_width="80dp"
+                        android:layout_height="120dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
 
-                    <TextView
-                        android:id="@+id/tv_reps_value"
-                        android:layout_width="wrap_content"
+                        <!-- Picker frame con fade top/bottom -->
+                        <FrameLayout
+                            android:id="@+id/frame_reps_picker"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/picker_reps"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:overScrollMode="never"
+                                android:scrollbars="none"
+                                android:nestedScrollingEnabled="false" />
+
+                            <!-- Fade top -->
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top"
+                                android:background="@drawable/bg_fade_top_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <!-- Líneas de selección -->
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginBottom="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginTop="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <!-- Fade bottom -->
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="bottom"
+                                android:background="@drawable/bg_fade_bottom_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                        </FrameLayout>
+
+                        <!-- ⭐ NUEVO: Contador de duración (oculto inicialmente) -->
+                        <FrameLayout
+                            android:id="@+id/frame_duration_counter"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_duration_counter"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:text="3:45"
+                                android:textSize="32sp"
+                                android:textColor="@color/gold_primary"
+                                android:gravity="center"
+                                android:textStyle="bold" />
+
+                        </FrameLayout>
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layout_duration_play"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="10"
-                        android:textSize="38sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary_dark"
-                        android:gravity="center"
-                        android:minWidth="56dp"
-                        android:paddingVertical="2dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_duration_play_button"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="4dp"
+                        android:layout_marginTop="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
 
-                    <ImageButton
-                        android:id="@+id/btn_decrease_reps"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/arrow_down"
-                        android:background="@drawable/bg_circle_button_outline"
-                        android:contentDescription="-"
-                        android:layout_marginTop="2dp"
-                        app:tint="@color/gold_primary"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="▶ INICIAR"
+                            android:textSize="13sp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_start_duration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TAP"
+                            android:textSize="9sp"
+                            android:textColor="#C8B560"
+                            android:textAllCaps="true"
+                            android:letterSpacing="0.10"
+                            android:alpha="0.8" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-                <!-- DIVISOR VERTICAL entre reps/duración y param -->
+                <!-- DIVISOR VERTICAL -->
                 <View
                     android:id="@+id/view_divider"
                     android:layout_width="1dp"
                     android:layout_height="100dp"
                     android:background="#2A2A2A"
-                    android:layout_marginHorizontal="12dp"/>
+                    android:layout_marginHorizontal="12dp"
+                    android:visibility="gone" />
 
-                <!-- COLUMNA DERECHA: PARAM NUMÉRICO o DURACIÓN
-                     El adapter decide qué mostrar aquí según el caso -->
+                <!-- ── COLUMNA DERECHA: PARAM / TIEMPO ── -->
                 <LinearLayout
                     android:id="@+id/layout_param_container"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tv_weight_unit"
@@ -169,119 +244,367 @@
                         android:textColor="@color/text_secondary_dark"
                         android:textAllCaps="true"
                         android:letterSpacing="0.08"
-                        android:layout_marginBottom="6dp"/>
+                        android:layout_marginBottom="6dp" />
 
-                    <ImageButton
-                        android:id="@+id/btn_increase_weight"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/arrow_up"
-                        android:background="@drawable/bg_circle_button_gold_filled"
-                        android:contentDescription="+"
-                        android:layout_marginBottom="2dp"
-                        app:tint="@color/background_dark"/>
+                    <!-- Contenedor para picker y contador -->
+                    <FrameLayout
+                        android:layout_width="80dp"
+                        android:layout_height="120dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
 
-                    <TextView
-                        android:id="@+id/tv_weight_value"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="38sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary_dark"
-                        android:gravity="center"
-                        android:minWidth="56dp"
-                        android:paddingVertical="2dp"/>
+                        <FrameLayout
+                            android:id="@+id/frame_param_picker"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
 
-                    <ImageButton
-                        android:id="@+id/btn_decrease_weight"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/arrow_down"
-                        android:background="@drawable/bg_circle_button_outline"
-                        android:contentDescription="-"
-                        android:layout_marginTop="2dp"
-                        app:tint="@color/gold_primary"/>
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/picker_param"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:overScrollMode="never"
+                                android:scrollbars="none"
+                                android:nestedScrollingEnabled="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top"
+                                android:background="@drawable/bg_fade_top_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginBottom="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginTop="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="bottom"
+                                android:background="@drawable/bg_fade_bottom_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                        </FrameLayout>
+
+                    </FrameLayout>
 
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- COLUMNA EXTRA: DURACIÓN cuando coexiste con reps+param (3 parámetros)
-                 El adapter la hace visible solo en ese caso, ocupa ancho completo -->
+            <!-- ── BLOQUE DURACIÓN EXTRA (3 parámetros) ── -->
             <LinearLayout
                 android:id="@+id/layout_duration_extra"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:orientation="horizontal"
                 android:gravity="center"
                 android:layout_marginBottom="14dp"
                 android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/tv_duration_label_extra"
-                    android:layout_width="wrap_content"
+                <!-- MINUTOS -->
+                <LinearLayout
+                    android:id="@+id/layout_duration_minutes"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="TIEMPO"
-                    android:textSize="9sp"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textAllCaps="true"
-                    android:letterSpacing="0.08"
-                    android:layout_marginBottom="6dp"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
 
-                <ImageButton
-                    android:id="@+id/btn_increase_duration_extra"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/ic_add"
-                    android:background="@drawable/bg_circle_button_gold_filled"
-                    android:contentDescription="+5s"
-                    android:layout_marginBottom="2dp"
-                    app:tint="@color/background_dark"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MIN"
+                        android:textSize="9sp"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.08"
+                        android:layout_marginBottom="6dp" />
 
-                <!-- Tap para iniciar/parar -->
-                <TextView
-                    android:id="@+id/tv_duration_timer"
-                    android:layout_width="wrap_content"
+                    <!-- Contenedor para picker y contador -->
+                    <FrameLayout
+                        android:layout_width="80dp"
+                        android:layout_height="120dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
+
+                        <FrameLayout
+                            android:id="@+id/frame_minutes_picker"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/picker_duration_minutes"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:overScrollMode="never"
+                                android:scrollbars="none"
+                                android:nestedScrollingEnabled="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top"
+                                android:background="@drawable/bg_fade_top_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginBottom="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginTop="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="bottom"
+                                android:background="@drawable/bg_fade_bottom_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                        </FrameLayout>
+
+                        <!-- ⭐ NUEVO: Contador en duración extra minutos -->
+                        <FrameLayout
+                            android:id="@+id/frame_duration_counter_minutes"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_duration_counter_minutes"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:text="3:45"
+                                android:textSize="32sp"
+                                android:textColor="@color/gold_primary"
+                                android:gravity="center"
+                                android:textStyle="bold" />
+
+                        </FrameLayout>
+
+                    </FrameLayout>
+
+                    <!-- ⭐ NUEVO: Botón play minutos con MISMA estética del timer de set -->
+                    <LinearLayout
+                        android:id="@+id/layout_duration_play_minutes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_duration_play_button"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="4dp"
+                        android:layout_marginTop="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="▶ INICIAR"
+                            android:textSize="13sp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_start_duration_minutes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TAP"
+                            android:textSize="9sp"
+                            android:textColor="#C8B560"
+                            android:textAllCaps="true"
+                            android:letterSpacing="0.10"
+                            android:alpha="0.8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- DIVISOR -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="100dp"
+                    android:background="#2A2A2A"
+                    android:layout_marginHorizontal="12dp" />
+
+                <!-- SEGUNDOS -->
+                <LinearLayout
+                    android:id="@+id/layout_duration_seconds"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="1m 00s"
-                    android:textSize="38sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/gold_primary"
-                    android:gravity="center"
-                    android:minWidth="56dp"
-                    android:paddingVertical="2dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
 
-                <ImageButton
-                    android:id="@+id/btn_decrease_duration_extra"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/ic_remove"
-                    android:background="@drawable/bg_circle_button_outline"
-                    android:contentDescription="-5s"
-                    android:layout_marginTop="2dp"
-                    app:tint="@color/gold_primary"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SEG"
+                        android:textSize="9sp"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.08"
+                        android:layout_marginBottom="6dp" />
+
+                    <!-- Contenedor para picker y contador -->
+                    <FrameLayout
+                        android:layout_width="80dp"
+                        android:layout_height="120dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
+
+                        <FrameLayout
+                            android:id="@+id/frame_seconds_picker"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/picker_duration_seconds"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:overScrollMode="never"
+                                android:scrollbars="none"
+                                android:nestedScrollingEnabled="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top"
+                                android:background="@drawable/bg_fade_top_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginBottom="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginTop="20dp"
+                                android:background="#2A2A2A"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:layout_gravity="bottom"
+                                android:background="@drawable/bg_fade_bottom_surface"
+                                android:clickable="false"
+                                android:focusable="false" />
+
+                        </FrameLayout>
+
+                        <!-- ⭐ NUEVO: Contador en duración extra segundos -->
+                        <FrameLayout
+                            android:id="@+id/frame_duration_counter_seconds"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tv_duration_counter_seconds"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:text="3:45"
+                                android:textSize="32sp"
+                                android:textColor="@color/gold_primary"
+                                android:gravity="center"
+                                android:textStyle="bold" />
+
+                        </FrameLayout>
+
+                    </FrameLayout>
+
+                    <!-- ⭐ NUEVO: Botón play segundos con MISMA estética del timer de set -->
+                    <LinearLayout
+                        android:id="@+id/layout_duration_play_seconds"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_duration_play_button"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="4dp"
+                        android:layout_marginTop="8dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="▶ INICIAR"
+                            android:textSize="13sp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_start_duration_seconds"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TAP"
+                            android:textSize="9sp"
+                            android:textColor="#C8B560"
+                            android:textAllCaps="true"
+                            android:letterSpacing="0.10"
+                            android:alpha="0.8" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Separador -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#1E1E1E"
-                android:layout_marginBottom="8dp"/>
 
-            <!-- ── TIMER DE DESCANSO DEL SET ── fondo negro, borde gris sutil -->
+
+            <!-- ── TIMER DE DESCANSO ── -->
             <LinearLayout
                 android:id="@+id/layout_rest_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="@drawable/bg_badge_gold"
+                android:background="@drawable/bg_badge_warning"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="9dp"
                 android:clickable="true"
@@ -294,8 +617,8 @@
                     android:layout_weight="1"
                     android:text="60s descanso"
                     android:textSize="13sp"
-                    android:textColor="@color/black"
-                    android:textStyle="bold"/>
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tv_rest_hint"
@@ -303,10 +626,10 @@
                     android:layout_height="wrap_content"
                     android:text="TAP"
                     android:textSize="9sp"
-                    android:textColor="@color/black"
+                    android:textColor="#C8B560"
                     android:textAllCaps="true"
                     android:letterSpacing="0.10"
-                    android:alpha="0.7"/>
+                    android:alpha="0.8" />
 
             </LinearLayout>
 

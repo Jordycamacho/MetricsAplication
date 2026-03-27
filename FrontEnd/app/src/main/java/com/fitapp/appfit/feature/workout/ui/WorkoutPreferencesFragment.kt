@@ -44,6 +44,7 @@ class WorkoutPreferencesFragment : Fragment() {
         val vibrationEnabled = WorkoutPreferences.isVibrationEnabled(ctx)
         val soundEnabled = WorkoutPreferences.isSoundEnabled(ctx)
         val soundType = WorkoutPreferences.getSoundType(ctx)
+        val setViewType = WorkoutPreferences.getSetViewType(ctx)
 
         binding.switchVibration.isChecked = vibrationEnabled
         binding.switchSound.isChecked = soundEnabled
@@ -54,6 +55,11 @@ class WorkoutPreferencesFragment : Fragment() {
             WorkoutPreferences.SoundType.BEEP  -> binding.rgSoundType.check(binding.rbBeep.id)
             WorkoutPreferences.SoundType.BELL  -> binding.rgSoundType.check(binding.rbBell.id)
             WorkoutPreferences.SoundType.CHIME -> binding.rgSoundType.check(binding.rbChime.id)
+        }
+
+        when (setViewType) {
+            WorkoutPreferences.SetViewType.CLASSIC -> binding.rgSetViewType.check(binding.rbViewClassic.id)
+            WorkoutPreferences.SetViewType.MODERN  -> binding.rgSetViewType.check(binding.rbViewModern.id)
         }
 
         isLoadingPreferences = false
@@ -98,6 +104,17 @@ class WorkoutPreferencesFragment : Fragment() {
                     WorkoutSoundManager.playRestFinished(requireContext())
                 }
             }
+        }
+
+        // ⭐ NUEVO: RadioGroup para vista de sets
+        binding.rgSetViewType.setOnCheckedChangeListener { _, checkedId ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            val type = when (checkedId) {
+                binding.rbViewClassic.id -> WorkoutPreferences.SetViewType.CLASSIC
+                else                     -> WorkoutPreferences.SetViewType.MODERN
+            }
+            WorkoutPreferences.setSetViewType(requireContext(), type)
+            Log.d("PrefsFragment", "setSetViewType changed to $type")
         }
     }
 
