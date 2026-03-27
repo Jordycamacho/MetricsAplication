@@ -103,7 +103,7 @@
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:src="@drawable/ic_drop_down_24"
+                                android:src="@drawable/arrow_down"
                                 app:tint="#78703F" />
 
                             <TextView
@@ -139,7 +139,7 @@
                             <ImageView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:src="@drawable/ic_drop_up_24"
+                                android:src="@drawable/arrow_up"
                                 app:tint="#78703F" />
 
                             <TextView
@@ -183,13 +183,13 @@
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:src="@drawable/ic_check"
+                                android:src="@drawable/ic_auto_mode"
                                 app:tint="#78703F" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Progreso"
+                                android:text="Automatico"
                                 android:textColor="#B3B3B3"
                                 android:textSize="9sp"
                                 android:layout_marginTop="3dp" />
@@ -239,7 +239,6 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Lista de días -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
