@@ -333,4 +333,69 @@
         android:label="Planes"
         tools:layout="@layout/fragment_plans" />
 
+
+    <fragment
+        android:id="@+id/navigation_marketplace"
+        android:name="com.fitapp.appfit.feature.marketplace.ui.list.MarketplaceFragment"
+        android:label="Marketplace"
+        tools:layout="@layout/fragment_marketplace">
+        <action
+            android:id="@+id/action_navigation_marketplace_to_package_detail"
+            app:destination="@id/navigation_package_detail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_package_detail"
+        android:name="com.fitapp.appfit.feature.marketplace.ui.detail.PackageDetailFragment"
+        android:label="Paquete"
+        tools:layout="@layout/fragment_package_detail">
+        <argument
+            android:name="packageId"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_my_packages"
+        android:name="com.fitapp.appfit.feature.marketplace.ui.list.MyPackagesFragment"
+        android:label="Mis Paquetes"
+        tools:layout="@layout/fragment_my_packages">
+        <action
+            android:id="@+id/action_my_packages_to_create_package"
+            app:destination="@id/navigation_create_package" />
+        <action
+            android:id="@+id/action_my_packages_to_edit_package"
+            app:destination="@id/navigation_edit_package">
+            <argument
+                android:name="packageId"
+                app:argType="long" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_create_package"
+        android:name="com.fitapp.appfit.feature.marketplace.ui.form.CreatePackageFragment"
+        android:label="Crear Paquete"
+        tools:layout="@layout/fragment_create_package">
+        <action
+            android:id="@+id/action_create_package_to_add_items"
+            app:destination="@id/navigation_add_package_items">
+            <argument
+                android:name="packageId"
+                app:argType="long" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/navigation_add_package_items"
+        android:name="com.fitapp.appfit.feature.marketplace.ui.items.AddPackageItemsFragment"
+        android:label="Agregar Items"
+        tools:layout="@layout/fragment_add_package_items" />
+    <fragment
+        android:id="@+id/navigation_edit_package"
+        android:name="com.fitapp.appfit.feature.marketplace.ui.form.EditPackageFragment"
+        android:label="Editar Paquete"
+        tools:layout="@layout/fragment_edit_package">
+        <argument
+            android:name="packageId"
+            app:argType="long" />
+    </fragment>
 </navigation>

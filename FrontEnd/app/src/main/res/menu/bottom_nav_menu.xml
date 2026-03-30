@@ -12,6 +12,11 @@
         android:title="@string/title_training" />
 
     <item
+        android:id="@+id/navigation_marketplace"
+        android:icon="@drawable/ic_shopping_bag"
+        android:title="Marketplace" />
+
+    <item
         android:id="@+id/navigation_metrics"
         android:icon="@drawable/ic_metrics"
         android:title="@string/title_metrics" />

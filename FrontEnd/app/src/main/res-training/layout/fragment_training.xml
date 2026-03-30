@@ -4,309 +4,243 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_dark">
+    android:background="#121212"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="20dp">
 
-    <!-- Header -->
+    <!-- Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@color/surface_dark"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="16dp">
+        android:layout_marginBottom="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Entrenamiento"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary_dark" />
+            android:text="Centro de Entrenamiento"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gestiona tu plan de entrenamiento"
+            android:text="Gestiona tus rutinas, ejercicios y parámetros"
             android:textSize="13sp"
-            android:textColor="@color/text_secondary_dark"
-            android:layout_marginTop="3dp" />
-
+            android:textColor="#B3B3B3"
+            android:layout_marginTop="4dp" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/gold_primary"
-        android:alpha="0.4" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:overScrollMode="never"
-        android:paddingBottom="80dp"
-        android:clipToPadding="false">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
 
-            <!-- Fila 1: Rutinas + Ejercicios -->
-            <LinearLayout
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- SECCIÓN 1: NÚCLEO (Rutinas, Deportes, Ejercicios) -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NÚCLEO"
+                android:textSize="12sp"
+                android:textColor="#78703F"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Rutinas -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_routines"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#78703F"
+                app:strokeWidth="1dp">
 
-                <!-- Rutinas -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_routines"
-                    android:layout_width="0dp"
-                    android:layout_height="120dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/surface_dark"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#2A2A2A"
-                    app:strokeWidth="1dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_training"
-                            app:tint="@color/gold_primary"
-                            android:layout_marginBottom="10dp" />
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/title_routines"
-                            android:textColor="@color/text_primary_dark"
-                            android:textSize="14sp"
+                            android:text="Rutinas"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/training_routines_description"
-                            android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
-                            android:maxLines="2"
-                            android:ellipsize="end"
-                            android:layout_marginTop="3dp" />
-
+                            android:text="Crea y gestiona tus rutinas"
+                            android:textSize="12sp"
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
-                <!-- Ejercicios -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_exercises"
-                    android:layout_width="0dp"
-                    android:layout_height="120dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/surface_dark"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#2A2A2A"
-                    app:strokeWidth="1dp">
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_training"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_exercise_24"
-                            app:tint="@color/gold_primary"
-                            android:layout_marginBottom="10dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/title_exercises"
-                            android:textColor="@color/text_primary_dark"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/training_exercises_description"
-                            android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
-                            android:maxLines="2"
-                            android:ellipsize="end"
-                            android:layout_marginTop="3dp" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-            </LinearLayout>
-
-            <!-- Fila 2: Deportes + Categorías -->
-            <LinearLayout
+            <!-- Deportes -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_sports"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#78703F"
+                app:strokeWidth="1dp">
 
-                <!-- Deportes -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_sports"
-                    android:layout_width="0dp"
-                    android:layout_height="120dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/surface_dark"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#2A2A2A"
-                    app:strokeWidth="1dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_sport_24"
-                            app:tint="@color/gold_primary"
-                            android:layout_marginBottom="10dp" />
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/title_sports"
-                            android:textColor="@color/text_primary_dark"
-                            android:textSize="14sp"
+                            android:text="Deportes"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/training_sports_description"
-                            android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
-                            android:maxLines="2"
-                            android:ellipsize="end"
-                            android:layout_marginTop="3dp" />
-
+                            android:text="Deportes personalizados"
+                            android:textSize="12sp"
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
-                <!-- Categorías -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardCategories"
-                    android:layout_width="0dp"
-                    android:layout_height="120dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/surface_dark"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="#2A2A2A"
-                    app:strokeWidth="1dp">
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_sport_24"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Ejercicios -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_exercises"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#78703F"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
 
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_category_24"
-                            app:tint="@color/gold_primary"
-                            android:layout_marginBottom="10dp" />
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/title_categories"
-                            android:textColor="@color/text_primary_dark"
-                            android:textSize="14sp"
+                            android:text="Ejercicios"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/categories_description"
-                            android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
-                            android:maxLines="2"
-                            android:ellipsize="end"
-                            android:layout_marginTop="3dp" />
-
+                            android:text="Biblioteca de ejercicios"
+                            android:textSize="12sp"
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
-            </LinearLayout>
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_exercise_24"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Fila 3: Parámetros (ancho completo) -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- SECCIÓN 2: CONFIGURACIÓN (Parámetros, Marketplace) -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CONFIGURACIÓN"
+                android:textSize="12sp"
+                android:textColor="#78703F"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Parámetros -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_parameters"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/surface_dark"
-                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#2A2A2A"
+                app:strokeColor="#78703F"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="20dp"
+                    android:padding="16dp"
                     android:gravity="center_vertical">
-
-                    <LinearLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_circle_button"
-                        android:gravity="center"
-                        android:layout_marginEnd="16dp">
-
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:src="@drawable/ic_parameter_24"
-                            app:tint="#121212" />
-
-                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -317,65 +251,98 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/title_exercise_params"
-                            android:textColor="@color/text_primary_dark"
-                            android:textSize="15sp"
+                            android:text="Parámetros"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/training_params_description"
-                            android:textColor="@color/text_secondary_dark"
+                            android:text="Métricas personalizadas"
                             android:textSize="12sp"
-                            android:layout_marginTop="3dp" />
-
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textSize="22sp"
-                        android:textColor="@color/gold_primary" />
-
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_parameter_24"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Fila 4: Importar/Exportar (ancho completo) -->
+            <!-- Marketplace -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_marketplace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1A78703F"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#78703F"
+                app:strokeWidth="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Marketplace"
+                            android:textSize="16sp"
+                            android:textColor="#78703F"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Crea y comparte paquetes"
+                            android:textSize="12sp"
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_shopping_bag"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Importar/Exportar -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_import_export"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                app:cardBackgroundColor="@color/surface_dark"
-                app:cardCornerRadius="16dp"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#2A2A2A"
+                app:strokeColor="#78703F"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="20dp"
+                    android:padding="16dp"
                     android:gravity="center_vertical">
-
-                    <LinearLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_circle_button"
-                        android:gravity="center"
-                        android:layout_marginEnd="16dp">
-
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:src="@drawable/ic_import_24"
-                            app:tint="#121212" />
-
-                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -386,28 +353,90 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/title_import_export"
-                            android:textColor="@color/text_primary_dark"
-                            android:textSize="15sp"
+                            android:text="Importar/Exportar"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/training_import_export_description"
-                            android:textColor="@color/text_secondary_dark"
+                            android:text="Sincroniza tus datos"
                             android:textSize="12sp"
-                            android:layout_marginTop="3dp" />
-
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textSize="22sp"
-                        android:textColor="@color/gold_primary" />
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_import_24"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- SECCIÓN 3: UTILIDADES (Categorías) -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="UTILIDADES"
+                android:textSize="12sp"
+                android:textColor="#78703F"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Categorías -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_categories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#78703F"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Categorías"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Organiza tus ejercicios"
+                            android:textSize="12sp"
+                            android:textColor="#B3B3B3"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_category_24"
+                        android:scaleType="centerInside"
+                        app:tint="#78703F" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

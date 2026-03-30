@@ -50,11 +50,17 @@ class TrainingFragment : Fragment() {
             findNavController().navigate(R.id.navigation_exercise_params)
         }
 
+        // Navegar a Marketplace (Paquetes)
+        binding.cardMarketplace.setOnClickListener {
+            findNavController().navigate(R.id.navigation_my_packages)
+        }
+
         // Navegar a Importar/Exportar
         binding.cardImportExport.setOnClickListener {
             findNavController().navigate(R.id.navigation_import_export)
         }
 
+        // Navegar a Categorías
         binding.cardCategories.setOnClickListener {
             findNavController().navigate(R.id.navigation_exercise_categories)
         }

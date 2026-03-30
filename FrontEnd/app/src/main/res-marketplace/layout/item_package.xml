@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="#1E1E1E"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#78703F"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Fila superior: Nombre + Type badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_package_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre Paquete"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:id="@+id/tv_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Descripción corta"
+                    android:textSize="12sp"
+                    android:textColor="#B3B3B3"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_package_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ROUTINE_PACK"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#121212"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:background="@drawable/badge_package_type"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <!-- Info: Creator, Items count, Downloads -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_creator"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Por: Creator"
+                android:textSize="11sp"
+                android:textColor="#78703F"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_item_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5 items"
+                android:textSize="11sp"
+                android:textColor="#B3B3B3"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:id="@+id/tv_download_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="234 descargas"
+                android:textSize="11sp"
+                android:textColor="#B3B3B3"
+                android:layout_marginStart="12dp" />
+        </LinearLayout>
+
+        <!-- Separador -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#252525"
+            android:layout_marginVertical="8dp" />
+
+        <!-- Rating y Precio -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <RatingBar
+                android:id="@+id/rating_bar"
+                android:layout_width="100dp"
+                android:layout_height="16dp"
+                android:numStars="5"
+                android:rating="3"
+                android:stepSize="0.5"
+                android:isIndicator="true"
+                style="?attr/ratingBarStyleSmall" />
+
+            <TextView
+                android:id="@+id/tv_rating_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="(125)"
+                android:textSize="11sp"
+                android:textColor="#B3B3B3"
+                android:layout_marginStart="8dp" />
+
+            <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tv_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gratis"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#78703F" />
+        </LinearLayout>
+
+        <!-- Status y botón descargar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="PUBLISHED"
+                android:textSize="11sp"
+                android:textColor="#78703F"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_download"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Descargar"
+                android:textColor="#121212"
+                android:textSize="12sp"
+                app:backgroundTint="#78703F"
+                app:cornerRadius="8dp"
+                android:elevation="0dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
