@@ -64,7 +64,7 @@ public class PackageItemEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
-    private ExerciseCategoryEntity category;
+    private ExerciseCategoryEntity category;// este no pero dejalo por si queremos meter categorías predefinidas en packs de deporte
 
     // ── Presentación ─────────────────────────────────────────────────────────
 

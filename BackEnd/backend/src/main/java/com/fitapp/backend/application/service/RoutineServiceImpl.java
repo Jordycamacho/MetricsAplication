@@ -64,8 +64,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
     private final RoutineServiceLogger serviceLogger;
     private final SubscriptionLimitChecker limitChecker;
 
-    // ── CRUD ──────────────────────────────────────────────────────────────────
-
     @Override
     @Caching(evict = {
         @CacheEvict(value = "routines", allEntries = true),
@@ -112,7 +110,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
     }
 
     @Override
-    // FIX: no cachear getRoutineForTraining porque siempre actualiza lastUsedAt
     public RoutineResponse getRoutineForTraining(Long id, String userEmail) {
         log.info("GET_ROUTINE_TRAINING | routineId={} | user={}", id, userEmail);
 
@@ -123,7 +120,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
         SportModel sport = loadSport(routine.getSportId());
 
-        // Carga todos los ejercicios y parámetros en batch para evitar N+1
         RoutineResponse response = mapToResponseBatch(routine, sport);
 
         routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
@@ -225,8 +221,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
         serviceLogger.logRoutineStatusToggle(id, isActive, userEmail);
     }
 
-    // ── Listados ──────────────────────────────────────────────────────────────
-
     @Override
     @Cacheable(value = "userRoutines", key = "#userEmail + '_p' + #page + '_s' + #size + '_' + #sortBy + '_' + #sortDirection")
     public PageResponse<RoutineSummaryResponse> getUserRoutines(
@@ -315,20 +309,12 @@ public class RoutineServiceImpl implements RoutineUseCase {
         routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
     }
 
-    // ── Mapeo sin N+1: carga deportes y parámetros en batch ──────────────────
-
-    /**
-     * Mapea una lista de rutinas a resúmenes cargando todos los deportes necesarios
-     * en una sola pasada (evita N+1 por deporte).
-     */
     private List<RoutineSummaryResponse> mapToSummaryListBatch(List<RoutineModel> routines) {
-        // Recoger todos los sportIds únicos
         Set<Long> sportIds = routines.stream()
                 .filter(r -> r.getSportId() != null)
                 .map(RoutineModel::getSportId)
                 .collect(Collectors.toSet());
 
-        // Cargar todos los deportes de una vez
         Map<Long, SportModel> sportMap = sportIds.stream()
                 .map(id -> sportPersistencePort.findById(id).orElse(null))
                 .filter(s -> s != null)
@@ -339,16 +325,11 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Mapea una rutina completa con sus ejercicios cargando ejercicios y parámetros
-     * en batch (evita N+1 anidado en getRoutineForTraining).
-     */
     private RoutineResponse mapToResponseBatch(RoutineModel routine, SportModel sport) {
         if (routine.getExercises() == null || routine.getExercises().isEmpty()) {
             return mapToResponse(routine, sport);
         }
 
-        // Batch: todos los exerciseIds en una sola query
         Set<Long> exerciseIds = routine.getExercises().stream()
                 .map(e -> e.getExerciseId())
                 .collect(Collectors.toSet());
@@ -358,7 +339,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 .filter(e -> e != null)
                 .collect(Collectors.toMap(ExerciseModel::getId, Function.identity()));
 
-        // Batch: todos los parameterIds únicos (de todos los ejercicios y sets)
         Set<Long> paramIds = new java.util.HashSet<>();
         routine.getExercises().forEach(ex -> {
             if (ex.getTargetParameters() != null)
@@ -400,8 +380,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
         response.setExercises(exerciseResponses);
         return response;
     }
-
-    // ── Mapeo estándar (para operaciones simples sin batch necesario) ─────────
 
     private RoutineResponse mapToResponse(RoutineModel routine, SportModel sport) {
         RoutineResponse response = buildBaseResponse(routine, sport);
@@ -472,20 +450,17 @@ public class RoutineServiceImpl implements RoutineUseCase {
     }
 
     private PageResponse<RoutineSummaryResponse> mapToPageResponse(Page<RoutineModel> page) {
-        // Batch sport load para toda la página
         List<RoutineSummaryResponse> content = mapToSummaryListBatch(page.getContent());
         return PageResponse.<RoutineSummaryResponse>builder()
                 .content(content)
-                .pageNumber(page.getNumber())
+                .page(page.getNumber())
                 .pageSize(page.getSize())
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
+                .hasNext(page.hasNext())
+                .hasPrevious(page.hasPrevious())
                 .build();
     }
-
-    // ── Mapeo de parámetros con caché in-memory ───────────────────────────────
 
     private List<RoutineExerciseParameterResponse> mapParamsFromCache(
             List<RoutineExerciseParameterModel> parameters, Map<Long, CustomParameterModel> paramMap) {
@@ -549,7 +524,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 .collect(Collectors.toList());
     }
 
-    // Mapeo estándar (para operaciones que no son getRoutineForTraining)
     private List<RoutineExerciseParameterResponse> mapToParameterResponses(
             List<RoutineExerciseParameterModel> parameters) {
         if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
@@ -611,8 +585,6 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 })
                 .collect(Collectors.toList());
     }
-
-    // ── Utilidades ────────────────────────────────────────────────────────────
 
     private UserModel findUser(String email) {
         return userPersistencePort.findByEmail(email)

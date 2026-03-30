@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Data
@@ -16,7 +17,7 @@ public class PageResponse<T> {
     private List<T> content;
 
     @JsonProperty("pageNumber")
-    private int pageNumber;
+    private int page;
 
     @JsonProperty("pageSize")
     private int pageSize;
@@ -27,9 +28,34 @@ public class PageResponse<T> {
     @JsonProperty("totalPages")
     private int totalPages;
 
-    @JsonProperty("first")
-    private boolean first;
+    @JsonProperty("hasNext")
+    private boolean hasNext;
 
-    @JsonProperty("last")
-    private boolean last;
+    @JsonProperty("hasPrevious")
+    private boolean hasPrevious;
+
+    public static <T> PageResponse<T> from(List<T> content, Page<?> page) {
+        return PageResponse.<T>builder()
+                .content(content)
+                .page(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .hasNext(page.hasNext())
+                .hasPrevious(page.hasPrevious())
+                .build();
+    }
+
+
+    public static <T> PageResponse<T> empty() {
+        return PageResponse.<T>builder()
+                .content(List.of())
+                .page(0)
+                .pageSize(0)
+                .totalElements(0)
+                .totalPages(0)
+                .hasNext(false)
+                .hasPrevious(false)
+                .build();
+    }
 }

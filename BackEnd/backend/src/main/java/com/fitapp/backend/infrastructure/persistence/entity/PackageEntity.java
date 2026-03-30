@@ -131,7 +131,7 @@ public class PackageEntity {
 
     // ── Relaciones ───────────────────────────────────────────────────────────
 
-    /** NULL = pack oficial de FitApp. */
+    /** NULL = pack oficial de JnobFit. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
