@@ -44,7 +44,7 @@ public class PackageConverter {
                                 .items(entity.getItems() != null
                                                 ? entity.getItems().stream()
                                                                 .map(this::toDomain)
-                                                                .collect(Collectors.toCollection(ArrayList::new))
+                                                                .collect(Collectors.toList())
                                                 : new ArrayList<>())
                                 .createdAt(entity.getCreatedAt())
                                 .updatedAt(entity.getUpdatedAt())
@@ -94,7 +94,8 @@ public class PackageConverter {
                 entity.setCreatedBy(creatorUser);
                 entity.setCreatedAt(domain.getCreatedAt());
                 entity.setUpdatedAt(domain.getUpdatedAt());
-                
+
+                // Items se manejan por cascada en la relación OneToMany
                 if (domain.getItems() != null && !domain.getItems().isEmpty()) {
                         List<PackageItemEntity> itemEntities = domain.getItems().stream()
                                         .map(itemModel -> toEntity(itemModel, entity))
@@ -193,6 +194,8 @@ public class PackageConverter {
                                 .thumbnailUrl(domain.getThumbnailUrl())
                                 .tags(domain.getTags())
                                 .createdByName(creator != null ? creator.getUsername() : "FitApp Team")
+                                .createdByName(creator != null ? creator.getUsername() : "FitApp Team")
+                                .creatorId(creator != null ? creator.getId() : null)
                                 .createdAt(domain.getCreatedAt())
                                 .updatedAt(domain.getUpdatedAt())
                                 .itemCount(domain.getItems() != null ? domain.getItems().size() : 0)

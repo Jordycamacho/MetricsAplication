@@ -1,8 +1,6 @@
 package com.fitapp.backend.application.dto.package_.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -20,7 +18,7 @@ public class PackageFilterRequest {
  
     @Schema(description = "Filter by package type")
     @JsonProperty("packageType")
-    private PackageType packageType;
+    private String packageType;
  
     @Schema(description = "Filter by free/paid")
     @JsonProperty("isFree")
@@ -28,7 +26,7 @@ public class PackageFilterRequest {
  
     @Schema(description = "Filter by minimum subscription requirement")
     @JsonProperty("requiresSubscription")
-    private SubscriptionType requiresSubscription;
+    private String requiresSubscription;
  
     @Schema(description = "Filter by rating (minimum)")
     @JsonProperty("minRating")

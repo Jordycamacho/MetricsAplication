@@ -9,8 +9,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
@@ -273,15 +276,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
         @ExceptionHandler(IllegalArgumentException.class)
-        public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-                log.warn("ILLEGAL_ARGUMENT | {}", ex.getMessage());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                                ErrorResponse.builder()
-                                                .code("BAD_REQUEST")
-                                                .message(ex.getMessage())
-                                                .timestamp(Instant.now())
-                                                .correlationId(MDC.get("correlationId"))
-                                                .build());
+        public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {
+                log.error("ILLEGAL_ARGUMENT_FULL | error={} | message={} | cause={}",
+                                e.getClass().getName(), e.getMessage(), e.getCause(), e);
+
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                log.error("FULL_STACK:\n{}", sw.toString());
+
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
 
         @ExceptionHandler(SubscriptionLimitException.class)

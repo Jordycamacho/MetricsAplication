@@ -10,6 +10,7 @@ import com.fitapp.backend.infrastructure.persistence.converter.PackageConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.*;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageItemType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageStatus;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 import com.fitapp.backend.infrastructure.persistence.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -42,21 +43,37 @@ public class PackagePersistenceAdapter implements PackagePersistencePort {
     @Override
     @Transactional
     public PackageModel save(PackageModel packageModel) {
-        log.info("SAVE_PACKAGE | name={} | creator={}",
-                packageModel.getName(), packageModel.getCreatedByUserId());
+        log.info("SAVE_PACKAGE | name={} | creator={} | packageType={} | requiresSubscription={}",
+                packageModel.getName(), packageModel.getCreatedByUserId(),
+                packageModel.getPackageType(), packageModel.getRequiresSubscription());
 
-        UserEntity creatorUser = null;
-        if (packageModel.getCreatedByUserId() != null) {
-            creatorUser = userRepository.findById(packageModel.getCreatedByUserId())
-                    .orElseThrow(
-                            () -> new RuntimeException("Creator user not found: " + packageModel.getCreatedByUserId()));
+        try {
+            UserEntity creatorUser = null;
+            if (packageModel.getCreatedByUserId() != null) {
+                log.info("FINDING_CREATOR | userId={}", packageModel.getCreatedByUserId());
+                creatorUser = userRepository.findById(packageModel.getCreatedByUserId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Creator user not found: " + packageModel.getCreatedByUserId()));
+                log.info("CREATOR_FOUND | userId={}", creatorUser.getId());
+            }
+
+            log.info("CONVERTING_TO_ENTITY | packageModel={}", packageModel);
+            PackageEntity entity = packageConverter.toEntity(packageModel, creatorUser);
+            log.info("ENTITY_CONVERTED | entity={}", entity);
+
+            log.info("SAVING_ENTITY");
+            PackageEntity saved = packageRepository.save(entity);
+            log.info("ENTITY_SAVED | packageId={} | itemCount={}", saved.getId(), saved.getItems().size());
+
+            log.info("CONVERTING_TO_DOMAIN");
+            PackageModel result = packageConverter.toDomain(saved);
+            log.info("DOMAIN_CONVERTED | packageId={}", result.getId());
+
+            return result;
+        } catch (Exception e) {
+            log.error("ERROR_SAVE_PACKAGE | error={} | message={}", e.getClass().getName(), e.getMessage(), e);
+            throw e;
         }
-
-        PackageEntity entity = packageConverter.toEntity(packageModel, creatorUser);
-        PackageEntity saved = packageRepository.save(entity);
-
-        log.info("SAVE_PACKAGE_OK | packageId={} | itemCount={}", saved.getId(), saved.getItems().size());
-        return packageConverter.toDomain(saved);
     }
 
     @Override
@@ -141,8 +158,13 @@ public class PackagePersistenceAdapter implements PackagePersistencePort {
                     cb.like(cb.lower(root.get("tags")), search)));
         }
 
-        if (filters.getPackageType() != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("packageType"), filters.getPackageType()));
+        if (filters.getPackageType() != null && !filters.getPackageType().isBlank()) {
+            try {
+                PackageType packageType = PackageType.valueOf(filters.getPackageType());
+                spec = spec.and((root, query, cb) -> cb.equal(root.get("packageType"), packageType));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid package type: {}", filters.getPackageType());
+            }
         }
 
         if (filters.getIsFree() != null) {
@@ -153,10 +175,15 @@ public class PackagePersistenceAdapter implements PackagePersistencePort {
             spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("rating"), filters.getMinRating()));
         }
 
-        if (filters.getRequiresSubscription() != null) {
-            spec = spec.and((root, query, cb) -> cb.or(
-                    cb.equal(root.get("requiresSubscription"), SubscriptionType.FREE),
-                    cb.equal(root.get("requiresSubscription"), filters.getRequiresSubscription())));
+        if (filters.getRequiresSubscription() != null && !filters.getRequiresSubscription().isBlank()) {
+            try {
+                SubscriptionType subscriptionType = SubscriptionType.valueOf(filters.getRequiresSubscription());
+                spec = spec.and((root, query, cb) -> cb.or(
+                        cb.equal(root.get("requiresSubscription"), SubscriptionType.FREE),
+                        cb.equal(root.get("requiresSubscription"), subscriptionType)));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid subscription type: {}", filters.getRequiresSubscription());
+            }
         }
 
         Page<PackageEntity> page = packageRepository.findAll(spec, pageable);

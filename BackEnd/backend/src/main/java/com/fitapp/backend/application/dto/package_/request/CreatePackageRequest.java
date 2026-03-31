@@ -1,7 +1,6 @@
 package com.fitapp.backend.application.dto.package_.request;
  
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
@@ -33,7 +32,7 @@ public class CreatePackageRequest {
     @NotNull(message = "Package type is required")
     @Schema(description = "Type of package content", example = "ROUTINE_PACK")
     @JsonProperty("packageType")
-    private PackageType packageType;
+    private String packageType;
 
     @Builder.Default
     @Schema(description = "Is this package free?", example = "false")
@@ -56,7 +55,7 @@ public class CreatePackageRequest {
     @Builder.Default
     @Schema(description = "Minimum subscription tier required", example = "FREE")
     @JsonProperty("requiresSubscription")
-    private SubscriptionType requiresSubscription = SubscriptionType.FREE;
+    private String requiresSubscription = SubscriptionType.FREE.name();
 
     @Size(max = 512, message = "Thumbnail URL must be max 512 characters")
     @Schema(description = "Thumbnail image URL")

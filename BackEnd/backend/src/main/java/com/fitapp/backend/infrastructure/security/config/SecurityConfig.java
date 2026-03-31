@@ -92,6 +92,11 @@ public class SecurityConfig {
                                                                 "/actuator/prometheus",
                                                                 "/error")
                                                 .permitAll()
+
+                                                .requestMatchers(HttpMethod.GET, "/api/packages/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/packages").authenticated()
+                                                .requestMatchers(HttpMethod.PUT, "/api/packages/**").authenticated()                                                                  // auth
+                                                .requestMatchers(HttpMethod.DELETE, "/api/packages/**").authenticated()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/api/premium/**").hasAnyRole("PREMIUM_USER", "ADMIN")
                                                 .requestMatchers("/api/coach/**").hasAnyRole("COACH", "ADMIN")

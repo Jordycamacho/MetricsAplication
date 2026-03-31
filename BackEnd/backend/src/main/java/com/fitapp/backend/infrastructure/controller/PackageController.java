@@ -37,40 +37,22 @@ public class PackageController {
 
     @Operation(summary = "Search marketplace packages", description = "Search published packages with filters")
     @GetMapping("/search")
-    @ApiResponse(responseCode = "200", description = "Packages found", 
-            content = @Content(schema = @Schema(implementation = PageResponse.class)))
     public ResponseEntity<PageResponse<PackageSummaryResponse>> searchMarketplace(
-            @Parameter(description = "Search term (name, description, tags)")
             @RequestParam(required = false) String search,
-
-            @Parameter(description = "Package type: SPORT_PACK, PARAMETER_PACK, ROUTINE_PACK, EXERCISE_PACK, MIXED")
             @RequestParam(required = false) String packageType,
-
-            @Parameter(description = "Filter by free packages")
             @RequestParam(required = false) Boolean isFree,
-
-            @Parameter(description = "Minimum rating (0.0 - 5.0)")
             @RequestParam(required = false) Double minRating,
-
-            @Parameter(description = "Page number (0-based)")
             @RequestParam(defaultValue = "0") int page,
-
-            @Parameter(description = "Page size")
             @RequestParam(defaultValue = "10") int size,
-
-            @Parameter(description = "Sort field: createdAt, rating, downloadCount, name")
             @RequestParam(defaultValue = "createdAt") String sortBy,
-
-            @Parameter(description = "Sort direction: ASC, DESC")
             @RequestParam(defaultValue = "DESC") String sortDirection,
-
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
-        
+
         PackageFilterRequest filters = PackageFilterRequest.builder()
                 .search(search)
-                .packageType(packageType != null ? com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType.valueOf(packageType) : null)
+                .packageType(packageType)
                 .isFree(isFree)
                 .minRating(minRating)
                 .sortBy(sortBy)
@@ -86,13 +68,12 @@ public class PackageController {
 
     @Operation(summary = "Get package by ID", description = "Retrieve full package details with all items")
     @GetMapping("/{packageId}")
-    @ApiResponse(responseCode = "200", description = "Package found",
-            content = @Content(schema = @Schema(implementation = PackageDetailResponse.class)))
+    @ApiResponse(responseCode = "200", description = "Package found", content = @Content(schema = @Schema(implementation = PackageDetailResponse.class)))
     @ApiResponse(responseCode = "404", description = "Package not found")
     public ResponseEntity<PackageDetailResponse> getPackageById(
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         PackageDetailResponse response = packageQueryUseCase.getPackageById(packageId, userId);
         return ResponseEntity.ok(response);
@@ -105,7 +86,7 @@ public class PackageController {
     public ResponseEntity<PackageDetailResponse> getPackageBySlug(
             @Parameter(description = "URL-friendly slug") @PathVariable String slug,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         PackageDetailResponse response = packageQueryUseCase.getPackageBySlug(slug, userId);
         return ResponseEntity.ok(response);
@@ -117,7 +98,7 @@ public class PackageController {
     public ResponseEntity<PageResponse<PackageSummaryResponse>> getOfficialPackages(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         PageResponse<PackageSummaryResponse> result = packageQueryUseCase.getOfficialPackages(pageable);
         return ResponseEntity.ok(result);
@@ -131,10 +112,11 @@ public class PackageController {
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long currentUserId = extractUserId(jwt);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        PageResponse<PackageSummaryResponse> result = packageQueryUseCase.getUserPackages(userId, pageable, currentUserId);
+        PageResponse<PackageSummaryResponse> result = packageQueryUseCase.getUserPackages(userId, pageable,
+                currentUserId);
         return ResponseEntity.ok(result);
     }
 
@@ -146,7 +128,7 @@ public class PackageController {
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         PageResponse<PackageSummaryResponse> result = packageQueryUseCase.getUserPurchasedPackages(userId, pageable);
@@ -158,7 +140,7 @@ public class PackageController {
     @ApiResponse(responseCode = "200", description = "Trending packages retrieved")
     public ResponseEntity<List<PackageSummaryResponse>> getTrendingPackages(
             @Parameter(description = "Limit") @RequestParam(defaultValue = "10") int limit) {
-        
+
         List<PackageSummaryResponse> result = packageQueryUseCase.getTrendingPackages(limit);
         return ResponseEntity.ok(result);
     }
@@ -168,7 +150,7 @@ public class PackageController {
     @ApiResponse(responseCode = "200", description = "Top-rated packages retrieved")
     public ResponseEntity<List<PackageSummaryResponse>> getTopRatedPackages(
             @Parameter(description = "Limit") @RequestParam(defaultValue = "10") int limit) {
-        
+
         List<PackageSummaryResponse> result = packageQueryUseCase.getTopRatedPackages(limit);
         return ResponseEntity.ok(result);
     }
@@ -180,7 +162,7 @@ public class PackageController {
     public ResponseEntity<List<PackageSummaryResponse>> getRecommendations(
             @Parameter(description = "Limit") @RequestParam(defaultValue = "5") int limit,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         List<PackageSummaryResponse> result = packageQueryUseCase.getRecommendedPackages(userId, limit);
         return ResponseEntity.ok(result);
@@ -193,7 +175,7 @@ public class PackageController {
     public ResponseEntity<PackageStatisticsResponse> getPackageStatistics(
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         PackageStatisticsResponse result = packageQueryUseCase.getPackageStatistics(packageId, userId);
         return ResponseEntity.ok(result);
@@ -201,18 +183,17 @@ public class PackageController {
 
     @Operation(summary = "Create new package", description = "Create a new package (DRAFT status)")
     @PostMapping
-    @ApiResponse(responseCode = "201", description = "Package created",
-            content = @Content(schema = @Schema(implementation = PackageDetailResponse.class)))
+    @ApiResponse(responseCode = "201", description = "Package created", content = @Content(schema = @Schema(implementation = PackageDetailResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid input")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Insufficient subscription tier")
     public ResponseEntity<PackageDetailResponse> createPackage(
             @Valid @RequestBody CreatePackageRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("CREATE_PACKAGE_REQUEST | userId={} | name={}", userId, request.getName());
-        
+
         PackageDetailResponse response = packageCommandUseCase.createPackage(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -228,28 +209,27 @@ public class PackageController {
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @Valid @RequestBody UpdatePackageRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("UPDATE_PACKAGE_REQUEST | packageId={} | userId={}", packageId, userId);
-        
+
         PackageDetailResponse response = packageCommandUseCase.updatePackage(packageId, request, userId);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Publish package", description = "Change package status from DRAFT to PUBLISHED")
     @PostMapping("/{packageId}/publish")
-    @ApiResponse(responseCode = "200", description = "Package published",
-            content = @Content(schema = @Schema(implementation = PackageStatusChangeResponse.class)))
+    @ApiResponse(responseCode = "200", description = "Package published", content = @Content(schema = @Schema(implementation = PackageStatusChangeResponse.class)))
     @ApiResponse(responseCode = "400", description = "Package cannot be published")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "404", description = "Package not found")
     public ResponseEntity<PackageStatusChangeResponse> publishPackage(
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("PUBLISH_PACKAGE_REQUEST | packageId={} | userId={}", packageId, userId);
-        
+
         PackageStatusChangeResponse response = packageCommandUseCase.publishPackage(packageId, userId);
         return ResponseEntity.ok(response);
     }
@@ -263,7 +243,7 @@ public class PackageController {
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @RequestParam(required = false) String reason,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         PackageStatusChangeResponse response = packageCommandUseCase.deprecatePackage(packageId, reason, userId);
         return ResponseEntity.ok(response);
@@ -278,18 +258,17 @@ public class PackageController {
     public ResponseEntity<Void> deletePackage(
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("DELETE_PACKAGE_REQUEST | packageId={} | userId={}", packageId, userId);
-        
+
         packageCommandUseCase.deletePackage(packageId, userId);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Add item to package", description = "Add content (sport, parameter, routine, exercise) to package")
     @PostMapping("/{packageId}/items")
-    @ApiResponse(responseCode = "201", description = "Item added",
-            content = @Content(schema = @Schema(implementation = PackageItemResponse.class)))
+    @ApiResponse(responseCode = "201", description = "Item added", content = @Content(schema = @Schema(implementation = PackageItemResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid item")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "404", description = "Package not found")
@@ -297,10 +276,10 @@ public class PackageController {
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @Valid @RequestBody AddPackageItemRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("ADD_ITEM_REQUEST | packageId={} | itemType={}", packageId, request.getItemType());
-        
+
         PackageItemResponse response = packageCommandUseCase.addItemToPackage(packageId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -314,7 +293,7 @@ public class PackageController {
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @Parameter(description = "Item ID") @PathVariable Long itemId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         packageCommandUseCase.removeItemFromPackage(packageId, itemId, userId);
         return ResponseEntity.noContent().build();
@@ -322,8 +301,7 @@ public class PackageController {
 
     @Operation(summary = "Reorder package items", description = "Change display order of items")
     @PutMapping("/{packageId}/reorder")
-    @ApiResponse(responseCode = "200", description = "Items reordered",
-            content = @Content(schema = @Schema(implementation = PackageDetailResponse.class)))
+    @ApiResponse(responseCode = "200", description = "Items reordered", content = @Content(schema = @Schema(implementation = PackageDetailResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid item order")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "404", description = "Package not found")
@@ -331,7 +309,7 @@ public class PackageController {
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @Valid @RequestBody ReorderPackageItemsRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         PackageDetailResponse response = packageCommandUseCase.reorderPackageItems(packageId, request, userId);
         return ResponseEntity.ok(response);
@@ -346,10 +324,10 @@ public class PackageController {
     public ResponseEntity<Void> downloadPackage(
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("DOWNLOAD_PACKAGE_REQUEST | packageId={} | userId={}", packageId, userId);
-        
+
         packageCommandUseCase.recordPackageDownload(packageId, userId);
         return ResponseEntity.ok().build();
     }
@@ -364,10 +342,10 @@ public class PackageController {
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @Parameter(description = "Rating value (1.0-5.0)") @RequestParam Double rating,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("RATE_PACKAGE_REQUEST | packageId={} | rating={}", packageId, rating);
-        
+
         packageCommandUseCase.ratePackage(packageId, rating, userId);
         return ResponseEntity.ok().build();
     }
@@ -382,10 +360,10 @@ public class PackageController {
     public ResponseEntity<Void> purchasePackage(
             @Parameter(description = "Package ID") @PathVariable Long packageId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         Long userId = extractUserId(jwt);
         log.info("PURCHASE_PACKAGE_REQUEST | packageId={} | userId={}", packageId, userId);
-        
+
         packageCommandUseCase.purchasePackage(packageId, userId);
         return ResponseEntity.ok().build();
     }
@@ -394,7 +372,12 @@ public class PackageController {
         if (jwt == null) {
             throw new RuntimeException("Authentication required");
         }
-        String userIdStr = jwt.getClaimAsString("sub");
-        return Long.parseLong(userIdStr);
+        
+        Number userIdClaim = jwt.getClaim("userId");
+        if (userIdClaim == null) {
+            throw new RuntimeException("userId claim not found in JWT token");
+        }
+
+        return userIdClaim.longValue();
     }
 }

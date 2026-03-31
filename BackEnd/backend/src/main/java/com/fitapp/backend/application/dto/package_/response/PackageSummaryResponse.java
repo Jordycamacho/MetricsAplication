@@ -99,4 +99,12 @@ public class PackageSummaryResponse {
     @Schema(description = "Number of items in package", example = "8")
     @JsonProperty("itemCount")
     private Integer itemCount;
+
+    @Schema(description = "Creator username (alias para createdByName)")
+    @JsonProperty("creatorUsername")
+    private String creatorUsername;
+
+    @Schema(description = "Creator ID")
+    @JsonProperty("creatorId")
+    private Long creatorId;
 }

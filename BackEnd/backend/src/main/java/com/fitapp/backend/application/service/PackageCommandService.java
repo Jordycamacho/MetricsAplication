@@ -8,6 +8,7 @@ import com.fitapp.backend.domain.model.package_.CreatorModel;
 import com.fitapp.backend.domain.model.package_.PackageItemModel;
 import com.fitapp.backend.domain.model.package_.PackageModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageStatus;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 import com.fitapp.backend.infrastructure.persistence.converter.PackageConverter;
 import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
@@ -43,12 +44,12 @@ public class PackageCommandService implements PackageCommandUseCase {
                 .name(request.getName())
                 .description(request.getDescription())
                 .slug(slug)
-                .packageType(request.getPackageType())
+                .packageType(PackageType.valueOf(request.getPackageType()))
                 .isFree(request.isFree())
                 .price(request.isFree() ? null : request.getPrice())
                 .currency(request.getCurrency())
                 .version("1.0.0")
-                .requiresSubscription(request.getRequiresSubscription())
+                .requiresSubscription(SubscriptionType.valueOf(request.getRequiresSubscription()))
                 .status(PackageStatus.DRAFT)
                 .downloadCount(0)
                 .rating(null)
