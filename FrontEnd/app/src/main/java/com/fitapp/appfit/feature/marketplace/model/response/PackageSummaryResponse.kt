@@ -49,9 +49,6 @@ data class PackageSummaryResponse(
     @SerializedName("tags")
     val tags: String?,
 
-    @SerializedName("creatorUsername")
-    val creatorUsername: String?,
-
     @SerializedName("creatorId")
     val creatorId: Long?,
 
@@ -59,8 +56,8 @@ data class PackageSummaryResponse(
     val itemCount: Int,
 
     @SerializedName("createdAt")
-    val createdAt: LocalDateTime?,
+    val createdAt: String?,
 
     @SerializedName("updatedAt")
-    val updatedAt: LocalDateTime?
+    val updatedAt: String?
 )

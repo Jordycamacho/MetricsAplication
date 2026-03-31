@@ -146,6 +146,7 @@ class PackageRepository(private val context: Context) {
                 Resource.Error(httpErrorMessage(response.code(), response.errorBody()?.string()))
             }
         } catch (e: Exception) {
+            android.util.Log.e("REPO_ERROR", "Exception en call()", e)
             Resource.Error(exceptionMessage(e))
         }
     }

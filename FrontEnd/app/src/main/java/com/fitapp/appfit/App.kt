@@ -12,5 +12,10 @@ class App : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Timber.e(throwable, "UNCAUGHT_EXCEPTION en thread: ${thread.name}")
+            throwable.printStackTrace()
+        }
     }
 }

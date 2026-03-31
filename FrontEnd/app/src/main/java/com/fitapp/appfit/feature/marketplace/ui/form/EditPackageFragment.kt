@@ -5,12 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentEditPackageBinding
+import com.fitapp.appfit.feature.marketplace.model.enums.PackageStatus
 import com.fitapp.appfit.feature.marketplace.model.request.UpdatePackageRequest
+import com.fitapp.appfit.feature.marketplace.model.response.PackageResponse
 import com.fitapp.appfit.feature.marketplace.ui.MarketplaceViewModel
 
 class EditPackageFragment : Fragment() {
@@ -20,6 +23,7 @@ class EditPackageFragment : Fragment() {
 
     private lateinit var viewModel: MarketplaceViewModel
     private var packageId: Long = 0L
+    private var currentPackage: PackageResponse? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +46,7 @@ class EditPackageFragment : Fragment() {
     }
 
     private fun loadPackage() {
+        binding.progressBar.visibility = View.VISIBLE
         viewModel.getPackageById(packageId)
     }
 
@@ -53,11 +58,14 @@ class EditPackageFragment : Fragment() {
                 }
                 is Resource.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    state.data?.let { renderPackage(it) }
+                    state.data?.let {
+                        currentPackage = it
+                        renderPackage(it)
+                    }
                 }
                 is Resource.Error -> {
                     binding.progressBar.visibility = View.GONE
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${state.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -69,24 +77,29 @@ class EditPackageFragment : Fragment() {
                 }
                 is Resource.Success -> {
                     binding.btnUpdate.isEnabled = true
-                    Toast.makeText(requireContext(), "Paquete actualizado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Paquete actualizado correctamente", Toast.LENGTH_SHORT).show()
                     findNavController().navigateUp()
                 }
                 is Resource.Error -> {
                     binding.btnUpdate.isEnabled = true
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${state.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
 
         viewModel.publishState.observe(viewLifecycleOwner) { state ->
             when (state) {
+                is Resource.Loading -> {
+                    binding.btnPublish.isEnabled = false
+                }
                 is Resource.Success -> {
+                    binding.btnPublish.isEnabled = true
                     Toast.makeText(requireContext(), "Paquete publicado", Toast.LENGTH_SHORT).show()
-                    findNavController().navigateUp()
+                    loadPackage()
                 }
                 is Resource.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    binding.btnPublish.isEnabled = true
+                    Toast.makeText(requireContext(), "Error: ${state.message}", Toast.LENGTH_LONG).show()
                 }
                 else -> {}
             }
@@ -94,19 +107,24 @@ class EditPackageFragment : Fragment() {
 
         viewModel.deleteState.observe(viewLifecycleOwner) { state ->
             when (state) {
+                is Resource.Loading -> {
+                    binding.btnDelete.isEnabled = false
+                }
                 is Resource.Success -> {
+                    binding.btnDelete.isEnabled = true
                     Toast.makeText(requireContext(), "Paquete eliminado", Toast.LENGTH_SHORT).show()
                     findNavController().navigateUp()
                 }
                 is Resource.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    binding.btnDelete.isEnabled = true
+                    Toast.makeText(requireContext(), "Error: ${state.message}", Toast.LENGTH_LONG).show()
                 }
                 else -> {}
             }
         }
     }
 
-    private fun renderPackage(pkg: com.fitapp.appfit.feature.marketplace.model.response.PackageResponse) {
+    private fun renderPackage(pkg: PackageResponse) {
         with(binding) {
             etName.setText(pkg.name)
             etDescription.setText(pkg.description)
@@ -116,18 +134,20 @@ class EditPackageFragment : Fragment() {
             etChangelog.setText(pkg.changelog)
             cbIsFree.isChecked = pkg.isFree
 
-            tvStatus.text = "Estado: ${pkg.status}"
+            // Status Badge
+            val statusEnum = PackageStatus.fromString(pkg.status)
+            tvStatus.text = "Estado: ${statusEnum?.displayName ?: pkg.status}"
+            tvStatus.setTextColor(
+                android.graphics.Color.parseColor(statusEnum?.color ?: "#FFFFFF")
+            )
+
             tvVersion.text = "v${pkg.version}"
 
             // Mostrar botones según estado
-            when (pkg.status) {
-                "DRAFT" -> {
+            when (PackageStatus.fromString(pkg.status)) {
+                PackageStatus.DRAFT -> {
                     btnPublish.visibility = View.VISIBLE
                     btnDelete.visibility = View.VISIBLE
-                }
-                "PUBLISHED" -> {
-                    btnPublish.visibility = View.GONE
-                    btnDelete.visibility = View.GONE
                 }
                 else -> {
                     btnPublish.visibility = View.GONE
@@ -141,7 +161,6 @@ class EditPackageFragment : Fragment() {
 
     private fun setupListeners() {
         binding.apply {
-            // Configura el listener del ícono de navegación del toolbar
             toolbar.setNavigationOnClickListener {
                 findNavController().navigateUp()
             }
@@ -151,18 +170,11 @@ class EditPackageFragment : Fragment() {
             }
 
             btnPublish.setOnClickListener {
-                viewModel.publishPackage(packageId)
+                confirmPublish()
             }
 
             btnDelete.setOnClickListener {
-                android.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Eliminar paquete")
-                    .setMessage("¿Estás seguro? Solo se pueden eliminar packages en estado DRAFT")
-                    .setPositiveButton("Sí") { _, _ ->
-                        viewModel.deletePackage(packageId)
-                    }
-                    .setNegativeButton("No", null)
-                    .show()
+                confirmDelete()
             }
 
             cbIsFree.setOnCheckedChangeListener { _, _ ->
@@ -178,18 +190,40 @@ class EditPackageFragment : Fragment() {
 
     private fun updatePackage() {
         val request = UpdatePackageRequest(
-            name = binding.etName.text.toString().ifBlank { null },
-            description = binding.etDescription.text.toString().ifBlank { null },
+            name = binding.etName.text.toString().trim().ifEmpty { null },
+            description = binding.etDescription.text.toString().trim().ifEmpty { null },
             isFree = binding.cbIsFree.isChecked,
             price = if (binding.cbIsFree.isChecked) null
             else binding.etPrice.text.toString().toDoubleOrNull(),
-            currency = binding.etCurrency.text.toString().ifBlank { null },
+            currency = binding.etCurrency.text.toString().trim().ifEmpty { null },
             requiresSubscription = null,
             thumbnailUrl = null,
-            tags = binding.etTags.text.toString().ifBlank { null },
-            changelog = binding.etChangelog.text.toString().ifBlank { null }
+            tags = binding.etTags.text.toString().trim().ifEmpty { null },
+            changelog = binding.etChangelog.text.toString().trim().ifEmpty { null }
         )
         viewModel.updatePackage(packageId, request)
+    }
+
+    private fun confirmPublish() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Publicar Paquete")
+            .setMessage("¿Deseas publicar este paquete? Una vez publicado, estará disponible en el marketplace.")
+            .setPositiveButton("Publicar") { _, _ ->
+                viewModel.publishPackage(packageId)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun confirmDelete() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Eliminar Paquete")
+            .setMessage("¿Estás seguro? Solo se pueden eliminar paquetes en estado DRAFT. Esta acción no se puede deshacer.")
+            .setPositiveButton("Eliminar") { _, _ ->
+                viewModel.deletePackage(packageId)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     override fun onDestroyView() {

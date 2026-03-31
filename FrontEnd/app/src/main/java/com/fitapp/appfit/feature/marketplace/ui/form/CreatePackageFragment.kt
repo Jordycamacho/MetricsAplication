@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -11,14 +12,16 @@ import androidx.navigation.fragment.findNavController
 import com.fitapp.appfit.R
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentCreatePackageBinding
+import com.fitapp.appfit.feature.marketplace.model.enums.PackageType
+import com.fitapp.appfit.feature.marketplace.model.enums.SubscriptionType
 import com.fitapp.appfit.feature.marketplace.model.request.CreatePackageRequest
 import com.fitapp.appfit.feature.marketplace.ui.MarketplaceViewModel
+import java.math.BigDecimal
 
 class CreatePackageFragment : Fragment() {
 
     private var _binding: FragmentCreatePackageBinding? = null
     private val binding get() = _binding!!
-
     private lateinit var viewModel: MarketplaceViewModel
 
     override fun onCreateView(
@@ -35,8 +38,28 @@ class CreatePackageFragment : Fragment() {
 
         viewModel = ViewModelProvider(this).get(MarketplaceViewModel::class.java)
 
+        setupSpinners()
         observeViewModel()
         setupListeners()
+    }
+
+    private fun setupSpinners() {
+        // Package Type Spinner
+        val packageTypeAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            PackageType.values().map { it.displayName }
+        )
+        binding.spinnerPackageType.setAdapter(packageTypeAdapter)
+
+        // Subscription Type Spinner
+        val subscriptionAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            SubscriptionType.values().map { it.displayName }
+        )
+        binding.spinnerSubscription.setAdapter(subscriptionAdapter)
+        binding.spinnerSubscription.setText(SubscriptionType.FREE.displayName, false)
     }
 
     private fun observeViewModel() {
@@ -49,7 +72,7 @@ class CreatePackageFragment : Fragment() {
                 is Resource.Success -> {
                     binding.progressBar.visibility = View.GONE
                     state.data?.let { pkg ->
-                        Toast.makeText(requireContext(), "Paquete creado", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Paquete creado exitosamente", Toast.LENGTH_SHORT).show()
                         val bundle = Bundle().apply {
                             putLong("packageId", pkg.id)
                         }
@@ -62,7 +85,7 @@ class CreatePackageFragment : Fragment() {
                 is Resource.Error -> {
                     binding.progressBar.visibility = View.GONE
                     binding.btnCreate.isEnabled = true
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${state.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -80,10 +103,6 @@ class CreatePackageFragment : Fragment() {
                 }
             }
 
-            spinnerPackageType.setOnItemClickListener { _, _, _, _ ->
-                updatePriceVisibility()
-            }
-
             cbIsFree.setOnCheckedChangeListener { _, isChecked ->
                 updatePriceVisibility()
             }
@@ -92,13 +111,27 @@ class CreatePackageFragment : Fragment() {
 
     private fun validateInputs(): Boolean {
         with(binding) {
-            if (etName.text.isNullOrBlank()) {
-                Toast.makeText(requireContext(), "Nombre requerido", Toast.LENGTH_SHORT).show()
-                return false
-            }
-            if (!cbIsFree.isChecked && etPrice.text.isNullOrBlank()) {
-                Toast.makeText(requireContext(), "Precio requerido", Toast.LENGTH_SHORT).show()
-                return false
+            when {
+                etName.text.isNullOrBlank() -> {
+                    tilName.error = "El nombre es requerido"
+                    return false
+                }
+                etName.text!!.length < 3 -> {
+                    tilName.error = "El nombre debe tener al menos 3 caracteres"
+                    return false
+                }
+                spinnerPackageType.text.isNullOrBlank() -> {
+                    Toast.makeText(requireContext(), "Selecciona un tipo de paquete", Toast.LENGTH_SHORT).show()
+                    return false
+                }
+                !cbIsFree.isChecked && etPrice.text.isNullOrBlank() -> {
+                    tilPrice.error = "El precio es requerido"
+                    return false
+                }
+                !cbIsFree.isChecked && etPrice.text.toString().toDoubleOrNull() == null -> {
+                    tilPrice.error = "Ingresa un precio válido"
+                    return false
+                }
             }
         }
         return true
@@ -110,19 +143,46 @@ class CreatePackageFragment : Fragment() {
     }
 
     private fun createPackage() {
+        val packageTypeStr = binding.spinnerPackageType.text.toString()
+        val packageType = PackageType.values().find { it.displayName == packageTypeStr }?.name
+            ?: return showError("Tipo de paquete inválido")
+
+        val subscriptionStr = binding.spinnerSubscription.text.toString()
+        val subscriptionType = SubscriptionType.values().find { it.displayName == subscriptionStr }?.name
+            ?: SubscriptionType.FREE.name
+
+        val price = if (binding.cbIsFree.isChecked) {
+            null
+        } else {
+            binding.etPrice.text?.toString()?.toDoubleOrNull()?.let { BigDecimal.valueOf(it) }
+        }
+
+        val tagsStr = binding.etTags.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+        val tagsJson = tagsStr?.let {
+            val tagList = it.split(",").map { tag -> tag.trim() }
+            com.google.gson.Gson().toJson(tagList)
+        }
+
         val request = CreatePackageRequest(
-            name = binding.etName.text?.toString() ?: "",
-            description = binding.etDescription.text?.toString()?.ifBlank { null },
-            packageType = binding.spinnerPackageType.text.toString(),
+            name = binding.etName.text?.toString()?.trim() ?: "",
+            description = binding.etDescription.text?.toString()?.trim()?.ifEmpty { null },
+            packageType = packageType,
             isFree = binding.cbIsFree.isChecked,
-            price = if (binding.cbIsFree.isChecked) null
-            else binding.etPrice.text?.toString()?.toDoubleOrNull(),
-            currency = binding.etCurrency.text?.toString()?.ifBlank { "USD" },
-            requiresSubscription = binding.spinnerSubscription.text.toString(),
+            price = price as Double?,
+            currency = binding.etCurrency.text?.toString()?.trim()?.ifEmpty { "USD" } ?: "USD",
+            requiresSubscription = subscriptionType,
             thumbnailUrl = null,
-            tags = binding.etTags.text?.toString()?.ifBlank { null }
+            tags = tagsJson,
+            initialItems = emptyList()
         )
+
+        android.util.Log.d("CreatePackage", "Request JSON: ${com.google.gson.Gson().toJson(request)}")
+
         viewModel.createPackage(request)
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

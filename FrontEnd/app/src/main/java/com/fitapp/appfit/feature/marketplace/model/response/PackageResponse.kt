@@ -1,9 +1,5 @@
 package com.fitapp.appfit.feature.marketplace.model.response
 
-import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
-import com.fitapp.appfit.feature.exercise.model.exercise.response.ExerciseResponse
-import com.fitapp.appfit.feature.sport.model.response.SportResponse
-import com.fitapp.appfit.feature.parameter.model.response.CustomParameterResponse
 import com.google.gson.annotations.SerializedName
 import java.time.LocalDateTime
 
@@ -75,17 +71,17 @@ data class PackageResponse(
     val isPurchased: Boolean,
 
     @SerializedName("createdAt")
-    val createdAt: LocalDateTime?,
+    val createdAt: String?,
 
     @SerializedName("updatedAt")
-    val updatedAt: LocalDateTime?
+    val updatedAt: String?
 ) {
     data class CreatorInfo(
         @SerializedName("id")
         val id: Long,
 
         @SerializedName("username")
-        val username: String,
+        val username: String?,
 
         @SerializedName("reputationScore")
         val reputationScore: Int?

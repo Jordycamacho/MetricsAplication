@@ -74,7 +74,15 @@ class MyPackagesFragment : Fragment() {
                 is Resource.Success -> {
                     binding.progressBar.visibility = View.GONE
                     binding.rvMyPackages.visibility = View.VISIBLE
-                    state.data?.content?.let { adapter.submitList(it) }
+                    try {
+                        state.data?.content?.let {
+                            android.util.Log.d("DEBUG_PACKAGES", "Items: ${it.size}")
+                            adapter.submitList(it)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("DEBUG_PACKAGES", "Error en submitList", e)
+                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
                 is Resource.Error -> {
                     binding.progressBar.visibility = View.GONE

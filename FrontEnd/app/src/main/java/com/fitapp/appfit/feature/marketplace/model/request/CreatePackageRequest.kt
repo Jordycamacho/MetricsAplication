@@ -11,19 +11,19 @@ data class CreatePackageRequest(
     val description: String?,
 
     @SerializedName("packageType")
-    val packageType: String, // SPORT_PACK, PARAMETER_PACK, ROUTINE_PACK, EXERCISE_PACK, MIXED
+    val packageType: String,
 
     @SerializedName("isFree")
     val isFree: Boolean,
 
     @SerializedName("price")
-    val price: BigDecimal?,
+    val price: Double?,
 
     @SerializedName("currency")
     val currency: String?,
 
     @SerializedName("requiresSubscription")
-    val requiresSubscription: String, // FREE, STANDARD, PREMIUM
+    val requiresSubscription: String,
 
     @SerializedName("thumbnailUrl")
     val thumbnailUrl: String?,
@@ -33,5 +33,4 @@ data class CreatePackageRequest(
 
     @SerializedName("initialItems")
     val initialItems: List<AddPackageItemRequest>
-
 )

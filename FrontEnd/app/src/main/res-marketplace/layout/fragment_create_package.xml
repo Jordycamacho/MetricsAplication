@@ -4,18 +4,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="@color/background_dark">
 
+    <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#1E1E1E"
+        android:background="@color/surface_dark"
         app:navigationIcon="@drawable/ic_arrow_right"
-        app:title="Crear Paquete"
-        app:titleTextColor="#FFFFFF"
-        app:navigationIconTint="#78703F" />
+        app:title="Crear Nuevo Paquete"
+        app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        app:titleTextColor="@color/text_primary_dark"
+        app:navigationIconTint="@color/gold_primary"
+        app:elevation="4dp" />
 
+    <!-- ScrollView -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -27,116 +31,168 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="24dp">
 
-            <!-- Nombre -->
+            <!-- NOMBRE SECTION -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="NOMBRE"
-                android:textColor="#78703F"
-                android:textSize="11sp"
+                android:text="INFORMACIÓN BÁSICA"
+                android:textColor="@color/gold_primary"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="8dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxCornerRadiusTopStart="10dp"
-                app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp"
-                app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333">
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="@color/divider_dark"
+                app:boxStrokeWidth="1dp"
+                app:hintTextColor="@color/gold_primary"
+                app:counterEnabled="true"
+                app:counterMaxLength="200">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
                     android:inputType="text"
-                    android:hint="Ej: Rutinas de Fuerza" />
+                    android:hint="Ej: Rutinas de Fuerza"
+                    android:textSize="14sp"
+                    android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Descripción -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DESCRIPCIÓN"
-                android:textColor="#78703F"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
-
+            <!-- DESCRIPCIÓN -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxCornerRadiusTopStart="10dp"
-                app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp"
-                app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333">
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="@color/divider_dark"
+                app:boxStrokeWidth="1dp"
+                app:hintTextColor="@color/gold_primary"
+                app:counterEnabled="true"
+                app:counterMaxLength="2000">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
                     android:inputType="textMultiLine"
                     android:hint="Descripción del paquete"
-                    android:minLines="3" />
+                    android:minLines="4"
+                    android:maxLines="6"
+                    android:textSize="14sp"
+                    android:paddingVertical="12dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Tipo de Paquete -->
+            <!-- TIPO Y CONFIGURACIÓN SECTION -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TIPO DE PAQUETE"
-                android:textColor="#78703F"
-                android:textSize="11sp"
+                android:text="TIPO Y CONFIGURACIÓN"
+                android:textColor="@color/gold_primary"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="12dp" />
 
+            <!-- TIPO DE PAQUETE -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxStrokeColor="#333333">
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxStrokeColor="@color/divider_dark"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:hintTextColor="@color/gold_primary">
 
                 <AutoCompleteTextView
                     android:id="@+id/spinner_package_type"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
                     android:inputType="none"
-                    android:entries="@array/package_types" />
+                    android:hint="Tipo de paquete"
+                    android:textSize="14sp"
+                    android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Gratis/Pago -->
-            <LinearLayout
+            <!-- SUSCRIPCIÓN REQUERIDA -->
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxStrokeColor="@color/divider_dark"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:hintTextColor="@color/gold_primary">
 
-                <CheckBox
-                    android:id="@+id/cb_is_free"
-                    android:layout_width="wrap_content"
+                <AutoCompleteTextView
+                    android:id="@+id/spinner_subscription"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Gratis"
-                    android:textColor="#FFFFFF"
-                    android:buttonTint="#78703F" />
-            </LinearLayout>
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:inputType="none"
+                    android:hint="Suscripción requerida"
+                    android:textSize="14sp"
+                    android:paddingVertical="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Precio -->
+            <!-- PRECIO SECTION -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PRECIO"
+                android:textColor="@color/gold_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="8dp" />
+
+            <!-- Checkbox Gratis -->
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/cb_is_free"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Este paquete es gratuito"
+                android:textColor="@color/text_primary_dark"
+                android:buttonTint="@color/gold_primary"
+                android:layout_marginBottom="12dp"
+                android:textSize="14sp" />
+
+            <!-- Precio y Moneda -->
             <LinearLayout
                 android:id="@+id/layout_price"
                 android:layout_width="match_parent"
@@ -146,113 +202,135 @@
                 android:layout_marginBottom="16dp">
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_price"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:layout_marginEnd="12dp"
                     app:boxBackgroundMode="outline"
-                    app:boxBackgroundColor="#1E1E1E"
-                    app:boxStrokeColor="#333333"
-                    android:layout_marginEnd="8dp">
+                    app:boxBackgroundColor="@color/surface_dark"
+                    app:boxStrokeColor="@color/divider_dark"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:hintTextColor="@color/gold_primary"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="8">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_price"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/text_primary_dark"
+                        android:textColorHint="@color/text_secondary_dark"
                         android:inputType="numberDecimal"
-                        android:hint="Precio" />
+                        android:hint="Precio"
+                        android:textSize="14sp"
+                        android:paddingVertical="14dp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="90dp"
                     android:layout_height="wrap_content"
                     app:boxBackgroundMode="outline"
-                    app:boxBackgroundColor="#1E1E1E"
-                    app:boxStrokeColor="#333333">
+                    app:boxBackgroundColor="@color/surface_dark"
+                    app:boxStrokeColor="@color/divider_dark"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:hintTextColor="@color/gold_primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_currency"
-                        android:layout_width="80dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/text_primary_dark"
+                        android:textColorHint="@color/text_secondary_dark"
                         android:hint="USD"
-                        android:text="USD" />
+                        android:text="USD"
+                        android:textSize="14sp"
+                        android:paddingVertical="14dp"
+                        android:inputType="text" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Suscripción requerida -->
+            <!-- TAGS SECTION -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SUSCRIPCIÓN REQUERIDA"
-                android:textColor="#78703F"
-                android:textSize="11sp"
+                android:text="ETIQUETAS"
+                android:textColor="@color/gold_primary"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxStrokeColor="#333333">
-
-                <AutoCompleteTextView
-                    android:id="@+id/spinner_subscription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:inputType="none"
-                    android:entries="@array/subscription_types" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Tags -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ETIQUETAS (separadas por coma)"
-                android:textColor="#78703F"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="8dp" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#1E1E1E"
-                app:boxStrokeColor="#333333">
+                app:boxBackgroundColor="@color/surface_dark"
+                app:boxStrokeColor="@color/divider_dark"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:hintTextColor="@color/gold_primary"
+                app:helperTextEnabled="true"
+                app:helperText="Separadas por comas. Ej: fuerza, hipertrofia">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_tags"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:hint="fuerza, hipertrofia, principiantes" />
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_secondary_dark"
+                    android:hint="fuerza, hipertrofia, principiantes"
+                    android:textSize="14sp"
+                    android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Botón crear -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_create"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="56dp"
                 android:text="CREAR PAQUETE"
-                android:textColor="#121212"
-                android:textSize="14sp"
+                android:textColor="@color/background_dark"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                app:backgroundTint="#78703F"
-                app:cornerRadius="12dp" />
+                android:letterSpacing="0.05"
+                app:backgroundTint="@color/gold_primary"
+                app:cornerRadius="12dp"
+                app:elevation="4dp"
+                android:layout_marginBottom="16dp" />
 
+            <!-- Progress Bar -->
             <ProgressBar
                 android:id="@+id/progress_bar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="16dp"
+                android:layout_gravity="center_horizontal"
                 android:visibility="gone"
-                android:indeterminateTint="#78703F" />
+                android:indeterminateTint="@color/gold_primary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/adsd"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="CREAR PAQUETE"
+                android:textColor="@color/background_dark"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                app:backgroundTint="@color/gold_primary"
+                app:cornerRadius="12dp"
+                app:elevation="4dp"
+                android:layout_marginBottom="16dp" />
 
         </LinearLayout>
     </ScrollView>

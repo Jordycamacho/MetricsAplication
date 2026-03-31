@@ -18,17 +18,23 @@ interface PackageService {
     @POST("api/packages")
     suspend fun createPackage(@Body request: CreatePackageRequest): Response<PackageResponse>
 
-    @GET("api/packages/{id}")
-    suspend fun getPackageById(@Path("id") id: Long): Response<PackageResponse>
-
     @GET("api/packages/by-slug/{slug}")
     suspend fun getPackageBySlug(@Path("slug") slug: String): Response<PackageResponse>
+
+    @GET("api/packages/{id}")
+    suspend fun getPackageById(@Path("id") id: Long): Response<PackageResponse>
 
     @PUT("api/packages/{id}")
     suspend fun updatePackage(
         @Path("id") id: Long,
         @Body request: UpdatePackageRequest
     ): Response<PackageResponse>
+
+    @GET("api/packages/official")
+    suspend fun getOfficialPackages(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<PageResponse<PackageSummaryResponse>>
 
     @DELETE("api/packages/{id}")
     suspend fun deletePackage(@Path("id") id: Long): Response<Unit>
@@ -44,12 +50,6 @@ interface PackageService {
         @Query("requiresSubscription") requiresSubscription: String? = null,
         @Query("sortBy") sortBy: String = "createdAt",
         @Query("sortDirection") sortDirection: String = "DESC",
-        @Query("page") page: Int = 0,
-        @Query("size") size: Int = 20
-    ): Response<PageResponse<PackageSummaryResponse>>
-
-    @GET("api/packages/official")
-    suspend fun getOfficialPackages(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
     ): Response<PageResponse<PackageSummaryResponse>>

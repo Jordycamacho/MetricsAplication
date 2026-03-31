@@ -37,7 +37,7 @@ class PackageAdapter(
             with(binding) {
                 tvPackageName.text = pkg.name
                 tvDescription.text = pkg.description ?: "Sin descripción"
-                tvCreator.text = pkg.creatorUsername ?: "Oficial"
+                tvCreator.text = pkg.creatorId?.let { "Creator ID: $it" } ?: "Oficial"
                 tvItemCount.text = "${pkg.itemCount} items"
 
                 // Precio
