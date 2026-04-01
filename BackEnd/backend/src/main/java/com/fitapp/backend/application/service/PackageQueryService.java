@@ -40,24 +40,25 @@ public class PackageQueryService implements PackageQueryUseCase {
             throw new RuntimeException("Package not found: " + packageId);
         }
 
-        SubscriptionType userTier = getUserTier(currentUserId);
-        if (!packageModel.isAccessibleByTier(userTier)) {
-            throw new RuntimeException("Access denied for package: " + packageId);
+        boolean isCreator = packageModel.canBeEditedBy(currentUserId);
+
+        if (!isCreator) {
+            SubscriptionType userTier = getUserTier(currentUserId);
+            if (!packageModel.isAccessibleByTier(userTier)) {
+                throw new RuntimeException("Access denied for package: " + packageId);
+            }
         }
 
         CreatorModel creator = getCreatorInfo(packageModel.getCreatedByUserId());
-
-        boolean canEdit = packageModel.canBeEditedBy(currentUserId);
         boolean isPurchased = false;
 
         return packageConverter.toDetailResponse(
                 packageModel,
                 creator,
                 persistencePort.findItemsByPackageId(packageId),
-                canEdit,
+                isCreator,
                 true,
-                isPurchased
-        );
+                isPurchased);
     }
 
     @Override
@@ -217,11 +218,23 @@ public class PackageQueryService implements PackageQueryUseCase {
     // ══════════════════════════════════════════════════════════════════════════════
 
     private SubscriptionType getUserTier(Long userId) {
-        return SubscriptionType.PREMIUM;
+        if (userId == null) {
+            return SubscriptionType.FREE;
+        }
+
+        return userRepository.findById(userId)
+                .map(user -> {
+                    if (user.getSubscription() != null) {
+                        return user.getSubscription().getSubscriptionType();
+                    }
+                    return SubscriptionType.FREE;
+                })
+                .orElse(SubscriptionType.FREE);
     }
 
     private CreatorModel getCreatorInfo(Long userId) {
-        if (userId == null) return null;
+        if (userId == null)
+            return null;
         return userRepository.findById(userId)
                 .map(user -> CreatorModel.builder()
                         .id(user.getId())
