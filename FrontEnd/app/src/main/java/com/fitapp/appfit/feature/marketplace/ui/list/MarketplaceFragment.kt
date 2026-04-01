@@ -56,12 +56,20 @@ class MarketplaceFragment : Fragment() {
             },
             onDownloadClick = { pkg ->
                 viewModel.downloadPackage(pkg.id)
+            },
+            onEditClick = { pkg ->
+                val bundle = Bundle().apply {
+                    putLong("packageId", pkg.id)
+                }
+                findNavController().navigate(
+                    R.id.action_my_packages_to_edit_package,
+                    bundle
+                )
             }
         )
-        binding.rvPackages.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@MarketplaceFragment.adapter
-        }
+
+        binding.rvPackages.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvPackages.adapter = adapter
     }
 
     private fun observeViewModel() {

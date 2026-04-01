@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.fitapp.appfit.feature.auth.model.AuthResponse
+import com.google.gson.Gson
+import com.google.gson.JsonParser
 import timber.log.Timber
 import java.time.Instant
+import java.util.Base64
 import java.util.Date
 
 object SessionManager {
@@ -83,6 +86,21 @@ object SessionManager {
 
     fun hasSession(): Boolean {
         return !accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()
+    }
+
+    fun getUserId(): Long {
+        return try {
+            val token = accessToken ?: return 0L
+            val parts = token.split(".")
+            if (parts.size != 3) return 0L
+
+            val decoded = String(Base64.getDecoder().decode(parts[1]))
+            val jsonObject = JsonParser.parseString(decoded).asJsonObject
+            jsonObject.get("userId").asLong
+        } catch (e: Exception) {
+            Timber.Forest.e(e, "Error extrayendo userId del JWT")
+            0L
+        }
     }
 
     fun clearSession() {

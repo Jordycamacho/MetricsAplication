@@ -8,7 +8,8 @@ import com.fitapp.appfit.databinding.ItemPackageBinding
 
 class PackageAdapter(
     private val onPackageClick: (PackageSummaryResponse) -> Unit,
-    private val onDownloadClick: (PackageSummaryResponse) -> Unit
+    private val onDownloadClick: (PackageSummaryResponse) -> Unit,
+    private val onEditClick: (PackageSummaryResponse) -> Unit
 ) : RecyclerView.Adapter<PackageAdapter.PackageViewHolder>() {
 
     private val items = mutableListOf<PackageSummaryResponse>()
@@ -40,20 +41,14 @@ class PackageAdapter(
                 tvCreator.text = pkg.creatorId?.let { "Creator ID: $it" } ?: "Oficial"
                 tvItemCount.text = "${pkg.itemCount} items"
 
-                // Precio
                 if (pkg.isFree) {
                     tvPrice.text = "Gratis"
-                    tvPrice.setTextColor(
-                        root.context.getColor(android.R.color.holo_green_dark)
-                    )
+                    tvPrice.setTextColor(root.context.getColor(android.R.color.holo_green_dark))
                 } else {
                     tvPrice.text = "${pkg.price} ${pkg.currency ?: "USD"}"
-                    tvPrice.setTextColor(
-                        root.context.getColor(android.R.color.holo_orange_dark)
-                    )
+                    tvPrice.setTextColor(root.context.getColor(android.R.color.holo_orange_dark))
                 }
 
-                // Rating
                 if (pkg.ratingCount > 0) {
                     ratingBar.rating = (pkg.rating ?: 0.0).toFloat()
                     tvRatingCount.text = "(${pkg.ratingCount})"
@@ -62,13 +57,9 @@ class PackageAdapter(
                     tvRatingCount.text = "(Sin valoraciones)"
                 }
 
-                // Downloads
                 tvDownloadCount.text = "${pkg.downloadCount} descargas"
-
-                // Type badge
                 tvPackageType.text = pkg.packageType
 
-                // Status
                 tvStatus.text = pkg.status
                 tvStatus.setTextColor(
                     root.context.getColor(
@@ -82,9 +73,10 @@ class PackageAdapter(
                     )
                 )
 
-                // Listeners
+                // AQUÍ VAN LOS LISTENERS
                 root.setOnClickListener { onPackageClick(pkg) }
                 btnDownload.setOnClickListener { onDownloadClick(pkg) }
+                btnEdit.setOnClickListener { onEditClick(pkg) }
             }
         }
     }

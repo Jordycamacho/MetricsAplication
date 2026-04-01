@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
+import com.fitapp.appfit.core.session.SessionManager
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentMyPackagesBinding
 import com.fitapp.appfit.feature.marketplace.ui.MarketplaceViewModel
@@ -40,8 +41,7 @@ class MyPackagesFragment : Fragment() {
         observeViewModel()
         setupListeners()
 
-        // TODO: obtener userId del SessionManager
-        val userId = 1L // Placeholder
+        val userId = SessionManager.getUserId()
         viewModel.getUserPackages(userId)
     }
 
@@ -52,16 +52,24 @@ class MyPackagesFragment : Fragment() {
                     putLong("packageId", pkg.id)
                 }
                 findNavController().navigate(
-                    R.id.action_my_packages_to_edit_package,
+                    R.id.action_my_packages_to_package_detail,
                     bundle
                 )
             },
-            onDownloadClick = { }
+            onDownloadClick = { },
+            onEditClick = { pkg ->
+                val bundle = Bundle().apply {
+                    putLong("packageId", pkg.id)
+                }
+                findNavController().navigate(
+                    R.id.action_my_packages_to_edit_package,
+                    bundle
+                )
+            }
         )
-        binding.rvMyPackages.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@MyPackagesFragment.adapter
-        }
+
+        binding.rvMyPackages.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvMyPackages.adapter = adapter
     }
 
     private fun observeViewModel() {
@@ -76,11 +84,9 @@ class MyPackagesFragment : Fragment() {
                     binding.rvMyPackages.visibility = View.VISIBLE
                     try {
                         state.data?.content?.let {
-                            android.util.Log.d("DEBUG_PACKAGES", "Items: ${it.size}")
                             adapter.submitList(it)
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("DEBUG_PACKAGES", "Error en submitList", e)
                         Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }

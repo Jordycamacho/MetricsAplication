@@ -369,6 +369,13 @@
                 android:name="packageId"
                 app:argType="long" />
         </action>
+        <action
+            android:id="@+id/action_my_packages_to_package_detail"
+            app:destination="@id/navigation_package_detail">
+            <argument
+                android:name="packageId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <fragment

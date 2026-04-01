@@ -170,6 +170,18 @@
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Editar"
+                android:textColor="#121212"
+                android:textSize="12sp"
+                app:backgroundTint="#78703F"
+                app:cornerRadius="8dp"
+                android:elevation="0dp"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_download"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
