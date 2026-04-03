@@ -17,11 +17,17 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "workout_sessions")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class WorkoutSessionEntity {
 
     @Id
