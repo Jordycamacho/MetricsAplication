@@ -29,11 +29,10 @@ import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
         SetTemplateEntity::class,
         SetParameterEntity::class,
         PendingSyncOperation::class,
-        // ── Workout (v3) ──────────────────────────
         WorkoutSessionEntity::class,
         WorkoutSetResultEntity::class
     ],
-    version = 3,
+    version = 4,                     // ← Incrementada a 4
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -44,18 +43,14 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun setTemplateDao(): SetTemplateDao
     abstract fun setParameterDao(): SetParameterDao
     abstract fun pendingSyncDao(): PendingSyncDao
-    // ── Workout ───────────────────────────────────
     abstract fun workoutSessionDao(): WorkoutSessionDao
     abstract fun workoutSetResultDao(): WorkoutSetResultDao
 
     companion object {
 
-        @Volatile private var INSTANCE: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
-        /**
-         * Migración v2 → v3: añade las tablas de workout.
-         * No toca nada existente — migración segura.
-         */
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Tabla de sesiones de entrenamiento
@@ -76,7 +71,6 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_routineId` ON `workout_sessions` (`routineId`)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_syncStatus` ON `workout_sessions` (`syncStatus`)")
 
-                // Tabla de valores reales ejecutados por set
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS `workout_set_results` (
                         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -98,6 +92,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migración v3 → v4: añade la columna exerciseId a workout_set_results.
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE workout_set_results ADD COLUMN exerciseId INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
@@ -105,7 +108,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "fitapp_offline.db"
                 )
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     .also { INSTANCE = it }
             }

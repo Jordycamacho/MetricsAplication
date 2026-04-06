@@ -45,6 +45,7 @@ data class WorkoutSetResultEntity(
     val id: Long = 0,
     val workoutSessionId: Long,
     val setTemplateId: Long,
+    val exerciseId: Long,
     val parameterId: Long,
     val repetitions: Int? = null,
     val numericValue: Double? = null,

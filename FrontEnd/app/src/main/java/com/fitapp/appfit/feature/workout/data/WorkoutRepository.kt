@@ -3,7 +3,6 @@ package com.fitapp.appfit.feature.workout.data
 import android.content.Context
 import android.util.Log
 import com.fitapp.appfit.core.database.AppDatabase
-import com.fitapp.appfit.core.network.ApiClient
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.workout.database.entity.WorkoutSessionEntity
 import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
@@ -21,15 +20,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-/**
- * Repository para gestión de workouts con soporte offline-first.
- *
- * Estrategia:
- * 1. Guardar siempre localmente primero (Room)
- * 2. Intentar sync con backend si hay conexión
- * 3. Si falla, marcar como PENDING_CREATE para sync posterior
- * 4. WorkoutSyncManager se encarga de sincronizar pendientes
- */
 class WorkoutRepository(private val context: Context) {
 
     private val service = WorkoutService.instance
@@ -42,19 +32,6 @@ class WorkoutRepository(private val context: Context) {
         private val ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     }
 
-    // ── Guardar sesión (offline-first) ────────────────────────────────────────
-
-    /**
-     * Guarda una sesión de workout.
-     *
-     * Flujo:
-     * 1. Guardar en Room (siempre)
-     * 2. Intentar enviar al backend
-     * 3. Si tiene éxito → marcar como SYNCED
-     * 4. Si falla → dejar como PENDING_CREATE para sync posterior
-     *
-     * @return sessionId local (Room) siempre, independientemente del sync
-     */
     suspend fun saveWorkoutSession(
         routineId: Long,
         userId: String,
@@ -265,7 +242,6 @@ class WorkoutRepository(private val context: Context) {
      * Elimina una sesión.
      */
     suspend fun deleteWorkoutSession(sessionId: Long): Resource<Unit> {
-        // Eliminar localmente primero
         try {
             sessionDao.deleteSession(sessionId)
             Log.d(TAG, "SESSION_DELETED_LOCALLY | sessionId=$sessionId")
@@ -273,7 +249,6 @@ class WorkoutRepository(private val context: Context) {
             Log.e(TAG, "ERROR_DELETING_LOCALLY | sessionId=$sessionId | error=${e.message}", e)
         }
 
-        // Intentar eliminar en backend
         return callUnit { service.deleteWorkoutSession(sessionId) }
     }
 
@@ -293,6 +268,9 @@ class WorkoutRepository(private val context: Context) {
         val results = mutableListOf<WorkoutSetResultEntity>()
 
         setParamState.forEach { (setTemplateId, setData) ->
+
+            val exerciseId = (setData["exerciseId"] as? Long) ?: 0L
+
             @Suppress("UNCHECKED_CAST")
             val paramMap = setData["parameters"] as? Map<Long, Map<String, Any?>> ?: return@forEach
 
@@ -303,6 +281,7 @@ class WorkoutRepository(private val context: Context) {
                     WorkoutSetResultEntity(
                         workoutSessionId = sessionId,
                         setTemplateId = setTemplateId,
+                        exerciseId = exerciseId,
                         parameterId = parameterId,
                         repetitions = values["repetitions"] as? Int,
                         numericValue = values["numericValue"] as? Double,
@@ -355,7 +334,7 @@ class WorkoutRepository(private val context: Context) {
         finishedAt: Long,
         performanceScore: Int?,
         results: List<WorkoutSetResultEntity>,
-        setParamState: Map<Long, Map<String, Any?>> // ⭐ NUEVO parámetro
+        setParamState: Map<Long, Map<String, Any?>>
     ): SaveWorkoutSessionRequest {
 
         val startTime = timestampToIso(startedAt)
@@ -365,10 +344,8 @@ class WorkoutRepository(private val context: Context) {
             .groupBy { it.setTemplateId }
             .map { (setTemplateId, params) ->
 
-                // ⭐ OBTENER exerciseId del estado
                 val exerciseId = (setParamState[setTemplateId]?.get("exerciseId") as? Long) ?: 0L
 
-                // Filtrar parámetros que tienen AL MENOS UN valor
                 val validParams = params.mapNotNull { result ->
                     val hasValue = result.numericValue != null && result.numericValue != 0.0 ||
                             result.integerValue != null && result.integerValue != 0 ||
@@ -391,7 +368,7 @@ class WorkoutRepository(private val context: Context) {
                 if (validParams.isNotEmpty()) {
                     SaveWorkoutSessionRequest.SetExecutionRequest(
                         setTemplateId = setTemplateId,
-                        exerciseId = exerciseId, // ⭐ USAR exerciseId REAL
+                        exerciseId = exerciseId,
                         position = 1,
                         setType = "NORMAL",
                         status = "COMPLETED",
