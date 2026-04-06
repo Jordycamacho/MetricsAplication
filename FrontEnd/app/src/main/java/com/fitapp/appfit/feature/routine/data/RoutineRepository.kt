@@ -17,7 +17,6 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSet
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineStatisticsResponse
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineSummaryResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
-import com.fitapp.appfit.feature.routine.data.RoutineService
 import com.fitapp.appfit.shared.model.PageResponse
 import retrofit2.HttpException
 import retrofit2.Response

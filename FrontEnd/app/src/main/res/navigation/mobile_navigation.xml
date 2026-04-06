@@ -32,7 +32,11 @@
         android:id="@+id/navigation_metrics"
         android:name="com.fitapp.appfit.feature.metrics.ui.MetricsFragment"
         android:label="@string/title_metrics"
-        tools:layout="@layout/fragment_metrics" />
+        tools:layout="@layout/fragment_metrics">
+        <action
+            android:id="@+id/action_metrics_to_workout_history"
+            app:destination="@id/navigation_workout_history" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
@@ -405,4 +409,11 @@
             android:name="packageId"
             app:argType="long" />
     </fragment>
+
+
+    <fragment
+        android:id="@+id/navigation_workout_history"
+        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutHistoryFragment"
+        android:label="Historial"
+        tools:layout="@layout/fragment_workout_history" />
 </navigation>

@@ -50,7 +50,7 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.13:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.14:8080/\"")
         }
         create("local") {
             dimension = "environment"
@@ -142,4 +142,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+
+
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

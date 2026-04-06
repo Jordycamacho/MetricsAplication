@@ -17,7 +17,8 @@ import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutExerciseAdapter(
-    private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit
+    private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
+    private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit
 ) : RecyclerView.Adapter<WorkoutExerciseAdapter.ExerciseViewHolder>() {
 
     private var exercises: List<RoutineExerciseResponse> = emptyList()
@@ -57,7 +58,6 @@ class WorkoutExerciseAdapter(
         private var restSeconds = 0
         private var restTimerActive = false
 
-        // ⭐ NUEVO: Crear adapter según preferencia
         private val setAdapter: RecyclerView.Adapter<*> by lazy {
             val viewType = WorkoutPreferences.getSetViewType(itemView.context)
             when (viewType) {
@@ -65,6 +65,9 @@ class WorkoutExerciseAdapter(
                     WorkoutSetAdapterClassic(
                         onValueChanged = { set, type, value ->
                             currentExercise?.let { onSetValueChanged(it, set, type, value) }
+                        },
+                        onSetCompletedToggled = { set, completed ->
+                            currentExercise?.let { onSetCompletedToggled(it, set, completed) }
                         },
                         onSequenceComplete = {
                             if (restSeconds > 0 && itemView.isAttachedToWindow) {
@@ -81,6 +84,9 @@ class WorkoutExerciseAdapter(
                     WorkoutSetAdapter(
                         onValueChanged = { set, type, value ->
                             currentExercise?.let { onSetValueChanged(it, set, type, value) }
+                        },
+                        onSetCompletedToggled = { set, completed ->
+                            currentExercise?.let { onSetCompletedToggled(it, set, completed) }
                         },
                         onSequenceComplete = {
                             if (restSeconds > 0 && itemView.isAttachedToWindow) {

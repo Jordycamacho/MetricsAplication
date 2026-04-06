@@ -15,7 +15,8 @@ import com.fitapp.appfit.feature.workout.model.WorkoutDay
 import com.fitapp.appfit.feature.workout.ui.WorkoutExerciseAdapter
 
 class WorkoutDayAdapter(
-    private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit
+    private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
+    private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit
 ) : RecyclerView.Adapter<WorkoutDayAdapter.DayViewHolder>() {
 
     private var days: List<WorkoutDay> = emptyList()
@@ -78,14 +79,12 @@ class WorkoutDayAdapter(
     override fun getItemCount() = days.size
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         private val tvDay: TextView = itemView.findViewById(R.id.tv_day_title)
         private val ivExpand: ImageView = itemView.findViewById(R.id.iv_expand_day)
         private val recyclerExercises: RecyclerView = itemView.findViewById(R.id.recycler_exercises)
         private val container: View = itemView.findViewById(R.id.layout_day_container)
         private val tvExerciseCount: TextView = itemView.findViewById(R.id.tv_exercise_count)
-
-        private val exerciseAdapter = WorkoutExerciseAdapter(onSetValueChanged)
+        private val exerciseAdapter = WorkoutExerciseAdapter(onSetValueChanged, onSetCompletedToggled)
 
         init {
             recyclerExercises.layoutManager = LinearLayoutManager(itemView.context)

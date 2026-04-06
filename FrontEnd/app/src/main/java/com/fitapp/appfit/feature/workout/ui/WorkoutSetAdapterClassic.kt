@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -18,6 +19,7 @@ import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutSetAdapterClassic(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
+    private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit, // ⭐ NUEVO
     private val onSequenceComplete: () -> Unit = {}
 ) : RecyclerView.Adapter<WorkoutSetAdapterClassic.SetViewHolder>() {
 
@@ -27,15 +29,24 @@ class WorkoutSetAdapterClassic(
     private val currentDuration = mutableMapOf<Long, Long>()
     private val paramLabel      = mutableMapOf<Long, String>()
     private val paramType       = mutableMapOf<Long, String>()
+    private val setCompletionState = mutableMapOf<Long, Boolean>() // ⭐ NUEVO
     private var activeSequenceIndex = -1
 
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
         currentReps.clear(); currentParam.clear(); currentDuration.clear()
         paramLabel.clear(); paramType.clear()
+        // NO limpiar setCompletionState para mantener estado al rotar pantalla
         activeSequenceIndex = -1
         sets.forEach { initSetState(it.id, it.parameters ?: emptyList()) }
         notifyDataSetChanged()
+    }
+
+    // ⭐ NUEVO: Métodos para sincronizar estado externo
+    fun setSetCompleted(setId: Long, completed: Boolean) {
+        setCompletionState[setId] = completed
+        val position = sets.indexOfFirst { it.id == setId }
+        if (position != -1) notifyItemChanged(position)
     }
 
     fun isSequenceMode() = sets.isNotEmpty() && sets.all { currentDuration.containsKey(it.id) }
@@ -57,6 +68,11 @@ class WorkoutSetAdapterClassic(
             currentParam[setId] = 0.0
             paramLabel[setId] = "KG"
             paramType[setId]  = "number"
+        }
+
+        // ⭐ Inicializar estado de completado si no existe
+        if (!setCompletionState.containsKey(setId)) {
+            setCompletionState[setId] = false
         }
     }
 
@@ -83,6 +99,9 @@ class WorkoutSetAdapterClassic(
 
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
+        // ⭐ CHECKBOX
+        private val checkboxCompleted: CheckBox = itemView.findViewById(R.id.checkbox_set_completed)
+
         // Header
         private val viewTypeStripe: View = itemView.findViewById(R.id.view_type_stripe)
         private val tvSetBadge: TextView = itemView.findViewById(R.id.tv_set_badge)
@@ -104,7 +123,7 @@ class WorkoutSetAdapterClassic(
         private val btnDecParam: ImageButton = itemView.findViewById(R.id.btn_decrease_weight)
         private val btnIncParam: ImageButton = itemView.findViewById(R.id.btn_increase_weight)
 
-        // Bloque extra de duración (caso: reps + param + duración)
+        // Bloque extra de duración
         private val layoutDurationExtra: View = itemView.findViewById(R.id.layout_duration_extra)
         private val tvDurationTimer: TextView = itemView.findViewById(R.id.tv_duration_timer)
         private val btnDecDurationExtra: ImageButton = itemView.findViewById(R.id.btn_decrease_duration_extra)
@@ -132,11 +151,8 @@ class WorkoutSetAdapterClassic(
             onFinish = {
                 if (restTimerActive && itemView.isAttachedToWindow) {
                     restTimerActive = false
-
                     WorkoutHaptics.restFinished(itemView.context)
-
                     Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
-
                     updateRestLabel()
                     if (isSequenceMode()) onSetRestFinished(myIndex)
                 }
@@ -153,11 +169,8 @@ class WorkoutSetAdapterClassic(
                 if (durationTimerActive && itemView.isAttachedToWindow) {
                     durationTimerActive = false
                     durationDisplayView?.text = formatDuration(currentDuration[currentSetId] ?: 0L)
-
                     WorkoutHaptics.setComplete(itemView.context)
-
                     Thread { WorkoutSoundManager.playSetComplete(itemView.context) }.start()
-
                     onValueChanged(sets[myIndex], "completed", 1.0)
                     if (isSequenceMode() && restSeconds > 0) {
                         restTimerActive = true
@@ -181,9 +194,34 @@ class WorkoutSetAdapterClassic(
             durationDisplayView = null
             currentSetId = set.id
             myIndex = position
+
+            bindCheckbox(set)
             bindTypeDecoration(set)
             bindControls(set, position)
             bindRestTimer(set)
+        }
+
+        // ⭐ NUEVO: Bind del checkbox
+        private fun bindCheckbox(set: RoutineSetTemplateResponse) {
+            val isCompleted = setCompletionState[set.id] ?: false
+            checkboxCompleted.isChecked = isCompleted
+
+            // Listener sin recursión
+            checkboxCompleted.setOnCheckedChangeListener(null)
+            checkboxCompleted.setOnCheckedChangeListener { _, checked ->
+                setCompletionState[set.id] = checked
+                onSetCompletedToggled(set, checked)
+                updateCompletionVisuals(checked)
+            }
+
+            updateCompletionVisuals(isCompleted)
+        }
+
+        // ⭐ NUEVO: Actualizar visuales según estado de completado
+        private fun updateCompletionVisuals(completed: Boolean) {
+            val alpha = if (completed) 0.5f else 1.0f
+            val cardRoot = itemView.findViewById<View>(R.id.card_set_root)
+            cardRoot?.alpha = alpha
         }
 
         // ── Decoración del tipo ───────────────────────────────────────────────
@@ -214,7 +252,7 @@ class WorkoutSetAdapterClassic(
             else              -> "Normal"          to R.color.set_type_normal
         }
 
-        // ── Controles ─────────────────────────────────────────────────────────
+        // ── Controles (igual que antes, sin cambios) ─────────────────────────
 
         private fun bindControls(set: RoutineSetTemplateResponse, position: Int) {
             val hasReps     = currentReps.containsKey(set.id)
@@ -225,7 +263,6 @@ class WorkoutSetAdapterClassic(
 
             tvParamSummary.text = buildSummary(hasReps, hasDuration, hasParam, set.id)
 
-            // Reset visibilidad y weights antes de asignar
             layoutReps.visibility = View.GONE
             layoutParam.visibility = View.GONE
             viewDivider.visibility = View.GONE
@@ -233,7 +270,6 @@ class WorkoutSetAdapterClassic(
             setColumnWeight(layoutReps, 1f)
             setColumnWeight(layoutParam, 1f)
 
-            // Resetear estilos de texto que se puedan haber reutilizado para duración
             tvRepsValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary_dark))
             tvRepsValue.textSize = 38f
             tvRepsValue.isClickable = false
@@ -246,34 +282,28 @@ class WorkoutSetAdapterClassic(
             tvParamValue.setOnClickListener(null)
 
             when {
-                // A: Reps + Param (sin duración)
                 hasReps && hasParam && !hasDuration -> {
                     setupRepsColumn(set); setupParamColumn(set)
                     viewDivider.visibility = View.VISIBLE
                 }
-                // B: Solo reps
                 hasReps && !hasParam && !hasDuration -> {
                     setupRepsColumn(set)
                     setColumnWeight(layoutReps, 2f)
                 }
-                // C: Duración + Param (sin reps)
                 !hasReps && hasDuration && hasParam -> {
                     setupDurationInColumn(set, position, isLeft = true)
                     setupParamColumn(set)
                     viewDivider.visibility = View.VISIBLE
                 }
-                // D: Solo duración
                 !hasReps && hasDuration && !hasParam -> {
                     setupDurationInColumn(set, position, isLeft = true)
                     setColumnWeight(layoutReps, 2f)
                 }
-                // E: Reps + Duración (sin param numérico)
                 hasReps && hasDuration && !hasParam -> {
                     setupRepsColumn(set)
                     setupDurationInColumn(set, position, isLeft = false)
                     viewDivider.visibility = View.VISIBLE
                 }
-                // F: Reps + Param + Duración (3 parámetros)
                 hasReps && hasParam && hasDuration -> {
                     setupRepsColumn(set); setupParamColumn(set)
                     viewDivider.visibility = View.VISIBLE
@@ -296,8 +326,6 @@ class WorkoutSetAdapterClassic(
                 if (hasParam) unit else null
             ).joinToString(" · ")
         }
-
-        // ── Helpers de columna ────────────────────────────────────────────────
 
         private fun setupRepsColumn(set: RoutineSetTemplateResponse) {
             layoutReps.visibility = View.VISIBLE
@@ -348,7 +376,6 @@ class WorkoutSetAdapterClassic(
             tvValue.isClickable = true
             tvValue.isFocusable = true
 
-            // ← Aquí está la corrección: el timer usará ESTE view
             durationDisplayView = tvValue
 
             tvValue.setOnClickListener { toggleDuration(set, position) }
@@ -358,12 +385,10 @@ class WorkoutSetAdapterClassic(
             autoStartIfSequence(set, position)
         }
 
-
         private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
             layoutDurationExtra.visibility = View.VISIBLE
             tvDurationTimer.text = formatDuration(currentDuration[set.id] ?: 0L)
 
-            // ← durationDisplayView apunta al TextView del bloque extra
             durationDisplayView = tvDurationTimer
 
             tvDurationTimer.setOnClickListener { toggleDuration(set, position) }
@@ -385,7 +410,6 @@ class WorkoutSetAdapterClassic(
             if (durationTimerActive) {
                 durationTimerActive = false
                 durationTimer.stop()
-                // Restaurar solo el display de duración, sin tocar el param del lado contrario
                 durationDisplayView?.text = formatDuration(currentDuration[set.id] ?: 0L)
             } else {
                 WorkoutHaptics.exerciseStart(itemView.context)
@@ -402,8 +426,6 @@ class WorkoutSetAdapterClassic(
             onValueChanged(set, "duration", new.toDouble())
         }
 
-        // ── Rest timer ────────────────────────────────────────────────────────
-
         private fun bindRestTimer(set: RoutineSetTemplateResponse) {
             restSeconds = set.restAfterSet ?: 0
             if (restSeconds <= 0) { layoutRestContainer.visibility = View.GONE; return }
@@ -419,8 +441,6 @@ class WorkoutSetAdapterClassic(
             tvRestTimer.text = "${restSeconds}s descanso"
             tvRestHint.text = "TAP"
         }
-
-        // ── Helpers ───────────────────────────────────────────────────────────
 
         private fun stepFor(unit: String, type: String): Double = when {
             type == "percentage" -> 5.0; type == "distance" -> 1.0

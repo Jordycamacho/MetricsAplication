@@ -33,13 +33,24 @@
             android:paddingTop="12dp"
             android:paddingBottom="10dp">
 
-            <!-- ── HEADER: resumen tipo + badge ── -->
+            <!-- ── HEADER: checkbox + resumen tipo + badge ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginBottom="14dp">
+
+                <!-- ⭐ CHECKBOX DE COMPLETADO -->
+                <CheckBox
+                    android:id="@+id/checkbox_set_completed"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="12dp"
+                    android:button="@drawable/checkbox_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Marcar como completado"/>
 
                 <TextView
                     android:id="@+id/tv_param_summary"

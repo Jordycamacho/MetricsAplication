@@ -22,6 +22,7 @@ import com.google.android.material.button.MaterialButton
 
 class WorkoutSetAdapter(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
+    private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
     private val onSequenceComplete: () -> Unit = {}
 ) : RecyclerView.Adapter<WorkoutSetAdapter.SetViewHolder>() {
 

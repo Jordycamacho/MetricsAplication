@@ -32,28 +32,59 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/tv_exercise_name"
-                    android:layout_width="0dp"
+                <!-- Header con checkbox -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Press Banca"
-                    android:textColor="@color/text_primary_dark"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <ImageView
-                    android:id="@+id/iv_expand"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_arrow_down"
-                    android:layout_marginStart="12dp"
-                    app:tint="@color/gold_primary"/>
+                    <!-- ⭐ CHECKBOX DE EJERCICIO -->
+                    <CheckBox
+                        android:id="@+id/checkbox_exercise_completed"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="12dp"
+                        android:button="@drawable/checkbox_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:contentDescription="Marcar ejercicio completado"/>
 
+                    <TextView
+                        android:id="@+id/tv_exercise_name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Press Banca"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="18sp"
+                        android:textStyle="bold"/>
+
+                    <!-- Badge de progreso (sets completados/totales) -->
+                    <TextView
+                        android:id="@+id/tv_sets_progress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0/3"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary_dark"
+                        android:layout_marginEnd="8dp"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"
+                        android:background="@drawable/bg_badge_rounded"
+                        android:backgroundTint="#2A2A2A"/>
+
+                    <ImageView
+                        android:id="@+id/iv_expand"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_down"
+                        app:tint="@color/gold_primary"/>
+
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -75,8 +106,7 @@
             android:layout_height="wrap_content"
             android:nestedScrollingEnabled="false"/>
 
-        <!-- ── DESCANSO DEL EJERCICIO ── siempre visible si restAfterExercise > 0
-             Fondo negro, borde dorado — estilo premium diferenciado del set -->
+        <!-- ── DESCANSO DEL EJERCICIO ── -->
         <LinearLayout
             android:id="@+id/layout_exercise_rest"
             android:layout_width="match_parent"

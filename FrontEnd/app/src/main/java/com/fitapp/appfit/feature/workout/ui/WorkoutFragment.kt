@@ -41,8 +41,10 @@ class WorkoutFragment : Fragment() {
     private lateinit var adapter: WorkoutDayAdapter
     private var backPressedOnce = false
     private val backHandler = Handler(Looper.getMainLooper())
-    private val setParamState =
-        mutableMapOf<Long, MutableMap<Long, MutableMap<String, Any?>>>()
+
+    // ⭐ NUEVA ESTRUCTURA: setTemplateId -> Map("exerciseId", "parameters")
+    private val setParamState = mutableMapOf<Long, MutableMap<String, Any?>>()
+    private val setCompletionState = mutableMapOf<Long, Boolean>()
 
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
@@ -70,6 +72,7 @@ class WorkoutFragment : Fragment() {
             restTimerService = (binder as? RestTimerService.LocalBinder)?.getService()
             serviceBound = true
         }
+
         override fun onServiceDisconnected(name: ComponentName?) {
             restTimerService = null
             serviceBound = false
@@ -117,45 +120,37 @@ class WorkoutFragment : Fragment() {
         val handler = Handler(Looper.getMainLooper())
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-
             if (backPressedOnce) {
-
                 androidx.appcompat.app.AlertDialog.Builder(requireContext())
                     .setTitle("Salir del entrenamiento")
                     .setMessage("Si sales ahora perderás el progreso. ¿Seguro?")
                     .setPositiveButton("Salir") { _, _ ->
-
                         if (setParamState.isNotEmpty()) {
                             lifecycleScope.launch {
-                                workoutRepository.saveWorkout(
-                                    routineId     = args.routineId,
-                                    userId        = currentUserId,
+                                workoutRepository.saveWorkoutSession(
+                                    routineId = args.routineId,
+                                    userId = currentUserId,
                                     setParamState = setParamState,
-                                    startedAt     = workoutStartedAt
+                                    startedAt = workoutStartedAt
                                 )
                             }
                         }
-
                         findNavController().navigateUp()
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()
-
             } else {
                 backPressedOnce = true
-
                 com.google.android.material.snackbar.Snackbar.make(
                     binding.root,
                     "Pulsa otra vez para salir",
                     com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
                 ).show()
-
-                handler.postDelayed({
-                    backPressedOnce = false
-                }, 2000)
+                handler.postDelayed({ backPressedOnce = false }, 2000)
             }
         }
     }
+
     override fun onStart() {
         super.onStart()
         val intent = Intent(requireContext(), RestTimerService::class.java)
@@ -217,34 +212,46 @@ class WorkoutFragment : Fragment() {
     // ── RecyclerView ──────────────────────────────────────────────────────────
 
     private fun setupRecyclerView() {
-        adapter = WorkoutDayAdapter { exercise, set, valueType, newValue ->
-            if (!setParamState.containsKey(set.id)) {
-                setParamState[set.id] = initSetState(set.parameters ?: emptyList())
-            }
-            val paramMap = setParamState[set.id]!!
-            when (valueType) {
-                "reps" -> paramMap.values.forEach { it["repetitions"] = newValue.toInt() }
-                "param" -> {
-                    set.parameters?.forEach { param ->
-                        val type = param.parameterType?.uppercase() ?: return@forEach
-                        if (type in listOf("NUMBER", "DISTANCE", "PERCENTAGE")) {
-                            paramMap[param.parameterId]?.set("numericValue", newValue)
-                        } else if (type == "INTEGER") {
-                            paramMap[param.parameterId]?.set("integerValue", newValue.toInt())
-                        }
-                    }
+        adapter = WorkoutDayAdapter(
+            onSetValueChanged = { exercise, set, valueType, newValue ->
+                // ⭐ INICIALIZAR con exerciseId si no existe
+                if (!setParamState.containsKey(set.id)) {
+                    setParamState[set.id] = mutableMapOf(
+                        "exerciseId" to exercise.exerciseId,
+                        "parameters" to initSetState(set.parameters ?: emptyList())
+                    )
                 }
 
-                "duration" -> {
-                    set.parameters?.forEach { param ->
-                        if (param.parameterType?.uppercase() == "DURATION") {
-                            paramMap[param.parameterId]?.set("durationValue", newValue.toLong())
+                @Suppress("UNCHECKED_CAST")
+                val paramMap = setParamState[set.id]!!["parameters"] as MutableMap<Long, MutableMap<String, Any?>>
+
+                when (valueType) {
+                    "reps" -> paramMap.values.forEach { it["repetitions"] = newValue.toInt() }
+                    "param" -> {
+                        set.parameters?.forEach { param ->
+                            val type = param.parameterType?.uppercase() ?: return@forEach
+                            if (type in listOf("NUMBER", "DISTANCE", "PERCENTAGE")) {
+                                paramMap[param.parameterId]?.set("numericValue", newValue)
+                            } else if (type == "INTEGER") {
+                                paramMap[param.parameterId]?.set("integerValue", newValue.toInt())
+                            }
+                        }
+                    }
+                    "duration" -> {
+                        set.parameters?.forEach { param ->
+                            if (param.parameterType?.uppercase() == "DURATION") {
+                                paramMap[param.parameterId]?.set("durationValue", newValue.toLong())
+                            }
                         }
                     }
                 }
+                binding.fabSaveWorkout.isInvisible = false
+            },
+            onSetCompletedToggled = { exercise, set, isCompleted ->
+                setCompletionState[set.id] = isCompleted
+                Log.d("Workout", "Set ${set.id} completado=$isCompleted")
             }
-            binding.fabSaveWorkout.isInvisible = false
-        }
+        )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
@@ -255,10 +262,10 @@ class WorkoutFragment : Fragment() {
     ): MutableMap<Long, MutableMap<String, Any?>> {
         return params.associate { param ->
             param.parameterId to mutableMapOf<String, Any?>(
-                "repetitions"   to param.repetitions,
-                "numericValue"  to param.numericValue,
+                "repetitions" to param.repetitions,
+                "numericValue" to param.numericValue,
                 "durationValue" to param.durationValue,
-                "integerValue"  to param.integerValue
+                "integerValue" to param.integerValue
             )
         }.toMutableMap()
     }
@@ -273,6 +280,7 @@ class WorkoutFragment : Fragment() {
                     binding.recyclerView.isVisible = false
                     binding.fabSaveWorkout.isInvisible = true
                 }
+
                 is Resource.Success -> {
                     binding.progressBar.isVisible = false
                     binding.recyclerView.isVisible = true
@@ -284,11 +292,17 @@ class WorkoutFragment : Fragment() {
                         binding.fabSaveWorkout.isInvisible = setParamState.isEmpty()
                     }
                 }
+
                 is Resource.Error -> {
                     binding.progressBar.isVisible = false
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Error: ${resource.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                     findNavController().navigateUp()
                 }
+
                 else -> {}
             }
         }
@@ -302,29 +316,53 @@ class WorkoutFragment : Fragment() {
     // ── Guardar ───────────────────────────────────────────────────────────────
 
     private fun saveWorkout() {
-        if (setParamState.isEmpty()) return
+        if (setParamState.isEmpty()) {
+            Toast.makeText(requireContext(), "No hay datos para guardar", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         binding.fabSaveWorkout.isEnabled = false
         binding.progressBar.isVisible = true
 
         lifecycleScope.launch {
-            val result = workoutRepository.saveWorkout(
-                routineId     = args.routineId,
-                userId        = currentUserId,
-                setParamState = setParamState,
-                startedAt     = workoutStartedAt
+            Log.i(
+                "WorkoutFragment",
+                "SAVING_WORKOUT | routineId=${args.routineId} | sets=${setParamState.size}"
             )
+
+            val result = workoutRepository.saveWorkoutSession(
+                routineId = args.routineId,
+                userId = currentUserId,
+                setParamState = setParamState,
+                startedAt = workoutStartedAt,
+                finishedAt = System.currentTimeMillis(),
+                performanceScore = null
+            )
+
             binding.progressBar.isVisible = false
             binding.fabSaveWorkout.isEnabled = true
+
             result.fold(
                 onSuccess = { sessionId ->
+                    Log.i("WorkoutFragment", "WORKOUT_SAVED | sessionId=$sessionId")
+
                     setParamState.clear()
                     binding.fabSaveWorkout.isInvisible = true
-                    Log.i("WorkoutFragment", "Workout guardado, sessionId=$sessionId")
-                    Toast.makeText(requireContext(), "Entrenamiento guardado ✓", Toast.LENGTH_SHORT).show()
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Entrenamiento guardado ✓",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 },
                 onFailure = { error ->
-                    Log.e("WorkoutFragment", "Error guardando workout: ${error.message}", error)
-                    Toast.makeText(requireContext(), "Error al guardar. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
+                    Log.e("WorkoutFragment", "WORKOUT_SAVE_ERROR | error=${error.message}", error)
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Error al guardar: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             )
         }
