@@ -6,8 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Set realmente ejecutado durante una sesión de entrenamiento.
@@ -19,12 +19,11 @@ import java.util.List;
  * (el usuario añade un set extra que no estaba en la rutina).
  */
 @Entity
-@Table(name = "set_executions",
-    indexes = {
-        @Index(name = "idx_se_session_ex",  columnList = "session_exercise_id"),
-        @Index(name = "idx_se_position",    columnList = "session_exercise_id, position"),
-        @Index(name = "idx_se_status",      columnList = "status")
-    })
+@Table(name = "set_executions", indexes = {
+        @Index(name = "idx_se_session_ex", columnList = "session_exercise_id"),
+        @Index(name = "idx_se_position", columnList = "session_exercise_id, position"),
+        @Index(name = "idx_se_status", columnList = "status")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -84,7 +83,7 @@ public class SetExecutionEntity {
 
     @OneToMany(mappedBy = "setExecution", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<SetExecutionParameterEntity> parameters = new ArrayList<>();
+    private Set<SetExecutionParameterEntity> parameters = new HashSet<>();
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -93,7 +92,8 @@ public class SetExecutionEntity {
     }
 
     public Long getDurationSeconds() {
-        if (startedAt == null || completedAt == null) return null;
+        if (startedAt == null || completedAt == null)
+            return null;
         return java.time.Duration.between(startedAt, completedAt).getSeconds();
     }
 }

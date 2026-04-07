@@ -93,7 +93,7 @@ public class SetExecutionConverter {
         if (model.getParameters() != null && !model.getParameters().isEmpty()) {
             entity.setParameters(model.getParameters().stream()
                     .map(paramModel -> parameterConverter.toEntity(paramModel, entity))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toSet()));
         }
 
         return entity;
