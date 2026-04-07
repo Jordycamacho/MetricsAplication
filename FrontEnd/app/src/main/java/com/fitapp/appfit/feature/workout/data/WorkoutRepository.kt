@@ -76,7 +76,11 @@ class WorkoutRepository(private val context: Context) {
         when (syncResult) {
             is Resource.Success -> {
                 Log.i(TAG, "SYNC_SUCCESS | sessionId=$sessionId | backendId=${syncResult.data?.id}")
-                sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
+                syncResult.data?.id?.let { remoteId ->
+                    sessionDao.updateRemoteId(sessionId, remoteId)
+                } ?: run {
+                    sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
+                }
                 resultDao.markSessionResultsAsSynced(sessionId)
             }
             is Resource.Error -> {
@@ -396,7 +400,7 @@ class WorkoutRepository(private val context: Context) {
     }
 
     private fun WorkoutSessionEntity.toSummary() = WorkoutSessionSummaryResponse(
-        id = id,
+        id = remoteId ?: id,
         routineId = routineId,
         routineName = "Routine $routineId",
         startTime = timestampToIso(startedAt),

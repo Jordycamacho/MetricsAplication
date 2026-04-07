@@ -58,12 +58,8 @@ class WorkoutHistoryFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = WorkoutHistoryAdapter(
             onItemClick = { session ->
-                // TODO: Navegar a detalles de sesión
-                Toast.makeText(
-                    requireContext(),
-                    "Detalles de sesión #${session.id}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                val action = WorkoutHistoryFragmentDirections.actionWorkoutHistoryToDetail(session.id)
+                findNavController().navigate(action)
             },
             onDeleteClick = { session ->
                 showDeleteConfirmation(session.id)

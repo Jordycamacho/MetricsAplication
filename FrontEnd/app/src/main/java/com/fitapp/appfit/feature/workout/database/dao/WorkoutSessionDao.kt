@@ -19,6 +19,9 @@ interface WorkoutSessionDao {
     @Query("DELETE FROM workout_sessions WHERE id = :sessionId")
     suspend fun deleteSession(sessionId: Long)
 
+    @Query("UPDATE workout_sessions SET remoteId = :remoteId, syncStatus = 'SYNCED' WHERE id = :localId")
+    suspend fun updateRemoteId(localId: Long, remoteId: Long)
+
     @Query("SELECT * FROM workout_sessions WHERE id = :sessionId")
     suspend fun getSessionById(sessionId: Long): WorkoutSessionEntity?
 

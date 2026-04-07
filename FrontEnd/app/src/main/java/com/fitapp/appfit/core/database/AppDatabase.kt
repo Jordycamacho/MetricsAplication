@@ -32,7 +32,7 @@ import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
         WorkoutSessionEntity::class,
         WorkoutSetResultEntity::class
     ],
-    version = 4,                     // ← Incrementada a 4
+    version = 5,                     // ← Cambiado a 5
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -93,11 +93,20 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         /**
-         * Migración v3 → v4: añade la columna exerciseId a workout_set_results.
+         * Migración v3 → v4: columna exerciseId a workout_set_results.
          */
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE workout_set_results ADD COLUMN exerciseId INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /**
+         * Migración v4 → v5:  columna remoteId a workout_sessions.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE workout_sessions ADD COLUMN remoteId INTEGER")
             }
         }
 
@@ -108,7 +117,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "fitapp_offline.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // ← Añadida MIGRATION_4_5
                     .build()
                     .also { INSTANCE = it }
             }

@@ -27,6 +27,8 @@ data class WorkoutSessionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
+    val remoteId: Long? = null,
+
     val routineId: Long,
 
     val userId: String,
