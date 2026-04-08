@@ -35,14 +35,11 @@ class WorkoutFragment : Fragment() {
 
     private var _binding: FragmentWorkoutBinding? = null
     private val binding get() = _binding!!
-
     private val args: WorkoutFragmentArgs by navArgs()
     private val viewModel: RoutineViewModel by viewModels()
     private lateinit var adapter: WorkoutDayAdapter
     private var backPressedOnce = false
     private val backHandler = Handler(Looper.getMainLooper())
-
-    // ⭐ NUEVA ESTRUCTURA: setTemplateId -> Map("exerciseId", "parameters")
     private val setParamState = mutableMapOf<Long, MutableMap<String, Any?>>()
     private val setCompletionState = mutableMapOf<Long, Boolean>()
 
@@ -214,7 +211,6 @@ class WorkoutFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = WorkoutDayAdapter(
             onSetValueChanged = { exercise, set, valueType, newValue ->
-                // ⭐ INICIALIZAR con exerciseId si no existe
                 if (!setParamState.containsKey(set.id)) {
                     setParamState[set.id] = mutableMapOf(
                         "exerciseId" to exercise.exerciseId,
@@ -325,10 +321,7 @@ class WorkoutFragment : Fragment() {
         binding.progressBar.isVisible = true
 
         lifecycleScope.launch {
-            Log.i(
-                "WorkoutFragment",
-                "SAVING_WORKOUT | routineId=${args.routineId} | sets=${setParamState.size}"
-            )
+            Log.i("WorkoutFragment", "SAVING_WORKOUT | routineId=${args.routineId} | sets=${setParamState.size}")
 
             val result = workoutRepository.saveWorkoutSession(
                 routineId = args.routineId,
@@ -345,24 +338,14 @@ class WorkoutFragment : Fragment() {
             result.fold(
                 onSuccess = { sessionId ->
                     Log.i("WorkoutFragment", "WORKOUT_SAVED | sessionId=$sessionId")
-
                     setParamState.clear()
+                    setCompletionState.clear()
                     binding.fabSaveWorkout.isInvisible = true
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Entrenamiento guardado ✓",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Entrenamiento guardado ✓", Toast.LENGTH_SHORT).show()
                 },
                 onFailure = { error ->
-                    Log.e("WorkoutFragment", "WORKOUT_SAVE_ERROR | error=${error.message}", error)
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Error al guardar: ${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Log.e("WorkoutFragment", "SAVE_ERROR | error=${error.message}", error)
+                    Toast.makeText(requireContext(), "Error: ${error.message}", Toast.LENGTH_LONG).show()
                 }
             )
         }

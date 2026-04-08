@@ -19,7 +19,7 @@ import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutSetAdapterClassic(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
-    private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit, // ⭐ NUEVO
+    private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
     private val onSequenceComplete: () -> Unit = {}
 ) : RecyclerView.Adapter<WorkoutSetAdapterClassic.SetViewHolder>() {
 
@@ -42,7 +42,6 @@ class WorkoutSetAdapterClassic(
         notifyDataSetChanged()
     }
 
-    // ⭐ NUEVO: Métodos para sincronizar estado externo
     fun setSetCompleted(setId: Long, completed: Boolean) {
         setCompletionState[setId] = completed
         val position = sets.indexOfFirst { it.id == setId }
@@ -70,7 +69,6 @@ class WorkoutSetAdapterClassic(
             paramType[setId]  = "number"
         }
 
-        // ⭐ Inicializar estado de completado si no existe
         if (!setCompletionState.containsKey(setId)) {
             setCompletionState[setId] = false
         }
@@ -201,12 +199,10 @@ class WorkoutSetAdapterClassic(
             bindRestTimer(set)
         }
 
-        // ⭐ NUEVO: Bind del checkbox
         private fun bindCheckbox(set: RoutineSetTemplateResponse) {
             val isCompleted = setCompletionState[set.id] ?: false
             checkboxCompleted.isChecked = isCompleted
 
-            // Listener sin recursión
             checkboxCompleted.setOnCheckedChangeListener(null)
             checkboxCompleted.setOnCheckedChangeListener { _, checked ->
                 setCompletionState[set.id] = checked
@@ -217,14 +213,12 @@ class WorkoutSetAdapterClassic(
             updateCompletionVisuals(isCompleted)
         }
 
-        // ⭐ NUEVO: Actualizar visuales según estado de completado
         private fun updateCompletionVisuals(completed: Boolean) {
             val alpha = if (completed) 0.5f else 1.0f
             val cardRoot = itemView.findViewById<View>(R.id.card_set_root)
             cardRoot?.alpha = alpha
         }
 
-        // ── Decoración del tipo ───────────────────────────────────────────────
 
         private fun bindTypeDecoration(set: RoutineSetTemplateResponse) {
             val (label, colorRes) = setTypeMeta(set.setType ?: "NORMAL")
@@ -252,7 +246,6 @@ class WorkoutSetAdapterClassic(
             else              -> "Normal"          to R.color.set_type_normal
         }
 
-        // ── Controles (igual que antes, sin cambios) ─────────────────────────
 
         private fun bindControls(set: RoutineSetTemplateResponse, position: Int) {
             val hasReps     = currentReps.containsKey(set.id)
