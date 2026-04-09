@@ -9,19 +9,14 @@ package com.fitapp.appfit.feature.workout.model
  * - Set individual (setTemplateId) marcado/desmarcado
  */
 data class WorkoutCompletionState(
-    // Mapa de setTemplateId -> isCompleted
     private val completedSets: MutableMap<Long, Boolean> = mutableMapOf(),
 
-    // Mapa de routineExerciseId -> isCompleted (calculado o manual)
     private val completedExercises: MutableMap<Long, Boolean> = mutableMapOf(),
 
-    // Mapa de dayOfWeek -> isCompleted (calculado o manual)
     private val completedDays: MutableMap<String, Boolean> = mutableMapOf(),
 
-    // Cache de ejercicios por día para cálculos rápidos
     private val exercisesByDay: MutableMap<String, List<Long>> = mutableMapOf(),
 
-    // Cache de sets por ejercicio para cálculos rápidos
     private val setsByExercise: MutableMap<Long, List<Long>> = mutableMapOf()
 ) {
 
@@ -33,7 +28,6 @@ data class WorkoutCompletionState(
         val newState = !isSetCompleted(setId)
         completedSets[setId] = newState
 
-        // Recalcular estado del ejercicio basado en sus sets
         recalculateExerciseCompletion(exerciseId)
 
         return newState
@@ -50,7 +44,6 @@ data class WorkoutCompletionState(
         val sets = setsByExercise[exerciseId] ?: return false
         if (sets.isEmpty()) return false
 
-        // Un ejercicio está completado si AL MENOS UN set está completado
         return sets.any { completedSets[it] == true }
     }
 
@@ -58,8 +51,6 @@ data class WorkoutCompletionState(
         val sets = setsByExercise[exerciseId] ?: emptyList()
         if (sets.isEmpty()) return false
 
-        // Si algún set está completado, desmarcar todos
-        // Si ningún set está completado, marcar todos
         val shouldComplete = sets.none { completedSets[it] == true }
 
         sets.forEach { setId ->
@@ -83,7 +74,6 @@ data class WorkoutCompletionState(
         val exercises = exercisesByDay[dayOfWeek] ?: return false
         if (exercises.isEmpty()) return false
 
-        // Un día está completado si AL MENOS UN ejercicio está completado
         return exercises.any { isExerciseCompleted(it) }
     }
 
@@ -91,8 +81,6 @@ data class WorkoutCompletionState(
         val exercises = exercisesByDay[dayOfWeek] ?: emptyList()
         if (exercises.isEmpty()) return false
 
-        // Si algún ejercicio está completado, desmarcar todo el día
-        // Si ningún ejercicio está completado, marcar todo el día
         val shouldComplete = exercises.none { isExerciseCompleted(it) }
 
         exercises.forEach { exerciseId ->
@@ -120,7 +108,6 @@ data class WorkoutCompletionState(
         }
         (setsByExercise[exerciseId] as MutableList).add(setId)
 
-        // Inicializar como no completado si no existe
         if (!completedSets.containsKey(setId)) {
             completedSets[setId] = false
         }

@@ -9,8 +9,6 @@ import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
 import com.fitapp.appfit.feature.workout.model.request.SaveWorkoutSessionRequest
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionResponse
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionSummaryResponse
-import com.fitapp.appfit.feature.routine.model.setemplate.request.BulkUpdateSetParametersRequest
-import com.fitapp.appfit.feature.routine.data.RoutineSetTemplateService
 import com.fitapp.appfit.shared.enums.SyncStatus
 import com.fitapp.appfit.shared.model.PageResponse
 import retrofit2.HttpException
@@ -25,7 +23,6 @@ import java.time.format.DateTimeFormatter
 class WorkoutRepository(private val context: Context) {
 
     private val service = WorkoutService.instance
-    private val setTemplateService = RoutineSetTemplateService.instance
     private val db by lazy { AppDatabase.getInstance(context) }
     private val sessionDao by lazy { db.workoutSessionDao() }
     private val resultDao by lazy { db.workoutSetResultDao() }
@@ -45,7 +42,7 @@ class WorkoutRepository(private val context: Context) {
         performanceScore: Int? = null
     ): Result<Long> {
 
-        Log.i(TAG, "SAVE_WORKOUT_START | routineId=$routineId | modifiedSets=${setParamState.size} | completedSets=${setCompletionState.count { it.value }}")
+        Log.i(TAG, "SAVE_WORKOUT_START | routineId=$routineId | completedSets=${setCompletionState.count { it.value }}")
 
         // ═══════════════════════════════════════════════════════════════════════
         // 1. GUARDAR LOCALMENTE (Room)
@@ -80,8 +77,9 @@ class WorkoutRepository(private val context: Context) {
             return Result.failure(e)
         }
 
-        var sessionSyncSuccess = false
-        var setResultsSyncSuccess = false
+        // ═══════════════════════════════════════════════════════════════════════
+        // 2. SINCRONIZAR AL BACKEND (UNA SOLA LLAMADA)
+        // ═══════════════════════════════════════════════════════════════════════
 
         val sessionSyncResult = syncSessionToBackend(
             sessionId, routineId, startedAt, finishedAt, performanceScore, results, setParamState, setCompletionState
@@ -89,41 +87,17 @@ class WorkoutRepository(private val context: Context) {
 
         when (sessionSyncResult) {
             is Resource.Success -> {
-                sessionSyncSuccess = true
                 Log.i(TAG, "SESSION_SYNC_SUCCESS | sessionId=$sessionId | backendId=${sessionSyncResult.data?.id}")
                 sessionSyncResult.data?.id?.let { remoteId ->
                     sessionDao.updateRemoteId(sessionId, remoteId)
-                } ?: run {
-                    sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
                 }
+                sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
+                resultDao.markSessionResultsAsSynced(sessionId)
             }
             is Resource.Error -> {
                 Log.w(TAG, "SESSION_SYNC_FAILED | sessionId=$sessionId | error=${sessionSyncResult.message}")
             }
             else -> {}
-        }
-
-        val setResultsSyncResult = syncSetResultsToBackend(results)
-
-        when (setResultsSyncResult) {
-            is Resource.Success -> {
-                setResultsSyncSuccess = true
-                Log.i(TAG, "SET_RESULTS_SYNC_SUCCESS | sessionId=$sessionId")
-                resultDao.markSessionResultsAsSynced(sessionId)
-            }
-            is Resource.Error -> {
-                Log.w(TAG, "SET_RESULTS_SYNC_FAILED | sessionId=$sessionId | error=${setResultsSyncResult.message}")
-            }
-            else -> {}
-        }
-
-        if (sessionSyncSuccess && setResultsSyncSuccess) {
-            sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
-            Log.i(TAG, "FULL_SYNC_SUCCESS | sessionId=$sessionId")
-        } else if (sessionSyncSuccess || setResultsSyncSuccess) {
-            Log.w(TAG, "PARTIAL_SYNC | sessionId=$sessionId | session=$sessionSyncSuccess | sets=$setResultsSyncSuccess")
-        } else {
-            Log.w(TAG, "FULL_SYNC_FAILED | sessionId=$sessionId | ambas llamadas fallaron")
         }
 
         return Result.success(sessionId)
@@ -144,8 +118,7 @@ class WorkoutRepository(private val context: Context) {
             return true
         }
 
-        var sessionSyncSuccess = false
-        var setResultsSyncSuccess = false
+        val setCompletionState = results.associate { it.setTemplateId to true }
 
         val sessionSyncResult = syncSessionToBackend(
             sessionId = sessionId,
@@ -153,32 +126,28 @@ class WorkoutRepository(private val context: Context) {
             startedAt = session.startedAt,
             finishedAt = session.finishedAt,
             performanceScore = null,
-            results = results
+            results = results,
+            setParamState = emptyMap(), // No disponible en sync diferido
+            setCompletionState = setCompletionState
         )
 
-        if (sessionSyncResult is Resource.Success) {
-            sessionSyncSuccess = true
-            sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
+        return when (sessionSyncResult) {
+            is Resource.Success -> {
+                sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
+                resultDao.markSessionResultsAsSynced(sessionId)
+                Log.i(TAG, "SYNC_SESSION_SUCCESS | sessionId=$sessionId")
+                true
+            }
+            else -> {
+                Log.w(TAG, "SYNC_SESSION_FAILED | sessionId=$sessionId")
+                false
+            }
         }
-
-        val setResultsSyncResult = syncSetResultsToBackend(results)
-
-        if (setResultsSyncResult is Resource.Success) {
-            setResultsSyncSuccess = true
-            resultDao.markSessionResultsAsSynced(sessionId)
-        }
-
-        val success = sessionSyncSuccess && setResultsSyncSuccess
-
-        if (success) {
-            Log.i(TAG, "SYNC_SESSION_SUCCESS | sessionId=$sessionId")
-        } else {
-            Log.w(TAG, "SYNC_SESSION_PARTIAL | sessionId=$sessionId | session=$sessionSyncSuccess | sets=$setResultsSyncSuccess")
-        }
-
-        return success
     }
 
+    /**
+     * Sincroniza todas las sesiones pendientes.
+     */
     suspend fun syncAllPendingSessions(): Int {
         val pending = sessionDao.getPendingSync()
 
@@ -197,6 +166,8 @@ class WorkoutRepository(private val context: Context) {
         Log.i(TAG, "SYNC_COMPLETED | synced=$synced/${pending.size}")
         return synced
     }
+
+    // ── Consultas (backend con fallback a Room) ──────────────────────────────
 
     suspend fun getWorkoutHistory(
         routineId: Long? = null,
@@ -292,6 +263,10 @@ class WorkoutRepository(private val context: Context) {
         return call { service.getTotalVolume() }
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // HELPERS PRIVADOS - SINCRONIZACIÓN
+    // ══════════════════════════════════════════════════════════════════════════
+
     private suspend fun syncSessionToBackend(
         sessionId: Long,
         routineId: Long,
@@ -322,36 +297,6 @@ class WorkoutRepository(private val context: Context) {
         }
     }
 
-    private suspend fun syncSetResultsToBackend(
-        results: List<WorkoutSetResultEntity>
-    ): Resource<Unit> {
-
-        try {
-            val request = buildBulkUpdateSetParametersRequest(results)
-
-            Log.d(TAG, "SYNC_SET_RESULTS_TO_BACKEND | setResults=${request.setResults.size}")
-
-            request.setResults.forEachIndexed { index, setResult ->
-                Log.d(TAG, "SET_RESULT_$index | setTemplateId=${setResult.setTemplateId} | params=${setResult.parameters.size}")
-            }
-
-            val response = setTemplateService.bulkSaveSetParameters(request)
-
-            return if (response.isSuccessful) {
-                Log.i(TAG, "BULK_SAVE_SET_PARAMETERS_SUCCESS")
-                Resource.Success(Unit)
-            } else {
-                val errorMsg = httpErrorMessage(response.code(), response.errorBody()?.string())
-                Log.w(TAG, "BULK_SAVE_SET_PARAMETERS_FAILED | $errorMsg")
-                Resource.Error(errorMsg)
-            }
-
-        } catch (e: Exception) {
-            Log.w(TAG, "BULK_SAVE_SET_PARAMETERS_EXCEPTION | error=${e.message}", e)
-            return Resource.Error(exceptionMessage(e))
-        }
-    }
-
     private fun buildSetResults(
         sessionId: Long,
         setParamState: Map<Long, Map<String, Any?>>,
@@ -366,15 +311,18 @@ class WorkoutRepository(private val context: Context) {
         completedSetIds.forEach { setTemplateId ->
             val setData = setParamState[setTemplateId]
 
-            val exerciseId = (setData?.get("exerciseId") as? Long) ?: run {
+            if (setData == null) {
+                Log.w(TAG, "SKIP_SET_NO_DATA | setId=$setTemplateId - Set marcado como completado pero sin datos")
+                return@forEach
+            }
+
+            val exerciseId = (setData["exerciseId"] as? Long) ?: run {
                 Log.w(TAG, "SKIP_SET_NO_EXERCISE_ID | setId=$setTemplateId")
                 return@forEach
             }
 
             @Suppress("UNCHECKED_CAST")
-            val paramMap = setData["parameters"] as? Map<Long, Map<String, Any?>> ?: emptyMap()
-
-            if (paramMap.isEmpty()) {
+            val paramMap = setData["parameters"] as? Map<Long, Map<String, Any?>> ?: run {
                 Log.w(TAG, "SKIP_SET_NO_PARAMS | setId=$setTemplateId")
                 return@forEach
             }
@@ -463,30 +411,6 @@ class WorkoutRepository(private val context: Context) {
             performanceScore = performanceScore,
             setExecutions = setExecutions
         )
-    }
-
-    private fun buildBulkUpdateSetParametersRequest(
-        results: List<WorkoutSetResultEntity>
-    ): BulkUpdateSetParametersRequest {
-
-        val grouped = results.groupBy { it.setTemplateId }
-
-        val setResults = grouped.map { (setTemplateId, params) ->
-            BulkUpdateSetParametersRequest.SetResultRequest(
-                setTemplateId = setTemplateId,
-                parameters = params.map { r ->
-                    BulkUpdateSetParametersRequest.ParameterResultRequest(
-                        parameterId = r.parameterId,
-                        repetitions = r.repetitions,
-                        numericValue = r.numericValue,
-                        durationValue = r.durationValue,
-                        integerValue = r.integerValue
-                    )
-                }
-            )
-        }
-
-        return BulkUpdateSetParametersRequest(setResults)
     }
 
     private fun timestampToIso(timestamp: Long): String {

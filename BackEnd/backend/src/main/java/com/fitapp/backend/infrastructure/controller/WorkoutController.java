@@ -5,7 +5,6 @@ import com.fitapp.backend.application.dto.workout.request.WorkoutHistoryFilterRe
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionResponse;
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionSummaryResponse;
 import com.fitapp.backend.application.ports.input.WorkoutUseCase;
-import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

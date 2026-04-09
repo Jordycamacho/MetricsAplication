@@ -30,10 +30,9 @@ class WorkoutSessionDetailViewModel(application: Application) : AndroidViewModel
             val result = repository.getWorkoutSessionDetails(sessionId)
             _sessionDetailState.postValue(result)
 
-            // Si se cargó exitosamente, buscar sesión anterior para comparar
             if (result is Resource.Success) {
                 result.data?.let { session ->
-                    loadPreviousSessionForComparison(session.routineId, sessionId)
+                    loadPreviousSessionForComparison(session.routineId, session.startTime)
                 }
             }
         }
@@ -42,36 +41,40 @@ class WorkoutSessionDetailViewModel(application: Application) : AndroidViewModel
     /**
      * Busca la sesión anterior de la misma rutina para hacer comparación.
      */
-    private suspend fun loadPreviousSessionForComparison(routineId: Long, currentSessionId: Long) {
+    private suspend fun loadPreviousSessionForComparison(
+        routineId: Long,
+        currentStartTime: String
+    ) {
         val historyResult = repository.getWorkoutHistory(
             routineId = routineId,
             page = 0,
-            size = 10
+            size = 20
         )
 
         if (historyResult is Resource.Success) {
             val sessions = historyResult.data?.content ?: emptyList()
 
-            // Buscar la sesión inmediatamente anterior
             val previousSession = sessions
-                .filter { it.id != currentSessionId }
-                .maxByOrNull { it.id } // Asumiendo que IDs mayores = más recientes
+                .filter { it.startTime < currentStartTime }
+                .maxByOrNull { it.startTime }
 
             if (previousSession != null) {
                 val current = _sessionDetailState.value?.data
                 if (current != null) {
+                    val currentSets = current.exercises?.sumOf { it.sets?.size ?: 0 } ?: 0
+                    val previousSets = previousSession.setCount ?: 0
+
                     val comparison = SessionComparison(
                         previousSessionDate = previousSession.startTime,
                         volumeDifference = (current.totalVolume ?: 0.0) - (previousSession.totalVolume ?: 0.0),
                         durationDifference = (current.durationSeconds ?: 0L) - (previousSession.durationSeconds ?: 0L),
-                        setsDifference = calculateSetsDifference(current, previousSession.setCount)
+                        setsDifference = currentSets - previousSets
                     )
                     _comparisonState.postValue(comparison)
                 }
             }
         }
     }
-
     private fun calculateSetsDifference(
         current: WorkoutSessionResponse,
         previousSetCount: Int
