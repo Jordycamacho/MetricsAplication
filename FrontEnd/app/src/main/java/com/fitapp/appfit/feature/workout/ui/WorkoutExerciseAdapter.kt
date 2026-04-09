@@ -12,13 +12,15 @@ import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.core.util.RestTimer
+import com.fitapp.appfit.feature.workout.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutExerciseAdapter(
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
-    private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit
+    private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit,
+    private val completionState: WorkoutCompletionState
 ) : RecyclerView.Adapter<WorkoutExerciseAdapter.ExerciseViewHolder>() {
 
     private var exercises: List<RoutineExerciseResponse> = emptyList()
@@ -77,7 +79,8 @@ class WorkoutExerciseAdapter(
                                 tvExerciseRestHint.text = "STOP"
                                 restTimer.start(restSeconds)
                             }
-                        }
+                        },
+                        completionState = completionState
                     )
                 }
                 WorkoutPreferences.SetViewType.MODERN -> {
@@ -96,7 +99,8 @@ class WorkoutExerciseAdapter(
                                 tvExerciseRestHint.text = "STOP"
                                 restTimer.start(restSeconds)
                             }
-                        }
+                        },
+                        completionState = completionState
                     )
                 }
             }
@@ -163,7 +167,6 @@ class WorkoutExerciseAdapter(
                 layoutExerciseRest.visibility = View.GONE
             }
 
-            // ⭐ Enviar lista según tipo de adapter
             when (setAdapter) {
                 is WorkoutSetAdapterClassic -> (setAdapter as WorkoutSetAdapterClassic).submitList(exercise.setsTemplate ?: emptyList())
                 is WorkoutSetAdapter -> (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList())

@@ -27,8 +27,9 @@ import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetP
 import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
 import com.fitapp.appfit.feature.workout.data.WorkoutRepository
 import com.fitapp.appfit.feature.workout.data.RestTimerService
-import com.fitapp.appfit.feature.workout.ui.WorkoutDayAdapter
 import com.fitapp.appfit.core.notification.WorkoutNotificationManager
+import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
+import com.fitapp.appfit.feature.workout.model.WorkoutCompletionState
 import kotlinx.coroutines.launch
 
 class WorkoutFragment : Fragment() {
@@ -41,8 +42,7 @@ class WorkoutFragment : Fragment() {
     private var backPressedOnce = false
     private val backHandler = Handler(Looper.getMainLooper())
     private val setParamState = mutableMapOf<Long, MutableMap<String, Any?>>()
-    private val setCompletionState = mutableMapOf<Long, Boolean>()
-
+    private val completionState = WorkoutCompletionState()
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
     private lateinit var workoutRepository: WorkoutRepository
@@ -124,10 +124,12 @@ class WorkoutFragment : Fragment() {
                     .setPositiveButton("Salir") { _, _ ->
                         if (setParamState.isNotEmpty()) {
                             lifecycleScope.launch {
+                                val completionMap = completionState.getAllCompletedSets().associateWith { true }
                                 workoutRepository.saveWorkoutSession(
                                     routineId = args.routineId,
                                     userId = currentUserId,
                                     setParamState = setParamState,
+                                    setCompletionState = completionMap,
                                     startedAt = workoutStartedAt
                                 )
                             }
@@ -244,9 +246,19 @@ class WorkoutFragment : Fragment() {
                 binding.fabSaveWorkout.isInvisible = false
             },
             onSetCompletedToggled = { exercise, set, isCompleted ->
-                setCompletionState[set.id] = isCompleted
-                Log.d("Workout", "Set ${set.id} completado=$isCompleted")
-            }
+                completionState.markSetCompleted(set.id, exercise.exerciseId, isCompleted)
+
+                if (isCompleted && !setParamState.containsKey(set.id)) {
+                    setParamState[set.id] = mutableMapOf(
+                        "exerciseId" to exercise.exerciseId,
+                        "parameters" to initSetState(set.parameters ?: emptyList())
+                    )
+                }
+
+                binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
+                Log.d("Workout", "Set ${set.id} completado=$isCompleted | totalCompletados=${completionState.getAllCompletedSets().size}")
+            },
+            completionState = completionState
         )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -284,8 +296,9 @@ class WorkoutFragment : Fragment() {
                         binding.tvRoutineName.text = routine.name ?: "Entrenamiento"
                         if (adapter.itemCount == 0) {
                             adapter.submitRoutine(routine)
+                            initializeCompletionStructure(routine)
                         }
-                        binding.fabSaveWorkout.isInvisible = setParamState.isEmpty()
+                        binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
                     }
                 }
 
@@ -304,6 +317,18 @@ class WorkoutFragment : Fragment() {
         }
     }
 
+    private fun initializeCompletionStructure(routine: RoutineResponse) {
+        routine.exercises?.forEach { exercise ->
+            val dayOfWeek = exercise.dayOfWeek ?: "SIN_DIA"
+            completionState.registerExercise(exercise.exerciseId, dayOfWeek)
+
+            exercise.setsTemplate?.forEach { set ->
+                completionState.registerSet(set.id, exercise.exerciseId)
+            }
+        }
+    }
+
+
     private fun loadRoutine() {
         viewModel.getRoutineForTraining(args.routineId)
         viewModel.markRoutineAsUsed(args.routineId)
@@ -312,8 +337,8 @@ class WorkoutFragment : Fragment() {
     // ── Guardar ───────────────────────────────────────────────────────────────
 
     private fun saveWorkout() {
-        if (setParamState.isEmpty()) {
-            Toast.makeText(requireContext(), "No hay datos para guardar", Toast.LENGTH_SHORT).show()
+        if (!completionState.hasAnyCompletedSets()) {
+            Toast.makeText(requireContext(), "No hay sets completados para guardar", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -321,12 +346,15 @@ class WorkoutFragment : Fragment() {
         binding.progressBar.isVisible = true
 
         lifecycleScope.launch {
-            Log.i("WorkoutFragment", "SAVING_WORKOUT | routineId=${args.routineId} | sets=${setParamState.size}")
+            val completedSets = completionState.getAllCompletedSets()
+            Log.i("WorkoutFragment", "SAVING_WORKOUT | routineId=${args.routineId} | completedSets=${completedSets.size}")
 
+            val completionMap = completionState.getAllCompletedSets().associateWith { true }
             val result = workoutRepository.saveWorkoutSession(
                 routineId = args.routineId,
                 userId = currentUserId,
                 setParamState = setParamState,
+                setCompletionState = completionMap,
                 startedAt = workoutStartedAt,
                 finishedAt = System.currentTimeMillis(),
                 performanceScore = null
@@ -339,7 +367,9 @@ class WorkoutFragment : Fragment() {
                 onSuccess = { sessionId ->
                     Log.i("WorkoutFragment", "WORKOUT_SAVED | sessionId=$sessionId")
                     setParamState.clear()
-                    setCompletionState.clear()
+                    completionState.getAllCompletedSets().forEach { setId ->
+                        completionState.markSetCompleted(setId, 0L, false)
+                    }
                     binding.fabSaveWorkout.isInvisible = true
                     Toast.makeText(requireContext(), "Entrenamiento guardado ✓", Toast.LENGTH_SHORT).show()
                 },

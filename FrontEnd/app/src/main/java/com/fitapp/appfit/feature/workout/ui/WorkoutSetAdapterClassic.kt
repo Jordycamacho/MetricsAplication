@@ -14,13 +14,15 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.core.util.RestTimer
+import com.fitapp.appfit.feature.workout.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutSetAdapterClassic(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
-    private val onSequenceComplete: () -> Unit = {}
+    private val onSequenceComplete: () -> Unit = {},
+    private val completionState: WorkoutCompletionState
 ) : RecyclerView.Adapter<WorkoutSetAdapterClassic.SetViewHolder>() {
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()
@@ -29,23 +31,15 @@ class WorkoutSetAdapterClassic(
     private val currentDuration = mutableMapOf<Long, Long>()
     private val paramLabel      = mutableMapOf<Long, String>()
     private val paramType       = mutableMapOf<Long, String>()
-    private val setCompletionState = mutableMapOf<Long, Boolean>() // ⭐ NUEVO
     private var activeSequenceIndex = -1
 
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
         currentReps.clear(); currentParam.clear(); currentDuration.clear()
         paramLabel.clear(); paramType.clear()
-        // NO limpiar setCompletionState para mantener estado al rotar pantalla
         activeSequenceIndex = -1
         sets.forEach { initSetState(it.id, it.parameters ?: emptyList()) }
         notifyDataSetChanged()
-    }
-
-    fun setSetCompleted(setId: Long, completed: Boolean) {
-        setCompletionState[setId] = completed
-        val position = sets.indexOfFirst { it.id == setId }
-        if (position != -1) notifyItemChanged(position)
     }
 
     fun isSequenceMode() = sets.isNotEmpty() && sets.all { currentDuration.containsKey(it.id) }
@@ -67,10 +61,6 @@ class WorkoutSetAdapterClassic(
             currentParam[setId] = 0.0
             paramLabel[setId] = "KG"
             paramType[setId]  = "number"
-        }
-
-        if (!setCompletionState.containsKey(setId)) {
-            setCompletionState[setId] = false
         }
     }
 
@@ -96,37 +86,29 @@ class WorkoutSetAdapterClassic(
     // ─────────────────────────────────────────────────────────────────────────
 
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        // ⭐ CHECKBOX
         private val checkboxCompleted: CheckBox = itemView.findViewById(R.id.checkbox_set_completed)
-
         // Header
         private val viewTypeStripe: View = itemView.findViewById(R.id.view_type_stripe)
         private val tvSetBadge: TextView = itemView.findViewById(R.id.tv_set_badge)
         private val tvParamSummary: TextView = itemView.findViewById(R.id.tv_param_summary)
-
         // Columna izquierda
         private val layoutReps: LinearLayout = itemView.findViewById(R.id.layout_reps_container)
         private val tvRepsLabel: TextView = itemView.findViewById(R.id.tv_reps_label)
         private val tvRepsValue: TextView = itemView.findViewById(R.id.tv_reps_value)
         private val btnDecReps: ImageButton = itemView.findViewById(R.id.btn_decrease_reps)
         private val btnIncReps: ImageButton = itemView.findViewById(R.id.btn_increase_reps)
-
         private val viewDivider: View = itemView.findViewById(R.id.view_divider)
-
         // Columna derecha
         private val layoutParam: LinearLayout = itemView.findViewById(R.id.layout_param_container)
         private val tvParamUnit: TextView = itemView.findViewById(R.id.tv_weight_unit)
         private val tvParamValue: TextView = itemView.findViewById(R.id.tv_weight_value)
         private val btnDecParam: ImageButton = itemView.findViewById(R.id.btn_decrease_weight)
         private val btnIncParam: ImageButton = itemView.findViewById(R.id.btn_increase_weight)
-
         // Bloque extra de duración
         private val layoutDurationExtra: View = itemView.findViewById(R.id.layout_duration_extra)
         private val tvDurationTimer: TextView = itemView.findViewById(R.id.tv_duration_timer)
         private val btnDecDurationExtra: ImageButton = itemView.findViewById(R.id.btn_decrease_duration_extra)
         private val btnIncDurationExtra: ImageButton = itemView.findViewById(R.id.btn_increase_duration_extra)
-
         // Descanso
         private val layoutRestContainer: View = itemView.findViewById(R.id.layout_rest_container)
         private val tvRestTimer: TextView = itemView.findViewById(R.id.tv_rest_timer)
@@ -200,12 +182,12 @@ class WorkoutSetAdapterClassic(
         }
 
         private fun bindCheckbox(set: RoutineSetTemplateResponse) {
-            val isCompleted = setCompletionState[set.id] ?: false
+            val isCompleted = completionState.isSetCompleted(set.id)
             checkboxCompleted.isChecked = isCompleted
 
             checkboxCompleted.setOnCheckedChangeListener(null)
             checkboxCompleted.setOnCheckedChangeListener { _, checked ->
-                setCompletionState[set.id] = checked
+                completionState.markSetCompleted(set.id, 0L, checked)
                 onSetCompletedToggled(set, checked)
                 updateCompletionVisuals(checked)
             }

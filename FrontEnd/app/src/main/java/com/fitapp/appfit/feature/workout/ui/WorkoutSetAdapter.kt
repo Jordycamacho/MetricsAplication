@@ -16,6 +16,7 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.core.util.RestTimer
+import com.fitapp.appfit.feature.workout.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 import com.google.android.material.button.MaterialButton
@@ -23,7 +24,8 @@ import com.google.android.material.button.MaterialButton
 class WorkoutSetAdapter(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
-    private val onSequenceComplete: () -> Unit = {}
+    private val onSequenceComplete: () -> Unit = {},
+    private val completionState: WorkoutCompletionState
 ) : RecyclerView.Adapter<WorkoutSetAdapter.SetViewHolder>() {
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()
