@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.fitapp.appfit.core.database.AppDatabase
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentWorkoutBinding
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
@@ -30,7 +31,10 @@ import com.fitapp.appfit.feature.workout.data.RestTimerService
 import com.fitapp.appfit.core.notification.WorkoutNotificationManager
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.workout.model.WorkoutCompletionState
+import com.fitapp.appfit.feature.workout.util.LastWorkoutValuesHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class WorkoutFragment : Fragment() {
 
@@ -46,6 +50,8 @@ class WorkoutFragment : Fragment() {
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
     private lateinit var workoutRepository: WorkoutRepository
+    private lateinit var lastValuesHelper: LastWorkoutValuesHelper
+
 
     // ── Cronómetro ────────────────────────────────────────────────────────────
     private val timerHandler = Handler(Looper.getMainLooper())
@@ -91,6 +97,9 @@ class WorkoutFragment : Fragment() {
         workoutRepository = WorkoutRepository(requireContext())
         currentUserId = "usuario_temporal"
         WorkoutNotificationManager.createChannel(requireContext())
+
+        val db = AppDatabase.getInstance(requireContext())
+        lastValuesHelper = LastWorkoutValuesHelper(db.workoutSetResultDao())
 
         setupRecyclerView()
         setupRibbon()
@@ -295,8 +304,7 @@ class WorkoutFragment : Fragment() {
                     resource.data?.let { routine ->
                         binding.tvRoutineName.text = routine.name ?: "Entrenamiento"
                         if (adapter.itemCount == 0) {
-                            adapter.submitRoutine(routine)
-                            initializeCompletionStructure(routine)
+                            applyLastValuesAndSubmit(routine)
                         }
                         binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
                     }
@@ -378,6 +386,41 @@ class WorkoutFragment : Fragment() {
                     Toast.makeText(requireContext(), "Error: ${error.message}", Toast.LENGTH_LONG).show()
                 }
             )
+        }
+    }
+
+    private fun applyLastValuesAndSubmit(routine: RoutineResponse) {
+        lifecycleScope.launch {
+            try {
+                val routineWithLastValues = lastValuesHelper.applyLastValuesToRoutine(routine)
+
+                adapter.submitRoutine(routineWithLastValues)
+
+                initializeCompletionStructure(routineWithLastValues)
+
+                Log.i("WorkoutFragment", "ÚLTIMOS_VALORES_APLICADOS | routineId=${routine.id}")
+
+                if (hasLastWorkout(routine.id)) {
+                    com.google.android.material.snackbar.Snackbar.make(
+                        binding.root,
+                        "✓ Valores de tu última sesión cargados",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+
+            } catch (e: Exception) {
+                Log.e("WorkoutFragment", "Error aplicando últimos valores", e)
+                // Fallback: mostrar rutina sin modificar
+                adapter.submitRoutine(routine)
+                initializeCompletionStructure(routine)
+            }
+        }
+    }
+
+    private suspend fun hasLastWorkout(routineId: Long): Boolean {
+        return withContext(Dispatchers.IO) {
+            val db = AppDatabase.getInstance(requireContext())
+            db.workoutSetResultDao().getLastWorkoutResults(routineId).isNotEmpty()
         }
     }
 }

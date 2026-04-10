@@ -51,4 +51,42 @@ interface WorkoutSetResultDao {
 
     @Query("DELETE FROM workout_set_results")
     suspend fun deleteAllResults()
+
+    @Query("""
+        SELECT wsr.*
+        FROM workout_set_results wsr
+        INNER JOIN workout_sessions ws ON wsr.workoutSessionId = ws.id
+        WHERE ws.routineId = :routineId
+        AND ws.id = (
+            SELECT id FROM workout_sessions 
+            WHERE routineId = :routineId 
+            ORDER BY finishedAt DESC 
+            LIMIT 1
+        )
+    """)
+    suspend fun getLastWorkoutResults(routineId: Long): List<WorkoutSetResultEntity>
+
+    @Query("""
+        SELECT wsr.* 
+        FROM workout_set_results wsr
+        INNER JOIN workout_sessions ws ON wsr.workoutSessionId = ws.id
+        WHERE wsr.setTemplateId = :setTemplateId 
+        AND ws.routineId = :routineId 
+        AND ws.id = (
+            SELECT id FROM workout_sessions 
+            WHERE routineId = :routineId 
+            ORDER BY finishedAt DESC 
+            LIMIT 1
+        )
+    """)
+    suspend fun getLastResultsForSet(setTemplateId: Long, routineId: Long): List<WorkoutSetResultEntity>
+
+    @Query("""
+        SELECT EXISTS(
+            SELECT 1 FROM workout_sessions 
+            WHERE routineId = :routineId 
+            LIMIT 1
+        )
+    """)
+    suspend fun hasLastWorkout(routineId: Long): Boolean
 }

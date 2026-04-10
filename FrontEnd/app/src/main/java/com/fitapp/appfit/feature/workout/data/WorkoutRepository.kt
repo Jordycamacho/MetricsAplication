@@ -127,7 +127,7 @@ class WorkoutRepository(private val context: Context) {
             finishedAt = session.finishedAt,
             performanceScore = null,
             results = results,
-            setParamState = emptyMap(), // No disponible en sync diferido
+            setParamState = emptyMap(),
             setCompletionState = setCompletionState
         )
 
@@ -371,22 +371,25 @@ class WorkoutRepository(private val context: Context) {
                 val isCompleted = setCompletionState[setTemplateId] ?: false
 
                 val validParams = params.mapNotNull { result ->
-                    val hasValue = result.numericValue != null && result.numericValue != 0.0 ||
-                            result.integerValue != null && result.integerValue != 0 ||
-                            result.durationValue != null && result.durationValue != 0L ||
-                            result.repetitions != null && result.repetitions != 0
+                    val hasReps = result.repetitions != null && result.repetitions != 0
+                    val hasNumeric = result.numericValue != null && result.numericValue != 0.0
+                    val hasInteger = result.integerValue != null && result.integerValue != 0
+                    val hasDuration = result.durationValue != null && result.durationValue != 0L
 
-                    if (hasValue) {
+                    if (hasReps || hasNumeric || hasInteger || hasDuration) {
+                        val finalIntegerValue = when {
+                            result.integerValue != null && result.integerValue != 0 -> result.integerValue
+                            hasReps -> result.repetitions
+                            else -> null
+                        }
                         SaveWorkoutSessionRequest.ParameterValueRequest(
                             parameterId = result.parameterId,
                             numericValue = result.numericValue?.takeIf { it != 0.0 },
-                            integerValue = result.integerValue?.takeIf { it != 0 },
+                            integerValue = finalIntegerValue?.takeIf { it != 0 },
                             durationValue = result.durationValue?.takeIf { it != 0L },
                             stringValue = null
                         )
-                    } else {
-                        null
-                    }
+                    } else null
                 }
 
                 val status = if (isCompleted) "COMPLETED" else "SKIPPED"
