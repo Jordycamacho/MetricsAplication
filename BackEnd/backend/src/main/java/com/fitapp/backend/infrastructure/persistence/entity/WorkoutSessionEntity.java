@@ -35,6 +35,9 @@ public class WorkoutSessionEntity {
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "routine_id")
     private RoutineEntity routine;
@@ -57,4 +60,10 @@ public class WorkoutSessionEntity {
 
     @Formula("EXTRACT(EPOCH FROM (end_time - start_time))")
     private Long durationSeconds;
+
+    public Long getDurationSeconds() {
+        if (startTime == null || endTime == null)
+            return null;
+        return java.time.Duration.between(startTime, endTime).getSeconds();
+    }
 }

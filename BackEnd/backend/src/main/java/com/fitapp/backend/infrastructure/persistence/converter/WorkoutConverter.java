@@ -28,14 +28,16 @@ public class WorkoutConverter {
             return null;
         }
 
-        log.debug("WORKOUT_CONVERTER_TO_DOMAIN | sessionId={} | routineId={}", 
-                  entity.getId(), entity.getRoutine() != null ? entity.getRoutine().getId() : null);
+        log.debug("WORKOUT_CONVERTER_TO_DOMAIN | sessionId={} | routineId={}",
+                entity.getId(), entity.getRoutine() != null ? entity.getRoutine().getId() : null);
 
         WorkoutSessionModel model = WorkoutSessionModel.builder()
                 .id(entity.getId())
+                .userId(entity.getUserId())
                 .routineId(entity.getRoutine() != null ? entity.getRoutine().getId() : null)
-                .userId(entity.getRoutine() != null && entity.getRoutine().getUser() != null 
-                        ? entity.getRoutine().getUser().getId() : null)
+                .userId(entity.getRoutine() != null && entity.getRoutine().getUser() != null
+                        ? entity.getRoutine().getUser().getId()
+                        : null)
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .performanceScore(entity.getPerformanceScore())
@@ -60,22 +62,26 @@ public class WorkoutConverter {
             return null;
         }
 
-        log.debug("WORKOUT_CONVERTER_TO_ENTITY | sessionId={} | routineId={}", 
-                  model.getId(), model.getRoutineId());
+        log.debug("WORKOUT_CONVERTER_TO_ENTITY | sessionId={} | routineId={}",
+                model.getId(), model.getRoutineId());
 
         WorkoutSessionEntity entity = new WorkoutSessionEntity();
         entity.setId(model.getId());
+        entity.setUserId(model.getUserId());
         entity.setStartTime(model.getStartTime());
         entity.setEndTime(model.getEndTime());
         entity.setPerformanceScore(model.getPerformanceScore());
         entity.setTotalVolume(model.getTotalVolume());
 
         // Cargar routine
-        if (model.getRoutineId() != null) {
-            RoutineEntity routine = routineRepository.findById(model.getRoutineId())
+        if (model.getRoutineId() != null && model.getUserId() != null) {
+            RoutineEntity routine = routineRepository.findByIdAndUserId(model.getRoutineId(), model.getUserId())
                     .orElseThrow(() -> {
-                        log.error("WORKOUT_CONVERTER_ROUTINE_NOT_FOUND | routineId={}", model.getRoutineId());
-                        return new RuntimeException("Routine not found: " + model.getRoutineId());
+                        log.error("WORKOUT_CONVERTER_ROUTINE_NOT_FOUND_OR_UNAUTHORIZED | routineId={} | userId={}",
+                                model.getRoutineId(), model.getUserId());
+                        return new RuntimeException(
+                                "Routine not found or unauthorized: routineId=" + model.getRoutineId() +
+                                        ", userId=" + model.getUserId());
                     });
             entity.setRoutine(routine);
         }
@@ -98,8 +104,8 @@ public class WorkoutConverter {
             return null;
         }
 
-        log.debug("WORKOUT_CONVERTER_TO_RESPONSE | sessionId={} | routineName={}", 
-                  model.getId(), routineName);
+        log.debug("WORKOUT_CONVERTER_TO_RESPONSE | sessionId={} | routineName={}",
+                model.getId(), routineName);
 
         return WorkoutSessionResponse.builder()
                 .id(model.getId())
@@ -111,7 +117,7 @@ public class WorkoutConverter {
                 .durationSeconds(model.getDurationSeconds())
                 .performanceScore(model.getPerformanceScore())
                 .totalVolume(model.getTotalVolume())
-                .exercises(model.getExercises() != null 
+                .exercises(model.getExercises() != null
                         ? model.getExercises().stream()
                                 .map(sessionExerciseConverter::toResponse)
                                 .collect(Collectors.toList())
@@ -131,10 +137,11 @@ public class WorkoutConverter {
             return null;
         }
 
-        log.debug("WORKOUT_CONVERTER_TO_SUMMARY | sessionId={}", entity.getId());
+        log.debug("WORKOUT_CONVERTER_TO_SUMMARY | sessionId={} | routineId={}",
+                entity.getId(), entity.getRoutine() != null ? entity.getRoutine().getId() : null);
 
         int exerciseCount = entity.getExercises() != null ? entity.getExercises().size() : 0;
-        int setCount = entity.getExercises() != null 
+        int setCount = entity.getExercises() != null
                 ? entity.getExercises().stream()
                         .mapToInt(ex -> ex.getSets() != null ? ex.getSets().size() : 0)
                         .sum()
@@ -165,7 +172,7 @@ public class WorkoutConverter {
         log.debug("WORKOUT_CONVERTER_TO_SUMMARY_FROM_MODEL | sessionId={}", model.getId());
 
         int exerciseCount = model.getExercises() != null ? model.getExercises().size() : 0;
-        int setCount = model.getExercises() != null 
+        int setCount = model.getExercises() != null
                 ? model.getExercises().stream()
                         .mapToInt(ex -> ex.getSets() != null ? ex.getSets().size() : 0)
                         .sum()

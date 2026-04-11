@@ -20,8 +20,7 @@ public class WorkoutSessionSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // OBLIGATORIO: filtrar por usuario
-            predicates.add(criteriaBuilder.equal(root.get("routine").get("user").get("id"), userId));
+            predicates.add(criteriaBuilder.equal(root.get("userId"), userId));
             
             log.debug("WORKOUT_SPEC_USER_FILTER | userId={}", userId);
 
@@ -44,14 +43,12 @@ public class WorkoutSessionSpecification {
                 log.debug("WORKOUT_SPEC_TO_DATE_FILTER | toDate={}", toDateTime);
             }
 
-            // Filtro por performance score mínimo
             if (filters.getMinPerformanceScore() != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(
                         root.get("performanceScore"), filters.getMinPerformanceScore()));
                 log.debug("WORKOUT_SPEC_MIN_SCORE_FILTER | minScore={}", filters.getMinPerformanceScore());
             }
 
-            // Filtro por performance score máximo
             if (filters.getMaxPerformanceScore() != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(
                         root.get("performanceScore"), filters.getMaxPerformanceScore()));

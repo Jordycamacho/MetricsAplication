@@ -73,7 +73,7 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
         log.debug("WORKOUT_PERSISTENCE_FIND_BY_USER | userId={} | page={} | size={}", 
                   userId, pageable.getPageNumber(), pageable.getPageSize());
 
-        Page<WorkoutSessionEntity> page = workoutSessionRepository.findByRoutine_User_Id(userId, pageable);
+        Page<WorkoutSessionEntity> page = workoutSessionRepository.findByUserId(userId, pageable);
 
         log.debug("WORKOUT_PERSISTENCE_FOUND_PAGE | userId={} | totalElements={}", 
                   userId, page.getTotalElements());
@@ -116,12 +116,13 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
     public long countByUserId(Long userId) {
         log.debug("WORKOUT_PERSISTENCE_COUNT_BY_USER | userId={}", userId);
 
-        long count = workoutSessionRepository.countByRoutine_User_Id(userId);
+        long count = workoutSessionRepository.countByUserId(userId);
 
         log.debug("WORKOUT_PERSISTENCE_COUNT_RESULT | userId={} | count={}", userId, count);
 
         return count;
     }
+
 
     @Override
     @Transactional(readOnly = true)
