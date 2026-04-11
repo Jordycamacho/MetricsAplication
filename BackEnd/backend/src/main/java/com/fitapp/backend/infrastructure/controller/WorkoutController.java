@@ -2,8 +2,10 @@ package com.fitapp.backend.infrastructure.controller;
 
 import com.fitapp.backend.application.dto.workout.request.SaveWorkoutSessionRequest;
 import com.fitapp.backend.application.dto.workout.request.WorkoutHistoryFilterRequest;
+import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesResponse;
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionResponse;
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionSummaryResponse;
+import com.fitapp.backend.application.ports.input.WorkoutHistoryUseCase;
 import com.fitapp.backend.application.ports.input.WorkoutUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.oauth2.jwt.Jwt;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class WorkoutController {
 
     private final WorkoutUseCase workoutUseCase;
+    private final WorkoutHistoryUseCase workoutHistoryUseCase;
 
     @PostMapping("/sessions")
     @Operation(summary = "Save completed workout session", description = "Saves a workout session with all executed sets and parameters")
@@ -118,6 +124,27 @@ public class WorkoutController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/start/{routineId}/last-values")
+    @Operation(
+        summary = "Get last values before starting workout",
+        description = "Returns last recorded values for all exercises in routine before starting a new session"
+    )
+    public ResponseEntity<Map<Long, LastExerciseValuesResponse>> getLastValuesBeforeWorkout(
+            @PathVariable Long routineId,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        Long userId = jwt.getClaim("userId");
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "userId missing in token");
+        }
+
+        log.info("GET_LAST_VALUES_BEFORE_WORKOUT | routineId={} | userId={}", routineId, userId);
+
+        Map<Long, LastExerciseValuesResponse> response = workoutHistoryUseCase.getLastValuesForRoutine(routineId, userId);
+
+        return ResponseEntity.
+        ok(response);
+    }
     @DeleteMapping("/sessions/{sessionId}")
     @Operation(summary = "Delete workout session")
     public ResponseEntity<Void> deleteWorkoutSession(
