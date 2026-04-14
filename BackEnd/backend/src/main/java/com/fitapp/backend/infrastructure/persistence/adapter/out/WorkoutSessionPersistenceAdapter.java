@@ -3,6 +3,8 @@ package com.fitapp.backend.infrastructure.persistence.adapter.out;
 import com.fitapp.backend.application.ports.output.WorkoutSessionPersistencePort;
 import com.fitapp.backend.domain.model.WorkoutSessionModel;
 import com.fitapp.backend.infrastructure.persistence.converter.WorkoutConverter;
+import com.fitapp.backend.infrastructure.persistence.entity.SessionExerciseEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.SetExecutionEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.WorkoutSessionEntity;
 import com.fitapp.backend.infrastructure.persistence.repository.WorkoutSessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +30,41 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
     @Override
     @Transactional
     public WorkoutSessionModel save(WorkoutSessionModel session) {
-        log.info("WORKOUT_PERSISTENCE_SAVE_START | routineId={} | userId={}", 
-                 session.getRoutineId(), session.getUserId());
+        log.info("WORKOUT_PERSISTENCE_SAVE_START | routineId={} | userId={}",
+                session.getRoutineId(), session.getUserId());
 
         WorkoutSessionEntity entity = workoutConverter.toEntity(session);
+
+        log.info("ENTITY_BEFORE_SAVE | sessionId={} | exercises={}", entity.getId(), entity.getExercises().size());
+        for (SessionExerciseEntity ex : entity.getExercises()) {
+            log.info("  Exercise {} has {} sets",
+                    ex.getExercise() != null ? ex.getExercise().getId() : "null",
+                    ex.getSets().size());
+            for (SetExecutionEntity set : ex.getSets()) {
+                log.info("    setTemplateId={}, params={}",
+                        set.getSetTemplate() != null ? set.getSetTemplate().getId() : "null",
+                        set.getParameters().size());
+            }
+        }
+
         WorkoutSessionEntity saved = workoutSessionRepository.save(entity);
 
-        log.info("WORKOUT_PERSISTENCE_SAVE_SUCCESS | sessionId={} | exerciseCount={} | totalVolume={}", 
-                 saved.getId(), 
-                 saved.getExercises() != null ? saved.getExercises().size() : 0,
-                 saved.getTotalVolume());
+        log.info("NTITY_AFTER_SAVE | sessionId={} | exercises={}",
+                saved.getId(), saved.getExercises().size());
+        for (SessionExerciseEntity ex : saved.getExercises()) {
+            log.info("  Exercise {} has {} sets",
+                    ex.getExercise().getId(), ex.getSets().size());
+            for (SetExecutionEntity set : ex.getSets()) {
+                log.info("    setExecutionId={}, setTemplateId={}, params={}",
+                        set.getId(),
+                        set.getSetTemplate().getId(),
+                        set.getParameters().size());
+            }
+        }
+        log.info("WORKOUT_PERSISTENCE_SAVE_SUCCESS | sessionId={} | exerciseCount={} | totalVolume={}",
+                saved.getId(),
+                saved.getExercises() != null ? saved.getExercises().size() : 0,
+                saved.getTotalVolume());
 
         return workoutConverter.toDomain(saved);
     }
@@ -61,8 +88,8 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
 
         return workoutSessionRepository.findByIdAndUserIdWithDetails(id, userId)
                 .map(entity -> {
-                    log.debug("WORKOUT_PERSISTENCE_FOUND_WITH_DETAILS | sessionId={} | exerciseCount={}", 
-                              id, entity.getExercises() != null ? entity.getExercises().size() : 0);
+                    log.debug("WORKOUT_PERSISTENCE_FOUND_WITH_DETAILS | sessionId={} | exerciseCount={}",
+                            id, entity.getExercises() != null ? entity.getExercises().size() : 0);
                     return workoutConverter.toDomain(entity);
                 });
     }
@@ -70,13 +97,13 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
     @Override
     @Transactional(readOnly = true)
     public Page<WorkoutSessionModel> findByUserId(Long userId, Pageable pageable) {
-        log.debug("WORKOUT_PERSISTENCE_FIND_BY_USER | userId={} | page={} | size={}", 
-                  userId, pageable.getPageNumber(), pageable.getPageSize());
+        log.debug("WORKOUT_PERSISTENCE_FIND_BY_USER | userId={} | page={} | size={}",
+                userId, pageable.getPageNumber(), pageable.getPageSize());
 
         Page<WorkoutSessionEntity> page = workoutSessionRepository.findByUserId(userId, pageable);
 
-        log.debug("WORKOUT_PERSISTENCE_FOUND_PAGE | userId={} | totalElements={}", 
-                  userId, page.getTotalElements());
+        log.debug("WORKOUT_PERSISTENCE_FOUND_PAGE | userId={} | totalElements={}",
+                userId, page.getTotalElements());
 
         return page.map(workoutConverter::toDomain);
     }
@@ -84,27 +111,30 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
     @Override
     @Transactional(readOnly = true)
     public Page<WorkoutSessionModel> findByRoutineIdAndUserId(Long routineId, Long userId, Pageable pageable) {
-        log.debug("WORKOUT_PERSISTENCE_FIND_BY_ROUTINE | routineId={} | userId={} | page={}", 
-                  routineId, userId, pageable.getPageNumber());
+        log.debug("WORKOUT_PERSISTENCE_FIND_BY_ROUTINE | routineId={} | userId={} | page={}",
+                routineId, userId, pageable.getPageNumber());
 
-        Page<WorkoutSessionEntity> page = workoutSessionRepository.findByRoutineIdAndUserId(routineId, userId, pageable);
+        Page<WorkoutSessionEntity> page = workoutSessionRepository.findByRoutineIdAndUserId(routineId, userId,
+                pageable);
 
-        log.debug("WORKOUT_PERSISTENCE_FOUND_BY_ROUTINE | routineId={} | totalElements={}", 
-                  routineId, page.getTotalElements());
+        log.debug("WORKOUT_PERSISTENCE_FOUND_BY_ROUTINE | routineId={} | totalElements={}",
+                routineId, page.getTotalElements());
 
         return page.map(workoutConverter::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<WorkoutSessionModel> findByUserIdAndDateRange(Long userId, LocalDateTime fromDate, LocalDateTime toDate) {
-        log.debug("WORKOUT_PERSISTENCE_FIND_BY_DATE_RANGE | userId={} | from={} | to={}", 
-                  userId, fromDate, toDate);
+    public List<WorkoutSessionModel> findByUserIdAndDateRange(Long userId, LocalDateTime fromDate,
+            LocalDateTime toDate) {
+        log.debug("WORKOUT_PERSISTENCE_FIND_BY_DATE_RANGE | userId={} | from={} | to={}",
+                userId, fromDate, toDate);
 
-        List<WorkoutSessionEntity> sessions = workoutSessionRepository.findByUserIdAndDateRange(userId, fromDate, toDate);
+        List<WorkoutSessionEntity> sessions = workoutSessionRepository.findByUserIdAndDateRange(userId, fromDate,
+                toDate);
 
-        log.debug("WORKOUT_PERSISTENCE_FOUND_IN_RANGE | userId={} | count={}", 
-                  userId, sessions.size());
+        log.debug("WORKOUT_PERSISTENCE_FOUND_IN_RANGE | userId={} | count={}",
+                userId, sessions.size());
 
         return sessions.stream()
                 .map(workoutConverter::toDomain)
@@ -122,7 +152,6 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
 
         return count;
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -165,8 +194,8 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
     @Override
     @Transactional(readOnly = true)
     public Double sumTotalVolumeByUserIdAndDateRange(Long userId, LocalDateTime fromDate, LocalDateTime toDate) {
-        log.debug("WORKOUT_PERSISTENCE_SUM_VOLUME_RANGE | userId={} | from={} | to={}", 
-                  userId, fromDate, toDate);
+        log.debug("WORKOUT_PERSISTENCE_SUM_VOLUME_RANGE | userId={} | from={} | to={}",
+                userId, fromDate, toDate);
 
         Double volume = workoutSessionRepository.sumTotalVolumeByUserIdAndDateRange(userId, fromDate, toDate);
 

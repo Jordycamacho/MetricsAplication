@@ -65,6 +65,15 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                 sessionModel.calculateDuration();
                 sessionModel.calculateTotalVolume();
 
+                log.info("SESSION_MODEL_SETS | exerciseCount={}", sessionModel.getExercises().size());
+                for (SessionExerciseModel ex : sessionModel.getExercises()) {
+                        log.info("  Exercise {} has {} sets", ex.getExerciseId(), ex.getSets().size());
+                        for (SetExecutionModel set : ex.getSets()) {
+                                log.info("    setTemplateId={}, params={}", set.getSetTemplateId(),
+                                                set.getParameters().size());
+                        }
+                }
+
                 WorkoutSessionModel saved = workoutSessionPersistencePort.save(sessionModel);
                 updateRoutineLastUsed(routine.getId(), userId, request.getStartTime());
 

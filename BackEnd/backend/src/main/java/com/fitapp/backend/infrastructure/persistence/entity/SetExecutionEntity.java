@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -95,5 +96,31 @@ public class SetExecutionEntity {
         if (startedAt == null || completedAt == null)
             return null;
         return java.time.Duration.between(startedAt, completedAt).getSeconds();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof SetExecutionEntity))
+            return false;
+        SetExecutionEntity that = (SetExecutionEntity) o;
+        return Objects.equals(getSetTemplateId(), that.getSetTemplateId())
+                && Objects.equals(position, that.position)
+                && Objects.equals(getSessionExerciseId(), that.getSessionExerciseId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getSetTemplateId(), position, getSessionExerciseId());
+    }
+
+    // Para evitar lazy loading
+    private Long getSetTemplateId() {
+        return setTemplate != null ? setTemplate.getId() : null;
+    }
+
+    private Long getSessionExerciseId() {
+        return sessionExercise != null ? sessionExercise.getId() : null;
     }
 }
