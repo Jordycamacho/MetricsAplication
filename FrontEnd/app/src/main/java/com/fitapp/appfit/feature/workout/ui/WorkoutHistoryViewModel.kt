@@ -1,9 +1,9 @@
 package com.fitapp.appfit.feature.workout.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.workout.data.WorkoutRepository
@@ -11,12 +11,15 @@ import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionSummaryRes
 import com.fitapp.appfit.shared.model.PageResponse
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel para la pantalla de historial de workouts.
- */
-class WorkoutHistoryViewModel(application: Application) : AndroidViewModel(application) {
+class WorkoutHistoryViewModel(
+    private val workoutRepository: WorkoutRepository
+) : ViewModel() {
 
-    private val repository = WorkoutRepository(application)
+    companion object {
+        private const val TAG = "WorkoutHistoryViewModel"
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
 
     private val _workoutHistoryState = MutableLiveData<Resource<PageResponse<WorkoutSessionSummaryResponse>>>()
     val workoutHistoryState: LiveData<Resource<PageResponse<WorkoutSessionSummaryResponse>>> = _workoutHistoryState
@@ -27,59 +30,79 @@ class WorkoutHistoryViewModel(application: Application) : AndroidViewModel(appli
     private val _deleteState = MutableLiveData<Resource<Unit>>()
     val deleteState: LiveData<Resource<Unit>> = _deleteState
 
-    /**
-     * Carga el historial de workouts.
-     */
+    // ── Actions ───────────────────────────────────────────────────────────────
+
     fun loadWorkoutHistory(
         routineId: Long? = null,
         page: Int = 0,
         size: Int = 20
     ) {
-        _workoutHistoryState.value = Resource.Loading()
+        Log.i(TAG, "LOAD_WORKOUT_HISTORY | routineId=$routineId | page=$page | size=$size")
 
         viewModelScope.launch {
-            val result = repository.getWorkoutHistory(
+            _workoutHistoryState.value = Resource.Loading()
+
+            val result = workoutRepository.getWorkoutHistory(
                 routineId = routineId,
                 page = page,
                 size = size
             )
-            _workoutHistoryState.postValue(result)
+
+            when (result) {
+                is Resource.Success -> {
+                    Log.i(TAG, "✅ HISTORY_LOADED | count=${result.data?.content?.size}")
+                }
+                is Resource.Error -> {
+                    Log.e(TAG, "❌ HISTORY_ERROR | error=${result.message}")
+                }
+                else -> {}
+            }
+
+            _workoutHistoryState.value = result
         }
     }
 
-    /**
-     * Carga las sesiones recientes.
-     */
-    fun loadRecentWorkouts(limit: Int = 10) {
-        _workoutHistoryState.value = Resource.Loading()
-
-        viewModelScope.launch {
-            val result = repository.getRecentWorkouts(limit)
-            _workoutHistoryState.postValue(result)
-        }
-    }
-
-    /**
-     * Carga el volumen total acumulado.
-     */
     fun loadTotalVolume() {
-        _totalVolumeState.value = Resource.Loading()
+        Log.i(TAG, "LOAD_TOTAL_VOLUME")
 
         viewModelScope.launch {
-            val result = repository.getTotalVolume()
-            _totalVolumeState.postValue(result)
+            _totalVolumeState.value = Resource.Loading()
+
+            val result = workoutRepository.getTotalVolume()
+
+            when (result) {
+                is Resource.Success -> {
+                    Log.i(TAG, "✅ TOTAL_VOLUME_LOADED | volume=${result.data}")
+                }
+                is Resource.Error -> {
+                    Log.e(TAG, "❌ TOTAL_VOLUME_ERROR | error=${result.message}")
+                }
+                else -> {}
+            }
+
+            _totalVolumeState.value = result
         }
     }
 
-    /**
-     * Elimina una sesión de workout.
-     */
     fun deleteWorkoutSession(sessionId: Long) {
-        _deleteState.value = Resource.Loading()
+        Log.i(TAG, "DELETE_WORKOUT_SESSION | sessionId=$sessionId")
 
         viewModelScope.launch {
-            val result = repository.deleteWorkoutSession(sessionId)
-            _deleteState.postValue(result)
+            _deleteState.value = Resource.Loading()
+
+            val result = workoutRepository.deleteWorkoutSession(sessionId)
+
+            when (result) {
+                is Resource.Success -> {
+                    Log.i(TAG, "✅ SESSION_DELETED | sessionId=$sessionId")
+                }
+                is Resource.Error -> {
+                    Log.e(TAG, "❌ DELETE_ERROR | sessionId=$sessionId | error=${result.message}")
+                }
+                else -> {}
+            }
+
+            _deleteState.value = result
         }
     }
 }

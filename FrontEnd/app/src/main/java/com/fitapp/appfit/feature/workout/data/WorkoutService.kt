@@ -2,6 +2,7 @@ package com.fitapp.appfit.feature.workout.data
 
 import com.fitapp.appfit.core.network.ApiClient
 import com.fitapp.appfit.feature.workout.model.request.SaveWorkoutSessionRequest
+import com.fitapp.appfit.feature.workout.model.response.LastExerciseValuesResponse
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionResponse
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionSummaryResponse
 import com.fitapp.appfit.shared.model.PageResponse
@@ -45,6 +46,21 @@ interface WorkoutService {
 
     @GET("api/workouts/stats/total-volume")
     suspend fun getTotalVolume(): Response<Double>
+
+    @GET("api/workouts/history/exercises/{exerciseId}/last-values")
+    suspend fun getLastExerciseValues(
+        @Path("exerciseId") exerciseId: Long
+    ): Response<LastExerciseValuesResponse>
+
+    @POST("api/workouts/history/exercises/last-values")
+    suspend fun getLastValuesForExercises(
+        @Body exerciseIds: List<Long>
+    ): Response<Map<String, LastExerciseValuesResponse>>
+
+    @GET("api/workouts/history/routines/{routineId}/last-values")
+    suspend fun getLastValuesForRoutine(
+        @Path("routineId") routineId: Long
+    ): Response<Map<String, LastExerciseValuesResponse>>
 
     companion object {
         val instance: WorkoutService by lazy {

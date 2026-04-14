@@ -30,8 +30,10 @@ import com.fitapp.appfit.feature.workout.data.WorkoutRepository
 import com.fitapp.appfit.feature.workout.data.RestTimerService
 import com.fitapp.appfit.core.notification.WorkoutNotificationManager
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
+import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
+import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.workout.model.WorkoutCompletionState
-import com.fitapp.appfit.feature.workout.util.LastWorkoutValuesHelper
+import com.fitapp.appfit.feature.workout.model.response.LastExerciseValuesResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,8 +52,10 @@ class WorkoutFragment : Fragment() {
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
     private lateinit var workoutRepository: WorkoutRepository
-    private lateinit var lastValuesHelper: LastWorkoutValuesHelper
 
+    companion object {
+        private const val TAG = "WorkoutFragment"
+    }
 
     // ── Cronómetro ────────────────────────────────────────────────────────────
     private val timerHandler = Handler(Looper.getMainLooper())
@@ -94,12 +98,13 @@ class WorkoutFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "WORKOUT_FRAGMENT_CREATED | routineId=${args.routineId}")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+
         workoutRepository = WorkoutRepository(requireContext())
         currentUserId = "usuario_temporal"
         WorkoutNotificationManager.createChannel(requireContext())
-
-        val db = AppDatabase.getInstance(requireContext())
-        lastValuesHelper = LastWorkoutValuesHelper(db.workoutSetResultDao())
 
         setupRecyclerView()
         setupRibbon()
@@ -122,41 +127,7 @@ class WorkoutFragment : Fragment() {
 
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
 
-        var backPressedOnce = false
-        val handler = Handler(Looper.getMainLooper())
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            if (backPressedOnce) {
-                androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Salir del entrenamiento")
-                    .setMessage("Si sales ahora perderás el progreso. ¿Seguro?")
-                    .setPositiveButton("Salir") { _, _ ->
-                        if (setParamState.isNotEmpty()) {
-                            lifecycleScope.launch {
-                                val completionMap = completionState.getAllCompletedSets().associateWith { true }
-                                workoutRepository.saveWorkoutSession(
-                                    routineId = args.routineId,
-                                    userId = currentUserId,
-                                    setParamState = setParamState,
-                                    setCompletionState = completionMap,
-                                    startedAt = workoutStartedAt
-                                )
-                            }
-                        }
-                        findNavController().navigateUp()
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            } else {
-                backPressedOnce = true
-                com.google.android.material.snackbar.Snackbar.make(
-                    binding.root,
-                    "Pulsa otra vez para salir",
-                    com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
-                ).show()
-                handler.postDelayed({ backPressedOnce = false }, 2000)
-            }
-        }
+        setupBackPressHandler()
     }
 
     override fun onStart() {
@@ -222,25 +193,33 @@ class WorkoutFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = WorkoutDayAdapter(
             onSetValueChanged = { exercise, set, valueType, newValue ->
+                Log.d(TAG, "SET_VALUE_CHANGED | exerciseId=${exercise.exerciseId} | setId=${set.id} | type=$valueType | value=$newValue")
+
                 if (!setParamState.containsKey(set.id)) {
                     setParamState[set.id] = mutableMapOf(
                         "exerciseId" to exercise.exerciseId,
                         "parameters" to initSetState(set.parameters ?: emptyList())
                     )
+                    Log.d(TAG, "  INITIALIZED_SET_STATE | setId=${set.id}")
                 }
 
                 @Suppress("UNCHECKED_CAST")
                 val paramMap = setParamState[set.id]!!["parameters"] as MutableMap<Long, MutableMap<String, Any?>>
 
                 when (valueType) {
-                    "reps" -> paramMap.values.forEach { it["repetitions"] = newValue.toInt() }
+                    "reps" -> {
+                        paramMap.values.forEach { it["repetitions"] = newValue.toInt() }
+                        Log.d(TAG, "  UPDATED_REPS | setId=${set.id} | reps=${newValue.toInt()}")
+                    }
                     "param" -> {
                         set.parameters?.forEach { param ->
                             val type = param.parameterType?.uppercase() ?: return@forEach
                             if (type in listOf("NUMBER", "DISTANCE", "PERCENTAGE")) {
                                 paramMap[param.parameterId]?.set("numericValue", newValue)
+                                Log.d(TAG, "  UPDATED_NUMERIC | parameterId=${param.parameterId} | value=$newValue")
                             } else if (type == "INTEGER") {
                                 paramMap[param.parameterId]?.set("integerValue", newValue.toInt())
+                                Log.d(TAG, "  UPDATED_INTEGER | parameterId=${param.parameterId} | value=${newValue.toInt()}")
                             }
                         }
                     }
@@ -248,6 +227,7 @@ class WorkoutFragment : Fragment() {
                         set.parameters?.forEach { param ->
                             if (param.parameterType?.uppercase() == "DURATION") {
                                 paramMap[param.parameterId]?.set("durationValue", newValue.toLong())
+                                Log.d(TAG, "  UPDATED_DURATION | parameterId=${param.parameterId} | value=${newValue.toLong()}")
                             }
                         }
                     }
@@ -255,6 +235,8 @@ class WorkoutFragment : Fragment() {
                 binding.fabSaveWorkout.isInvisible = false
             },
             onSetCompletedToggled = { exercise, set, isCompleted ->
+                Log.d(TAG, "SET_COMPLETED_TOGGLED | exerciseId=${exercise.exerciseId} | setId=${set.id} | completed=$isCompleted")
+
                 completionState.markSetCompleted(set.id, exercise.exerciseId, isCompleted)
 
                 if (isCompleted && !setParamState.containsKey(set.id)) {
@@ -262,10 +244,12 @@ class WorkoutFragment : Fragment() {
                         "exerciseId" to exercise.exerciseId,
                         "parameters" to initSetState(set.parameters ?: emptyList())
                     )
+                    Log.d(TAG, "  INITIALIZED_SET_STATE_ON_COMPLETE | setId=${set.id}")
                 }
 
                 binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
-                Log.d("Workout", "Set ${set.id} completado=$isCompleted | totalCompletados=${completionState.getAllCompletedSets().size}")
+
+                Log.i(TAG, "COMPLETION_STATE_UPDATED | completedSets=${completionState.getAllCompletedSets().size} | hasAny=${completionState.hasAnyCompletedSets()}")
             },
             completionState = completionState
         )
@@ -293,12 +277,14 @@ class WorkoutFragment : Fragment() {
         viewModel.workoutRoutineState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Loading -> {
+                    Log.d(TAG, "ROUTINE_LOADING")
                     binding.progressBar.isVisible = true
                     binding.recyclerView.isVisible = false
                     binding.fabSaveWorkout.isInvisible = true
                 }
 
                 is Resource.Success -> {
+                    Log.i(TAG, "ROUTINE_LOADED | name=${resource.data?.name}")
                     binding.progressBar.isVisible = false
                     binding.recyclerView.isVisible = true
                     resource.data?.let { routine ->
@@ -311,6 +297,7 @@ class WorkoutFragment : Fragment() {
                 }
 
                 is Resource.Error -> {
+                    Log.e(TAG, "ROUTINE_ERROR | error=${resource.message}")
                     binding.progressBar.isVisible = false
                     Toast.makeText(
                         requireContext(),
@@ -326,18 +313,26 @@ class WorkoutFragment : Fragment() {
     }
 
     private fun initializeCompletionStructure(routine: RoutineResponse) {
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+        Log.i(TAG, "INITIALIZE_COMPLETION_STRUCTURE")
+
         routine.exercises?.forEach { exercise ->
             val dayOfWeek = exercise.dayOfWeek ?: "SIN_DIA"
             completionState.registerExercise(exercise.exerciseId, dayOfWeek)
+            Log.d(TAG, "  REGISTERED_EXERCISE | exerciseId=${exercise.exerciseId} | day=$dayOfWeek")
 
             exercise.setsTemplate?.forEach { set ->
                 completionState.registerSet(set.id, exercise.exerciseId)
+                Log.d(TAG, "    REGISTERED_SET | setId=${set.id} | exerciseId=${exercise.exerciseId}")
             }
         }
+
+        Log.i(TAG, "COMPLETION_STRUCTURE_INITIALIZED")
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
     }
 
-
     private fun loadRoutine() {
+        Log.i(TAG, "LOAD_ROUTINE | routineId=${args.routineId}")
         viewModel.getRoutineForTraining(args.routineId)
         viewModel.markRoutineAsUsed(args.routineId)
     }
@@ -350,14 +345,20 @@ class WorkoutFragment : Fragment() {
             return
         }
 
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "SAVE_WORKOUT_INITIATED")
+        Log.i(TAG, "completedSets: ${completionState.getAllCompletedSets().size}")
+        Log.i(TAG, "modifiedSets: ${setParamState.size}")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+
         binding.fabSaveWorkout.isEnabled = false
         binding.progressBar.isVisible = true
 
         lifecycleScope.launch {
-            val completedSets = completionState.getAllCompletedSets()
-            Log.i("WorkoutFragment", "SAVING_WORKOUT | routineId=${args.routineId} | completedSets=${completedSets.size}")
-
             val completionMap = completionState.getAllCompletedSets().associateWith { true }
+
+            Log.d(TAG, "COMPLETION_MAP | entries=${completionMap.size}")
+
             val result = workoutRepository.saveWorkoutSession(
                 routineId = args.routineId,
                 userId = currentUserId,
@@ -373,7 +374,7 @@ class WorkoutFragment : Fragment() {
 
             result.fold(
                 onSuccess = { sessionId ->
-                    Log.i("WorkoutFragment", "WORKOUT_SAVED | sessionId=$sessionId")
+                    Log.i(TAG, "✅ WORKOUT_SAVED | sessionId=$sessionId")
                     setParamState.clear()
                     completionState.getAllCompletedSets().forEach { setId ->
                         completionState.markSetCompleted(setId, 0L, false)
@@ -382,7 +383,7 @@ class WorkoutFragment : Fragment() {
                     Toast.makeText(requireContext(), "Entrenamiento guardado ✓", Toast.LENGTH_SHORT).show()
                 },
                 onFailure = { error ->
-                    Log.e("WorkoutFragment", "SAVE_ERROR | error=${error.message}", error)
+                    Log.e(TAG, "❌ SAVE_ERROR | error=${error.message}", error)
                     Toast.makeText(requireContext(), "Error: ${error.message}", Toast.LENGTH_LONG).show()
                 }
             )
@@ -390,17 +391,35 @@ class WorkoutFragment : Fragment() {
     }
 
     private fun applyLastValuesAndSubmit(routine: RoutineResponse) {
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "APPLY_LAST_VALUES_AND_SUBMIT | routineId=${routine.id}")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+
         lifecycleScope.launch {
             try {
-                val routineWithLastValues = lastValuesHelper.applyLastValuesToRoutine(routine)
+                // Obtener últimos valores del backend
+                val lastValuesResult = workoutRepository.getLastValuesForRoutine(routine.id)
+
+                val routineWithLastValues = when (lastValuesResult) {
+                    is Resource.Success -> {
+                        val lastValues = lastValuesResult.data ?: emptyMap()
+                        Log.i(TAG, "✅ LAST_VALUES_LOADED | exercisesWithHistory=${lastValues.size}")
+
+                        applyLastValuesToRoutine(routine, lastValues)
+                    }
+                    is Resource.Error -> {
+                        Log.w(TAG, "⚠️ LAST_VALUES_ERROR | error=${lastValuesResult.message}")
+                        routine
+                    }
+                    else -> routine
+                }
 
                 adapter.submitRoutine(routineWithLastValues)
 
                 initializeCompletionStructure(routineWithLastValues)
 
-                Log.i("WorkoutFragment", "ÚLTIMOS_VALORES_APLICADOS | routineId=${routine.id}")
-
-                if (hasLastWorkout(routine.id)) {
+                if (lastValuesResult is Resource.Success &&
+                    lastValuesResult.data?.isNotEmpty() == true) {
                     com.google.android.material.snackbar.Snackbar.make(
                         binding.root,
                         "✓ Valores de tu última sesión cargados",
@@ -409,18 +428,148 @@ class WorkoutFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
-                Log.e("WorkoutFragment", "Error aplicando últimos valores", e)
-                // Fallback: mostrar rutina sin modificar
+                Log.e(TAG, "❌ ERROR_APPLYING_LAST_VALUES | error=${e.message}", e)
                 adapter.submitRoutine(routine)
                 initializeCompletionStructure(routine)
             }
         }
     }
 
-    private suspend fun hasLastWorkout(routineId: Long): Boolean {
-        return withContext(Dispatchers.IO) {
-            val db = AppDatabase.getInstance(requireContext())
-            db.workoutSetResultDao().getLastWorkoutResults(routineId).isNotEmpty()
+    private fun applyLastValuesToRoutine(
+        routine: RoutineResponse,
+        lastValues: Map<Long, LastExerciseValuesResponse>
+    ): RoutineResponse {
+
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+        Log.i(TAG, "APPLY_LAST_VALUES_TO_ROUTINE")
+        Log.i(TAG, "lastValuesMap size: ${lastValues.size}")
+
+        val updatedExercises = routine.exercises?.map { exercise ->
+            val lastValue = lastValues[exercise.exerciseId]
+
+            if (lastValue != null) {
+                Log.d(TAG, "  APPLYING_TO_EXERCISE | exerciseId=${exercise.exerciseId} | lastSets=${lastValue.sets.size}")
+
+                val updatedSets = exercise.setsTemplate?.mapIndexed { index, setTemplate ->
+                    val lastSet = lastValue.sets.getOrNull(index)
+
+                    if (lastSet != null) {
+                        Log.d(TAG, "    APPLYING_TO_SET[$index] | setId=${setTemplate.id} | lastParams=${lastSet.parameters.size}")
+
+                        val updatedParams = setTemplate.parameters?.map { param ->
+                            val lastParam = lastSet.parameters.find { it.parameterId == param.parameterId }
+
+                            if (lastParam != null) {
+                                Log.d(TAG, "      PARAM_APPLIED | parameterId=${param.parameterId} | " +
+                                        "numeric=${lastParam.numericValue} | integer=${lastParam.integerValue}")
+
+                                RoutineSetParameterResponse(
+                                    id = param.id,
+                                    setTemplateId = param.setTemplateId,
+                                    parameterId = param.parameterId,
+                                    parameterName = param.parameterName,
+                                    parameterType = param.parameterType,
+                                    unit = param.unit,
+                                    repetitions = lastParam.integerValue ?: param.repetitions,
+                                    numericValue = lastParam.numericValue ?: param.numericValue,
+                                    integerValue = lastParam.integerValue ?: param.integerValue,
+                                    durationValue = lastParam.durationValue ?: param.durationValue
+                                )
+                            } else {
+                                param
+                            }
+                        }
+
+                        RoutineSetTemplateResponse(
+                            id = setTemplate.id,
+                            position = setTemplate.position,
+                            subSetNumber = setTemplate.subSetNumber,
+                            groupId = setTemplate.groupId,
+                            setType = setTemplate.setType,
+                            restAfterSet = setTemplate.restAfterSet,
+                            parameters = updatedParams
+                        )
+                    } else {
+                        setTemplate
+                    }
+                }
+
+                RoutineExerciseResponse(
+                    id = exercise.id,
+                    exerciseId = exercise.exerciseId,
+                    routineId = exercise.routineId,
+                    exerciseName = exercise.exerciseName,
+                    position = exercise.position,
+                    sessionNumber = exercise.sessionNumber,
+                    dayOfWeek = exercise.dayOfWeek,
+                    sessionOrder = exercise.sessionOrder,
+                    restAfterExercise = exercise.restAfterExercise,
+                    sets = exercise.sets,
+                    targetParameters = exercise.targetParameters,
+                    setsTemplate = updatedSets
+                )
+            } else {
+                exercise
+            }
+        }
+
+        Log.i(TAG, "LAST_VALUES_APPLIED")
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+
+        return RoutineResponse(
+            id = routine.id,
+            name = routine.name,
+            description = routine.description,
+            sportId = routine.sportId,
+            sportName = routine.sportName,
+            trainingDays = routine.trainingDays,
+            goal = routine.goal,
+            sessionsPerWeek = routine.sessionsPerWeek,
+            isActive = routine.isActive,
+            createdAt = routine.createdAt,
+            updatedAt = routine.updatedAt,
+            lastUsedAt = routine.lastUsedAt,
+            exercises = updatedExercises
+        )
+    }
+
+    // ── Back Press Handler ────────────────────────────────────────────────────
+
+    private fun setupBackPressHandler() {
+        var backPressedOnce = false
+        val handler = Handler(Looper.getMainLooper())
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (backPressedOnce) {
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Salir del entrenamiento")
+                    .setMessage("Si sales ahora perderás el progreso. ¿Seguro?")
+                    .setPositiveButton("Salir") { _, _ ->
+                        if (setParamState.isNotEmpty()) {
+                            lifecycleScope.launch {
+                                val completionMap = completionState.getAllCompletedSets().associateWith { true }
+                                workoutRepository.saveWorkoutSession(
+                                    routineId = args.routineId,
+                                    userId = currentUserId,
+                                    setParamState = setParamState,
+                                    setCompletionState = completionMap,
+                                    startedAt = workoutStartedAt
+                                )
+                            }
+                        }
+                        findNavController().navigateUp()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            } else {
+                backPressedOnce = true
+                com.google.android.material.snackbar.Snackbar.make(
+                    binding.root,
+                    "Pulsa otra vez para salir",
+                    com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                ).show()
+                handler.postDelayed({ backPressedOnce = false }, 2000)
+            }
         }
     }
 }

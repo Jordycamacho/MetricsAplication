@@ -1,38 +1,35 @@
 package com.fitapp.appfit.feature.workout.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentWorkoutHistoryBinding
+import com.fitapp.appfit.feature.workout.data.WorkoutRepository
 import com.fitapp.appfit.feature.workout.ui.adapter.WorkoutHistoryAdapter
 import kotlinx.coroutines.launch
 
-/**
- * Pantalla de historial de workouts.
- *
- * Muestra:
- * - Lista de sesiones completadas
- * - Filtros por rutina, fecha, performance
- * - Detalles al hacer clic
- * - Estadísticas generales
- */
 class WorkoutHistoryFragment : Fragment() {
 
     private var _binding: FragmentWorkoutHistoryBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: WorkoutHistoryViewModel by viewModels()
+    private lateinit var viewModel: WorkoutHistoryViewModel
     private lateinit var adapter: WorkoutHistoryAdapter
+
+    companion object {
+        private const val TAG = "WorkoutHistoryFragment"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,11 +43,16 @@ class WorkoutHistoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.i(TAG, "WORKOUT_HISTORY_FRAGMENT_CREATED")
+
+        val repository = WorkoutRepository(requireContext())
+        val factory = WorkoutHistoryViewModelFactory(repository)
+        viewModel = ViewModelProvider(this, factory)[WorkoutHistoryViewModel::class.java]
+
         setupRecyclerView()
         setupObservers()
         setupListeners()
 
-        // Cargar historial inicial
         viewModel.loadWorkoutHistory()
         viewModel.loadTotalVolume()
     }
@@ -58,10 +60,12 @@ class WorkoutHistoryFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = WorkoutHistoryAdapter(
             onItemClick = { session ->
+                Log.d(TAG, "SESSION_CLICKED | sessionId=${session.id}")
                 val action = WorkoutHistoryFragmentDirections.actionWorkoutHistoryToDetail(session.id)
                 findNavController().navigate(action)
             },
             onDeleteClick = { session ->
+                Log.d(TAG, "DELETE_CLICKED | sessionId=${session.id}")
                 showDeleteConfirmation(session.id)
             }
         )
@@ -76,6 +80,8 @@ class WorkoutHistoryFragment : Fragment() {
     private fun setupObservers() {
         // Observar historial
         viewModel.workoutHistoryState.observe(viewLifecycleOwner) { resource ->
+            Log.d(TAG, "HISTORY_STATE_CHANGED | state=${resource.javaClass.simpleName}")
+
             when (resource) {
                 is Resource.Loading -> {
                     binding.progressBar.isVisible = true
@@ -88,6 +94,7 @@ class WorkoutHistoryFragment : Fragment() {
                     binding.progressBar.isVisible = false
 
                     val sessions = resource.data?.content ?: emptyList()
+                    Log.i(TAG, "✅ SESSIONS_LOADED | count=${sessions.size}")
 
                     if (sessions.isEmpty()) {
                         binding.rvWorkoutHistory.isVisible = false
@@ -102,6 +109,7 @@ class WorkoutHistoryFragment : Fragment() {
                 }
 
                 is Resource.Error -> {
+                    Log.e(TAG, "❌ HISTORY_ERROR | error=${resource.message}")
                     binding.progressBar.isVisible = false
                     binding.rvWorkoutHistory.isVisible = false
                     binding.layoutEmpty.isVisible = false
@@ -111,26 +119,26 @@ class WorkoutHistoryFragment : Fragment() {
             }
         }
 
-        // Observar volumen total
         viewModel.totalVolumeState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Success -> {
                     val volume = resource.data ?: 0.0
-                    binding.tvTotalVolume.text = "${String.format("%.1f", volume)} kg"
+                    Log.i(TAG, "✅ TOTAL_VOLUME | volume=$volume")
+                    binding.tvTotalVolume?.text = "${String.format("%.1f", volume)} kg"
                 }
                 else -> {
-                    binding.tvTotalVolume.text = "-- kg"
+                    binding.tvTotalVolume?.text = "-- kg"
                 }
             }
         }
 
-        // Observar eliminación
         viewModel.deleteState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Loading -> {
-                    // Mostrar loading si quieres
+                    Log.d(TAG, "DELETE_LOADING")
                 }
                 is Resource.Success -> {
+                    Log.i(TAG, "✅ SESSION_DELETED_SUCCESS")
                     Toast.makeText(
                         requireContext(),
                         "Sesión eliminada",
@@ -139,6 +147,7 @@ class WorkoutHistoryFragment : Fragment() {
                     viewModel.loadWorkoutHistory() // Recargar lista
                 }
                 is Resource.Error -> {
+                    Log.e(TAG, "❌ DELETE_ERROR | error=${resource.message}")
                     Toast.makeText(
                         requireContext(),
                         "Error al eliminar: ${resource.message}",
@@ -150,16 +159,14 @@ class WorkoutHistoryFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // Swipe to refresh
-        binding.swipeRefresh.setOnRefreshListener {
+        binding.swipeRefresh?.setOnRefreshListener {
+            Log.d(TAG, "SWIPE_REFRESH")
             viewModel.loadWorkoutHistory()
             viewModel.loadTotalVolume()
             binding.swipeRefresh.isRefreshing = false
         }
 
-        // Botón de filtros (opcional)
         binding.btnFilter?.setOnClickListener {
-            // TODO: Mostrar diálogo de filtros
             Toast.makeText(
                 requireContext(),
                 "Filtros - próximamente",
@@ -173,9 +180,13 @@ class WorkoutHistoryFragment : Fragment() {
             .setTitle("Eliminar sesión")
             .setMessage("¿Estás seguro de eliminar esta sesión? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
+                Log.i(TAG, "DELETE_CONFIRMED | sessionId=$sessionId")
                 viewModel.deleteWorkoutSession(sessionId)
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                Log.d(TAG, "DELETE_CANCELLED | sessionId=$sessionId")
+                dialog.dismiss()
+            }
             .show()
     }
 

@@ -7,6 +7,7 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.workout.database.entity.WorkoutSessionEntity
 import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
 import com.fitapp.appfit.feature.workout.model.request.SaveWorkoutSessionRequest
+import com.fitapp.appfit.feature.workout.model.response.LastExerciseValuesResponse
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionResponse
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionSummaryResponse
 import com.fitapp.appfit.shared.enums.SyncStatus
@@ -32,6 +33,10 @@ class WorkoutRepository(private val context: Context) {
         private val ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // GUARDAR SESIÓN DE WORKOUT
+    // ══════════════════════════════════════════════════════════════════════════
+
     suspend fun saveWorkoutSession(
         routineId: Long,
         userId: String,
@@ -42,11 +47,19 @@ class WorkoutRepository(private val context: Context) {
         performanceScore: Int? = null
     ): Result<Long> {
 
-        Log.i(TAG, "SAVE_WORKOUT_START | routineId=$routineId | completedSets=${setCompletionState.count { it.value }}")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "SAVE_WORKOUT_START")
+        Log.i(TAG, "routineId: $routineId")
+        Log.i(TAG, "userId: $userId")
+        Log.i(TAG, "completedSets: ${setCompletionState.count { it.value }}")
+        Log.i(TAG, "totalSets: ${setCompletionState.size}")
+        Log.i(TAG, "modifiedSets: ${setParamState.size}")
+        Log.i(TAG, "performanceScore: $performanceScore")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
 
-        // ═══════════════════════════════════════════════════════════════════════
+        // ─────────────────────────────────────────────────────────────────────
         // 1. GUARDAR LOCALMENTE (Room)
-        // ═══════════════════════════════════════════════════════════════════════
+        // ─────────────────────────────────────────────────────────────────────
 
         val session = WorkoutSessionEntity(
             routineId = routineId,
@@ -60,120 +73,115 @@ class WorkoutRepository(private val context: Context) {
         val sessionId = try {
             sessionDao.insertSession(session)
         } catch (e: Exception) {
-            Log.e(TAG, "ERROR_SAVING_SESSION_LOCALLY | error=${e.message}", e)
+            Log.e(TAG, "❌ ERROR_SAVING_SESSION_LOCALLY | error=${e.message}", e)
             return Result.failure(e)
         }
 
-        Log.d(TAG, "SESSION_SAVED_LOCALLY | sessionId=$sessionId")
+        Log.i(TAG, "✅ SESSION_SAVED_LOCALLY | sessionId=$sessionId")
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 2. CONSTRUIR SET RESULTS
+        // ─────────────────────────────────────────────────────────────────────
 
         val results = buildSetResults(sessionId, setParamState, setCompletionState)
 
+        if (results.isEmpty()) {
+            Log.w(TAG, "⚠️ NO_RESULTS_TO_SAVE | sessionId=$sessionId")
+            sessionDao.deleteSession(sessionId)
+            return Result.failure(Exception("No hay sets completados para guardar"))
+        }
+
         try {
             resultDao.insertResults(results)
-            Log.d(TAG, "SET_RESULTS_SAVED_LOCALLY | count=${results.size}")
+            Log.i(TAG, "✅ SET_RESULTS_SAVED_LOCALLY | count=${results.size}")
         } catch (e: Exception) {
-            Log.e(TAG, "ERROR_SAVING_RESULTS | error=${e.message}", e)
+            Log.e(TAG, "❌ ERROR_SAVING_RESULTS | error=${e.message}", e)
             sessionDao.deleteSession(sessionId)
             return Result.failure(e)
         }
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // 2. SINCRONIZAR AL BACKEND (UNA SOLA LLAMADA)
-        // ═══════════════════════════════════════════════════════════════════════
+        // ─────────────────────────────────────────────────────────────────────
+        // 3. SINCRONIZAR AL BACKEND
+        // ─────────────────────────────────────────────────────────────────────
 
-        val sessionSyncResult = syncSessionToBackend(
-            sessionId, routineId, startedAt, finishedAt, performanceScore, results, setParamState, setCompletionState
+        val syncResult = syncSessionToBackend(
+            sessionId, routineId, startedAt, finishedAt, performanceScore, results
         )
 
-        when (sessionSyncResult) {
+        when (syncResult) {
             is Resource.Success -> {
-                Log.i(TAG, "SESSION_SYNC_SUCCESS | sessionId=$sessionId | backendId=${sessionSyncResult.data?.id}")
-                sessionSyncResult.data?.id?.let { remoteId ->
+                Log.i(TAG, "✅ SESSION_SYNC_SUCCESS | sessionId=$sessionId | backendId=${syncResult.data?.id}")
+                syncResult.data?.id?.let { remoteId ->
                     sessionDao.updateRemoteId(sessionId, remoteId)
                 }
                 sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
                 resultDao.markSessionResultsAsSynced(sessionId)
             }
             is Resource.Error -> {
-                Log.w(TAG, "SESSION_SYNC_FAILED | sessionId=$sessionId | error=${sessionSyncResult.message}")
+                Log.w(TAG, "⚠️ SESSION_SYNC_FAILED | sessionId=$sessionId | error=${syncResult.message}")
+                Log.w(TAG, "   → Datos guardados localmente. Se reintentará después.")
             }
             else -> {}
         }
 
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "SAVE_WORKOUT_COMPLETE | sessionId=$sessionId")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+
         return Result.success(sessionId)
     }
 
-    suspend fun syncSession(sessionId: Long): Boolean {
-        Log.d(TAG, "SYNC_SESSION | sessionId=$sessionId")
+    // ══════════════════════════════════════════════════════════════════════════
+    // OBTENER ÚLTIMOS VALORES PARA RUTINA
+    // ══════════════════════════════════════════════════════════════════════════
 
-        val session = sessionDao.getSessionById(sessionId) ?: run {
-            Log.w(TAG, "SYNC_FAILED_SESSION_NOT_FOUND | sessionId=$sessionId")
-            return false
-        }
+    suspend fun getLastValuesForRoutine(routineId: Long): Resource<Map<Long, LastExerciseValuesResponse>> {
+        Log.i(TAG, "GET_LAST_VALUES_FOR_ROUTINE | routineId=$routineId")
 
-        val results = resultDao.getResultsBySession(sessionId)
-        if (results.isEmpty()) {
-            Log.w(TAG, "SYNC_SKIPPED_NO_RESULTS | sessionId=$sessionId")
-            sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
-            return true
-        }
+        return try {
+            val response = service.getLastValuesForRoutine(routineId)
 
-        val setCompletionState = results.associate { it.setTemplateId to true }
+            if (response.isSuccessful) {
+                val body = response.body()
 
-        val sessionSyncResult = syncSessionToBackend(
-            sessionId = sessionId,
-            routineId = session.routineId,
-            startedAt = session.startedAt,
-            finishedAt = session.finishedAt,
-            performanceScore = null,
-            results = results,
-            setParamState = emptyMap(),
-            setCompletionState = setCompletionState
-        )
+                if (body != null) {
+                    // El backend devuelve Map<String, LastExerciseValuesResponse>
+                    // Convertir a Map<Long, LastExerciseValuesResponse>
+                    val convertedMap = body.mapKeys { it.key.toLong() }
 
-        return when (sessionSyncResult) {
-            is Resource.Success -> {
-                sessionDao.updateSyncStatus(sessionId, SyncStatus.SYNCED)
-                resultDao.markSessionResultsAsSynced(sessionId)
-                Log.i(TAG, "SYNC_SESSION_SUCCESS | sessionId=$sessionId")
-                true
+                    Log.i(TAG, "✅ LAST_VALUES_FETCHED | exerciseCount=${convertedMap.size}")
+                    convertedMap.forEach { (exerciseId, values) ->
+                        Log.d(TAG, "   Exercise $exerciseId → ${values.sets.size} sets")
+                    }
+
+                    Resource.Success(convertedMap)
+                } else {
+                    Log.w(TAG, "⚠️ LAST_VALUES_EMPTY_BODY")
+                    Resource.Success(emptyMap())
+                }
+            } else {
+                val errorMsg = httpErrorMessage(response.code(), response.errorBody()?.string())
+                Log.e(TAG, "❌ LAST_VALUES_ERROR | code=${response.code()} | error=$errorMsg")
+                Resource.Error(errorMsg)
             }
-            else -> {
-                Log.w(TAG, "SYNC_SESSION_FAILED | sessionId=$sessionId")
-                false
-            }
+        } catch (e: Exception) {
+            val errorMsg = exceptionMessage(e)
+            Log.e(TAG, "❌ LAST_VALUES_EXCEPTION | error=$errorMsg", e)
+            Resource.Error(errorMsg)
         }
     }
 
-    /**
-     * Sincroniza todas las sesiones pendientes.
-     */
-    suspend fun syncAllPendingSessions(): Int {
-        val pending = sessionDao.getPendingSync()
-
-        if (pending.isEmpty()) {
-            Log.i(TAG, "NO_PENDING_SESSIONS")
-            return 0
-        }
-
-        Log.i(TAG, "SYNCING_PENDING_SESSIONS | count=${pending.size}")
-
-        var synced = 0
-        pending.forEach { session ->
-            if (syncSession(session.id)) synced++
-        }
-
-        Log.i(TAG, "SYNC_COMPLETED | synced=$synced/${pending.size}")
-        return synced
-    }
-
-    // ── Consultas (backend con fallback a Room) ──────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════════
+    // CONSULTAS (backend con fallback a Room)
+    // ══════════════════════════════════════════════════════════════════════════
 
     suspend fun getWorkoutHistory(
         routineId: Long? = null,
         page: Int = 0,
         size: Int = 20
     ): Resource<PageResponse<WorkoutSessionSummaryResponse>> {
+
+        Log.i(TAG, "GET_WORKOUT_HISTORY | routineId=$routineId | page=$page | size=$size")
 
         val networkResult = call {
             service.getWorkoutHistory(
@@ -184,8 +192,11 @@ class WorkoutRepository(private val context: Context) {
         }
 
         if (networkResult is Resource.Success) {
+            Log.i(TAG, "✅ HISTORY_FROM_NETWORK | count=${networkResult.data?.content?.size}")
             return networkResult
         }
+
+        Log.w(TAG, "⚠️ NETWORK_FAILED_USING_FALLBACK")
 
         return try {
             val local = if (routineId != null) {
@@ -194,6 +205,8 @@ class WorkoutRepository(private val context: Context) {
                 sessionDao.getAllSessions()
             }
 
+            Log.i(TAG, "✅ HISTORY_FROM_LOCAL | count=${local.size}")
+
             val summaries = local.map { it.toSummary() }
 
             Resource.Success(
@@ -210,20 +223,28 @@ class WorkoutRepository(private val context: Context) {
                 )
             )
         } catch (e: Exception) {
-            Log.e(TAG, "FALLBACK_FAILED | error=${e.message}", e)
+            Log.e(TAG, "❌ FALLBACK_FAILED | error=${e.message}", e)
             networkResult
         }
     }
 
     suspend fun getRecentWorkouts(limit: Int = 10): Resource<PageResponse<WorkoutSessionSummaryResponse>> {
+        Log.i(TAG, "GET_RECENT_WORKOUTS | limit=$limit")
+
         val networkResult = call { service.getRecentWorkouts(limit) }
 
         if (networkResult is Resource.Success) {
+            Log.i(TAG, "✅ RECENT_FROM_NETWORK | count=${networkResult.data?.content?.size}")
             return networkResult
         }
 
+        Log.w(TAG, "⚠️ NETWORK_FAILED_USING_FALLBACK")
+
         return try {
             val local = sessionDao.getRecentSessions(limit)
+
+            Log.i(TAG, "✅ RECENT_FROM_LOCAL | count=${local.size}")
+
             val summaries = local.map { it.toSummary() }
 
             Resource.Success(
@@ -240,31 +261,36 @@ class WorkoutRepository(private val context: Context) {
                 )
             )
         } catch (e: Exception) {
+            Log.e(TAG, "❌ FALLBACK_FAILED | error=${e.message}", e)
             networkResult
         }
     }
 
     suspend fun getWorkoutSessionDetails(sessionId: Long): Resource<WorkoutSessionResponse> {
+        Log.i(TAG, "GET_WORKOUT_DETAILS | sessionId=$sessionId")
         return call { service.getWorkoutSessionDetails(sessionId) }
     }
 
     suspend fun deleteWorkoutSession(sessionId: Long): Resource<Unit> {
+        Log.i(TAG, "DELETE_WORKOUT_SESSION | sessionId=$sessionId")
+
         try {
             sessionDao.deleteSession(sessionId)
-            Log.d(TAG, "SESSION_DELETED_LOCALLY | sessionId=$sessionId")
+            Log.i(TAG, "✅ SESSION_DELETED_LOCALLY | sessionId=$sessionId")
         } catch (e: Exception) {
-            Log.e(TAG, "ERROR_DELETING_LOCALLY | sessionId=$sessionId | error=${e.message}", e)
+            Log.e(TAG, "❌ ERROR_DELETING_LOCALLY | sessionId=$sessionId | error=${e.message}", e)
         }
 
         return callUnit { service.deleteWorkoutSession(sessionId) }
     }
 
     suspend fun getTotalVolume(): Resource<Double> {
+        Log.i(TAG, "GET_TOTAL_VOLUME")
         return call { service.getTotalVolume() }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // HELPERS PRIVADOS - SINCRONIZACIÓN
+    // HELPERS PRIVADOS
     // ══════════════════════════════════════════════════════════════════════════
 
     private suspend fun syncSessionToBackend(
@@ -273,26 +299,42 @@ class WorkoutRepository(private val context: Context) {
         startedAt: Long,
         finishedAt: Long,
         performanceScore: Int?,
-        results: List<WorkoutSetResultEntity>,
-        setParamState: Map<Long, Map<String, Any?>> = emptyMap(),
-        setCompletionState: Map<Long, Boolean> = emptyMap()
+        results: List<WorkoutSetResultEntity>
     ): Resource<WorkoutSessionResponse> {
+
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+        Log.i(TAG, "SYNC_SESSION_TO_BACKEND")
+        Log.i(TAG, "sessionId: $sessionId")
+        Log.i(TAG, "routineId: $routineId")
+        Log.i(TAG, "results: ${results.size}")
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
 
         try {
             val request = buildSaveWorkoutSessionRequest(
-                routineId, startedAt, finishedAt, performanceScore, results, setParamState, setCompletionState
+                routineId, startedAt, finishedAt, performanceScore, results
             )
 
-            Log.d(TAG, "SYNC_SESSION_TO_BACKEND | routineId=$routineId | setExecutions=${request.setExecutions.size}")
+            Log.i(TAG, "REQUEST_BUILT | setExecutions=${request.setExecutions.size}")
 
             request.setExecutions.forEachIndexed { index, execution ->
-                Log.d(TAG, "SET_$index | setTemplateId=${execution.setTemplateId} | exerciseId=${execution.exerciseId} | status=${execution.status} | params=${execution.parameters.size}")
+                Log.d(TAG, "  SET[$index] → setTemplateId=${execution.setTemplateId} " +
+                        "| exerciseId=${execution.exerciseId} " +
+                        "| position=${execution.position} " +
+                        "| status=${execution.status} " +
+                        "| params=${execution.parameters.size}")
+
+                execution.parameters.forEach { param ->
+                    Log.d(TAG, "    PARAM → id=${param.parameterId} " +
+                            "| numeric=${param.numericValue} " +
+                            "| integer=${param.integerValue} " +
+                            "| duration=${param.durationValue}")
+                }
             }
 
             return call { service.saveWorkoutSession(request) }
 
         } catch (e: Exception) {
-            Log.w(TAG, "SYNC_SESSION_EXCEPTION | error=${e.message}", e)
+            Log.e(TAG, "❌ SYNC_SESSION_EXCEPTION | error=${e.message}", e)
             return Resource.Error(exceptionMessage(e))
         }
     }
@@ -302,33 +344,44 @@ class WorkoutRepository(private val context: Context) {
         setParamState: Map<Long, Map<String, Any?>>,
         setCompletionState: Map<Long, Boolean>
     ): List<WorkoutSetResultEntity> {
-        val results = mutableListOf<WorkoutSetResultEntity>()
 
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+        Log.i(TAG, "BUILD_SET_RESULTS")
+        Log.i(TAG, "sessionId: $sessionId")
+        Log.i(TAG, "setParamState entries: ${setParamState.size}")
+        Log.i(TAG, "setCompletionState entries: ${setCompletionState.size}")
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+
+        val results = mutableListOf<WorkoutSetResultEntity>()
         val completedSetIds = setCompletionState.filter { it.value }.keys
 
-        Log.d(TAG, "BUILD_RESULTS | completedSets=${completedSetIds.size} | modifiedSets=${setParamState.size}")
+        Log.i(TAG, "COMPLETED_SETS: ${completedSetIds.size}")
 
         completedSetIds.forEach { setTemplateId ->
+            Log.d(TAG, "  Processing setId=$setTemplateId")
+
             val setData = setParamState[setTemplateId]
 
             if (setData == null) {
-                Log.w(TAG, "SKIP_SET_NO_DATA | setId=$setTemplateId - Set marcado como completado pero sin datos")
+                Log.w(TAG, "  ⚠️ SKIP_SET_NO_DATA | setId=$setTemplateId")
                 return@forEach
             }
 
             val exerciseId = (setData["exerciseId"] as? Long) ?: run {
-                Log.w(TAG, "SKIP_SET_NO_EXERCISE_ID | setId=$setTemplateId")
+                Log.w(TAG, "  ⚠️ SKIP_SET_NO_EXERCISE_ID | setId=$setTemplateId | setData=$setData")
                 return@forEach
             }
 
             @Suppress("UNCHECKED_CAST")
             val paramMap = setData["parameters"] as? Map<Long, Map<String, Any?>> ?: run {
-                Log.w(TAG, "SKIP_SET_NO_PARAMS | setId=$setTemplateId")
+                Log.w(TAG, "  ⚠️ SKIP_SET_NO_PARAMS | setId=$setTemplateId")
                 return@forEach
             }
 
+            Log.d(TAG, "  ✓ exerciseId=$exerciseId | params=${paramMap.size}")
+
             paramMap.forEach { (parameterId, values) ->
-                Log.d(TAG, "BUILD_RESULT | setId=$setTemplateId | paramId=$parameterId | values=$values")
+                Log.d(TAG, "    PARAM[$parameterId] → $values")
 
                 results.add(
                     WorkoutSetResultEntity(
@@ -346,7 +399,9 @@ class WorkoutRepository(private val context: Context) {
             }
         }
 
-        Log.i(TAG, "BUILD_SET_RESULTS_COMPLETE | totalResults=${results.size}")
+        Log.i(TAG, "✅ BUILD_SET_RESULTS_COMPLETE | totalResults=${results.size}")
+        Log.i(TAG, "───────────────────────────────────────────────────────────")
+
         return results
     }
 
@@ -355,57 +410,58 @@ class WorkoutRepository(private val context: Context) {
         startedAt: Long,
         finishedAt: Long,
         performanceScore: Int?,
-        results: List<WorkoutSetResultEntity>,
-        setParamState: Map<Long, Map<String, Any?>>,
-        setCompletionState: Map<Long, Boolean>
+        results: List<WorkoutSetResultEntity>
     ): SaveWorkoutSessionRequest {
 
         val startTime = timestampToIso(startedAt)
         val endTime = timestampToIso(finishedAt)
 
-        val setExecutions = results
-            .groupBy { it.setTemplateId }
-            .map { (setTemplateId, params) ->
+        Log.d(TAG, "BUILD_REQUEST | startTime=$startTime | endTime=$endTime")
 
-                val exerciseId = (setParamState[setTemplateId]?.get("exerciseId") as? Long) ?: 0L
-                val isCompleted = setCompletionState[setTemplateId] ?: false
+        val groupedBySet = results.groupBy { Triple(it.setTemplateId, it.exerciseId, it.workoutSessionId) }
 
-                val validParams = params.mapNotNull { result ->
-                    val hasReps = result.repetitions != null && result.repetitions != 0
-                    val hasNumeric = result.numericValue != null && result.numericValue != 0.0
-                    val hasInteger = result.integerValue != null && result.integerValue != 0
-                    val hasDuration = result.durationValue != null && result.durationValue != 0L
+        Log.d(TAG, "GROUPED_SETS | count=${groupedBySet.size}")
 
-                    if (hasReps || hasNumeric || hasInteger || hasDuration) {
-                        val finalIntegerValue = when {
-                            result.integerValue != null && result.integerValue != 0 -> result.integerValue
-                            hasReps -> result.repetitions
-                            else -> null
-                        }
-                        SaveWorkoutSessionRequest.ParameterValueRequest(
-                            parameterId = result.parameterId,
-                            numericValue = result.numericValue?.takeIf { it != 0.0 },
-                            integerValue = finalIntegerValue?.takeIf { it != 0 },
-                            durationValue = result.durationValue?.takeIf { it != 0L },
-                            stringValue = null
-                        )
-                    } else null
+        val setExecutions = groupedBySet.entries.mapIndexed { index, (key, params) ->
+            val (setTemplateId, exerciseId, _) = key
+
+            Log.d(TAG, "SET[$index] → setTemplateId=$setTemplateId | exerciseId=$exerciseId | params=${params.size}")
+
+            val validParams = params.mapNotNull { result ->
+                val hasValue = result.numericValue != null ||
+                        result.integerValue != null ||
+                        result.durationValue != null ||
+                        result.repetitions != null
+
+                if (hasValue) {
+                    SaveWorkoutSessionRequest.ParameterValueRequest(
+                        parameterId = result.parameterId,
+                        numericValue = result.numericValue?.takeIf { it != 0.0 },
+                        integerValue = (result.integerValue ?: result.repetitions)?.takeIf { it != 0 },
+                        durationValue = result.durationValue?.takeIf { it != 0L },
+                        stringValue = null
+                    )
+                } else {
+                    Log.w(TAG, "  ⚠️ SKIP_EMPTY_PARAM | parameterId=${result.parameterId}")
+                    null
                 }
-
-                val status = if (isCompleted) "COMPLETED" else "SKIPPED"
-
-                SaveWorkoutSessionRequest.SetExecutionRequest(
-                    setTemplateId = setTemplateId,
-                    exerciseId = exerciseId,
-                    position = 1,
-                    setType = "NORMAL",
-                    status = status,
-                    parameters = validParams
-                )
             }
-            .filterNotNull()
 
-        Log.i(TAG, "BUILD_REQUEST | setExecutions=${setExecutions.size} | completed=${setExecutions.count { it.status == "COMPLETED" }} | skipped=${setExecutions.count { it.status == "SKIPPED" }}")
+            if (validParams.isEmpty()) {
+                Log.w(TAG, "  ⚠️ SET_HAS_NO_VALID_PARAMS | setTemplateId=$setTemplateId")
+            }
+
+            SaveWorkoutSessionRequest.SetExecutionRequest(
+                setTemplateId = setTemplateId,
+                exerciseId = exerciseId,
+                position = index + 1, // ✅ POSICIÓN SECUENCIAL
+                setType = "NORMAL",
+                status = "COMPLETED",
+                parameters = validParams
+            )
+        }
+
+        Log.i(TAG, "✅ REQUEST_BUILT | setExecutions=${setExecutions.size}")
 
         return SaveWorkoutSessionRequest(
             routineId = routineId,
@@ -447,6 +503,68 @@ class WorkoutRepository(private val context: Context) {
         } catch (e: Exception) {
             Resource.Error(exceptionMessage(e))
         }
+    }
+
+    suspend fun syncAllPendingSessions(): Int {
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "SYNC_ALL_PENDING_SESSIONS")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+
+        val pending = sessionDao.getPendingSync()
+
+        if (pending.isEmpty()) {
+            Log.i(TAG, "✅ NO_PENDING_SESSIONS")
+            return 0
+        }
+
+        Log.i(TAG, "SYNCING_PENDING_SESSIONS | count=${pending.size}")
+
+        var synced = 0
+        pending.forEach { session ->
+            Log.d(TAG, "  Processing session ${session.id}...")
+
+            val results = resultDao.getResultsBySession(session.id)
+
+            if (results.isEmpty()) {
+                Log.w(TAG, "  ⚠️ SESSION_HAS_NO_RESULTS | sessionId=${session.id}")
+                sessionDao.updateSyncStatus(session.id, SyncStatus.SYNCED)
+                synced++
+                return@forEach
+            }
+
+            val syncResult = syncSessionToBackend(
+                sessionId = session.id,
+                routineId = session.routineId,
+                startedAt = session.startedAt,
+                finishedAt = session.finishedAt,
+                performanceScore = null,
+                results = results
+            )
+
+            when (syncResult) {
+                is Resource.Success -> {
+                    Log.i(TAG, "  ✅ SESSION_SYNCED | sessionId=${session.id}")
+                    sessionDao.updateSyncStatus(session.id, SyncStatus.SYNCED)
+                    resultDao.markSessionResultsAsSynced(session.id)
+
+                    syncResult.data?.id?.let { remoteId ->
+                        sessionDao.updateRemoteId(session.id, remoteId)
+                    }
+
+                    synced++
+                }
+                is Resource.Error -> {
+                    Log.w(TAG, "  ⚠️ SESSION_SYNC_FAILED | sessionId=${session.id} | error=${syncResult.message}")
+                }
+                else -> {}
+            }
+        }
+
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+        Log.i(TAG, "SYNC_COMPLETED | synced=$synced/${pending.size}")
+        Log.i(TAG, "═══════════════════════════════════════════════════════════")
+
+        return synced
     }
 
     private suspend fun callUnit(block: suspend () -> Response<Unit>): Resource<Unit> {

@@ -19,7 +19,8 @@ import com.fitapp.appfit.feature.routine.database.entity.RoutineEntity
     )],
     indices = [
         Index("routineId"),
-        Index("syncStatus")
+        Index("syncStatus"),
+        Index(value = ["remoteId"])
     ]
 )
 @TypeConverters(Converters::class)
