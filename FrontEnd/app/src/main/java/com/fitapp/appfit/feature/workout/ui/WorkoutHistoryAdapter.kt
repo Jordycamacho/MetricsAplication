@@ -1,4 +1,4 @@
-package com.fitapp.appfit.feature.workout.ui.adapter
+package com.fitapp.appfit.feature.workout.ui
 
 import android.view.LayoutInflater
 import android.view.View
@@ -14,9 +14,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-/**
- * Adapter para mostrar el historial de workouts.
- */
 class WorkoutHistoryAdapter(
     private val onItemClick: (WorkoutSessionSummaryResponse) -> Unit,
     private val onDeleteClick: (WorkoutSessionSummaryResponse) -> Unit
@@ -44,33 +41,27 @@ class WorkoutHistoryAdapter(
         private val btnDelete: ImageButton = itemView.findViewById(R.id.btn_delete)
 
         fun bind(session: WorkoutSessionSummaryResponse) {
-            // Nombre de rutina
             tvRoutineName.text = session.routineName
 
-            // Fecha relativa
             tvDate.text = formatRelativeDate(session.startTime)
 
-            // Duración
             tvDuration.text = formatDuration(session.durationSeconds)
 
-            // Ejercicios y sets
             tvExercises.text = "${session.exerciseCount} ejercicios"
             tvSets.text = "${session.setCount} sets"
 
-            // Volumen
             if (session.totalVolume != null && session.totalVolume > 0) {
                 tvVolume.visibility = View.VISIBLE
                 tvVolume.text = "Vol: ${String.format("%.1f", session.totalVolume)} kg"
             } else {
-                tvVolume.visibility = View.GONE
+                tvVolume.visibility = View.VISIBLE
+                tvVolume.text = "Vol: 0.0 kg"
             }
 
-            // Performance score
             if (session.performanceScore != null) {
                 tvPerformance.visibility = View.VISIBLE
                 tvPerformance.text = "${session.performanceScore}/10"
 
-                // Color según score
                 val color = when {
                     session.performanceScore >= 8 -> itemView.context.getColor(R.color.set_completed_green)
                     session.performanceScore >= 6 -> itemView.context.getColor(R.color.gold_primary)
@@ -81,7 +72,6 @@ class WorkoutHistoryAdapter(
                 tvPerformance.visibility = View.GONE
             }
 
-            // Click listeners
             itemView.setOnClickListener {
                 onItemClick(session)
             }
@@ -109,7 +99,7 @@ class WorkoutHistoryAdapter(
         }
 
         private fun formatDuration(seconds: Long?): String {
-            if (seconds == null) return "--"
+            if (seconds == null || seconds <= 0) return "0m"
 
             val hours = seconds / 3600
             val minutes = (seconds % 3600) / 60

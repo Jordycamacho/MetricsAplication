@@ -9,15 +9,11 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.fitapp.appfit.R
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentWorkoutHistoryBinding
 import com.fitapp.appfit.feature.workout.data.WorkoutRepository
-import com.fitapp.appfit.feature.workout.ui.adapter.WorkoutHistoryAdapter
-import kotlinx.coroutines.launch
 
 class WorkoutHistoryFragment : Fragment() {
 

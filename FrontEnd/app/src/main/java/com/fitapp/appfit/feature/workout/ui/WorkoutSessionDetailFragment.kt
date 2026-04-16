@@ -4,28 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentWorkoutSessionDetailBinding
-import com.fitapp.appfit.feature.workout.ui.adapter.SessionExerciseAdapter
-import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-/**
- * Muestra el detalle completo de una sesión de workout:
- * - Métricas generales
- * - Ejercicios y sets ejecutados
- * - Comparación con sesión anterior
- * - Records personales batidos
- */
 class WorkoutSessionDetailFragment : Fragment() {
 
     private var _binding: FragmentWorkoutSessionDetailBinding? = null
@@ -51,7 +40,6 @@ class WorkoutSessionDetailFragment : Fragment() {
         setupObservers()
         setupListeners()
 
-        // Cargar detalles de la sesión
         viewModel.loadSessionDetails(args.sessionId)
     }
 
@@ -93,7 +81,6 @@ class WorkoutSessionDetailFragment : Fragment() {
             }
         }
 
-        // Observar comparación con sesión anterior
         viewModel.comparisonState.observe(viewLifecycleOwner) { comparison ->
             comparison?.let { displayComparison(it) }
         }
@@ -106,11 +93,9 @@ class WorkoutSessionDetailFragment : Fragment() {
     }
 
     private fun displaySessionDetails(session: com.fitapp.appfit.feature.workout.model.response.WorkoutSessionResponse) {
-        // Header
         binding.tvRoutineName.text = session.routineName ?: "Entrenamiento"
         binding.tvDate.text = formatDate(session.startTime)
 
-        // Métricas principales
         binding.tvDuration.text = formatDuration(session.durationSeconds)
         binding.tvExerciseCount.text = "${session.exercises?.size ?: 0}"
 
@@ -120,10 +105,9 @@ class WorkoutSessionDetailFragment : Fragment() {
         binding.tvVolume.text = if (session.totalVolume != null && session.totalVolume > 0) {
             String.format("%.1f kg", session.totalVolume)
         } else {
-            "-- kg"
+            "0.0 kg"
         }
 
-        // Performance score
         session.performanceScore?.let { score ->
             binding.layoutPerformance.isVisible = true
             binding.tvPerformanceScore.text = "$score/10"
@@ -132,12 +116,10 @@ class WorkoutSessionDetailFragment : Fragment() {
             binding.layoutPerformance.isVisible = false
         }
 
-        // Lista de ejercicios
         session.exercises?.let { exercises ->
             exerciseAdapter.submitList(exercises)
         }
 
-        // PRs batidos
         val prs = detectPersonalRecords(session)
         if (prs.isNotEmpty()) {
             binding.layoutPersonalRecords.isVisible = true
@@ -154,12 +136,11 @@ class WorkoutSessionDetailFragment : Fragment() {
 
         binding.tvComparisonDate.text = "vs ${formatDate(comparison.previousSessionDate)}"
 
-        // Volumen
         val volumeDiff = comparison.volumeDifference
         binding.tvVolumeComparison.text = when {
             volumeDiff > 0 -> "+${String.format("%.1f", volumeDiff)} kg"
             volumeDiff < 0 -> String.format("%.1f", volumeDiff) + " kg"
-            else -> "="
+            else -> "0.0 kg"
         }
         binding.tvVolumeComparison.setTextColor(
             requireContext().getColor(
@@ -171,20 +152,18 @@ class WorkoutSessionDetailFragment : Fragment() {
             )
         )
 
-        // Duración
         val durationDiff = comparison.durationDifference
         binding.tvDurationComparison.text = when {
             durationDiff > 0 -> "+${formatDuration(durationDiff)}"
             durationDiff < 0 -> "-${formatDuration(-durationDiff)}"
-            else -> "="
+            else -> "0m"
         }
 
-        // Sets
         val setsDiff = comparison.setsDifference
         binding.tvSetsComparison.text = when {
             setsDiff > 0 -> "+$setsDiff"
             setsDiff < 0 -> "$setsDiff"
-            else -> "="
+            else -> "0"
         }
     }
 
@@ -228,7 +207,7 @@ class WorkoutSessionDetailFragment : Fragment() {
     }
 
     private fun formatDuration(seconds: Long?): String {
-        if (seconds == null || seconds <= 0) return "--"
+        if (seconds == null || seconds <= 0) return "0m"
 
         val hours = seconds / 3600
         val minutes = (seconds % 3600) / 60

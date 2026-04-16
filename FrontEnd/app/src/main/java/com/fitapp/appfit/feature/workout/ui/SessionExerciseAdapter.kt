@@ -1,5 +1,6 @@
-package com.fitapp.appfit.feature.workout.ui.adapter
+package com.fitapp.appfit.feature.workout.ui
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,10 +13,11 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.feature.workout.model.response.SessionExerciseResponse
 import com.fitapp.appfit.feature.workout.model.response.SetExecutionResponse
 
-/**
- * Adapter para mostrar ejercicios ejecutados en una sesión.
- */
 class SessionExerciseAdapter : ListAdapter<SessionExerciseResponse, SessionExerciseAdapter.ExerciseViewHolder>(DiffCallback()) {
+
+    companion object {
+        private const val TAG = "SessionExerciseAdapter"
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -44,18 +46,32 @@ class SessionExerciseAdapter : ListAdapter<SessionExerciseResponse, SessionExerc
         }
 
         fun bind(exercise: SessionExerciseResponse) {
+            Log.d(TAG, "BIND_EXERCISE | id=${exercise.id} | name=${exercise.exerciseName} | sets=${exercise.sets?.size}")
+
             tvExerciseName.text = exercise.exerciseName ?: "Ejercicio #${exercise.exerciseId}"
 
-            // Calcular volumen total del ejercicio
-            val totalVolume = exercise.sets?.sumOf { it.volume ?: 0.0 } ?: 0.0
+            val totalVolume = exercise.sets?.sumOf { set ->
+                val weight = set.parameters?.find {
+                    it.parameterType?.uppercase() in listOf("NUMBER", "WEIGHT")
+                }?.numericValue ?: 0.0
+
+                val reps = set.parameters?.find {
+                    it.parameterType?.uppercase() == "REPETITIONS"
+                }?.integerValue ?: 0
+
+                weight * reps
+            } ?: 0.0
+
             tvExerciseVolume.text = if (totalVolume > 0) {
                 String.format("%.1f kg", totalVolume)
             } else {
-                ""
+                "0.0 kg"
             }
 
-            // Mostrar sets
-            exercise.sets?.let { setsAdapter.submitList(it) }
+            exercise.sets?.let {
+                Log.d(TAG, "SUBMITTING_SETS | count=${it.size}")
+                setsAdapter.submitList(it)
+            }
         }
     }
 
@@ -72,10 +88,11 @@ class SessionExerciseAdapter : ListAdapter<SessionExerciseResponse, SessionExerc
     }
 }
 
-/**
- * Adapter anidado para mostrar los sets de un ejercicio.
- */
 class SessionSetsAdapter : ListAdapter<SetExecutionResponse, SessionSetsAdapter.SetViewHolder>(SetDiffCallback()) {
+
+    companion object {
+        private const val TAG = "SessionSetsAdapter"
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SetViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -95,27 +112,43 @@ class SessionSetsAdapter : ListAdapter<SetExecutionResponse, SessionSetsAdapter.
         private val tvSetPR: TextView = itemView.findViewById(R.id.tv_set_pr)
 
         fun bind(set: SetExecutionResponse, setNumber: Int) {
+            Log.d(TAG, "BIND_SET | setNumber=$setNumber | params=${set.parameters?.size}")
+
             tvSetNumber.text = "Set $setNumber"
 
-            // Construir detalles del set (reps × peso)
             val details = buildSetDetails(set)
             tvSetDetails.text = details
 
-            // Volumen
-            set.volume?.let { volume ->
+            val weight = set.parameters?.find {
+                it.parameterType?.uppercase() in listOf("NUMBER", "WEIGHT")
+            }?.numericValue ?: 0.0
+
+            val reps = set.parameters?.find {
+                it.parameterType?.uppercase() == "REPETITIONS"
+            }?.integerValue ?: 0
+
+            val volume = weight * reps
+
+            if (volume > 0) {
                 tvSetVolume.visibility = View.VISIBLE
                 tvSetVolume.text = String.format("%.1f kg", volume)
-            } ?: run {
+            } else {
                 tvSetVolume.visibility = View.GONE
             }
 
-            // PR indicator
             val hasPersonalRecord = set.parameters?.any { it.isPersonalRecord == true } == true
             tvSetPR.visibility = if (hasPersonalRecord) View.VISIBLE else View.GONE
         }
 
         private fun buildSetDetails(set: SetExecutionResponse): String {
-            val params = set.parameters ?: return "--"
+            val params = set.parameters
+
+            if (params.isNullOrEmpty()) {
+                Log.w(TAG, "NO_PARAMS_FOUND")
+                return "--"
+            }
+
+            Log.d(TAG, "BUILD_DETAILS | params=${params.map { "${it.parameterName}=${it.numericValue ?: it.integerValue ?: it.durationValue}" }}")
 
             val reps = params.find { it.parameterType?.uppercase() == "REPETITIONS" }?.integerValue
             val weight = params.find {
@@ -134,15 +167,11 @@ class SessionSetsAdapter : ListAdapter<SetExecutionResponse, SessionSetsAdapter.
                 reps != null -> {
                     "$reps reps"
                 }
+                weight != null -> {
+                    "${String.format("%.1f", weight)}kg"
+                }
                 else -> {
-                    params.joinToString(" · ") { param ->
-                        when {
-                            param.numericValue != null -> "${String.format("%.1f", param.numericValue)}${param.unit ?: ""}"
-                            param.integerValue != null -> "${param.integerValue}${param.unit ?: ""}"
-                            param.durationValue != null -> formatDuration(param.durationValue)
-                            else -> ""
-                        }
-                    }.trim()
+                    "--"
                 }
             }
         }

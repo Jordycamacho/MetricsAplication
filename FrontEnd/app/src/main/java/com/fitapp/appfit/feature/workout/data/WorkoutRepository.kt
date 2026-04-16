@@ -454,7 +454,7 @@ class WorkoutRepository(private val context: Context) {
             SaveWorkoutSessionRequest.SetExecutionRequest(
                 setTemplateId = setTemplateId,
                 exerciseId = exerciseId,
-                position = index + 1, // ✅ POSICIÓN SECUENCIAL
+                position = index + 1,
                 setType = "NORMAL",
                 status = "COMPLETED",
                 parameters = validParams

@@ -1,6 +1,7 @@
 package com.fitapp.appfit.feature.workout.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -20,10 +21,12 @@ class WorkoutSessionDetailViewModel(application: Application) : AndroidViewModel
     private val _comparisonState = MutableLiveData<SessionComparison?>()
     val comparisonState: LiveData<SessionComparison?> = _comparisonState
 
-    /**
-     * Carga los detalles de una sesión y automáticamente busca la anterior para comparar.
-     */
+    companion object {
+        private const val TAG = "WorkoutSessionDetailVM"
+    }
+
     fun loadSessionDetails(sessionId: Long) {
+        Log.i(TAG, "LOAD_SESSION_DETAILS | sessionId=$sessionId")
         _sessionDetailState.value = Resource.Loading()
 
         viewModelScope.launch {
@@ -32,19 +35,21 @@ class WorkoutSessionDetailViewModel(application: Application) : AndroidViewModel
 
             if (result is Resource.Success) {
                 result.data?.let { session ->
+                    Log.i(TAG, "SESSION_LOADED | routineId=${session.routineId} | startTime=${session.startTime}")
                     loadPreviousSessionForComparison(session.routineId, session.startTime)
                 }
+            } else if (result is Resource.Error) {
+                Log.e(TAG, "SESSION_LOAD_ERROR | error=${result.message}")
             }
         }
     }
 
-    /**
-     * Busca la sesión anterior de la misma rutina para hacer comparación.
-     */
     private suspend fun loadPreviousSessionForComparison(
         routineId: Long,
         currentStartTime: String
     ) {
+        Log.i(TAG, "LOAD_COMPARISON | routineId=$routineId | currentStartTime=$currentStartTime")
+
         val historyResult = repository.getWorkoutHistory(
             routineId = routineId,
             page = 0,
@@ -53,40 +58,46 @@ class WorkoutSessionDetailViewModel(application: Application) : AndroidViewModel
 
         if (historyResult is Resource.Success) {
             val sessions = historyResult.data?.content ?: emptyList()
+            Log.i(TAG, "HISTORY_LOADED | totalSessions=${sessions.size}")
 
             val previousSession = sessions
                 .filter { it.startTime < currentStartTime }
                 .maxByOrNull { it.startTime }
 
             if (previousSession != null) {
+                Log.i(TAG, "PREVIOUS_SESSION_FOUND | sessionId=${previousSession.id} | startTime=${previousSession.startTime}")
+
                 val current = _sessionDetailState.value?.data
                 if (current != null) {
                     val currentSets = current.exercises?.sumOf { it.sets?.size ?: 0 } ?: 0
-                    val previousSets = previousSession.setCount ?: 0
+                    val previousSets = previousSession.setCount
+
+                    val volumeDiff = (current.totalVolume ?: 0.0) - (previousSession.totalVolume ?: 0.0)
+                    val durationDiff = (current.durationSeconds ?: 0L) - (previousSession.durationSeconds ?: 0L)
+                    val setsDiff = currentSets - previousSets
+
+                    Log.i(TAG, "COMPARISON_CALC | volumeDiff=$volumeDiff | durationDiff=$durationDiff | setsDiff=$setsDiff")
 
                     val comparison = SessionComparison(
                         previousSessionDate = previousSession.startTime,
-                        volumeDifference = (current.totalVolume ?: 0.0) - (previousSession.totalVolume ?: 0.0),
-                        durationDifference = (current.durationSeconds ?: 0L) - (previousSession.durationSeconds ?: 0L),
-                        setsDifference = currentSets - previousSets
+                        volumeDifference = volumeDiff,
+                        durationDifference = durationDiff,
+                        setsDifference = setsDiff
                     )
                     _comparisonState.postValue(comparison)
+                    Log.i(TAG, "COMPARISON_POSTED")
                 }
+            } else {
+                Log.w(TAG, "NO_PREVIOUS_SESSION_FOUND")
+                _comparisonState.postValue(null)
             }
+        } else {
+            Log.e(TAG, "HISTORY_LOAD_ERROR | error=${(historyResult as? Resource.Error)?.message}")
         }
     }
-    private fun calculateSetsDifference(
-        current: WorkoutSessionResponse,
-        previousSetCount: Int
-    ): Int {
-        val currentSets = current.exercises?.sumOf { it.sets?.size ?: 0 } ?: 0
-        return currentSets - previousSetCount
-    }
 
-    /**
-     * Elimina una sesión.
-     */
     fun deleteSession(sessionId: Long) {
+        Log.i(TAG, "DELETE_SESSION | sessionId=$sessionId")
         viewModelScope.launch {
             repository.deleteWorkoutSession(sessionId)
         }
