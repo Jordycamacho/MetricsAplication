@@ -2,10 +2,11 @@ package com.fitapp.backend.infrastructure.persistence.converter;
 
 import com.fitapp.backend.application.dto.workout.response.SetExecutionParameterResponse;
 import com.fitapp.backend.domain.model.SetExecutionParameterModel;
-import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SetExecutionEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SetExecutionParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

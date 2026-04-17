@@ -5,7 +5,9 @@ import com.fitapp.backend.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.infrastructure.persistence.entity.*;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseRepository;
-import com.fitapp.backend.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

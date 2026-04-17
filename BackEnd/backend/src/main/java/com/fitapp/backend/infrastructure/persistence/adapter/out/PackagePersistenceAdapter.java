@@ -13,6 +13,9 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 import com.fitapp.backend.infrastructure.persistence.repository.*;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

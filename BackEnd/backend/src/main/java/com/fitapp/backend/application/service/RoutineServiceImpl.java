@@ -13,13 +13,11 @@ import com.fitapp.backend.application.dto.routine.response.RoutineStatisticsResp
 import com.fitapp.backend.application.dto.routine.response.RoutineSummaryResponse;
 import com.fitapp.backend.application.logging.RoutineServiceLogger;
 import com.fitapp.backend.application.ports.input.RoutineUseCase;
-import com.fitapp.backend.application.ports.output.CustomParameterPersistencePort;
 import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
 import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.exception.RoutineNotFoundException;
-import com.fitapp.backend.domain.model.CustomParameterModel;
 import com.fitapp.backend.domain.model.ExerciseModel;
 import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
 import com.fitapp.backend.domain.model.RoutineModel;
@@ -28,6 +26,8 @@ import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.domain.model.SportModel;
 import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
+import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

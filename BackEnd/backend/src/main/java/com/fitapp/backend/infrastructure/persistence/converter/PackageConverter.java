@@ -5,6 +5,8 @@ import com.fitapp.backend.domain.model.package_.CreatorModel;
 import com.fitapp.backend.domain.model.package_.PackageItemModel;
 import com.fitapp.backend.domain.model.package_.PackageModel;
 import com.fitapp.backend.infrastructure.persistence.entity.*;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -264,12 +266,12 @@ public class PackageConverter {
                 return response;
         }
 
-        public com.fitapp.backend.application.dto.parameter.response.CustomParameterResponse toParameterResponse(
+        public com.fitapp.backend.parameter.application.dto.response.CustomParameterResponse toParameterResponse(
                         CustomParameterEntity entity) {
                 if (entity == null)
                         return null;
 
-                com.fitapp.backend.application.dto.parameter.response.CustomParameterResponse response = new com.fitapp.backend.application.dto.parameter.response.CustomParameterResponse();
+                com.fitapp.backend.parameter.application.dto.response.CustomParameterResponse response = new com.fitapp.backend.parameter.application.dto.response.CustomParameterResponse();
                 response.setId(entity.getId());
                 response.setName(entity.getName());
                 response.setDescription(entity.getDescription());

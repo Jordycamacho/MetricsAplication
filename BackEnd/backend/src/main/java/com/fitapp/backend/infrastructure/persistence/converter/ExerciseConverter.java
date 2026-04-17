@@ -2,9 +2,10 @@ package com.fitapp.backend.infrastructure.persistence.converter;
 
 import com.fitapp.backend.domain.model.ExerciseModel;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseCategoryEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.Map;

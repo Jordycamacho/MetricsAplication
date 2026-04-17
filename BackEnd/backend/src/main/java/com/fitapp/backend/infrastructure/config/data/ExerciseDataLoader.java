@@ -1,14 +1,15 @@
 package com.fitapp.backend.infrastructure.config.data;
 
-import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseCategoryEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
-import com.fitapp.backend.infrastructure.persistence.repository.CustomParameterRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.ExerciseCategoryRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.ExerciseRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

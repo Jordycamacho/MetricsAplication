@@ -1,11 +1,11 @@
 package com.fitapp.backend.infrastructure.config.data;
 
-import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
-import com.fitapp.backend.infrastructure.persistence.repository.CustomParameterRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
+import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -462,7 +462,7 @@ public class ParameterDataLoader implements ApplicationRunner {
     private void createGlobalParameters() {
         // Verificar si ya existen parámetros globales sin deporte
         List<CustomParameterEntity> existingGlobalParams = customParameterRepository
-                .findByFilters(null, null, true, true, null, null, null)
+                .findByFilters(null, null, true, true, null, null, null, null)
                 .getContent();
 
         if (!existingGlobalParams.isEmpty()) {

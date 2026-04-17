@@ -5,7 +5,6 @@ import com.fitapp.backend.application.dto.RoutineSetTemplate.request.CreateSetTe
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.UpdateSetTemplateRequest;
 import com.fitapp.backend.application.logging.SetTemplateServiceLogger;
 import com.fitapp.backend.application.ports.input.RoutineSetTemplateUseCase;
-import com.fitapp.backend.application.ports.output.CustomParameterPersistencePort;
 import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutineExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutineSetParameterPersistencePort;
@@ -18,6 +17,7 @@ import com.fitapp.backend.domain.exception.UserNotFoundException;
 import com.fitapp.backend.domain.model.*;
 import com.fitapp.backend.infrastructure.metrics.SetTemplateMetrics;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
+import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
 
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;

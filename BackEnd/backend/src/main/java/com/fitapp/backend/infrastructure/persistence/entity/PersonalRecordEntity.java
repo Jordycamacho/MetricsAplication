@@ -1,6 +1,8 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

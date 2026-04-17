@@ -1,9 +1,9 @@
 package com.fitapp.backend.infrastructure.persistence.mapper;
 
 import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
+import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.dto.RoutineSetParameter.response.RoutineSetParameterResponse;
-import com.fitapp.backend.application.ports.output.CustomParameterPersistencePort;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

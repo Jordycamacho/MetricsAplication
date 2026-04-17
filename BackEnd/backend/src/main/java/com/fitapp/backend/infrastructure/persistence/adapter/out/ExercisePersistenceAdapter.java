@@ -8,6 +8,8 @@ import com.fitapp.backend.infrastructure.persistence.converter.ExerciseConverter
 import com.fitapp.backend.infrastructure.persistence.entity.*;
 import com.fitapp.backend.infrastructure.persistence.repository.*;
 import com.fitapp.backend.infrastructure.persistence.specification.ExerciseSpecification;
+import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

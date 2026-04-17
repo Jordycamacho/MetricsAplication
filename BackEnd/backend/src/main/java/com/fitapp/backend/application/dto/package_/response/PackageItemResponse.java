@@ -37,7 +37,7 @@ public class PackageItemResponse {
 
     @Schema(description = "Contenido si es PARAMETER")
     @JsonProperty("parameter")
-    private com.fitapp.backend.application.dto.parameter.response.CustomParameterResponse parameter;
+    private com.fitapp.backend.parameter.application.dto.response.CustomParameterResponse parameter;
 
     @Schema(description = "Contenido si es ROUTINE")
     @JsonProperty("routine")

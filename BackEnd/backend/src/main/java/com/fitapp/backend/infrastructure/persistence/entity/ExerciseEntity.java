@@ -1,6 +1,8 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
