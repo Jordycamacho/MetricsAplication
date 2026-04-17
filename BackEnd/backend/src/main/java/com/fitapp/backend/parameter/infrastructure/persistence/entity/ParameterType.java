@@ -1,4 +1,4 @@
-package com.fitapp.backend.infrastructure.persistence.entity.enums;
+package com.fitapp.backend.parameter.infrastructure.persistence.entity;
 
 public enum ParameterType {
     NUMBER("number", Double.class),

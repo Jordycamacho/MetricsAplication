@@ -1,8 +1,8 @@
-package com.fitapp.backend.application.ports.output;
+package com.fitapp.backend.parameter.infrastructure.persistence.adapter;
 
-import com.fitapp.backend.application.dto.parameter.request.CustomParameterFilterRequest;
-import com.fitapp.backend.domain.model.CustomParameterModel;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
+import com.fitapp.backend.parameter.application.dto.request.CustomParameterFilterRequest;
+import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

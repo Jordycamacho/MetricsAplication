@@ -1,10 +1,10 @@
-package com.fitapp.backend.application.ports.input;
+package com.fitapp.backend.parameter.application.port.input;
 
-import com.fitapp.backend.application.dto.parameter.request.CustomParameterFilterRequest;
-import com.fitapp.backend.application.dto.parameter.request.CustomParameterRequest;
-import com.fitapp.backend.application.dto.parameter.response.CustomParameterPageResponse;
-import com.fitapp.backend.domain.model.CustomParameterModel;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
+import com.fitapp.backend.parameter.application.dto.request.CustomParameterFilterRequest;
+import com.fitapp.backend.parameter.application.dto.request.CustomParameterRequest;
+import com.fitapp.backend.parameter.application.dto.response.CustomParameterPageResponse;
+import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 
 import java.util.List;
 

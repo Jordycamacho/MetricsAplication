@@ -1,7 +1,7 @@
-package com.fitapp.backend.infrastructure.persistence.repository;
+package com.fitapp.backend.parameter.infrastructure.persistence.repository;
 
-import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,7 +43,6 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
         @EntityGraph(attributePaths = "owner")
         Optional<CustomParameterEntity> findByNameAndIsGlobalTrue(String name);
 
-
         @Query("SELECT cp FROM CustomParameterEntity cp " +
                         "LEFT JOIN FETCH cp.owner " +
                         "WHERE (:search IS NULL OR LOWER(cp.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
@@ -52,7 +51,8 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
                         "(:isGlobal IS NULL OR cp.isGlobal = :isGlobal) AND " +
                         "(:isActive IS NULL OR cp.isActive = :isActive) AND " +
                         "(:ownerId IS NULL OR cp.owner.id = :ownerId) AND " +
-                        "(:isFavorite IS NULL OR cp.isFavorite = :isFavorite)")
+                        "(:isFavorite IS NULL OR cp.isFavorite = :isFavorite) AND " +
+                        "(:isTrackable IS NULL OR cp.isTrackable = :isTrackable)")
         Page<CustomParameterEntity> findByFilters(
                         @Param("search") String search,
                         @Param("parameterType") ParameterType parameterType,
@@ -60,6 +60,7 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
                         @Param("isActive") Boolean isActive,
                         @Param("ownerId") Long ownerId,
                         @Param("isFavorite") Boolean isFavorite,
+                        @Param("isTrackable") Boolean isTrackable,
                         Pageable pageable);
 
         @Query("SELECT DISTINCT cp.parameterType FROM CustomParameterEntity cp")
@@ -69,8 +70,18 @@ public interface CustomParameterRepository extends JpaRepository<CustomParameter
         @Query("UPDATE CustomParameterEntity cp SET cp.usageCount = cp.usageCount + 1 WHERE cp.id = :parameterId")
         void incrementUsageCount(@Param("parameterId") Long parameterId);
 
-        @Query("SELECT cp FROM CustomParameterEntity cp LEFT JOIN FETCH cp.owner WHERE cp.isActive = true AND (cp.isGlobal = true OR cp.owner.id = :userId)")
+        @Query("SELECT cp FROM CustomParameterEntity cp " +
+                        "LEFT JOIN FETCH cp.owner " +
+                        "WHERE cp.isActive = true AND (cp.isGlobal = true OR cp.owner.id = :userId)")
         Page<CustomParameterEntity> findAvailableForUser(@Param("userId") Long userId, Pageable pageable);
 
         long countByIsGlobalTrue();
+
+        /**
+         * Cuenta parámetros trackeables para un usuario (para métricas)
+         */
+        @Query("SELECT COUNT(cp) FROM CustomParameterEntity cp " +
+                        "WHERE cp.isTrackable = true AND cp.isActive = true " +
+                        "AND (cp.isGlobal = true OR cp.owner.id = :userId)")
+        long countTrackableForUser(@Param("userId") Long userId);
 }

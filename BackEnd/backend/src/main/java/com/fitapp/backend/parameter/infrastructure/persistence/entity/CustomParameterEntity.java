@@ -1,7 +1,8 @@
-package com.fitapp.backend.infrastructure.persistence.entity;
+package com.fitapp.backend.parameter.infrastructure.persistence.entity;
 
+import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;

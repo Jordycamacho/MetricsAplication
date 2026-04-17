@@ -1,6 +1,7 @@
-package com.fitapp.backend.application.dto.parameter.response;
+package com.fitapp.backend.parameter.application.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

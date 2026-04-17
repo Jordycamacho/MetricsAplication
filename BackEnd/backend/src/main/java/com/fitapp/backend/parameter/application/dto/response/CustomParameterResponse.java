@@ -1,7 +1,8 @@
-package com.fitapp.backend.application.dto.parameter.response;
+package com.fitapp.backend.parameter.application.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
+import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -63,4 +64,12 @@ public class CustomParameterResponse {
     @Schema(description = "Contador de uso")
     @JsonProperty("usageCount")
     private Integer usageCount;
+
+    @Schema(description = "Método de agregación para métricas")
+    @JsonProperty("metricAggregation")
+    private MetricAggregation metricAggregation;
+    
+    @Schema(description = "Si el parámetro es trackeable para métricas")
+    @JsonProperty("isTrackable")
+    private Boolean isTrackable;
 }

@@ -1,7 +1,8 @@
-package com.fitapp.backend.infrastructure.persistence.converter;
+package com.fitapp.backend.parameter.infrastructure.persistence.converter;
 
-import com.fitapp.backend.domain.model.CustomParameterModel;
-import com.fitapp.backend.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,8 @@ public class CustomParameterConverter {
         model.setUpdatedAt(entity.getUpdatedAt());
         model.setUsageCount(entity.getUsageCount());
         model.setFavorite(entity.isFavorite());
+        model.setMetricAggregation(entity.getMetricAggregation());
+        model.setTrackable(entity.isTrackable());
 
         if (entity.getOwner() != null) {
             model.setOwnerId(entity.getOwner().getId());
@@ -54,10 +57,12 @@ public class CustomParameterConverter {
                 .updatedAt(model.getUpdatedAt())
                 .usageCount(model.getUsageCount())
                 .isFavorite(model.isFavorite())
+                .metricAggregation(model.getMetricAggregation())
+                .isTrackable(model.isTrackable())
                 .build();
         
-        log.debug("CONVERTER_TO_ENTITY_PARAMETER_END | entityId={} | isGlobal={}", 
-                 entity.getId(), entity.getIsGlobal());
+        log.debug("CONVERTER_TO_ENTITY_PARAMETER_END | entityId={} | isGlobal={} | trackable={}", 
+                 entity.getId(), entity.getIsGlobal(), entity.isTrackable());
         
         return entity;
     }

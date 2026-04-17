@@ -1,7 +1,7 @@
-package com.fitapp.backend.application.dto.parameter.request;
+package com.fitapp.backend.parameter.application.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.ParameterType;
+import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -33,6 +33,10 @@ public class CustomParameterFilterRequest {
     @Schema(description = "Si está activo")
     @JsonProperty("isActive")
     private Boolean isActive;
+    
+    @Schema(description = "Si es trackeable para métricas")
+    @JsonProperty("isTrackable")
+    private Boolean isTrackable;
     
     @Schema(description = "ID del dueño")
     @JsonProperty("ownerId")
