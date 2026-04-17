@@ -7,5 +7,8 @@ data class CustomParameterRequest(
     @SerializedName("description") val description: String? = null,
     @SerializedName("parameterType") val parameterType: String,
     @SerializedName("unit") val unit: String? = null,
-    @SerializedName("isGlobal") val isGlobal: Boolean = false
+    @SerializedName("isGlobal") val isGlobal: Boolean = false,
+    @SerializedName("isFavorite") val isFavorite: Boolean = false,
+    @SerializedName("metricAggregation") val metricAggregation: String? = null,
+    @SerializedName("isTrackable") val isTrackable: Boolean = true
 )

@@ -6,13 +6,7 @@ import com.fitapp.appfit.feature.parameter.model.request.CustomParameterRequest
 import com.fitapp.appfit.feature.parameter.model.response.CustomParameterPageResponse
 import com.fitapp.appfit.feature.parameter.model.response.CustomParameterResponse
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.PATCH
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
+import retrofit2.http.*
 
 interface ParameterService {
 
@@ -58,8 +52,10 @@ interface ParameterService {
         @Path("id") id: Long
     ): Response<Void>
 
-    @GET("api/parameters/categories")
-    suspend fun getCategories(): Response<List<String>>
+    @PATCH("api/parameters/{id}/favorite")
+    suspend fun toggleFavorite(
+        @Path("id") id: Long
+    ): Response<Void>
 
     @GET("api/parameters/types")
     suspend fun getParameterTypes(): Response<List<String>>

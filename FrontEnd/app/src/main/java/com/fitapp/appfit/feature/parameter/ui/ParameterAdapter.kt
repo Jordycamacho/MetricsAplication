@@ -4,9 +4,11 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.R
+import com.fitapp.appfit.core.session.SessionManager
 import com.fitapp.appfit.feature.parameter.model.response.CustomParameterResponse
 
 class ParameterAdapter(
@@ -14,6 +16,7 @@ class ParameterAdapter(
     private val onItemClick: (CustomParameterResponse) -> Unit,
     private val onEditClick: (CustomParameterResponse) -> Unit = {},
     private val onDeleteClick: (CustomParameterResponse) -> Unit = {},
+    private val onFavoriteClick: ((CustomParameterResponse) -> Unit)? = null,
     private val showActions: Boolean = true
 ) : RecyclerView.Adapter<ParameterAdapter.ParameterViewHolder>() {
 
@@ -22,6 +25,8 @@ class ParameterAdapter(
         private val tvType: TextView = itemView.findViewById(R.id.tv_parameter_type)
         private val tvUnit: TextView = itemView.findViewById(R.id.tv_parameter_unit)
         private val tvVisibility: TextView = itemView.findViewById(R.id.tv_parameter_visibility)
+        private val tvAggregation: TextView? = itemView.findViewById(R.id.tv_parameter_aggregation)
+        private val ivFavorite: ImageView? = itemView.findViewById(R.id.iv_parameter_favorite)
         private val btnEdit: View = itemView.findViewById(R.id.btn_edit_parameter)
         private val btnDelete: View = itemView.findViewById(R.id.btn_delete_parameter)
 
@@ -29,13 +34,15 @@ class ParameterAdapter(
             tvName.text = parameter.name
             tvType.text = getTypeLabel(parameter.parameterType)
 
+            // Unidad
             if (!parameter.unit.isNullOrEmpty()) {
-                tvUnit.text = parameter.unit
+                tvUnit.text = "(${parameter.unit})"
                 tvUnit.visibility = View.VISIBLE
             } else {
                 tvUnit.visibility = View.GONE
             }
 
+            // Visibilidad
             when {
                 parameter.isGlobal && parameter.ownerId == null -> {
                     tvVisibility.text = "Sistema"
@@ -51,7 +58,28 @@ class ParameterAdapter(
                 }
             }
 
-            val isEditable = showActions && !parameter.isGlobal
+            tvAggregation?.let { badge ->
+                if (parameter.isTrackable && parameter.metricAggregation != null) {
+                    badge.text = parameter.metricAggregation
+                    badge.visibility = View.VISIBLE
+                } else {
+                    badge.visibility = View.GONE
+                }
+            }
+
+            ivFavorite?.let { icon ->
+                if (parameter.isFavorite) {
+                    icon.visibility = View.VISIBLE
+                    icon.setOnClickListener { onFavoriteClick?.invoke(parameter) }
+                } else {
+                    icon.visibility = View.GONE
+                }
+            }
+
+            val currentUserId = SessionManager.getUserId()
+            val isOwner = parameter.ownerId != null && parameter.ownerId == currentUserId
+            val isEditable = showActions && !parameter.isGlobal && isOwner
+
             btnEdit.visibility = if (isEditable) View.VISIBLE else View.GONE
             btnDelete.visibility = if (isEditable) View.VISIBLE else View.GONE
 
@@ -76,11 +104,14 @@ class ParameterAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ParameterViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_parameter, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_parameter, parent, false)
         return ParameterViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ParameterViewHolder, position: Int) = holder.bind(parameters[position])
+    override fun onBindViewHolder(holder: ParameterViewHolder, position: Int) {
+        holder.bind(parameters[position])
+    }
 
     override fun getItemCount(): Int = parameters.size
 

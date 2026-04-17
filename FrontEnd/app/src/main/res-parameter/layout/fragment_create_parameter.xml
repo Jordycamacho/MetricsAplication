@@ -17,7 +17,6 @@
         app:title="Nuevo Parámetro"
         app:navigationIconTint="#78703F" />
 
-    <!-- Línea dorada bajo toolbar -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -93,6 +92,7 @@
                 android:layout_marginBottom="6dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
@@ -206,9 +206,10 @@
                 android:layout_marginBottom="6dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilUnit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="16dp"
                 app:boxBackgroundMode="outline"
                 app:boxBackgroundColor="#1E1E1E"
                 app:boxCornerRadiusTopStart="10dp"
@@ -230,9 +231,86 @@
                     android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Mensaje de ayuda contextual -->
+            <TextView
+                android:id="@+id/tvTypeHelp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="#B3B3B3"
+                android:layout_marginTop="-12dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+
+            <!-- Switch trackeable -->
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchTrackable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="¿Trackeable? (calcular métricas)"
+                android:textColor="#FFFFFF"
+                android:thumbTint="#78703F"
+                android:trackTint="#444444"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Layout de agregación (se muestra si trackeable = true) -->
+            <LinearLayout
+                android:id="@+id/layoutAggregation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AGREGACIÓN DE MÉTRICA"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="6dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxBackgroundColor="#1E1E1E"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:boxStrokeColor="#333333"
+                    android:hint="Seleccionar agregación">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/spinnerAggregation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#FFFFFF"
+                        android:paddingVertical="14dp"
+                        android:paddingHorizontal="14dp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
             <!-- Botón guardar -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_save"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="CREAR PARÁMETRO"
+                android:textColor="#121212"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                app:backgroundTint="#78703F"
+                app:cornerRadius="12dp"
+                android:elevation="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/awdad"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:text="CREAR PARÁMETRO"

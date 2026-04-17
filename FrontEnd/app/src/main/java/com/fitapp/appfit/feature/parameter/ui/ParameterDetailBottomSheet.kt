@@ -22,20 +22,23 @@ class ParameterDetailBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(
-            R.layout.bottom_sheet_parameter_detail,
-            container,
-            false
-        )
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(R.layout.bottom_sheet_parameter_detail, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Nombre y tipo
         view.findViewById<TextView>(R.id.bs_param_name).text = parameter.name
         view.findViewById<TextView>(R.id.bs_param_type).text = getTypeLabel(parameter.parameterType)
+        view.findViewById<TextView>(R.id.bs_param_usage).text = "${parameter.usageCount} usos"
 
+        // Descripción
         val descView = view.findViewById<TextView>(R.id.bs_param_description)
         val descRow = view.findViewById<LinearLayout>(R.id.bs_row_description)
         if (!parameter.description.isNullOrEmpty()) {
@@ -45,6 +48,7 @@ class ParameterDetailBottomSheet : BottomSheetDialogFragment() {
             descRow.visibility = View.GONE
         }
 
+        // Unidad
         val unitView = view.findViewById<TextView>(R.id.bs_param_unit)
         val unitRow = view.findViewById<LinearLayout>(R.id.bs_row_unit)
         if (!parameter.unit.isNullOrEmpty()) {
@@ -54,16 +58,18 @@ class ParameterDetailBottomSheet : BottomSheetDialogFragment() {
             unitRow.visibility = View.GONE
         }
 
-        view.findViewById<TextView>(R.id.bs_param_visibility).text =
-            when {
-                parameter.isGlobal && parameter.ownerId == null -> "Sistema"
-                parameter.isGlobal -> "Global"
-                else -> "Personal"
-            }
+        // Visibilidad
+        view.findViewById<TextView>(R.id.bs_param_visibility).text = when {
+            parameter.isGlobal && parameter.ownerId == null -> "Sistema (oficial)"
+            parameter.isGlobal -> "Global"
+            else -> "Personal"
+        }
 
+        // Estado
         view.findViewById<TextView>(R.id.bs_param_status).text =
             if (parameter.isActive) "Activo" else "Inactivo"
 
+        // Dueño (solo si tiene)
         val ownerRow = view.findViewById<LinearLayout>(R.id.bs_row_owner)
         val ownerView = view.findViewById<TextView>(R.id.bs_param_owner)
         if (!parameter.ownerName.isNullOrEmpty()) {
@@ -73,8 +79,28 @@ class ParameterDetailBottomSheet : BottomSheetDialogFragment() {
             ownerRow.visibility = View.GONE
         }
 
-        view.findViewById<TextView>(R.id.bs_param_usage).text = "${parameter.usageCount} usos"
+        // Trackeable
+        val trackableRow = view.findViewById<LinearLayout>(R.id.bs_row_trackable)
+        val trackableView = view.findViewById<TextView>(R.id.bs_param_trackable)
+        trackableView.text = if (parameter.isTrackable) {
+            "Sí (se calculan métricas)"
+        } else {
+            "No (solo informativo)"
+        }
+        trackableRow.visibility = View.VISIBLE
 
+        // Agregación de métrica
+        val aggregationRow = view.findViewById<LinearLayout>(R.id.bs_row_aggregation)
+        val aggregationView = view.findViewById<TextView>(R.id.bs_param_aggregation)
+        if (parameter.isTrackable && parameter.metricAggregation != null) {
+            val aggLabel = parameter.getAggregationLabel() ?: parameter.metricAggregation
+            aggregationView.text = aggLabel
+            aggregationRow.visibility = View.VISIBLE
+        } else {
+            aggregationRow.visibility = View.GONE
+        }
+
+        // Botón cerrar
         view.findViewById<View>(R.id.bs_btn_close).setOnClickListener {
             dismiss()
         }

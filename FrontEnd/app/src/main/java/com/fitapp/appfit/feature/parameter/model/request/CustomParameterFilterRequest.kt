@@ -7,6 +7,8 @@ data class CustomParameterFilterRequest(
     @SerializedName("parameterType") val parameterType: String? = null,
     @SerializedName("isGlobal") val isGlobal: Boolean? = null,
     @SerializedName("isActive") val isActive: Boolean? = null,
+    @SerializedName("isFavorite") val isFavorite: Boolean? = null,
+    @SerializedName("isTrackable") val isTrackable: Boolean? = null,
     @SerializedName("sportId") val sportId: Long? = null,
     @SerializedName("ownerId") val ownerId: Long? = null,
     @SerializedName("category") val category: String? = null,

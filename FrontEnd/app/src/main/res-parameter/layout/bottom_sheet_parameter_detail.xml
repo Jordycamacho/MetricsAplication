@@ -220,6 +220,63 @@
 
     </LinearLayout>
 
+    <!-- Fila: Trackeable -->
+    <LinearLayout
+        android:id="@+id/bs_row_trackable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="10dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="¿Trackeable?"
+            android:textSize="14sp"
+            android:textColor="#B3B3B3" />
+
+        <TextView
+            android:id="@+id/bs_param_trackable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
+    <!-- Fila: Agregación de métrica -->
+    <LinearLayout
+        android:id="@+id/bs_row_aggregation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="10dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Agregación"
+            android:textSize="14sp"
+            android:textColor="#B3B3B3" />
+
+        <TextView
+            android:id="@+id/bs_param_aggregation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
     <!-- Separador -->
     <View
         android:layout_width="match_parent"

@@ -18,7 +18,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Fila superior: Nombre + Badge tipo -->
+        <!-- Fila superior: Nombre + Badges -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,6 +26,7 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="6dp">
 
+            <!-- Nombre + Unidad -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -53,6 +54,32 @@
                     android:visibility="gone" />
 
             </LinearLayout>
+
+            <!-- Badge de Favorito (v2) -->
+            <ImageView
+                android:id="@+id/iv_parameter_favorite"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_star"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                android:contentDescription="Favorito"
+                app:tint="#FFD700" />
+
+            <TextView
+                android:id="@+id/tv_parameter_aggregation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MAX"
+                android:textSize="9sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:background="@drawable/badge_aggregation"
+                android:letterSpacing="0.05"
+                android:layout_marginEnd="6dp"
+                android:visibility="gone" />
 
             <!-- Badge tipo -->
             <TextView
