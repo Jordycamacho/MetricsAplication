@@ -15,12 +15,9 @@ import kotlinx.coroutines.launch
 
 class ExerciseViewModel : ViewModel() {
     private val repository = ExerciseRepository()
+    private val TAG = "ExerciseViewModel"
 
-    companion object {
-        private const val TAG = "ExerciseViewModel"
-    }
-
-    // --- Listas ---
+    // Estados para búsquedas
     private val _allExercisesState = MutableLiveData<Resource<ExercisePageResponse>?>()
     val allExercisesState: LiveData<Resource<ExercisePageResponse>?> = _allExercisesState
 
@@ -33,16 +30,7 @@ class ExerciseViewModel : ViewModel() {
     private val _exercisesBySportState = MutableLiveData<Resource<ExercisePageResponse>?>()
     val exercisesBySportState: LiveData<Resource<ExercisePageResponse>?> = _exercisesBySportState
 
-    private val _recentlyUsedState = MutableLiveData<Resource<ExercisePageResponse>?>()
-    val recentlyUsedState: LiveData<Resource<ExercisePageResponse>?> = _recentlyUsedState
-
-    private val _mostPopularState = MutableLiveData<Resource<ExercisePageResponse>?>()
-    val mostPopularState: LiveData<Resource<ExercisePageResponse>?> = _mostPopularState
-
-    private val _topRatedState = MutableLiveData<Resource<ExercisePageResponse>?>()
-    val topRatedState: LiveData<Resource<ExercisePageResponse>?> = _topRatedState
-
-    // --- CRUD ---
+    // Estados CRUD
     private val _exerciseDetailState = MutableLiveData<Resource<ExerciseResponse>?>()
     val exerciseDetailState: LiveData<Resource<ExerciseResponse>?> = _exerciseDetailState
 
@@ -52,155 +40,283 @@ class ExerciseViewModel : ViewModel() {
     private val _updateExerciseState = MutableLiveData<Resource<ExerciseResponse>?>()
     val updateExerciseState: LiveData<Resource<ExerciseResponse>?> = _updateExerciseState
 
-    private val _deleteExerciseState = MutableLiveData<Resource<Void>?>()
-    val deleteExerciseState: LiveData<Resource<Void>?> = _deleteExerciseState
+    private val _deleteExerciseState = MutableLiveData<Resource<Unit>?>()
+    val deleteExerciseState: LiveData<Resource<Unit>?> = _deleteExerciseState
 
-    private val _toggleExerciseState = MutableLiveData<Resource<Void>?>()
-    val toggleExerciseState: LiveData<Resource<Void>?> = _toggleExerciseState
+    private val _toggleStatusState = MutableLiveData<Resource<Unit>?>()
+    val toggleStatusState: LiveData<Resource<Unit>?> = _toggleStatusState
 
-    private val _rateExerciseState = MutableLiveData<Resource<Void>?>()
-    val rateExerciseState: LiveData<Resource<Void>?> = _rateExerciseState
+    // Estados de acciones especiales
+    private val _rateExerciseState = MutableLiveData<Resource<Unit>?>()
+    val rateExerciseState: LiveData<Resource<Unit>?> = _rateExerciseState
 
     private val _duplicateExerciseState = MutableLiveData<Resource<ExerciseResponse>?>()
     val duplicateExerciseState: LiveData<Resource<ExerciseResponse>?> = _duplicateExerciseState
 
-    private val _makePublicState = MutableLiveData<Resource<ExerciseResponse>?>()
-    val makePublicState: LiveData<Resource<ExerciseResponse>?> = _makePublicState
+    // Listas especiales
+    private val _recentlyUsedState = MutableLiveData<Resource<ExercisePageResponse>?>()
+    val recentlyUsedState: LiveData<Resource<ExercisePageResponse>?> = _recentlyUsedState
 
-    private val _myExerciseCountState = MutableLiveData<Resource<Long>?>()
-    val myExerciseCountState: LiveData<Resource<Long>?> = _myExerciseCountState
+    private val _mostPopularState = MutableLiveData<Resource<ExercisePageResponse>?>()
+    val mostPopularState: LiveData<Resource<ExercisePageResponse>?> = _mostPopularState
 
-    // =========================================================
-    // Queries
-    // =========================================================
+    private val _topRatedState = MutableLiveData<Resource<ExercisePageResponse>?>()
+    val topRatedState: LiveData<Resource<ExercisePageResponse>?> = _topRatedState
 
-    fun searchExercises(filterRequest: ExerciseFilterRequest) {
+    private val _exerciseCountState = MutableLiveData<Resource<Long>?>()
+    val exerciseCountState: LiveData<Resource<Long>?> = _exerciseCountState
+
+    // ==================== BÚSQUEDAS ====================
+
+    fun searchExercises(filterRequest: ExerciseFilterRequest = ExerciseFilterRequest()) {
+        Log.d(TAG, "searchExercises called")
         _allExercisesState.value = Resource.Loading()
         viewModelScope.launch {
-            _allExercisesState.value = repository.searchExercises(filterRequest)
+            try {
+                _allExercisesState.value = repository.searchExercises(filterRequest)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in searchExercises", e)
+                _allExercisesState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
-    fun searchMyExercises(filterRequest: ExerciseFilterRequest) {
+    fun searchMyExercises(filterRequest: ExerciseFilterRequest = ExerciseFilterRequest()) {
+        Log.d(TAG, "searchMyExercises called")
         _myExercisesState.value = Resource.Loading()
         viewModelScope.launch {
-            _myExercisesState.value = repository.searchMyExercises(filterRequest)
+            try {
+                _myExercisesState.value = repository.searchMyExercises(filterRequest)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in searchMyExercises", e)
+                _myExercisesState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
-    fun searchAvailableExercises(filterRequest: ExerciseFilterRequest) {
+    fun searchAvailableExercises(filterRequest: ExerciseFilterRequest = ExerciseFilterRequest()) {
+        Log.d(TAG, "searchAvailableExercises called")
         _availableExercisesState.value = Resource.Loading()
         viewModelScope.launch {
-            _availableExercisesState.value = repository.searchAvailableExercises(filterRequest)
+            try {
+                _availableExercisesState.value = repository.searchAvailableExercises(filterRequest)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in searchAvailableExercises", e)
+                _availableExercisesState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
-    fun searchExercisesBySport(sportId: Long, filterRequest: ExerciseFilterRequest) {
+    fun searchExercisesBySport(
+        sportId: Long,
+        filterRequest: ExerciseFilterRequest = ExerciseFilterRequest()
+    ) {
+        Log.d(TAG, "searchExercisesBySport called for sport $sportId")
         _exercisesBySportState.value = Resource.Loading()
         viewModelScope.launch {
-            _exercisesBySportState.value = repository.searchExercisesBySport(sportId, filterRequest)
+            try {
+                _exercisesBySportState.value = repository.searchExercisesBySport(sportId, filterRequest)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in searchExercisesBySport", e)
+                _exercisesBySportState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
+
+    // ==================== CRUD ====================
 
     fun getExerciseById(id: Long) {
-        Log.i(TAG, "getExerciseById: $id")
+        Log.d(TAG, "getExerciseById called: $id")
         _exerciseDetailState.value = Resource.Loading()
         viewModelScope.launch {
-            _exerciseDetailState.value = repository.getExerciseById(id)
+            try {
+                _exerciseDetailState.value = repository.getExerciseById(id)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in getExerciseById", e)
+                _exerciseDetailState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
-
-    fun getRecentlyUsedExercises(page: Int = 0, size: Int = 10) {
-        _recentlyUsedState.value = Resource.Loading()
-        viewModelScope.launch {
-            _recentlyUsedState.value = repository.getRecentlyUsedExercises(page, size)
-        }
-    }
-
-    fun getMostPopularExercises(page: Int = 0, size: Int = 10) {
-        _mostPopularState.value = Resource.Loading()
-        viewModelScope.launch {
-            _mostPopularState.value = repository.getMostPopularExercises(page, size)
-        }
-    }
-
-    fun getTopRatedExercises(page: Int = 0, size: Int = 10) {
-        _topRatedState.value = Resource.Loading()
-        viewModelScope.launch {
-            _topRatedState.value = repository.getTopRatedExercises(page, size)
-        }
-    }
-
-    fun getMyExerciseCount() {
-        _myExerciseCountState.value = Resource.Loading()
-        viewModelScope.launch {
-            _myExerciseCountState.value = repository.getMyExerciseCount()
-        }
-    }
-
-    // =========================================================
-    // Commands
-    // =========================================================
 
     fun createExercise(exerciseRequest: ExerciseRequest) {
+        Log.d(TAG, "createExercise called: ${exerciseRequest.name}")
         _createExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _createExerciseState.value = repository.createExercise(exerciseRequest)
+            try {
+                _createExerciseState.value = repository.createExercise(exerciseRequest)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in createExercise", e)
+                _createExerciseState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
     fun updateExercise(id: Long, exerciseRequest: ExerciseRequest) {
+        Log.d(TAG, "updateExercise called: $id")
         _updateExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _updateExerciseState.value = repository.updateExercise(id, exerciseRequest)
+            try {
+                _updateExerciseState.value = repository.updateExercise(id, exerciseRequest)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in updateExercise", e)
+                _updateExerciseState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
     fun deleteExercise(id: Long) {
+        Log.d(TAG, "deleteExercise called: $id")
         _deleteExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _deleteExerciseState.value = repository.deleteExercise(id)
+            try {
+                _deleteExerciseState.value = repository.deleteExercise(id)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in deleteExercise", e)
+                _deleteExerciseState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
     fun toggleExerciseStatus(id: Long) {
-        _toggleExerciseState.value = Resource.Loading()
+        Log.d(TAG, "toggleExerciseStatus called: $id")
+        _toggleStatusState.value = Resource.Loading()
         viewModelScope.launch {
-            _toggleExerciseState.value = repository.toggleExerciseStatus(id)
+            try {
+                _toggleStatusState.value = repository.toggleExerciseStatus(id)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in toggleExerciseStatus", e)
+                _toggleStatusState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
+    // ==================== ACCIONES ESPECIALES ====================
+
     fun rateExercise(id: Long, rating: Double) {
+        Log.d(TAG, "rateExercise called: $id with rating $rating")
         _rateExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _rateExerciseState.value = repository.rateExercise(id, rating)
+            try {
+                _rateExerciseState.value = repository.rateExercise(id, rating)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in rateExercise", e)
+                _rateExerciseState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
     fun duplicateExercise(id: Long) {
+        Log.d(TAG, "duplicateExercise called: $id")
         _duplicateExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _duplicateExerciseState.value = repository.duplicateExercise(id)
+            try {
+                _duplicateExerciseState.value = repository.duplicateExercise(id)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in duplicateExercise", e)
+                _duplicateExerciseState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
-    fun makeExercisePublic(id: Long) {
-        _makePublicState.value = Resource.Loading()
+    // ==================== LISTAS ESPECIALES ====================
+
+    fun getRecentlyUsedExercises(page: Int = 0, size: Int = 10) {
+        Log.d(TAG, "getRecentlyUsedExercises called")
+        _recentlyUsedState.value = Resource.Loading()
         viewModelScope.launch {
-            _makePublicState.value = repository.makeExercisePublic(id)
+            try {
+                _recentlyUsedState.value = repository.getRecentlyUsedExercises(page, size)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in getRecentlyUsedExercises", e)
+                _recentlyUsedState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 
-    // =========================================================
-    // Clear states
-    // =========================================================
+    fun getMostPopularExercises(page: Int = 0, size: Int = 10) {
+        Log.d(TAG, "getMostPopularExercises called")
+        _mostPopularState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                _mostPopularState.value = repository.getMostPopularExercises(page, size)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in getMostPopularExercises", e)
+                _mostPopularState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
 
-    fun clearCreateState()      { _createExerciseState.value = null }
-    fun clearUpdateState()      { _updateExerciseState.value = null }
-    fun clearDeleteState()      { _deleteExerciseState.value = null }
-    fun clearToggleState()      { _toggleExerciseState.value = null }
-    fun clearRateState()        { _rateExerciseState.value = null }
-    fun clearDuplicateState()   { _duplicateExerciseState.value = null }
-    fun clearMakePublicState()  { _makePublicState.value = null }
-    fun clearDetailState()      { _exerciseDetailState.value = null }
+    fun getTopRatedExercises(page: Int = 0, size: Int = 10) {
+        Log.d(TAG, "getTopRatedExercises called")
+        _topRatedState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                _topRatedState.value = repository.getTopRatedExercises(page, size)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in getTopRatedExercises", e)
+                _topRatedState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    fun getMyExerciseCount() {
+        Log.d(TAG, "getMyExerciseCount called")
+        _exerciseCountState.value = Resource.Loading()
+        viewModelScope.launch {
+            try {
+                _exerciseCountState.value = repository.getMyExerciseCount()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in getMyExerciseCount", e)
+                _exerciseCountState.value = Resource.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    // ==================== LIMPIAR ESTADOS ====================
+
+    fun clearCreateState() {
+        _createExerciseState.value = null
+    }
+
+    fun clearUpdateState() {
+        _updateExerciseState.value = null
+    }
+
+    fun clearDeleteState() {
+        _deleteExerciseState.value = null
+    }
+
+    fun clearToggleState() {
+        _toggleStatusState.value = null
+    }
+
+    fun clearDetailState() {
+        _exerciseDetailState.value = null
+    }
+
+    fun clearRateState() {
+        _rateExerciseState.value = null
+    }
+
+    fun clearDuplicateState() {
+        _duplicateExerciseState.value = null
+    }
+
+    fun clearAllStates() {
+        _allExercisesState.value = null
+        _myExercisesState.value = null
+        _availableExercisesState.value = null
+        _exercisesBySportState.value = null
+        _exerciseDetailState.value = null
+        _createExerciseState.value = null
+        _updateExerciseState.value = null
+        _deleteExerciseState.value = null
+        _toggleStatusState.value = null
+        _rateExerciseState.value = null
+        _duplicateExerciseState.value = null
+        _recentlyUsedState.value = null
+        _mostPopularState.value = null
+        _topRatedState.value = null
+        _exerciseCountState.value = null
+    }
 }

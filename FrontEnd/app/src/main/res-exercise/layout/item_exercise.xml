@@ -52,7 +52,7 @@
                 android:letterSpacing="0.05" />
         </LinearLayout>
 
-        <!-- Línea 2: Deportes (máx 3) -->
+        <!-- Línea 2: Deportes -->
         <TextView
             android:id="@+id/tv_exercise_sports"
             android:layout_width="match_parent"
@@ -69,8 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/tv_exercise_usage"
@@ -78,23 +77,28 @@
                 android:layout_height="wrap_content"
                 android:text="0 usos"
                 android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark" />
+                android:textColor="@color/text_secondary_dark"
+                android:visibility="gone" />
 
             <View
+                android:id="@+id/divider_1"
                 android:layout_width="1dp"
                 android:layout_height="12dp"
                 android:background="@color/divider_dark"
-                android:layout_marginHorizontal="8dp" />
+                android:layout_marginHorizontal="8dp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tv_exercise_rating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0.0"
+                android:text="Sin calificación"
                 android:textSize="12sp"
-                android:textColor="@color/text_secondary_dark" />
+                android:textColor="@color/text_secondary_dark"
+                android:visibility="gone" />
 
             <View
+                android:id="@+id/divider_2"
                 android:layout_width="1dp"
                 android:layout_height="12dp"
                 android:background="@color/divider_dark"
@@ -108,21 +112,6 @@
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary_dark" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/btn_make_public"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hacer público"
-            android:textSize="12sp"
-            android:textColor="@color/gold_primary"
-            android:textStyle="bold"
-            android:paddingVertical="4dp"
-            android:paddingHorizontal="12dp"
-            android:background="@drawable/button_edit_background"
-            android:layout_gravity="end"
-            android:layout_marginTop="8dp"
-            android:visibility="gone" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

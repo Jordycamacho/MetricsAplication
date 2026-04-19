@@ -77,9 +77,9 @@ class ExerciseDetailFragment : Fragment() {
             }
         }
 
-        exerciseViewModel.toggleExerciseState.observe(viewLifecycleOwner) { resource ->
+        exerciseViewModel.toggleStatusState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
-                is Resource.Success -> {
+                is Resource.Success<Unit> -> {
                     exerciseViewModel.clearToggleState()
                     exerciseViewModel.getExerciseById(args.exerciseId)
                 }

@@ -1,5 +1,6 @@
 package com.fitapp.appfit.feature.exercise.ui.list
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.databinding.ItemExerciseBinding
 import com.fitapp.appfit.feature.exercise.model.exercise.response.ExerciseResponse
+import com.fitapp.appfit.feature.exercise.util.ExerciseValidation
 
 class ExerciseAdapter(
     private val onItemClick: (ExerciseResponse) -> Unit,
@@ -48,23 +50,46 @@ class ExerciseAdapter(
 
         fun bind(exercise: ExerciseResponse) {
             binding.tvExerciseName.text = exercise.name
-            binding.tvExerciseType.text = exercise.exerciseType?.name ?: "SIN TIPO"
 
-            binding.tvExerciseVisibility.text = if (exercise.isPublic == true) "Público" else "Personal"
+            val typeLabel = exercise.exerciseType?.let { type ->
+                ExerciseValidation.ExerciseTypeInfo.fromType(type)?.label ?: type.name
+            } ?: "SIN TIPO"
+            binding.tvExerciseType.text = typeLabel
+
+            val sportsText = exercise.sportsDisplayName()
+            binding.tvExerciseSports.text = if (sportsText.isNotEmpty()) sportsText else "—"
+            binding.tvExerciseSports.visibility = View.VISIBLE
+
+            binding.tvExerciseRating.text = ExerciseValidation.formatRating(exercise.rating, exercise.ratingCount)
+            binding.tvExerciseRating.visibility = if (exercise.rating != null && exercise.rating > 0) View.VISIBLE else View.GONE
+
+            if (exercise.usageCount != null && exercise.usageCount > 0) {
+                binding.tvExerciseUsage.text = "${exercise.usageCount} usos"
+                binding.tvExerciseUsage.visibility = View.VISIBLE
+            } else {
+                binding.tvExerciseUsage.visibility = View.GONE
+            }
+
+            val isSystemExercise = exercise.isPublic == true && exercise.createdById == null
+            val visibilityLabel = ExerciseValidation.getVisibilityLabel(exercise.isPublic ?: false, isSystemExercise)
+            binding.tvExerciseVisibility.text = visibilityLabel
+
+            val visibilityColor = when {
+                isSystemExercise -> Color.parseColor("#666666")
+                exercise.isPublic == true -> Color.parseColor("#78703F")
+                else -> Color.parseColor("#B3B3B3")
+            }
+            binding.tvExerciseVisibility.setTextColor(visibilityColor)
 
             val isActive = exercise.isActive == true
-
-            binding.tvExerciseRating.text = String.format("%.1f", exercise.rating ?: 0.0)
-
-            binding.btnMakePublic.visibility =
-                if (isAdminMode && exercise.isPublic == false) View.VISIBLE else View.GONE
+            binding.root.alpha = if (isActive) 1.0f else 0.6f
 
             binding.root.setOnClickListener { onItemClick(exercise) }
         }
     }
 
     class ExerciseDiffCallback : DiffUtil.ItemCallback<ExerciseResponse>() {
-        override fun areItemsTheSame(old: ExerciseResponse, new: ExerciseResponse) = old.id == new.id
-        override fun areContentsTheSame(old: ExerciseResponse, new: ExerciseResponse) = old == new
+        override fun areItemsTheSame(old: ExerciseResponse, new: ExerciseResponse): Boolean = old.id == new.id
+        override fun areContentsTheSame(old: ExerciseResponse, new: ExerciseResponse): Boolean = old == new
     }
 }

@@ -122,10 +122,10 @@ class ExercisesFragment : Fragment() {
             }
         }
 
-        exerciseViewModel.toggleExerciseState.observe(viewLifecycleOwner) { resource ->
+        exerciseViewModel.toggleStatusState.observe(viewLifecycleOwner) { resource ->
             resource?.let {
                 when (it) {
-                    is Resource.Success -> {
+                    is Resource.Success<Unit> -> {
                         Toast.makeText(requireContext(), "Estado actualizado", Toast.LENGTH_SHORT).show()
                         loadExercises(reset = true)
                     }
