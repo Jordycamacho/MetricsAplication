@@ -40,4 +40,14 @@ public class CreateRoutineRequest {
     @Size(max = 200, message = "Objetivo no puede exeder 200 caracteres")
     @JsonProperty("goal")
     private String goal;
+    
+    @JsonProperty("originalRoutineId")
+    private Long originalRoutineId;
+    
+    @Size(max = 20, message = "Version cannot exceed 20 characters")
+    @JsonProperty("version")
+    private String version;
+    
+    @JsonProperty("packageId")
+    private Long packageId;
 }

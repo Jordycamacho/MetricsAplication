@@ -17,6 +17,7 @@ import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
+import com.fitapp.backend.infrastructure.persistence.entity.PackageEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseParameterEntity;
@@ -27,8 +28,10 @@ import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
 import com.fitapp.backend.infrastructure.persistence.repository.ExerciseRepository;
+import com.fitapp.backend.infrastructure.persistence.repository.PackageRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseParameterRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseRepository;
+import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineSetTemplateRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
@@ -50,10 +53,10 @@ public class RoutineConverter {
     private final RoutineExerciseRepository routineExerciseRepository;
     private final RoutineExerciseParameterRepository routineExerciseParameterRepository;
     private final RoutineSetTemplateRepository routineSetTemplateRepository;
+    private final PackageRepository packageRepository;
+    private final RoutineRepository routineRepository;
 
     // ── toDomain ──────────────────────────────────────────────────────────────
-    // Nota: @Transactional pertenece al servicio/repositorio, no al converter.
-    // El converter recibe entidades ya cargadas en el contexto transaccional.
 
     public RoutineModel toDomain(RoutineEntity entity) {
         RoutineModel routine = new RoutineModel();
@@ -69,6 +72,13 @@ public class RoutineConverter {
         routine.setTrainingDays(entity.getTrainingDays() != null ? entity.getTrainingDays() : new HashSet<>());
         routine.setGoal(entity.getGoal() != null ? entity.getGoal() : "");
         routine.setSessionsPerWeek(entity.getSessionsPerWeek() != null ? entity.getSessionsPerWeek() : 3);
+        
+        // V2 fields
+        routine.setOriginalRoutineId(entity.getOriginalRoutine() != null ? entity.getOriginalRoutine().getId() : null);
+        routine.setVersion(entity.getVersion());
+        routine.setPackageId(entity.getPack() != null ? entity.getPack().getId() : null);
+        routine.setExportKey(entity.getExportKey());
+        routine.setTimesPurchased(entity.getTimesPurchased() != null ? entity.getTimesPurchased() : 0);
 
         if (entity.getExercises() != null) {
             List<RoutineExerciseModel> exerciseModels = entity.getExercises().stream()
@@ -167,6 +177,9 @@ public class RoutineConverter {
         entity.setTrainingDays(domain.getTrainingDays() != null ? domain.getTrainingDays() : new HashSet<>());
         entity.setGoal(domain.getGoal() != null ? domain.getGoal() : "");
         entity.setSessionsPerWeek(domain.getSessionsPerWeek() != null ? domain.getSessionsPerWeek() : 3);
+        entity.setVersion(domain.getVersion());
+        entity.setExportKey(domain.getExportKey());
+        entity.setTimesPurchased(domain.getTimesPurchased() != null ? domain.getTimesPurchased() : 0);
 
         UserEntity user = springDataUserRepository.findById(domain.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found: " + domain.getUserId()));
@@ -178,6 +191,18 @@ public class RoutineConverter {
             entity.setSport(sport);
         } else {
             entity.setSport(null);
+        }
+        
+        if (domain.getOriginalRoutineId() != null) {
+            RoutineEntity originalRoutine = routineRepository.findById(domain.getOriginalRoutineId())
+                    .orElseThrow(() -> new RuntimeException("Original routine not found: " + domain.getOriginalRoutineId()));
+            entity.setOriginalRoutine(originalRoutine);
+        }
+        
+        if (domain.getPackageId() != null) {
+            PackageEntity pack = packageRepository.findById(domain.getPackageId())
+                    .orElseThrow(() -> new RuntimeException("Package not found: " + domain.getPackageId()));
+            entity.setPack(pack);
         }
 
         if (domain.getExercises() != null && !domain.getExercises().isEmpty()) {

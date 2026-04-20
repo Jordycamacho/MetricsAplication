@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.ArrayList;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
@@ -57,4 +58,19 @@ public class RoutineResponse {
     
     @JsonProperty("sessionsPerWeek")
     private Integer sessionsPerWeek;
+    
+    @JsonProperty("originalRoutineId")
+    private Long originalRoutineId;
+    
+    @JsonProperty("version")
+    private String version;
+    
+    @JsonProperty("packageId")
+    private Long packageId;
+    
+    @JsonProperty("exportKey")
+    private UUID exportKey;
+    
+    @JsonProperty("timesPurchased")
+    private Integer timesPurchased;
 }

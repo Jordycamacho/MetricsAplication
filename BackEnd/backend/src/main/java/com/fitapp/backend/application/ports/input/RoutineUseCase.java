@@ -8,6 +8,7 @@ import com.fitapp.backend.application.dto.routine.request.UpdateRoutineRequest;
 import com.fitapp.backend.application.dto.routine.response.RoutineResponse;
 import com.fitapp.backend.application.dto.page.PageResponse;
 import java.util.List;
+import java.util.UUID;
 
 public interface RoutineUseCase {
     // CRUD
@@ -31,4 +32,7 @@ public interface RoutineUseCase {
     // Estadísticas
     RoutineStatisticsResponse getRoutineStatistics(String userEmail);
     
+    RoutineResponse getRoutineByExportKey(UUID exportKey);
+    RoutineResponse importRoutineFromExportKey(UUID exportKey, String userEmail);
+    void registerRoutinePurchase(Long routineId);
 }

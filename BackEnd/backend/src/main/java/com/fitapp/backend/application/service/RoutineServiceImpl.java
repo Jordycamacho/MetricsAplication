@@ -19,6 +19,7 @@ import com.fitapp.backend.application.ports.output.SportPersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.exception.RoutineNotFoundException;
 import com.fitapp.backend.domain.model.ExerciseModel;
+import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
 import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;
@@ -49,6 +50,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -66,10 +68,10 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
     @Override
     @Caching(evict = {
-        @CacheEvict(value = "routines", allEntries = true),
-        @CacheEvict(value = "userRoutines", allEntries = true),
-        @CacheEvict(value = "recentRoutines", allEntries = true),
-        @CacheEvict(value = "routineStats", allEntries = true)
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true)
     })
     public RoutineResponse createRoutine(CreateRoutineRequest request, String userEmail) {
         log.info("CREATE_ROUTINE | user={} | name={}", userEmail, request.getName());
@@ -101,8 +103,16 @@ public class RoutineServiceImpl implements RoutineUseCase {
         routine.setSessionsPerWeek(request.getSessionsPerWeek());
         routine.setLastUsedAt(null);
 
+        // V2 fields
+        routine.setOriginalRoutineId(request.getOriginalRoutineId());
+        routine.setVersion(request.getVersion());
+        routine.setPackageId(request.getPackageId());
+        routine.setTimesPurchased(0);
+        // exportKey se genera automáticamente en @PrePersist
+
         RoutineModel saved = routinePersistencePort.save(routine);
-        log.info("CREATE_ROUTINE_OK | routineId={} | user={}", saved.getId(), userEmail);
+        log.info("CREATE_ROUTINE_OK | routineId={} | user={} | originalRoutineId={}",
+                saved.getId(), userEmail, saved.getOriginalRoutineId());
         serviceLogger.logRoutineCreationSuccess(saved.getId(), userEmail);
 
         SportModel sport = loadSport(saved.getSportId());
@@ -144,11 +154,11 @@ public class RoutineServiceImpl implements RoutineUseCase {
     @Override
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "routines", allEntries = true),
-        @CacheEvict(value = "userRoutines", allEntries = true),
-        @CacheEvict(value = "recentRoutines", allEntries = true),
-        @CacheEvict(value = "routineStats", allEntries = true),
-        @CacheEvict(value = "activeRoutines", allEntries = true)
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true),
+            @CacheEvict(value = "activeRoutines", allEntries = true)
     })
     public RoutineResponse updateRoutine(Long id, UpdateRoutineRequest request, String userEmail) {
         log.info("UPDATE_ROUTINE | routineId={} | user={}", id, userEmail);
@@ -159,12 +169,20 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 .findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new RoutineNotFoundException(id));
 
-        if (request.getName() != null) existing.setName(request.getName());
-        if (request.getDescription() != null) existing.setDescription(request.getDescription());
-        if (request.getGoal() != null) existing.setGoal(request.getGoal());
-        if (request.getSessionsPerWeek() != null) existing.setSessionsPerWeek(request.getSessionsPerWeek());
-        if (request.getIsActive() != null) existing.setIsActive(request.getIsActive());
-        if (request.getSportId() != null) existing.setSportId(request.getSportId());
+        if (request.getName() != null)
+            existing.setName(request.getName());
+        if (request.getDescription() != null)
+            existing.setDescription(request.getDescription());
+        if (request.getGoal() != null)
+            existing.setGoal(request.getGoal());
+        if (request.getSessionsPerWeek() != null)
+            existing.setSessionsPerWeek(request.getSessionsPerWeek());
+        if (request.getIsActive() != null)
+            existing.setIsActive(request.getIsActive());
+        if (request.getSportId() != null)
+            existing.setSportId(request.getSportId());
+        if (request.getVersion() != null)
+            existing.setVersion(request.getVersion());
 
         if (request.getTrainingDays() != null && !request.getTrainingDays().isEmpty()) {
             Set<DayOfWeek> days = request.getTrainingDays().stream()
@@ -189,12 +207,12 @@ public class RoutineServiceImpl implements RoutineUseCase {
     @Override
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "routines", allEntries = true),
-        @CacheEvict(value = "userRoutines", allEntries = true),
-        @CacheEvict(value = "recentRoutines", allEntries = true),
-        @CacheEvict(value = "routineStats", allEntries = true),
-        @CacheEvict(value = "activeRoutines", allEntries = true),
-        @CacheEvict(value = "lastUsedRoutines", allEntries = true)
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true),
+            @CacheEvict(value = "activeRoutines", allEntries = true),
+            @CacheEvict(value = "lastUsedRoutines", allEntries = true)
     })
     public void deleteRoutine(Long id, String userEmail) {
         log.info("DELETE_ROUTINE | routineId={} | user={}", id, userEmail);
@@ -210,9 +228,9 @@ public class RoutineServiceImpl implements RoutineUseCase {
     @Override
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "routines", allEntries = true),
-        @CacheEvict(value = "activeRoutines", allEntries = true),
-        @CacheEvict(value = "userRoutines", allEntries = true)
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "activeRoutines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true)
     })
     public void toggleRoutineActiveStatus(Long id, boolean isActive, String userEmail) {
         log.info("TOGGLE_ACTIVE | routineId={} | active={} | user={}", id, isActive, userEmail);
@@ -307,6 +325,158 @@ public class RoutineServiceImpl implements RoutineUseCase {
         log.debug("MARK_USED | routineId={} | user={}", id, userEmail);
         UserModel user = findUser(userEmail);
         routinePersistencePort.updateLastUsedAt(id, user.getId(), LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RoutineResponse getRoutineByExportKey(UUID exportKey) {
+        log.info("GET_ROUTINE_BY_EXPORT_KEY | exportKey={}", exportKey);
+
+        RoutineModel routine = routinePersistencePort
+                .findByExportKey(exportKey)
+                .orElseThrow(() -> new RoutineNotFoundException("Routine not found with export key: " + exportKey));
+
+        SportModel sport = loadSport(routine.getSportId());
+        return mapToResponse(routine, sport);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true)
+    })
+    public RoutineResponse importRoutineFromExportKey(UUID exportKey, String userEmail) {
+        log.info("IMPORT_ROUTINE | exportKey={} | user={}", exportKey, userEmail);
+
+        UserModel user = findUser(userEmail);
+
+        // Validar límite de suscripción
+        long currentCount = routinePersistencePort.countByUserId(user.getId());
+        limitChecker.checkRoutineLimit(userEmail, currentCount);
+
+        // Obtener rutina original
+        RoutineModel originalRoutine = routinePersistencePort
+                .findFullByExportKey(exportKey)
+                .orElseThrow(() -> new RoutineNotFoundException("Routine not found with export key: " + exportKey));
+
+        // Crear copia
+        RoutineModel newRoutine = new RoutineModel();
+        newRoutine.setName(originalRoutine.getName() + " (importada)");
+        newRoutine.setDescription(originalRoutine.getDescription());
+        newRoutine.setUserId(user.getId());
+        newRoutine.setSportId(originalRoutine.getSportId());
+        newRoutine.setIsActive(true);
+        newRoutine.setTrainingDays(originalRoutine.getTrainingDays());
+        newRoutine.setGoal(originalRoutine.getGoal());
+        newRoutine.setSessionsPerWeek(originalRoutine.getSessionsPerWeek());
+
+        // V2: marcar origen
+        newRoutine.setOriginalRoutineId(originalRoutine.getId());
+        newRoutine.setVersion(originalRoutine.getVersion());
+        newRoutine.setPackageId(originalRoutine.getPackageId());
+        newRoutine.setTimesPurchased(0);
+
+        // Copiar estructura de ejercicios (deep copy)
+        newRoutine.setExercises(deepCopyExercises(originalRoutine.getExercises()));
+
+        RoutineModel saved = routinePersistencePort.save(newRoutine);
+
+        // Incrementar contador de compras/importaciones en la rutina original
+        routinePersistencePort.incrementPurchaseCount(originalRoutine.getId());
+
+        log.info("IMPORT_ROUTINE_OK | newRoutineId={} | originalRoutineId={} | user={}",
+                saved.getId(), originalRoutine.getId(), userEmail);
+
+        SportModel sport = loadSport(saved.getSportId());
+        return mapToResponse(saved, sport);
+    }
+
+    @Override
+    @Transactional
+    public void registerRoutinePurchase(Long routineId) {
+        log.info("REGISTER_PURCHASE | routineId={}", routineId);
+        routinePersistencePort.incrementPurchaseCount(routineId);
+    }
+
+    private List<RoutineExerciseModel> deepCopyExercises(List<RoutineExerciseModel> original) {
+        if (original == null || original.isEmpty())
+            return new ArrayList<>();
+
+        return original.stream()
+                .map(this::deepCopyExercise)
+                .collect(Collectors.toList());
+    }
+
+    private RoutineExerciseModel deepCopyExercise(RoutineExerciseModel original) {
+        RoutineExerciseModel copy = new RoutineExerciseModel();
+        copy.setExerciseId(original.getExerciseId());
+        copy.setPosition(original.getPosition());
+        copy.setSessionNumber(original.getSessionNumber());
+        copy.setDayOfWeek(original.getDayOfWeek());
+        copy.setSessionOrder(original.getSessionOrder());
+        copy.setRestAfterExercise(original.getRestAfterExercise());
+
+        // Copiar target parameters
+        if (original.getTargetParameters() != null) {
+            copy.setTargetParameters(
+                    original.getTargetParameters().stream()
+                            .map(this::deepCopyExerciseParameter)
+                            .collect(Collectors.toList()));
+        }
+
+        // Copiar sets
+        if (original.getSets() != null) {
+            copy.setSets(
+                    original.getSets().stream()
+                            .map(this::deepCopySetTemplate)
+                            .collect(Collectors.toList()));
+        }
+
+        return copy;
+    }
+
+    private RoutineExerciseParameterModel deepCopyExerciseParameter(RoutineExerciseParameterModel original) {
+        RoutineExerciseParameterModel copy = new RoutineExerciseParameterModel();
+        copy.setParameterId(original.getParameterId());
+        copy.setNumericValue(original.getNumericValue());
+        copy.setIntegerValue(original.getIntegerValue());
+        copy.setDurationValue(original.getDurationValue());
+        copy.setStringValue(original.getStringValue());
+        copy.setMinValue(original.getMinValue());
+        copy.setMaxValue(original.getMaxValue());
+        copy.setDefaultValue(original.getDefaultValue());
+        return copy;
+    }
+
+    private RoutineSetTemplateModel deepCopySetTemplate(RoutineSetTemplateModel original) {
+        RoutineSetTemplateModel copy = new RoutineSetTemplateModel();
+        copy.setPosition(original.getPosition());
+        copy.setSubSetNumber(original.getSubSetNumber());
+        copy.setGroupId(original.getGroupId());
+        copy.setSetType(original.getSetType());
+        copy.setRestAfterSet(original.getRestAfterSet());
+
+        if (original.getParameters() != null) {
+            copy.setParameters(
+                    original.getParameters().stream()
+                            .map(this::deepCopySetParameter)
+                            .collect(Collectors.toList()));
+        }
+
+        return copy;
+    }
+
+    private RoutineSetParameterModel deepCopySetParameter(RoutineSetParameterModel original) {
+        RoutineSetParameterModel copy = new RoutineSetParameterModel();
+        copy.setParameterId(original.getParameterId());
+        copy.setNumericValue(original.getNumericValue());
+        copy.setDurationValue(original.getDurationValue());
+        copy.setIntegerValue(original.getIntegerValue());
+        copy.setRepetitions(original.getRepetitions());
+        return copy;
     }
 
     private List<RoutineSummaryResponse> mapToSummaryListBatch(List<RoutineModel> routines) {
@@ -427,6 +597,12 @@ public class RoutineServiceImpl implements RoutineUseCase {
         response.setTrainingDays(routine.getTrainingDays());
         response.setGoal(routine.getGoal());
         response.setSessionsPerWeek(routine.getSessionsPerWeek());
+        response.setOriginalRoutineId(routine.getOriginalRoutineId());
+        response.setVersion(routine.getVersion());
+        response.setPackageId(routine.getPackageId());
+        response.setExportKey(routine.getExportKey());
+        response.setTimesPurchased(routine.getTimesPurchased());
+
         return response;
     }
 
@@ -446,6 +622,12 @@ public class RoutineServiceImpl implements RoutineUseCase {
                 .goal(routine.getGoal())
                 .sessionsPerWeek(routine.getSessionsPerWeek())
                 .exerciseCount(exerciseCount)
+                // V2 fields
+                .originalRoutineId(routine.getOriginalRoutineId())
+                .version(routine.getVersion())
+                .packageId(routine.getPackageId())
+                .exportKey(routine.getExportKey())
+                .timesPurchased(routine.getTimesPurchased())
                 .build();
     }
 
@@ -464,7 +646,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
     private List<RoutineExerciseParameterResponse> mapParamsFromCache(
             List<RoutineExerciseParameterModel> parameters, Map<Long, CustomParameterModel> paramMap) {
-        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        if (parameters == null || parameters.isEmpty())
+            return new ArrayList<>();
         return parameters.stream()
                 .map(param -> {
                     CustomParameterModel model = paramMap.get(param.getParameterId());
@@ -473,7 +656,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
                             .parameterId(param.getParameterId())
                             .parameterName(model != null ? model.getName() : null)
                             .parameterType(model != null && model.getParameterType() != null
-                                    ? model.getParameterType().name() : null)
+                                    ? model.getParameterType().name()
+                                    : null)
                             .numericValue(param.getNumericValue())
                             .integerValue(param.getIntegerValue())
                             .durationValue(param.getDurationValue())
@@ -488,7 +672,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
     private List<RoutineSetTemplateResponse> mapSetsFromCache(
             List<RoutineSetTemplateModel> sets, Map<Long, CustomParameterModel> paramMap) {
-        if (sets == null || sets.isEmpty()) return new ArrayList<>();
+        if (sets == null || sets.isEmpty())
+            return new ArrayList<>();
         return sets.stream()
                 .sorted(Comparator.comparing(RoutineSetTemplateModel::getPosition))
                 .map(set -> RoutineSetTemplateResponse.builder()
@@ -505,7 +690,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
     private List<RoutineSetParameterResponse> mapSetParamsFromCache(
             List<RoutineSetParameterModel> parameters, Map<Long, CustomParameterModel> paramMap) {
-        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        if (parameters == null || parameters.isEmpty())
+            return new ArrayList<>();
         return parameters.stream()
                 .map(param -> {
                     CustomParameterModel model = paramMap.get(param.getParameterId());
@@ -514,7 +700,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
                             .parameterId(param.getParameterId())
                             .parameterName(model != null ? model.getName() : null)
                             .parameterType(model != null && model.getParameterType() != null
-                                    ? model.getParameterType().name() : null)
+                                    ? model.getParameterType().name()
+                                    : null)
                             .numericValue(param.getNumericValue())
                             .durationValue(param.getDurationValue())
                             .integerValue(param.getIntegerValue())
@@ -526,7 +713,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
 
     private List<RoutineExerciseParameterResponse> mapToParameterResponses(
             List<RoutineExerciseParameterModel> parameters) {
-        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        if (parameters == null || parameters.isEmpty())
+            return new ArrayList<>();
         return parameters.stream()
                 .map(param -> {
                     CustomParameterModel model = customParameterPersistencePort
@@ -536,7 +724,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
                             .parameterId(param.getParameterId())
                             .parameterName(model != null ? model.getName() : null)
                             .parameterType(model != null && model.getParameterType() != null
-                                    ? model.getParameterType().name() : null)
+                                    ? model.getParameterType().name()
+                                    : null)
                             .numericValue(param.getNumericValue())
                             .integerValue(param.getIntegerValue())
                             .durationValue(param.getDurationValue())
@@ -550,7 +739,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
     }
 
     private List<RoutineSetTemplateResponse> mapToSetTemplateResponses(List<RoutineSetTemplateModel> sets) {
-        if (sets == null || sets.isEmpty()) return new ArrayList<>();
+        if (sets == null || sets.isEmpty())
+            return new ArrayList<>();
         return sets.stream()
                 .sorted(Comparator.comparing(RoutineSetTemplateModel::getPosition))
                 .map(set -> RoutineSetTemplateResponse.builder()
@@ -566,7 +756,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
     }
 
     private List<RoutineSetParameterResponse> mapToSetParameterResponses(List<RoutineSetParameterModel> parameters) {
-        if (parameters == null || parameters.isEmpty()) return new ArrayList<>();
+        if (parameters == null || parameters.isEmpty())
+            return new ArrayList<>();
         return parameters.stream()
                 .map(param -> {
                     CustomParameterModel model = customParameterPersistencePort
@@ -576,7 +767,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
                             .parameterId(param.getParameterId())
                             .parameterName(model != null ? model.getName() : null)
                             .parameterType(model != null && model.getParameterType() != null
-                                    ? model.getParameterType().name() : null)
+                                    ? model.getParameterType().name()
+                                    : null)
                             .numericValue(param.getNumericValue())
                             .durationValue(param.getDurationValue())
                             .integerValue(param.getIntegerValue())
@@ -592,7 +784,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
     }
 
     private SportModel loadSport(Long sportId) {
-        if (sportId == null) return null;
+        if (sportId == null)
+            return null;
         return sportPersistencePort.findById(sportId).orElse(null);
     }
 }

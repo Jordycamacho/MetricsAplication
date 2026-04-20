@@ -4,6 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
@@ -22,4 +23,9 @@ public class RoutineModel {
     private Set<DayOfWeek> trainingDays;
     private String goal;
     private Integer sessionsPerWeek;
+    private Long originalRoutineId;
+    private String version;
+    private Long packageId;
+    private UUID exportKey;
+    private Integer timesPurchased;
 }

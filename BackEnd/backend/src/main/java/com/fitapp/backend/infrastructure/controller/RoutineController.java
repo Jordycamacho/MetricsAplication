@@ -2,6 +2,7 @@ package com.fitapp.backend.infrastructure.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -222,5 +223,34 @@ public class RoutineController {
         String userEmail = jwt.getClaimAsString("email");
         routineUseCase.markRoutineAsUsed(id, userEmail);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get routine by export key", description = "Get a routine using its export UUID for sharing")
+    @GetMapping("/export/{exportKey}")
+    public ResponseEntity<RoutineResponse> getRoutineByExportKey(
+            @PathVariable UUID exportKey) {
+        log.info("GET_ROUTINE_BY_EXPORT_KEY | exportKey={}", exportKey);
+        RoutineResponse response = routineUseCase.getRoutineByExportKey(exportKey);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Import routine from export key", description = "Import a copy of a routine using export key")
+    @PostMapping("/import/{exportKey}")
+    public ResponseEntity<RoutineResponse> importRoutineFromExportKey(
+            @PathVariable UUID exportKey,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = jwt.getClaimAsString("email");
+        log.info("IMPORT_ROUTINE | exportKey={} | user={}", exportKey, userEmail);
+        RoutineResponse response = routineUseCase.importRoutineFromExportKey(exportKey, userEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "Register purchase of routine", description = "Increment purchase counter for a routine")
+    @PostMapping("/{id}/register-purchase")
+    public ResponseEntity<Void> registerPurchase(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+        routineUseCase.registerRoutinePurchase(id);
+        return ResponseEntity.ok().build();
     }
 }

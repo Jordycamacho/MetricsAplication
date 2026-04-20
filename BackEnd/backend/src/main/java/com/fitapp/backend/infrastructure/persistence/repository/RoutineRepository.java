@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.List;
 
 @Repository
@@ -84,4 +85,14 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, J
         @Query("SELECT p FROM RoutineSetParameterEntity p " +
                         "WHERE p.setTemplate.id IN :setIds")
         List<RoutineSetParameterEntity> findParametersBySetIds(@Param("setIds") List<Long> setIds);
+
+        Optional<RoutineEntity> findByExportKey(UUID exportKey);
+
+        @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise", "exercises.sets",
+                        "exercises.sets.parameters" })
+        Optional<RoutineEntity> findFullByExportKey(UUID exportKey);
+
+        @Modifying
+        @Query("UPDATE RoutineEntity r SET r.timesPurchased = r.timesPurchased + 1 WHERE r.id = :id")
+        int incrementPurchaseCount(@Param("id") Long id);
 }

@@ -42,7 +42,11 @@ public class UpdateRoutineRequest {
     private Integer sessionsPerWeek;
 
     @JsonProperty("isActive")
-    private Boolean isActive = true;
+    private Boolean isActive;
+ 
+    @Size(max = 20, message = "Version cannot exceed 20 characters")
+    @JsonProperty("version")
+    private String version;
 
     /** @return true si el cliente envió "sportId" en el JSON (aunque sea null) */
     public boolean hasSportIdExplicit() {
