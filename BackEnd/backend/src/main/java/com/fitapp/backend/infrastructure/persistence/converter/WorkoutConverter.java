@@ -3,9 +3,10 @@ package com.fitapp.backend.infrastructure.persistence.converter;
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionResponse;
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionSummaryResponse;
 import com.fitapp.backend.domain.model.WorkoutSessionModel;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.WorkoutSessionEntity;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

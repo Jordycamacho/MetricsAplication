@@ -1,4 +1,4 @@
-package com.fitapp.backend.application.dto.routine.request;
+package com.fitapp.backend.routinecomplete.routine.aplication.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Pattern;

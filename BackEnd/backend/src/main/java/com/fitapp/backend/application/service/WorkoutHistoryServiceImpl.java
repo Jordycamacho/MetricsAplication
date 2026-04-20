@@ -4,13 +4,14 @@ import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesRes
 import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesResponse.LastSetValueResponse;
 import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesResponse.LastSetValueResponse.ParameterValue;
 import com.fitapp.backend.application.ports.input.WorkoutHistoryUseCase;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SessionExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SetExecutionEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SetExecutionParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SessionExerciseRepository;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

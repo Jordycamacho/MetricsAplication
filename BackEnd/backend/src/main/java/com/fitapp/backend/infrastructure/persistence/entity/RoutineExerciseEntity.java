@@ -1,6 +1,8 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.Objects;

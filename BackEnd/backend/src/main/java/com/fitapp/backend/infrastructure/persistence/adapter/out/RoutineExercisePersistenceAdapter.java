@@ -11,12 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fitapp.backend.application.ports.output.RoutineExercisePersistencePort;
 import com.fitapp.backend.domain.model.RoutineExerciseModel;
-import com.fitapp.backend.infrastructure.persistence.converter.RoutineConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseRepository;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.converter.RoutineConverter;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

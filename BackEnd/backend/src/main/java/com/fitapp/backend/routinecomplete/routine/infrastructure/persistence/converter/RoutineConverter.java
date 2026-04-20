@@ -1,4 +1,4 @@
-package com.fitapp.backend.infrastructure.persistence.converter;
+package com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.converter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,12 +13,10 @@ import org.springframework.stereotype.Component;
 import com.fitapp.backend.application.dto.routine.request.AddExerciseToRoutineRequest;
 import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
-import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.PackageEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetParameterEntity;
@@ -31,12 +29,14 @@ import com.fitapp.backend.infrastructure.persistence.repository.ExerciseReposito
 import com.fitapp.backend.infrastructure.persistence.repository.PackageRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseParameterRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseRepository;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.RoutineSetTemplateRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

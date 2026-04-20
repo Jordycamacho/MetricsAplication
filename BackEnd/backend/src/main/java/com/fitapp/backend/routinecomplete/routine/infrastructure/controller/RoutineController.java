@@ -1,4 +1,4 @@
-package com.fitapp.backend.infrastructure.controller;
+package com.fitapp.backend.routinecomplete.routine.infrastructure.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -23,16 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fitapp.backend.application.dto.page.PageResponse;
-import com.fitapp.backend.application.dto.routine.request.CreateRoutineRequest;
-import com.fitapp.backend.application.dto.routine.request.RoutineFilterRequest;
-import com.fitapp.backend.application.dto.routine.request.UpdateRoutineRequest;
-import com.fitapp.backend.application.dto.routine.response.RoutineResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineStatisticsResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineSummaryResponse;
-import com.fitapp.backend.application.ports.input.RoutineUseCase;
 import com.fitapp.backend.application.service.defaults.DefaultRoutineService;
-import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.CreateRoutineRequest;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.RoutineFilterRequest;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.UpdateRoutineRequest;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineResponse;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineStatisticsResponse;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineSummaryResponse;
+import com.fitapp.backend.routinecomplete.routine.aplication.port.input.RoutineUseCase;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

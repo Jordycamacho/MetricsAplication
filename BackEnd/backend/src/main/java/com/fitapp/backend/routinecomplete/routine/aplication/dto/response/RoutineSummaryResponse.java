@@ -1,4 +1,4 @@
-package com.fitapp.backend.application.dto.routine.response;
+package com.fitapp.backend.routinecomplete.routine.aplication.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -7,23 +7,27 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.ArrayList;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class RoutineResponse {
+@AllArgsConstructor
+public class RoutineSummaryResponse {
     @JsonProperty("id")
     private Long id;
     
     @JsonProperty("name")
     private String name;
+    
+    @JsonProperty("userId")
+    private Long userId;
+    
+    @JsonProperty("userName")
+    private String userName;
     
     @JsonProperty("description")
     private String description;
@@ -46,10 +50,6 @@ public class RoutineResponse {
     @JsonProperty("lastUsedAt")
     private LocalDateTime lastUsedAt;
     
-    @Builder.Default
-    @JsonProperty("exercises")
-    private List<RoutineExerciseResponse> exercises = new ArrayList<>();
-    
     @JsonProperty("trainingDays")
     private Set<DayOfWeek> trainingDays;
     
@@ -59,6 +59,9 @@ public class RoutineResponse {
     @JsonProperty("sessionsPerWeek")
     private Integer sessionsPerWeek;
     
+    @JsonProperty("exerciseCount")
+    private Integer exerciseCount;
+        
     @JsonProperty("originalRoutineId")
     private Long originalRoutineId;
     

@@ -1,4 +1,4 @@
-package com.fitapp.backend.domain.model;
+package com.fitapp.backend.routinecomplete.routine.domain.model;
 
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 @Data

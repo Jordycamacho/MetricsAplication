@@ -3,6 +3,8 @@ package com.fitapp.backend.application.service.defaults;
 import com.fitapp.backend.domain.model.*;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+
 import org.springframework.stereotype.Component;
 
 import java.util.*;

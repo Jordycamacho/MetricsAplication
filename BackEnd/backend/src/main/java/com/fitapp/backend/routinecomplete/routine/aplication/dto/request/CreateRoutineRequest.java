@@ -1,4 +1,4 @@
-package com.fitapp.backend.application.dto.routine.request;
+package com.fitapp.backend.routinecomplete.routine.aplication.dto.request;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;

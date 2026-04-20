@@ -21,19 +21,19 @@ import com.fitapp.backend.application.dto.routine.response.RoutineExerciseRespon
 import com.fitapp.backend.application.ports.input.RoutineExerciseUseCase;
 import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
 import com.fitapp.backend.application.ports.output.RoutineExercisePersistencePort;
-import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
 import com.fitapp.backend.application.ports.output.UserPersistencePort;
 import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
-import com.fitapp.backend.domain.model.RoutineModel;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.domain.model.UserModel;
-import com.fitapp.backend.infrastructure.persistence.converter.RoutineConverter;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
+import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.converter.RoutineConverter;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -6,6 +6,7 @@ import com.fitapp.backend.domain.model.package_.PackageItemModel;
 import com.fitapp.backend.domain.model.package_.PackageModel;
 import com.fitapp.backend.infrastructure.persistence.entity.*;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -324,12 +325,12 @@ public class PackageConverter {
                 return response;
         }
 
-        public com.fitapp.backend.application.dto.routine.response.RoutineResponse toRoutineResponse(
+        public com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineResponse toRoutineResponse(
                         RoutineEntity entity) {
                 if (entity == null)
                         return null;
 
-                return com.fitapp.backend.application.dto.routine.response.RoutineResponse.builder()
+                return com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineResponse.builder()
                                 .id(entity.getId())
                                 .name(entity.getName())
                                 .description(entity.getDescription())

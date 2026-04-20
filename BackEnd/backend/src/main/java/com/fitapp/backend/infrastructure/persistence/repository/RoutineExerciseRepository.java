@@ -10,9 +10,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 
 @Repository
 public interface RoutineExerciseRepository extends JpaRepository<RoutineExerciseEntity, Long> {

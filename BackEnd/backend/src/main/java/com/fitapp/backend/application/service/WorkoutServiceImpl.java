@@ -5,7 +5,6 @@ import com.fitapp.backend.application.dto.workout.request.WorkoutHistoryFilterRe
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionResponse;
 import com.fitapp.backend.application.dto.workout.response.WorkoutSessionSummaryResponse;
 import com.fitapp.backend.application.ports.input.WorkoutUseCase;
-import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
 import com.fitapp.backend.application.ports.output.WorkoutSessionPersistencePort;
 import com.fitapp.backend.domain.exception.InvalidWorkoutDataException;
 import com.fitapp.backend.domain.exception.RoutineNotFoundException;
@@ -19,6 +18,9 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
 import com.fitapp.backend.infrastructure.persistence.repository.WorkoutSessionRepository;
 import com.fitapp.backend.infrastructure.persistence.specification.WorkoutSessionSpecification;
 import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
+import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;

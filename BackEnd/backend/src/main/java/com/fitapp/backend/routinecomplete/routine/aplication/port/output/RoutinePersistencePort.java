@@ -1,7 +1,8 @@
-package com.fitapp.backend.application.ports.output;
+package com.fitapp.backend.routinecomplete.routine.aplication.port.output;
 
-import com.fitapp.backend.application.dto.routine.request.RoutineFilterRequest;
-import com.fitapp.backend.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.RoutineFilterRequest;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import java.util.Optional;

@@ -3,6 +3,8 @@ package com.fitapp.backend.application.service.defaults;
 import com.fitapp.backend.application.ports.output.*;
 import com.fitapp.backend.domain.model.*;
 import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
+import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,8 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ImportSourceType;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import jakarta.persistence.*;

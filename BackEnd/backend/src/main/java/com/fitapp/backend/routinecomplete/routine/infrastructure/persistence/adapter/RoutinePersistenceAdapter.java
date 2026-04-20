@@ -1,15 +1,15 @@
-package com.fitapp.backend.infrastructure.persistence.adapter.out;
+package com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.adapter;
 
-import com.fitapp.backend.application.dto.routine.request.RoutineFilterRequest;
-import com.fitapp.backend.application.ports.output.RoutinePersistencePort;
-import com.fitapp.backend.domain.model.RoutineModel;
-import com.fitapp.backend.infrastructure.persistence.converter.RoutineConverter;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetParameterEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
+import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.RoutineFilterRequest;
+import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
+import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.converter.RoutineConverter;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

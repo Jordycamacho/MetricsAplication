@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fitapp.backend.application.dto.routine.request.AddExerciseToRoutineRequest;
 import com.fitapp.backend.application.dto.routine.response.RoutineExerciseResponse;
 import com.fitapp.backend.application.ports.input.RoutineExerciseUseCase;
-import com.fitapp.backend.application.ports.input.RoutineUseCase;
+import com.fitapp.backend.routinecomplete.routine.aplication.port.input.RoutineUseCase;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

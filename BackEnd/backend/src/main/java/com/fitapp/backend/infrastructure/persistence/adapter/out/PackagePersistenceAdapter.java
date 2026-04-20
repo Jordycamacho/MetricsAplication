@@ -15,6 +15,8 @@ import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionTy
 import com.fitapp.backend.infrastructure.persistence.repository.*;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

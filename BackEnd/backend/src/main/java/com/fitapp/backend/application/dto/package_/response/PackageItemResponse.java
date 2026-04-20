@@ -41,7 +41,7 @@ public class PackageItemResponse {
 
     @Schema(description = "Contenido si es ROUTINE")
     @JsonProperty("routine")
-    private com.fitapp.backend.application.dto.routine.response.RoutineResponse routine;
+    private com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineResponse routine;
 
     @Schema(description = "Contenido si es EXERCISE")
     @JsonProperty("exercise")

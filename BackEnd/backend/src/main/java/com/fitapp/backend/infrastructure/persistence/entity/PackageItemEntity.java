@@ -2,6 +2,7 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageItemType;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

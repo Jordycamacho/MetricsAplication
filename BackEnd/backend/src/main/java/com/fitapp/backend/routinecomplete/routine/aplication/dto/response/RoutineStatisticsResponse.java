@@ -1,4 +1,4 @@
-package com.fitapp.backend.application.dto.routine.response;
+package com.fitapp.backend.routinecomplete.routine.aplication.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
