@@ -8,15 +8,16 @@ import com.fitapp.appfit.feature.routine.database.entity.RoutineEntity
 import com.fitapp.appfit.feature.routine.database.entity.RoutineExerciseEntity
 import com.fitapp.appfit.feature.routine.database.entity.SetParameterEntity
 import com.fitapp.appfit.feature.routine.database.entity.SetTemplateEntity
-import com.fitapp.appfit.shared.enums.SyncStatus
 import com.fitapp.appfit.feature.routine.model.rutine.request.CreateRoutineRequest
 import com.fitapp.appfit.feature.routine.model.rutine.request.UpdateRoutineRequest
-import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
-import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineStatisticsResponse
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineSummaryResponse
+import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
+import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
+import com.fitapp.appfit.feature.routine.util.RoutineErrorHandler
+import com.fitapp.appfit.shared.enums.SyncStatus
 import com.fitapp.appfit.shared.model.PageResponse
 import retrofit2.HttpException
 import retrofit2.Response
@@ -25,14 +26,14 @@ import java.net.SocketTimeoutException
 
 class RoutineRepository(private val context: Context) {
 
-    private val service = RoutineService.Companion.instance
-    private val db by lazy { AppDatabase.Companion.getInstance(context) }
+    private val service = RoutineService.instance
+    private val db by lazy { AppDatabase.getInstance(context) }
     private val routineDao by lazy { db.routineDao() }
     private val exerciseDao by lazy { db.routineExerciseDao() }
     private val setTemplateDao by lazy { db.setTemplateDao() }
     private val setParameterDao by lazy { db.setParameterDao() }
 
-    // ── CRUD básico (solo back) ───────────────────────────────────────────────
+    // ── CRUD básico ───────────────────────────────────────────────────────────
 
     suspend fun createRoutine(request: CreateRoutineRequest) =
         call { service.createRoutine(request) }
@@ -54,6 +55,15 @@ class RoutineRepository(private val context: Context) {
 
     suspend fun markRoutineAsUsed(id: Long) =
         callUnit { service.markRoutineAsUsed(id) }
+
+    suspend fun getRoutineByExportKey(exportKey: String) =
+        call { service.getRoutineByExportKey(exportKey) }
+
+    suspend fun importRoutineFromExportKey(exportKey: String) =
+        call { service.importRoutineFromExportKey(exportKey) }
+
+    suspend fun registerPurchase(id: Long) =
+        callUnit { service.registerPurchase(id) }
 
     // ── Listados con fallback a Room ──────────────────────────────────────────
 
@@ -323,8 +333,6 @@ class RoutineRepository(private val context: Context) {
         repetitions = repetitions
     )
 
-    // ── Funciones genéricas de red ────────────────────────────────────────────
-
     private suspend fun <T> call(block: suspend () -> Response<T>): Resource<T> {
         return try {
             val response = block()
@@ -332,7 +340,7 @@ class RoutineRepository(private val context: Context) {
                 response.body()?.let { Resource.Success(it) }
                     ?: Resource.Error("El servidor respondió sin datos")
             } else {
-                Resource.Error(httpErrorMessage(response.code(), response.errorBody()?.string()))
+                Resource.Error(RoutineErrorHandler.getErrorMessage(response))
             }
         } catch (e: Exception) {
             Resource.Error(exceptionMessage(e))
@@ -342,35 +350,25 @@ class RoutineRepository(private val context: Context) {
     private suspend fun callUnit(block: suspend () -> Response<Unit>): Resource<Unit> {
         return try {
             val response = block()
-            if (response.isSuccessful) Resource.Success(Unit)
-            else Resource.Error(httpErrorMessage(response.code(), response.errorBody()?.string()))
+            if (response.isSuccessful) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(RoutineErrorHandler.getErrorMessage(response))
+            }
         } catch (e: Exception) {
             Resource.Error(exceptionMessage(e))
         }
     }
 
-    private fun httpErrorMessage(code: Int, body: String?): String = when (code) {
-        401 -> "Sesión expirada. Vuelve a iniciar sesión."
-        403 -> "No tienes permisos para realizar esta acción."
-        404 -> "Recurso no encontrado."
-        500 -> "Error del servidor. Intenta nuevamente."
-        else -> "Error $code: ${body ?: "Error desconocido"}"
-    }
-
     private fun exceptionMessage(e: Exception): String = when (e) {
-        is SocketTimeoutException -> "Tiempo de espera agotado. Verifica tu conexión."
-        is ConnectException -> "Sin conexión. Verifica tu internet."
-        is HttpException -> httpErrorMessage(e.code(), e.message())
+        is SocketTimeoutException -> "⏱️ Tiempo de espera agotado. Verifica tu conexión."
+        is ConnectException -> "📡 Sin conexión. Verifica tu internet."
+        is HttpException -> RoutineErrorHandler.getErrorMessage(e.response()!!)
         else -> "Error: ${e.message ?: "Error desconocido"}"
     }
 
     // ── Cache helpers ─────────────────────────────────────────────────────────
 
-    /**
-     * Guarda la rutina completa (ejercicios + sets + parámetros) en Room.
-     * Se llama cuando el back responde con éxito en getRoutineForTraining,
-     * asegurando que el workout funcione offline en la próxima sesión.
-     */
     private suspend fun cacheRoutineForTraining(routine: RoutineResponse) {
         try {
             Log.d("RoutineRepository", "Cacheando rutina ${routine.id}, ejercicios: ${routine.exercises.orEmpty().size}")
@@ -433,11 +431,6 @@ class RoutineRepository(private val context: Context) {
         }
     }
 
-    /**
-     * Convierte RoutineSummaryResponse a RoutineEntity para cachear la lista.
-     * userId se deja vacío porque el summary no lo incluye — se actualiza
-     * cuando el usuario abre la rutina completa.
-     */
     private fun RoutineSummaryResponse.toEntity() = RoutineEntity(
         id = id,
         userId = "",

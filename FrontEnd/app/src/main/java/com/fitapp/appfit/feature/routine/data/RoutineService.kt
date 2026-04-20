@@ -92,6 +92,21 @@ interface RoutineService {
     @GET("api/routines/{id}/for-training")
     suspend fun getRoutineForTraining(@Path("id") id: Long): Response<RoutineResponse>
 
+    @GET("api/routines/export/{exportKey}")
+    suspend fun getRoutineByExportKey(
+        @Path("exportKey") exportKey: String
+    ): Response<RoutineResponse>
+
+    @POST("api/routines/import/{exportKey}")
+    suspend fun importRoutineFromExportKey(
+        @Path("exportKey") exportKey: String
+    ): Response<RoutineResponse>
+
+    @POST("api/routines/{id}/register-purchase")
+    suspend fun registerPurchase(
+        @Path("id") id: Long
+    ): Response<Unit>
+
     companion object {
         val instance: RoutineService by lazy {
             ApiClient.instance.create(RoutineService::class.java)

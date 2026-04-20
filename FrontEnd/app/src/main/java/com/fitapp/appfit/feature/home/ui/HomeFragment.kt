@@ -183,7 +183,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        routineViewModel.clearAllUpdateStates()
+        //routineViewModel.clearAllUpdateStates()
         loadData()
     }
 

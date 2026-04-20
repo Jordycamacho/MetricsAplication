@@ -8,5 +8,8 @@ data class CreateRoutineRequest(
     @SerializedName("sportId") val sportId: Long? = null,
     @SerializedName("trainingDays") val trainingDays: List<String> = emptyList(),
     @SerializedName("goal") val goal: String,
-    @SerializedName("sessionsPerWeek") val sessionsPerWeek: Int
+    @SerializedName("sessionsPerWeek") val sessionsPerWeek: Int,
+    @SerializedName("originalRoutineId") val originalRoutineId: Long? = null,
+    @SerializedName("version") val version: String? = null,
+    @SerializedName("packageId") val packageId: Long? = null
 )

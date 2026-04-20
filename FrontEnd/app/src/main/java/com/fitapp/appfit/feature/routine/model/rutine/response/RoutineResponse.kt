@@ -16,5 +16,10 @@ data class RoutineResponse(
     @SerializedName("createdAt") val createdAt: String?,
     @SerializedName("updatedAt") val updatedAt: String?,
     @SerializedName("lastUsedAt") val lastUsedAt: String?,
-    @SerializedName("exercises") val exercises: List<RoutineExerciseResponse>?
+    @SerializedName("exercises") val exercises: List<RoutineExerciseResponse>?,
+    @SerializedName("originalRoutineId") val originalRoutineId: Long? = null,
+    @SerializedName("version") val version: String? = null,
+    @SerializedName("packageId") val packageId: Long? = null,
+    @SerializedName("exportKey") val exportKey: String? = null,
+    @SerializedName("timesPurchased") val timesPurchased: Int? = null
 )

@@ -142,7 +142,7 @@ object ExerciseValidation {
      */
     fun formatRating(rating: Double?, ratingCount: Int?): String {
         return if (rating != null && ratingCount != null && ratingCount > 0) {
-            String.format("%.1f ⭐ (%d)", rating, ratingCount)
+            String.format("%.1f  (%d)", rating, ratingCount)
         } else {
             "Sin calificación"
         }

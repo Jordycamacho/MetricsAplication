@@ -15,5 +15,10 @@ data class RoutineSummaryResponse(
     @SerializedName("trainingDays") val trainingDays: Set<String>,
     @SerializedName("goal") val goal: String,
     @SerializedName("sessionsPerWeek") val sessionsPerWeek: Int,
-    @SerializedName("exerciseCount") val exerciseCount: Int
+    @SerializedName("exerciseCount") val exerciseCount: Int,
+    @SerializedName("originalRoutineId") val originalRoutineId: Long? = null,
+    @SerializedName("version") val version: String? = null,
+    @SerializedName("packageId") val packageId: Long? = null,
+    @SerializedName("exportKey") val exportKey: String? = null,
+    @SerializedName("timesPurchased") val timesPurchased: Int? = null
 )

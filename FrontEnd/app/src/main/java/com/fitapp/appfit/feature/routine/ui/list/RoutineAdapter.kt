@@ -24,6 +24,7 @@ class RoutineAdapter(
 
     inner class RoutineViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvName: TextView = itemView.findViewById(R.id.tv_routine_name)
+        private val tvVersion: TextView = itemView.findViewById(R.id.tv_version)  // nuevo
         private val tvLastUsed: TextView = itemView.findViewById(R.id.tv_last_used)
         private val tvExerciseCount: TextView = itemView.findViewById(R.id.tv_exercise_count)
         private val tvSportName: TextView = itemView.findViewById(R.id.tv_sport_name)
@@ -32,8 +33,26 @@ class RoutineAdapter(
         val btnAddExercises: MaterialButton = itemView.findViewById(R.id.btn_add_exercises)
 
         fun bind(routine: RoutineSummaryResponse) {
-            tvName.text = routine.name
-            tvExerciseCount.text = "${routine.exerciseCount} ejercicios"
+            // Nombre con indicador de importación (solo un punto, sin emoji)
+            val nameWithImport = buildString {
+                append(routine.name)
+                if (routine.originalRoutineId != null) append(" •")
+            }
+            tvName.text = nameWithImport
+
+            if (!routine.version.isNullOrBlank()) {
+                tvVersion.text = "v${routine.version}"
+                tvVersion.visibility = View.VISIBLE
+            } else {
+                tvVersion.visibility = View.GONE
+            }
+
+            tvExerciseCount.text = buildString {
+                append("${routine.exerciseCount} ejercicios")
+                routine.timesPurchased?.takeIf { it > 0 }?.let {
+                    append(" • $it ${if (it == 1) "copia" else "copias"}")
+                }
+            }
 
             val sport = routine.sportName
             if (!sport.isNullOrEmpty()) {

@@ -36,38 +36,29 @@ class CreateRoutineFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
         setupObservers()
+        setupFrequencyMode()
         binding.btnCreateRoutine.setOnClickListener {
             if (validateForm()) createRoutine()
         }
         sportViewModel.getAllSports()
     }
 
-    // ── Toolbar ─────────────────────────────────────────────────────────────
-
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
     }
-
-    // ── Spinner de deportes ──────────────────────────────────────────────────
 
     private fun updateSportsSpinner(sports: List<SportResponse>) {
         sportsMap.clear()
         sportNames.clear()
         sportNames.add("Sin deporte específico")
-
         sports.forEach { sport ->
-            val label = sport.name
-            sportNames.add(label)
-            sportsMap[label] = sport.id
+            sportNames.add(sport.name)
+            sportsMap[sport.name] = sport.id
         }
-
-        val adapter =
-            ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, sportNames)
+        val adapter = ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, sportNames)
         binding.spinnerSports.setAdapter(adapter)
         binding.spinnerSports.setText(sportNames[0], false)
     }
-
-    // ── Observadores ─────────────────────────────────────────────────────────
 
     private fun setupObservers() {
         sportViewModel.allSportsState.observe(viewLifecycleOwner) { resource ->
@@ -81,62 +72,122 @@ class CreateRoutineFragment : Fragment() {
                 is Resource.Loading -> setFormEnabled(false)
                 is Resource.Success -> {
                     setFormEnabled(true)
-                    Toast.makeText(requireContext(), "Rutina creada", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "✓ Rutina creada", Toast.LENGTH_SHORT).show()
                     findNavController().navigateUp()
                 }
                 is Resource.Error -> {
                     setFormEnabled(true)
-                    Toast.makeText(requireContext(), resource.message ?: "Error al crear", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        resource.message ?: "Error al crear",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
+            }
+        }
+
+        routineViewModel.validationErrors.observe(viewLifecycleOwner) { errors ->
+            if (errors.isNotEmpty()) {
+                showValidationErrors(errors)
             }
         }
     }
 
-    // ── Validación ────────────────────────────────────────────────────────────
+    // ── Validación (ahora basada en visibilidad) ──────────────────────────────
 
     private fun validateForm(): Boolean {
+        binding.etRoutineName.error = null
+        binding.etGoal.error = null
+        if (binding.layoutSessionsContainer.visibility == View.VISIBLE) {
+            binding.etSessionsPerWeek.error = null
+        }
+
         val name = binding.etRoutineName.text.toString().trim()
+        val goal = binding.etGoal.text.toString().trim()
+
         if (name.isEmpty()) {
             binding.etRoutineName.error = "El nombre es obligatorio"
             return false
         }
-
-        val sessions = binding.etSessionsPerWeek.text.toString().toIntOrNull()
-        if (sessions == null || sessions < 1 || sessions > 7) {
-            binding.etSessionsPerWeek.error = "Debe ser un número entre 1 y 7"
+        if (goal.isEmpty()) {
+            binding.etGoal.error = "El objetivo es obligatorio"
             return false
         }
 
-        if (getSelectedDays().isEmpty()) {
-            Toast.makeText(requireContext(), "Selecciona al menos un día", Toast.LENGTH_SHORT).show()
-            return false
-        }
+        val useDays = binding.layoutDaysContainer.visibility == View.VISIBLE
 
+        if (useDays) {
+            val selectedDays = getSelectedDays()
+            if (selectedDays.isEmpty()) {
+                Toast.makeText(requireContext(), "Selecciona al menos un día", Toast.LENGTH_SHORT).show()
+                return false
+            }
+        } else {
+            val sessionsText = binding.etSessionsPerWeek.text.toString()
+            val sessions = sessionsText.toIntOrNull()
+            if (sessions == null || sessions !in 1..7) {
+                binding.etSessionsPerWeek.error = "Debe ser un número entre 1 y 7"
+                return false
+            }
+        }
         return true
     }
 
-    // ── Crear rutina ──────────────────────────────────────────────────────────
+    private fun showValidationErrors(errors: Map<String, String>) {
+        errors["name"]?.let { binding.etRoutineName.error = it }
+        errors["goal"]?.let { binding.etGoal.error = it }
+        errors["sessionsPerWeek"]?.let { binding.etSessionsPerWeek.error = it }
+        errors["trainingDays"]?.let {
+            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupFrequencyMode() {
+        binding.switchMode.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                binding.layoutDaysContainer.visibility = View.VISIBLE
+                binding.layoutSessionsContainer.visibility = View.GONE
+            } else {
+                binding.layoutDaysContainer.visibility = View.GONE
+                binding.layoutSessionsContainer.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    // ── Crear rutina (también basada en visibilidad) ──────────────────────────
 
     private fun createRoutine() {
         val name = binding.etRoutineName.text.toString().trim()
-        val goal = binding.etGoal.text.toString().trim().ifEmpty { null }
-        val sessions = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
-        val days = getSelectedDays()
+        val goal = binding.etGoal.text.toString().trim()
+        val version = binding.etVersion.text.toString().trim().takeIf { it.isNotEmpty() }
+        val selectedSportText = binding.spinnerSports.text.toString()
+        val sportId = sportsMap[selectedSportText]
 
-        val selectedText = binding.spinnerSports.text.toString()
-        val sportId = sportsMap[selectedText]
+        val useDays = binding.layoutDaysContainer.visibility == View.VISIBLE
+
+        val trainingDays: List<String>
+        val sessionsPerWeek: Int
+
+        if (useDays) {
+            trainingDays = getSelectedDays()
+            sessionsPerWeek = trainingDays.size  // o podrías usar 0 si el backend no lo necesita
+        } else {
+            trainingDays = emptyList()
+            sessionsPerWeek = binding.etSessionsPerWeek.text.toString().toIntOrNull() ?: 3
+        }
 
         routineViewModel.createRoutine(
             name = name,
             description = null,
             sportId = sportId,
-            trainingDays = days,
-            goal = goal ?: "",
-            sessionsPerWeek = sessions
+            trainingDays = trainingDays,
+            goal = goal,
+            sessionsPerWeek = sessionsPerWeek,
+            version = version,
+            originalRoutineId = null,
+            packageId = null
         )
     }
-
-    // ── Utilidades ────────────────────────────────────────────────────────────
 
     private fun getSelectedDays(): List<String> = buildList {
         if (binding.cbMonday.isChecked) add("MONDAY")

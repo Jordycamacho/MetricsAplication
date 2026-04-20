@@ -36,46 +36,83 @@
             android:padding="20dp"
             android:paddingBottom="32dp">
 
-            <!-- Header info -->
+            <!-- Header info mejorado (V2) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:orientation="vertical"
                 android:background="#1A78703F"
                 android:padding="14dp"
                 android:layout_marginBottom="24dp">
 
-                <View
-                    android:layout_width="3dp"
-                    android:layout_height="36dp"
-                    android:background="#78703F"
-                    android:layout_marginEnd="12dp" />
-
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Rutina Personal"
-                        android:textColor="#78703F"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05" />
+                    <View
+                        android:layout_width="3dp"
+                        android:layout_height="36dp"
+                        android:background="#78703F"
+                        android:layout_marginEnd="12dp" />
 
-                    <TextView
-                        android:id="@+id/tv_routine_info"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Solo visible para ti"
-                        android:textColor="#B3B3B3"
-                        android:textSize="12sp"
-                        android:layout_marginTop="2dp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rutina Personal"
+                            android:textColor="#78703F"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/tv_routine_info"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="..."
+                            android:textColor="#B3B3B3"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
                 </LinearLayout>
+
+                <!-- Información V2 adicional -->
+                <TextView
+                    android:id="@+id/tv_export_key"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#B3B3B3"
+                    android:textSize="11sp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_times_purchased"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#B3B3B3"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_original_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#B3B3B3"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- Nombre -->
@@ -186,18 +223,149 @@
                     android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Sesiones por semana -->
+            <!-- Contenedor para Días específicos (solo se muestra si la rutina usa días) -->
+            <LinearLayout
+                android:id="@+id/layout_days_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DÍAS DE ENTRENAMIENTO"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="10dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="#1E1E1E"
+                    android:padding="12dp"
+                    android:layout_marginBottom="20dp">
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="L" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_monday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="M" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_tuesday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="X" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_wednesday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="J" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_thursday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="V" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_friday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="S" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_saturday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="D" android:textColor="#B3B3B3" android:textSize="12sp"
+                            android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <CheckBox android:id="@+id/cb_sunday" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Contenedor para Sesiones por semana (solo se muestra si la rutina usa sesiones) -->
+            <LinearLayout
+                android:id="@+id/layout_sessions_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SESIONES POR SEMANA"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="6dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxBackgroundColor="#1E1E1E"
+                    app:boxCornerRadiusTopStart="10dp"
+                    app:boxCornerRadiusTopEnd="10dp"
+                    app:boxCornerRadiusBottomStart="10dp"
+                    app:boxCornerRadiusBottomEnd="10dp"
+                    app:hintTextColor="#B3B3B3"
+                    app:boxStrokeColor="#333333"
+                    app:boxStrokeWidth="1dp"
+                    android:hint="Número de sesiones (1-7)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_sessions_per_week"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#FFFFFF"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:paddingVertical="14dp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <!-- Versión (con validación semántica) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SESIONES POR SEMANA"
+                android:text="VERSIÓN (formato semántico: 1.2.3)"
                 android:textColor="#78703F"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.1"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp"
+                android:layout_marginTop="8dp" />
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_version"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
@@ -210,95 +378,18 @@
                 app:hintTextColor="#B3B3B3"
                 app:boxStrokeColor="#333333"
                 app:boxStrokeWidth="1dp"
-                android:hint="3">
+                android:hint="Ej: 1.0.0, 2.1, 3">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_sessions_per_week"
+                    android:id="@+id/et_version"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="#FFFFFF"
-                    android:inputType="number"
+                    android:inputType="text"
                     android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Días de entrenamiento -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DÍAS DE ENTRENAMIENTO"
-                android:textColor="#78703F"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="10dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="#1E1E1E"
-                android:padding="12dp"
-                android:layout_marginBottom="32dp">
-
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="L" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_monday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="M" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_tuesday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="X" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_wednesday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="J" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_thursday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="V" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_friday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="S" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_saturday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="D" android:textColor="#B3B3B3" android:textSize="12sp"
-                        android:textStyle="bold" android:layout_marginBottom="4dp"/>
-                    <CheckBox android:id="@+id/cb_sunday" android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:buttonTint="#78703F" android:gravity="center"/>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Guardar -->
+            <!-- Botones -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_save_routine"
                 android:layout_width="match_parent"
@@ -313,7 +404,6 @@
                 android:elevation="0dp"
                 android:layout_marginBottom="12dp" />
 
-            <!-- Toggle activo/inactivo -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_toggle_active"
                 android:layout_width="match_parent"
@@ -330,7 +420,6 @@
                 android:elevation="0dp"
                 android:layout_marginBottom="12dp" />
 
-            <!-- Eliminar -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_delete_routine"
                 android:layout_width="match_parent"
@@ -347,7 +436,7 @@
                 android:elevation="0dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnd_ddelete_rdwdwoutine"
+                android:id="@+id/sdaas"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:text="ELIMINAR RUTINA"

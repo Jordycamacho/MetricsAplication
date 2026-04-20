@@ -109,7 +109,8 @@ class RoutinesFragment : Fragment() {
                     generationLock.set(false)
                     hideLoading()
                     showEmpty()
-                    Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
+                    // Mostrar error mejorado
+                    showErrorToast(resource.message ?: "Error al cargar rutinas")
                 }
             }
         }
@@ -122,7 +123,7 @@ class RoutinesFragment : Fragment() {
                 }
                 is Resource.Error -> {
                     hideLoading()
-                    Toast.makeText(requireContext(), resource.message ?: "Error", Toast.LENGTH_SHORT).show()
+                    showErrorToast(resource.message ?: "Error al filtrar")
                 }
                 else -> {}
             }
@@ -144,7 +145,7 @@ class RoutinesFragment : Fragment() {
                     generationLock.set(false)
                     hideLoading()
                     unlockGenerateButtons()
-                    Toast.makeText(requireContext(), resource.message ?: "Error al generar", Toast.LENGTH_LONG).show()
+                    showErrorToast(resource.message ?: "Error al generar rutina")
                 }
             }
         }
@@ -207,12 +208,6 @@ class RoutinesFragment : Fragment() {
         binding.btnGenerateBoxing.text = "Generar esta rutina"
     }
 
-    private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.recyclerRoutines.visibility = View.GONE
-        binding.layoutEmptyState.visibility = View.GONE
-    }
-
     private fun hideLoading() {
         binding.progressBar.visibility = View.GONE
     }
@@ -235,6 +230,15 @@ class RoutinesFragment : Fragment() {
             binding.btnGenerateGym.visibility = View.VISIBLE
             binding.btnGenerateBoxing.visibility = View.VISIBLE
         }
+    }
+
+    private fun showErrorToast(message: String) {
+        val duration = if (message.contains("\n") || message.length > 50) {
+            Toast.LENGTH_LONG
+        } else {
+            Toast.LENGTH_SHORT
+        }
+        Toast.makeText(requireContext(), message, duration).show()
     }
 
     override fun onResume() {
