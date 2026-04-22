@@ -49,6 +49,16 @@ public class RoutineExercisePersistenceAdapter implements RoutineExercisePersist
         entity.setDayOfWeek(model.getDayOfWeek());
         entity.setSessionOrder(model.getSessionOrder());
         entity.setRestAfterExercise(model.getRestAfterExercise());
+        entity.setCircuitGroupId(model.getCircuitGroupId());
+        entity.setCircuitRoundCount(model.getCircuitRoundCount());
+        entity.setSuperSetGroupId(model.getSuperSetGroupId());
+        entity.setAmrapDurationSeconds(model.getAmrapDurationSeconds());
+        entity.setEmomIntervalSeconds(model.getEmomIntervalSeconds());
+        entity.setEmomTotalRounds(model.getEmomTotalRounds());
+        entity.setTabataWorkSeconds(model.getTabataWorkSeconds());
+        entity.setTabataRestSeconds(model.getTabataRestSeconds());
+        entity.setTabataRounds(model.getTabataRounds());
+        entity.setNotes(model.getNotes());
 
         RoutineExerciseEntity saved = routineExerciseRepository.save(entity);
         log.info("SAVE_ROUTINE_EXERCISE_OK | id={} | position={}", saved.getId(), saved.getPosition());

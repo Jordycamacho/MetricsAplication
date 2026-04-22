@@ -1,19 +1,30 @@
 package com.fitapp.backend.domain.model;
 
+import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import lombok.Data;
 import java.util.List;
-import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 
 @Data
 public class RoutineExerciseModel {
     private Long id;
-    private Long exerciseId;
     private Long routineId;
+    private Long exerciseId;
     private Integer position;
-    private Integer sessionNumber = 1;
+    private Integer sessionNumber;
     private DayOfWeek dayOfWeek;
     private Integer sessionOrder;
     private Integer restAfterExercise;
     private List<RoutineExerciseParameterModel> targetParameters;
-    private List<RoutineSetTemplateModel> sets;
+    //v2 
+    private List<RoutineSetTemplateModel> sets;    
+    private String circuitGroupId;
+    private Integer circuitRoundCount;
+    private String superSetGroupId;
+    private Integer amrapDurationSeconds;
+    private Integer emomIntervalSeconds;
+    private Integer emomTotalRounds;
+    private Integer tabataWorkSeconds;
+    private Integer tabataRestSeconds;
+    private Integer tabataRounds;
+    private String notes;
 }

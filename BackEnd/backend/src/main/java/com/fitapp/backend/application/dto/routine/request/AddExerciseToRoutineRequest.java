@@ -29,6 +29,38 @@ public class AddExerciseToRoutineRequest {
     
     @JsonProperty("sets")
     private List<SetTemplateRequest> sets;
+        
+    @JsonProperty("circuitGroupId")
+    private String circuitGroupId;
+    
+    @JsonProperty("circuitRoundCount")
+    private Integer circuitRoundCount;
+    
+    @JsonProperty("superSetGroupId")
+    private String superSetGroupId;
+    
+    @JsonProperty("amrapDurationSeconds")
+    private Integer amrapDurationSeconds;
+    
+    @JsonProperty("emomIntervalSeconds")
+    private Integer emomIntervalSeconds;
+    
+    @JsonProperty("emomTotalRounds")
+    private Integer emomTotalRounds;
+    
+    @JsonProperty("tabataWorkSeconds")
+    private Integer tabataWorkSeconds;
+    
+    @JsonProperty("tabataRestSeconds")
+    private Integer tabataRestSeconds;
+    
+    @JsonProperty("tabataRounds")
+    private Integer tabataRounds;
+    
+    @JsonProperty("notes")
+    private String notes;
+    
+    // ─────────────────────────────────────────────────────────────────────────
     
     @Data
     public static class ExerciseParameterRequest {

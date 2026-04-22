@@ -103,6 +103,18 @@ public class RoutineConverter {
         model.setDayOfWeek(entity.getDayOfWeek());
         model.setSessionOrder(entity.getSessionOrder());
         model.setRestAfterExercise(entity.getRestAfterExercise());
+        
+        // V2 Fields
+        model.setCircuitGroupId(entity.getCircuitGroupId());
+        model.setCircuitRoundCount(entity.getCircuitRoundCount());
+        model.setSuperSetGroupId(entity.getSuperSetGroupId());
+        model.setAmrapDurationSeconds(entity.getAmrapDurationSeconds());
+        model.setEmomIntervalSeconds(entity.getEmomIntervalSeconds());
+        model.setEmomTotalRounds(entity.getEmomTotalRounds());
+        model.setTabataWorkSeconds(entity.getTabataWorkSeconds());
+        model.setTabataRestSeconds(entity.getTabataRestSeconds());
+        model.setTabataRounds(entity.getTabataRounds());
+        model.setNotes(entity.getNotes());
 
         model.setTargetParameters(entity.getTargetParameters() != null && !entity.getTargetParameters().isEmpty()
                 ? entity.getTargetParameters().stream()
@@ -231,6 +243,16 @@ public class RoutineConverter {
         entity.setDayOfWeek(model.getDayOfWeek());
         entity.setSessionOrder(model.getSessionOrder());
         entity.setRestAfterExercise(model.getRestAfterExercise());
+        entity.setCircuitGroupId(model.getCircuitGroupId());
+        entity.setCircuitRoundCount(model.getCircuitRoundCount());
+        entity.setSuperSetGroupId(model.getSuperSetGroupId());
+        entity.setAmrapDurationSeconds(model.getAmrapDurationSeconds());
+        entity.setEmomIntervalSeconds(model.getEmomIntervalSeconds());
+        entity.setEmomTotalRounds(model.getEmomTotalRounds());
+        entity.setTabataWorkSeconds(model.getTabataWorkSeconds());
+        entity.setTabataRestSeconds(model.getTabataRestSeconds());
+        entity.setTabataRounds(model.getTabataRounds());
+        entity.setNotes(model.getNotes());
 
         entity.setTargetParameters(model.getTargetParameters() != null && !model.getTargetParameters().isEmpty()
                 ? model.getTargetParameters().stream()
@@ -345,6 +367,16 @@ public class RoutineConverter {
                 routineExercise.setDayOfWeek(null);
             }
         }
+        routineExercise.setCircuitGroupId(request.getCircuitGroupId());
+        routineExercise.setCircuitRoundCount(request.getCircuitRoundCount());
+        routineExercise.setSuperSetGroupId(request.getSuperSetGroupId());
+        routineExercise.setAmrapDurationSeconds(request.getAmrapDurationSeconds());
+        routineExercise.setEmomIntervalSeconds(request.getEmomIntervalSeconds());
+        routineExercise.setEmomTotalRounds(request.getEmomTotalRounds());
+        routineExercise.setTabataWorkSeconds(request.getTabataWorkSeconds());
+        routineExercise.setTabataRestSeconds(request.getTabataRestSeconds());
+        routineExercise.setTabataRounds(request.getTabataRounds());
+        routineExercise.setNotes(request.getNotes());
 
         routineExercise.setTargetParameters(
                 request.getTargetParameters() != null && !request.getTargetParameters().isEmpty()
@@ -362,8 +394,10 @@ public class RoutineConverter {
 
         routine.getExercises().add(routineExercise);
 
-        log.info("ADD_EXERCISE_OK | routineId={} | exerciseId={} | position={} | session={}",
-                routine.getId(), exercise.getId(), nextPosition, request.getSessionNumber());
+        log.info("ADD_EXERCISE_OK | routineId={} | exerciseId={} | position={} | session={} | circuit={} | superset={} | amrap={} | emom={} | tabata={}",
+                routine.getId(), exercise.getId(), nextPosition, request.getSessionNumber(),
+                request.getCircuitGroupId(), request.getSuperSetGroupId(), request.getAmrapDurationSeconds(),
+                request.getEmomTotalRounds(), request.getTabataRounds());
         return routineExercise;
     }
 
