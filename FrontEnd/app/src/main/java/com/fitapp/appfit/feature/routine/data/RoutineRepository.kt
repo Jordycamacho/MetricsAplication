@@ -305,7 +305,17 @@ class RoutineRepository(private val context: Context) {
         restAfterExercise = restAfterExercise,
         sets = sets,
         targetParameters = emptyList(),
-        setsTemplate = setsTemplate
+        setsTemplate = setsTemplate,
+        circuitGroupId = circuitGroupId,
+        circuitRoundCount = circuitRoundCount,
+        superSetGroupId = superSetGroupId,
+        amrapDurationSeconds = amrapDurationSeconds,
+        emomIntervalSeconds = emomIntervalSeconds,
+        emomTotalRounds = emomTotalRounds,
+        tabataWorkSeconds = tabataWorkSeconds,
+        tabataRestSeconds = tabataRestSeconds,
+        tabataRounds = tabataRounds,
+        notes = notes
     )
 
     private fun SetTemplateEntity.toResponse(
@@ -385,7 +395,17 @@ class RoutineRepository(private val context: Context) {
                     dayOfWeek = ex.dayOfWeek,
                     sessionOrder = ex.sessionOrder,
                     restAfterExercise = ex.restAfterExercise,
-                    sets = ex.sets
+                    sets = ex.sets,
+                    circuitGroupId = ex.circuitGroupId,
+                    circuitRoundCount = ex.circuitRoundCount,
+                    superSetGroupId = ex.superSetGroupId,
+                    amrapDurationSeconds = ex.amrapDurationSeconds,
+                    emomIntervalSeconds = ex.emomIntervalSeconds,
+                    emomTotalRounds = ex.emomTotalRounds,
+                    tabataWorkSeconds = ex.tabataWorkSeconds,
+                    tabataRestSeconds = ex.tabataRestSeconds,
+                    tabataRounds = ex.tabataRounds,
+                    notes = ex.notes
                 )
             }
             exerciseDao.insertExercises(exerciseEntities)

@@ -496,8 +496,8 @@ class WorkoutFragment : Fragment() {
 
                 RoutineExerciseResponse(
                     id = exercise.id,
-                    exerciseId = exercise.exerciseId,
                     routineId = exercise.routineId,
+                    exerciseId = exercise.exerciseId,
                     exerciseName = exercise.exerciseName,
                     position = exercise.position,
                     sessionNumber = exercise.sessionNumber,
@@ -506,7 +506,17 @@ class WorkoutFragment : Fragment() {
                     restAfterExercise = exercise.restAfterExercise,
                     sets = exercise.sets,
                     targetParameters = exercise.targetParameters,
-                    setsTemplate = updatedSets
+                    setsTemplate = updatedSets,
+                    circuitGroupId = exercise.circuitGroupId,
+                    circuitRoundCount = exercise.circuitRoundCount,
+                    superSetGroupId = exercise.superSetGroupId,
+                    amrapDurationSeconds = exercise.amrapDurationSeconds,
+                    emomIntervalSeconds = exercise.emomIntervalSeconds,
+                    emomTotalRounds = exercise.emomTotalRounds,
+                    tabataWorkSeconds = exercise.tabataWorkSeconds,
+                    tabataRestSeconds = exercise.tabataRestSeconds,
+                    tabataRounds = exercise.tabataRounds,
+                    notes = exercise.notes
                 )
             } else {
                 exercise

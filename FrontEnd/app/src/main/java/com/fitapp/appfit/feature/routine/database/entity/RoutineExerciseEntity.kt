@@ -28,6 +28,23 @@ data class RoutineExerciseEntity(
     val sessionOrder: Int?,
     val restAfterExercise: Int?,
     val sets: Int?,
+
+    // ── v2: Agrupación ────────────────────────────────────────────────────────
+    val circuitGroupId: String? = null,
+    val circuitRoundCount: Int? = null,
+    val superSetGroupId: String? = null,
+
+    // ── v2: Modos especiales ──────────────────────────────────────────────────
+    val amrapDurationSeconds: Int? = null,
+    val emomIntervalSeconds: Int? = null,
+    val emomTotalRounds: Int? = null,
+    val tabataWorkSeconds: Int? = null,
+    val tabataRestSeconds: Int? = null,
+    val tabataRounds: Int? = null,
+
+    // ── v2: Notas ─────────────────────────────────────────────────────────────
+    val notes: String? = null,
+
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
     val lastModifiedLocally: Long = System.currentTimeMillis()
 )

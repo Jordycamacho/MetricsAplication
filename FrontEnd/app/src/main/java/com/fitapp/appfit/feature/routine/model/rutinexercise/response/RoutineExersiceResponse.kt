@@ -15,7 +15,23 @@ data class RoutineExerciseResponse(
     @SerializedName("restAfterExercise") val restAfterExercise: Int?,
     @SerializedName("sets") val sets: Int?,
     @SerializedName("targetParameters") val targetParameters: List<RoutineExerciseParameterResponse>?,
-    @SerializedName("setsTemplate") val setsTemplate: List<RoutineSetTemplateResponse>?
+    @SerializedName("setsTemplate") val setsTemplate: List<RoutineSetTemplateResponse>?,
+
+    // ── v2: Agrupación ────────────────────────────────────────────────────────
+    @SerializedName("circuitGroupId") val circuitGroupId: String?,
+    @SerializedName("circuitRoundCount") val circuitRoundCount: Int?,
+    @SerializedName("superSetGroupId") val superSetGroupId: String?,
+
+    // ── v2: Modos especiales ──────────────────────────────────────────────────
+    @SerializedName("amrapDurationSeconds") val amrapDurationSeconds: Int?,
+    @SerializedName("emomIntervalSeconds") val emomIntervalSeconds: Int?,
+    @SerializedName("emomTotalRounds") val emomTotalRounds: Int?,
+    @SerializedName("tabataWorkSeconds") val tabataWorkSeconds: Int?,
+    @SerializedName("tabataRestSeconds") val tabataRestSeconds: Int?,
+    @SerializedName("tabataRounds") val tabataRounds: Int?,
+
+    // ── v2: Notas ─────────────────────────────────────────────────────────────
+    @SerializedName("notes") val notes: String?
 )
 
 data class RoutineExerciseParameterResponse(

@@ -195,7 +195,20 @@ private fun RoutineExerciseResponse.copy(
     restAfterExercise = this.restAfterExercise,
     sets = this.sets,
     targetParameters = this.targetParameters,
-    setsTemplate = setsTemplate
+    setsTemplate = setsTemplate,
+    // v2: Agrupación
+    circuitGroupId = this.circuitGroupId,
+    circuitRoundCount = this.circuitRoundCount,
+    superSetGroupId = this.superSetGroupId,
+    // v2: Modos especiales
+    amrapDurationSeconds = this.amrapDurationSeconds,
+    emomIntervalSeconds = this.emomIntervalSeconds,
+    emomTotalRounds = this.emomTotalRounds,
+    tabataWorkSeconds = this.tabataWorkSeconds,
+    tabataRestSeconds = this.tabataRestSeconds,
+    tabataRounds = this.tabataRounds,
+    // v2: Notas
+    notes = this.notes
 )
 
 private fun RoutineSetTemplateResponse.copy(

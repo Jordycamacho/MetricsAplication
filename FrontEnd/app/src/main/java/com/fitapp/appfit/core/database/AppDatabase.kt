@@ -32,7 +32,7 @@ import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
         WorkoutSessionEntity::class,
         WorkoutSetResultEntity::class
     ],
-    version = 5,                     // ← Cambiado a 5
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -54,7 +54,8 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Tabla de sesiones de entrenamiento
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE IF NOT EXISTS `workout_sessions` (
                         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         `routineId` INTEGER NOT NULL,
@@ -66,12 +67,14 @@ abstract class AppDatabase : RoomDatabase() {
                         `lastModifiedLocally` INTEGER NOT NULL,
                         FOREIGN KEY(`routineId`) REFERENCES `routines`(`id`) ON DELETE CASCADE
                     )
-                """.trimIndent())
+                """.trimIndent()
+                )
 
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_routineId` ON `workout_sessions` (`routineId`)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_syncStatus` ON `workout_sessions` (`syncStatus`)")
 
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE IF NOT EXISTS `workout_set_results` (
                         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         `workoutSessionId` INTEGER NOT NULL,
@@ -84,7 +87,8 @@ abstract class AppDatabase : RoomDatabase() {
                         `syncStatus` TEXT NOT NULL,
                         FOREIGN KEY(`workoutSessionId`) REFERENCES `workout_sessions`(`id`) ON DELETE CASCADE
                     )
-                """.trimIndent())
+                """.trimIndent()
+                )
 
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_set_results_workoutSessionId` ON `workout_set_results` (`workoutSessionId`)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_set_results_setTemplateId` ON `workout_set_results` (`setTemplateId`)")
@@ -110,16 +114,32 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN circuitGroupId TEXT")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN circuitRoundCount INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN superSetGroupId TEXT")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN amrapDurationSeconds INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN emomIntervalSeconds INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN emomTotalRounds INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN tabataWorkSeconds INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN tabataRestSeconds INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN tabataRounds INTEGER")
+                database.execSQL("ALTER TABLE routine_exercises ADD COLUMN notes TEXT")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                Room.databaseBuilder(
+                val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "fitapp_offline.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // ← Añadida MIGRATION_4_5
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
-                    .also { INSTANCE = it }
+                INSTANCE = instance
+                instance
             }
         }
     }

@@ -15,6 +15,7 @@
         app:cardBackgroundColor="@color/card_dark"
         android:clickable="true"
         android:focusable="true"
+        android:longClickable="true"
         android:foreground="?attr/selectableItemBackground">
 
         <LinearLayout
@@ -22,8 +23,9 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <!-- Franja dorada izquierda -->
+            <!-- Franja izquierda: dorada por defecto, cambia con agrupación -->
             <View
+                android:id="@+id/view_group_stripe"
                 android:layout_width="4dp"
                 android:layout_height="match_parent"
                 android:background="@color/gold_primary"/>
@@ -35,14 +37,13 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Header con checkbox -->
+                <!-- Fila 1: checkbox + nombre + badge progreso + flecha -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
-                    <!-- ⭐ CHECKBOX DE EJERCICIO -->
                     <CheckBox
                         android:id="@+id/checkbox_exercise_completed"
                         android:layout_width="28dp"
@@ -63,7 +64,6 @@
                         android:textSize="18sp"
                         android:textStyle="bold"/>
 
-                    <!-- Badge de progreso (sets completados/totales) -->
                     <TextView
                         android:id="@+id/tv_sets_progress"
                         android:layout_width="wrap_content"
@@ -85,6 +85,79 @@
                         app:tint="@color/gold_primary"/>
 
                 </LinearLayout>
+
+                <!-- Fila 2: badges de modo especial + agrupación (sólo visibles si aplica) -->
+                <LinearLayout
+                    android:id="@+id/layout_exercise_badges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <!-- Badge: modo especial (AMRAP / EMOM / TABATA) -->
+                    <TextView
+                        android:id="@+id/tv_special_mode_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AMRAP"
+                        android:textSize="9sp"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.08"
+                        android:paddingHorizontal="9dp"
+                        android:paddingVertical="4dp"
+                        android:background="@drawable/bg_badge_rounded"
+                        android:backgroundTint="#1565C0"
+                        android:layout_marginEnd="6dp"
+                        android:visibility="gone"/>
+
+                    <!-- Badge: agrupación (CIRCUITO / SUPERSET) -->
+                    <TextView
+                        android:id="@+id/tv_group_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CIRCUITO"
+                        android:textSize="9sp"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.08"
+                        android:paddingHorizontal="9dp"
+                        android:paddingVertical="4dp"
+                        android:background="@drawable/bg_badge_rounded"
+                        android:backgroundTint="#00695C"
+                        android:layout_marginEnd="6dp"
+                        android:visibility="gone"/>
+
+                    <!-- Badge: nota presente -->
+                    <TextView
+                        android:id="@+id/tv_notes_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📝"
+                        android:textSize="12sp"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="3dp"
+                        android:background="@drawable/bg_badge_rounded"
+                        android:backgroundTint="#2A2A2A"
+                        android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <!-- Fila 3: info del modo especial (parámetros numéricos) -->
+                <TextView
+                    android:id="@+id/tv_special_mode_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="11sp"
+                    android:textColor="#78703F"
+                    android:letterSpacing="0.04"
+                    android:visibility="gone"/>
+
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
