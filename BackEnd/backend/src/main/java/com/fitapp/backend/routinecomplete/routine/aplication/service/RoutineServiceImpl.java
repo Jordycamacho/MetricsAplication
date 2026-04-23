@@ -1,23 +1,14 @@
 package com.fitapp.backend.routinecomplete.routine.aplication.service;
 
+import com.fitapp.backend.Exercise.aplication.port.output.ExercisePersistencePort;
+import com.fitapp.backend.Exercise.domain.model.ExerciseModel;
 import com.fitapp.backend.application.dto.RoutineSetParameter.response.RoutineSetParameterResponse;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.dto.page.PageResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineExerciseParameterResponse;
-import com.fitapp.backend.application.dto.routine.response.RoutineExerciseResponse;
 import com.fitapp.backend.application.logging.RoutineServiceLogger;
-import com.fitapp.backend.application.ports.output.ExercisePersistencePort;
-import com.fitapp.backend.application.ports.output.SportPersistencePort;
-import com.fitapp.backend.application.ports.output.UserPersistencePort;
-import com.fitapp.backend.application.service.SubscriptionLimitChecker;
 import com.fitapp.backend.domain.exception.RoutineNotFoundException;
-import com.fitapp.backend.domain.model.ExerciseModel;
-import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;
-import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
-import com.fitapp.backend.domain.model.SportModel;
-import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
 import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
@@ -30,6 +21,15 @@ import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.Routin
 import com.fitapp.backend.routinecomplete.routine.aplication.port.input.RoutineUseCase;
 import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.response.RoutineExerciseParameterResponse;
+import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.response.RoutineExerciseResponse;
+import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseModel;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
+import com.fitapp.backend.sport.aplication.port.output.SportPersistencePort;
+import com.fitapp.backend.sport.domain.model.SportModel;
+import com.fitapp.backend.suscription.aplication.service.SubscriptionLimitChecker;
+import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.user.domain.model.UserModel;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

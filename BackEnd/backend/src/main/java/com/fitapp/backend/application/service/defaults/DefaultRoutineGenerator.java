@@ -4,6 +4,8 @@ import com.fitapp.backend.domain.model.*;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseModel;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
 
 import org.springframework.stereotype.Component;
 

@@ -12,8 +12,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.ArrayList;
 
-import com.fitapp.backend.application.dto.routine.response.RoutineExerciseResponse;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.response.RoutineExerciseResponse;
 
 @Data
 @Builder

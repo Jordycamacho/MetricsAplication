@@ -21,12 +21,12 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.fitapp.backend.application.ports.input.SubscriptionUseCase;
-import com.fitapp.backend.application.ports.output.UserPersistencePort;
-import com.fitapp.backend.domain.model.SubscriptionModel;
-import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
+import com.fitapp.backend.suscription.aplication.port.input.SubscriptionUseCase;
+import com.fitapp.backend.suscription.domain.model.SubscriptionModel;
+import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.user.domain.model.UserModel;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

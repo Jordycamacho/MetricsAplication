@@ -1,9 +1,9 @@
 package com.fitapp.backend.application.ports.input;
 
-import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.BulkUpdateSetParametersRequest;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.CreateSetTemplateRequest;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.request.UpdateSetTemplateRequest;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
 
 import java.util.List;
 

@@ -4,9 +4,10 @@ import com.fitapp.backend.application.dto.Auth.AuthResponse;
 import com.fitapp.backend.application.dto.Auth.LoginRequest;
 import com.fitapp.backend.application.dto.Auth.RefreshTokenRequest;
 import com.fitapp.backend.application.dto.Auth.RegisterRequest;
-import com.fitapp.backend.application.dto.user.PasswordUpdateRequest;
 import com.fitapp.backend.application.ports.input.AuthUseCase;
-import com.fitapp.backend.application.ports.input.UserUseCase;
+import com.fitapp.backend.user.aplication.dto.request.PasswordUpdateRequest;
+import com.fitapp.backend.user.aplication.port.input.UserUseCase;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,11 +1,11 @@
 package com.fitapp.backend.infrastructure.config.data;
 
-import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
-import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
+import com.fitapp.backend.sport.infrastructure.persistence.repository.SportRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

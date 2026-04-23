@@ -14,9 +14,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.stereotype.Component;
 
-import com.fitapp.backend.application.ports.output.UserPersistencePort;
-import com.fitapp.backend.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
+import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.user.domain.model.UserModel;
 
 @Component
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {

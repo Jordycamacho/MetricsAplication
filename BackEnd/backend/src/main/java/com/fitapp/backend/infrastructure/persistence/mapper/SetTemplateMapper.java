@@ -1,7 +1,7 @@
 package com.fitapp.backend.infrastructure.persistence.mapper;
 
-import com.fitapp.backend.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.application.dto.RoutineSetParameter.response.RoutineSetParameterResponse;
 import com.fitapp.backend.domain.model.RoutineSetParameterModel;

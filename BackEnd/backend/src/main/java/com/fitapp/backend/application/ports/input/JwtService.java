@@ -1,6 +1,6 @@
 package com.fitapp.backend.application.ports.input;
 
-import com.fitapp.backend.domain.model.UserModel;
+import com.fitapp.backend.user.domain.model.UserModel;
 
 public interface JwtService {
 

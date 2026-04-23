@@ -1,7 +1,7 @@
 package com.fitapp.backend.parameter.infrastructure.persistence.entity;
 
-import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.fitapp.backend.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseModel;
 
 @Data
 public class RoutineModel {

@@ -1,7 +1,8 @@
 package com.fitapp.backend.infrastructure.persistence.specification;
 
 import com.fitapp.backend.application.dto.workout.request.WorkoutHistoryFilterRequest;
-import com.fitapp.backend.infrastructure.persistence.entity.WorkoutSessionEntity;
+import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
+
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;

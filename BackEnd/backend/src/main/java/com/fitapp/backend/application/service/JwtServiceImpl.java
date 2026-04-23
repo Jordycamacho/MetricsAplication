@@ -16,7 +16,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
 import com.fitapp.backend.application.ports.input.JwtService;
-import com.fitapp.backend.domain.model.UserModel;
+import com.fitapp.backend.user.domain.model.UserModel;
 
 import lombok.RequiredArgsConstructor;
 

@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fitapp.backend.application.dto.page.PageResponse;
-import com.fitapp.backend.application.service.defaults.DefaultRoutineService;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.CreateRoutineRequest;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.RoutineFilterRequest;
@@ -32,6 +31,7 @@ import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.Routin
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineStatisticsResponse;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineSummaryResponse;
 import com.fitapp.backend.routinecomplete.routine.aplication.port.input.RoutineUseCase;
+import com.fitapp.backend.routinecomplete.routine.aplication.service.DefaultRoutineService;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
 
 import io.swagger.v3.oas.annotations.Operation;

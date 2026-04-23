@@ -2,6 +2,8 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionChangeReason;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

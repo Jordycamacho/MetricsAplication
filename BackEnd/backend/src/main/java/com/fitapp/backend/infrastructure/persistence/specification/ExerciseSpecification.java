@@ -1,6 +1,6 @@
 package com.fitapp.backend.infrastructure.persistence.specification;
 
-import com.fitapp.backend.infrastructure.persistence.entity.ExerciseEntity;
+import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;

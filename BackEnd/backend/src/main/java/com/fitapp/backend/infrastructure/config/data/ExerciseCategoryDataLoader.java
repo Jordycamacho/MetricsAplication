@@ -1,7 +1,8 @@
 package com.fitapp.backend.infrastructure.config.data;
 
-import com.fitapp.backend.infrastructure.persistence.entity.ExerciseCategoryEntity;
-import com.fitapp.backend.infrastructure.persistence.repository.ExerciseCategoryRepository;
+import com.fitapp.backend.category.infrastructure.persistence.entity.ExerciseCategoryEntity;
+import com.fitapp.backend.category.infrastructure.persistence.repository.ExerciseCategoryRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

@@ -1,7 +1,5 @@
 package com.fitapp.backend.parameter.application.port.output;
 
-import com.fitapp.backend.infrastructure.persistence.entity.UserEntity;
-import com.fitapp.backend.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.parameter.application.dto.request.CustomParameterFilterRequest;
 import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
 import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
@@ -9,6 +7,8 @@ import com.fitapp.backend.parameter.infrastructure.persistence.converter.CustomP
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

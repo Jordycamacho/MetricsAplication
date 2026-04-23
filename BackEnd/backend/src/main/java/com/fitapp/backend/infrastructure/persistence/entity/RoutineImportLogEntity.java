@@ -2,6 +2,7 @@ package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ImportSourceType;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;

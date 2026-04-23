@@ -1,7 +1,9 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
+import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricGranularity;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

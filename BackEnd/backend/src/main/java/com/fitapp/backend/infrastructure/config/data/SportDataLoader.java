@@ -1,8 +1,9 @@
 package com.fitapp.backend.infrastructure.config.data;
 
-import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;
-import com.fitapp.backend.infrastructure.persistence.repository.SportRepository;
+import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
+import com.fitapp.backend.sport.infrastructure.persistence.repository.SportRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

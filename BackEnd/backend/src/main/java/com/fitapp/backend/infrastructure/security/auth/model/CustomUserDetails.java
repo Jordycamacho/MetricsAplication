@@ -4,8 +4,9 @@ import java.time.LocalDate;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import com.fitapp.backend.domain.model.UserModel;
+
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
+import com.fitapp.backend.user.domain.model.UserModel;
 
 
 public class CustomUserDetails implements UserDetails {

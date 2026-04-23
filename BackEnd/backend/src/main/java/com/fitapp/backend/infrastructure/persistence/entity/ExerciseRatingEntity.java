@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
+
 import java.time.LocalDateTime;
 
 @Entity

@@ -1,6 +1,7 @@
 package com.fitapp.backend.infrastructure.persistence.entity;
 
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
+import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

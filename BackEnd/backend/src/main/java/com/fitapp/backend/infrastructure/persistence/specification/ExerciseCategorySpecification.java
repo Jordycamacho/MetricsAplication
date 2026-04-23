@@ -1,10 +1,11 @@
 package com.fitapp.backend.infrastructure.persistence.specification;
 
-import com.fitapp.backend.infrastructure.persistence.entity.ExerciseCategoryEntity;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
+
+import com.fitapp.backend.category.infrastructure.persistence.entity.ExerciseCategoryEntity;
 
 import java.util.ArrayList;
 import java.util.List;

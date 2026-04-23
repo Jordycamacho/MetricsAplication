@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

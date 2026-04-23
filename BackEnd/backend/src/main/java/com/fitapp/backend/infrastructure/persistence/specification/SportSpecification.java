@@ -1,7 +1,7 @@
 package com.fitapp.backend.infrastructure.persistence.specification;
 
-import com.fitapp.backend.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;
+import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
