@@ -1,19 +1,19 @@
 package com.fitapp.backend.category.aplication.service;
 
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
 import com.fitapp.backend.category.aplication.dto.request.ExerciseCategoryFilterRequest;
 import com.fitapp.backend.category.aplication.dto.request.ExerciseCategoryRequest;
 import com.fitapp.backend.category.aplication.dto.response.ExerciseCategoryPageResponse;
 import com.fitapp.backend.category.aplication.dto.response.ExerciseCategoryResponse;
 import com.fitapp.backend.category.aplication.port.input.ExerciseCategoryUseCase;
 import com.fitapp.backend.category.aplication.port.output.ExerciseCategoryPersistencePort;
+import com.fitapp.backend.category.domain.exception.CategoryDuplicateException;
+import com.fitapp.backend.category.domain.exception.CategoryNotFoundException;
+import com.fitapp.backend.category.domain.exception.CategoryOwnershipException;
+import com.fitapp.backend.category.domain.exception.PredefinedCategoryException;
 import com.fitapp.backend.category.domain.model.ExerciseCategoryModel;
-import com.fitapp.backend.domain.exception.CategoryDuplicateException;
-import com.fitapp.backend.domain.exception.CategoryNotFoundException;
-import com.fitapp.backend.domain.exception.CategoryOwnershipException;
-import com.fitapp.backend.domain.exception.PredefinedCategoryException;
 import com.fitapp.backend.infrastructure.config.CacheService;
 import com.fitapp.backend.suscription.aplication.service.SubscriptionLimitChecker;
-import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_CREATE_CATEGORY_START | user={} | name={}", userEmail, request.getName());
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         // Verificar límite de categorías personalizadas
@@ -86,7 +86,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_UPDATE_CATEGORY_START | user={} | categoryId={}", userEmail, id);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         var existingCategory = categoryPersistencePort.findById(id)
@@ -128,7 +128,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_DELETE_CATEGORY_START | user={} | categoryId={}", userEmail, id);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         var category = categoryPersistencePort.findById(id)
@@ -187,7 +187,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_GET_MY_CATEGORIES | user={}", userEmail);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         filterRequest.setOwnerId(user.getId());
@@ -231,7 +231,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_GET_AVAILABLE_CATEGORIES | user={} | sportId={}", userEmail, sportId);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         Pageable pageable = createPageable(filterRequest);
@@ -252,7 +252,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_TOGGLE_STATUS | categoryId={} | user={}", id, userEmail);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         var category = categoryPersistencePort.findById(id)
@@ -281,7 +281,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.info("SERVICE_TOGGLE_VISIBILITY | categoryId={} | user={}", id, userEmail);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         var category = categoryPersistencePort.findById(id)
@@ -368,7 +368,7 @@ public class ExerciseCategoryServiceImpl implements ExerciseCategoryUseCase {
         log.debug("SERVICE_CHECK_NAME_AVAILABLE | name={} | user={}", name, userEmail);
 
         var user = userPersistencePort.findByEmail(userEmail)
-                .orElseThrow(() -> new com.fitapp.backend.domain.exception.UserNotFoundException(
+                .orElseThrow(() -> new com.fitapp.backend.auth.domain.exception.UserNotFoundException(
                         "Usuario no encontrado: " + userEmail));
 
         boolean takenByUser = categoryPersistencePort.findByNameAndOwnerId(name, user.getId()).isPresent();

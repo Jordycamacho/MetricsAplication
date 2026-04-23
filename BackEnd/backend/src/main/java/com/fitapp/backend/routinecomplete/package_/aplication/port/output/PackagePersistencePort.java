@@ -1,6 +1,6 @@
 package com.fitapp.backend.routinecomplete.package_.aplication.port.output;
 
-import com.fitapp.backend.application.dto.page.PageResponse;
+import com.fitapp.backend.infrastructure.shared.dto.PageResponse;
 import com.fitapp.backend.routinecomplete.package_.aplication.dto.request.*;
 import com.fitapp.backend.routinecomplete.package_.domain.model.PackageItemModel;
 import com.fitapp.backend.routinecomplete.package_.domain.model.PackageModel;

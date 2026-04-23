@@ -1,10 +1,10 @@
 package com.fitapp.backend.Exercise.infrastructure.persistence.entity;
 
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.category.infrastructure.persistence.entity.ExerciseCategoryEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseType;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;

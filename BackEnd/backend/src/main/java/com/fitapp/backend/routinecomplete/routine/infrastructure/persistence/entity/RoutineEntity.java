@@ -1,11 +1,11 @@
 package com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity;
 
-import com.fitapp.backend.infrastructure.persistence.converter.DaysOfWeekConverter;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.entity.PackageEntity;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.converter.DaysOfWeekConverter;
 import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;

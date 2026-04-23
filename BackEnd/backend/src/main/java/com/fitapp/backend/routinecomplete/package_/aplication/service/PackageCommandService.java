@@ -1,5 +1,6 @@
 package com.fitapp.backend.routinecomplete.package_.aplication.service;
 
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
@@ -11,7 +12,6 @@ import com.fitapp.backend.routinecomplete.package_.domain.model.CreatorModel;
 import com.fitapp.backend.routinecomplete.package_.domain.model.PackageItemModel;
 import com.fitapp.backend.routinecomplete.package_.domain.model.PackageModel;
 import com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.converter.PackageConverter;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

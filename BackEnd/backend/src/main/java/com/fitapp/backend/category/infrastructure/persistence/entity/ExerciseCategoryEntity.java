@@ -7,8 +7,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import java.time.LocalDateTime;
 

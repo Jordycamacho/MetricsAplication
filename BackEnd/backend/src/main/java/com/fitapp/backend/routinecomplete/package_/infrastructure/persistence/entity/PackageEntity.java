@@ -1,9 +1,9 @@
 package com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.entity;
 
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

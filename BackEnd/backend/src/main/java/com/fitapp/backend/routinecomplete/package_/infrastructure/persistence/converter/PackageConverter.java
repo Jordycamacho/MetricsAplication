@@ -1,6 +1,7 @@
 package com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.converter;
 
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.category.infrastructure.persistence.entity.ExerciseCategoryEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.routinecomplete.package_.aplication.dto.response.PackageItemResponse;
@@ -11,7 +12,6 @@ import com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.en
 import com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.entity.PackageItemEntity;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

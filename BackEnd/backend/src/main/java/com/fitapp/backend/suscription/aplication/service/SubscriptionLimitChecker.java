@@ -1,11 +1,11 @@
 package com.fitapp.backend.suscription.aplication.service;
 
-import com.fitapp.backend.domain.exception.SubscriptionLimitException;
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.suscription.aplication.port.input.SubscriptionUseCase;
+import com.fitapp.backend.suscription.domain.exception.SubscriptionLimitException;
 import com.fitapp.backend.suscription.domain.model.SubscriptionLimitsModel;
 import com.fitapp.backend.suscription.domain.model.SubscriptionModel;
-import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
-import com.fitapp.backend.user.domain.model.UserModel;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

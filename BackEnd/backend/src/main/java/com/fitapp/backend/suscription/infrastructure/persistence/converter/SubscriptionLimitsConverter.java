@@ -1,7 +1,7 @@
 package com.fitapp.backend.suscription.infrastructure.persistence.converter;
 
-import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionLimitsEntity;
 import com.fitapp.backend.suscription.domain.model.SubscriptionLimitsModel;
+import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionLimitsEntity;
 
 import org.springframework.stereotype.Component;
 

@@ -1,10 +1,9 @@
 package com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity;
 
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;

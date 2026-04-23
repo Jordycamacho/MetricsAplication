@@ -1,11 +1,11 @@
 package com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.controller;
 
-import com.fitapp.backend.application.dto.RoutineSetTemplate.request.BulkUpdateSetParametersRequest;
-import com.fitapp.backend.application.dto.RoutineSetTemplate.request.CreateSetTemplateRequest;
-import com.fitapp.backend.application.dto.RoutineSetTemplate.request.UpdateSetTemplateRequest;
-import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
-import com.fitapp.backend.infrastructure.persistence.mapper.SetTemplateMapper;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.dto.request.BulkUpdateSetParametersRequest;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.dto.request.CreateSetTemplateRequest;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.dto.request.UpdateSetTemplateRequest;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.dto.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.service.RoutineSetTemplateServiceImpl;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.converter.SetTemplateMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

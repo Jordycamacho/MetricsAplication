@@ -1,10 +1,11 @@
 package com.fitapp.backend.Exercise.infrastructure.persistence.repository;
 
-import com.fitapp.backend.infrastructure.persistence.entity.ExerciseRatingEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseRatingEntity;
 
 import java.util.Optional;
 

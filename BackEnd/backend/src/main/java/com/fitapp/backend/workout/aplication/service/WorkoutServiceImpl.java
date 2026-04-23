@@ -1,21 +1,20 @@
 package com.fitapp.backend.workout.aplication.service;
 
-import com.fitapp.backend.application.dto.workout.request.SaveWorkoutSessionRequest;
-import com.fitapp.backend.application.dto.workout.request.WorkoutHistoryFilterRequest;
-import com.fitapp.backend.application.dto.workout.response.WorkoutSessionResponse;
-import com.fitapp.backend.application.dto.workout.response.WorkoutSessionSummaryResponse;
-import com.fitapp.backend.application.ports.input.WorkoutUseCase;
-import com.fitapp.backend.domain.exception.InvalidWorkoutDataException;
-import com.fitapp.backend.domain.exception.RoutineNotFoundException;
-import com.fitapp.backend.domain.exception.WorkoutSessionNotFoundException;
+import com.fitapp.backend.auth.domain.model.CustomUserDetails;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetExecutionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
-import com.fitapp.backend.infrastructure.persistence.specification.WorkoutSessionSpecification;
-import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
 import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
+import com.fitapp.backend.routinecomplete.routine.domain.exception.RoutineNotFoundException;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.workout.aplication.dto.request.SaveWorkoutSessionRequest;
+import com.fitapp.backend.workout.aplication.dto.request.WorkoutHistoryFilterRequest;
+import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionResponse;
+import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionSummaryResponse;
+import com.fitapp.backend.workout.aplication.port.input.WorkoutUseCase;
 import com.fitapp.backend.workout.aplication.port.output.WorkoutSessionPersistencePort;
+import com.fitapp.backend.workout.domain.exception.InvalidWorkoutDataException;
+import com.fitapp.backend.workout.domain.exception.WorkoutSessionNotFoundException;
 import com.fitapp.backend.workout.domain.model.SessionExerciseModel;
 import com.fitapp.backend.workout.domain.model.SetExecutionModel;
 import com.fitapp.backend.workout.domain.model.SetExecutionParameterModel;
@@ -23,6 +22,7 @@ import com.fitapp.backend.workout.domain.model.WorkoutSessionModel;
 import com.fitapp.backend.workout.infrastructure.persistence.converter.WorkoutConverter;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.repository.WorkoutSessionRepository;
+import com.fitapp.backend.workout.infrastructure.persistence.specification.WorkoutSessionSpecification;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

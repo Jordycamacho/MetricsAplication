@@ -1,6 +1,6 @@
 package com.fitapp.backend.suscription.infrastructure.controller;
 
-import com.fitapp.backend.infrastructure.security.auth.model.CustomUserDetails;
+import com.fitapp.backend.auth.domain.model.CustomUserDetails;
 import com.fitapp.backend.suscription.aplication.dto.request.ChangePlanRequest;
 import com.fitapp.backend.suscription.aplication.dto.response.SubscriptionResponse;
 import com.fitapp.backend.suscription.aplication.port.input.SubscriptionUseCase;

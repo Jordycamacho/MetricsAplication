@@ -1,10 +1,10 @@
 package com.fitapp.backend.parameter.infrastructure.controller;
 
-import com.fitapp.backend.application.logging.ParameterServiceLogger;
 import com.fitapp.backend.parameter.application.dto.request.CustomParameterFilterRequest;
 import com.fitapp.backend.parameter.application.dto.request.CustomParameterRequest;
 import com.fitapp.backend.parameter.application.dto.response.CustomParameterPageResponse;
 import com.fitapp.backend.parameter.application.dto.response.CustomParameterResponse;
+import com.fitapp.backend.parameter.application.logging.ParameterServiceLogger;
 import com.fitapp.backend.parameter.application.port.input.CustomParameterUseCase;
 import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;

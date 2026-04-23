@@ -1,19 +1,18 @@
 package com.fitapp.backend.routinecomplete.routine.aplication.service;
 
 import com.fitapp.backend.Exercise.aplication.port.output.ExercisePersistencePort;
-import com.fitapp.backend.application.ports.output.*;
-import com.fitapp.backend.application.service.defaults.DefaultRoutineGenerator;
-import com.fitapp.backend.domain.model.*;
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
 import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.port.output.RoutineExercisePersistencePort;
 import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseModel;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.port.output.RoutineSetParameterPersistencePort;
 import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.port.output.RoutineSetTemplatePersistencePort;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.sport.aplication.port.output.SportPersistencePort;
-import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
-import com.fitapp.backend.user.domain.model.UserModel;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,10 +1,10 @@
 package com.fitapp.backend.sport.infrastructure.controller;
 
-import com.fitapp.backend.application.logging.SportServiceLogger;
 import com.fitapp.backend.sport.aplication.dto.request.SportFilterRequest;
 import com.fitapp.backend.sport.aplication.dto.request.SportRequest;
 import com.fitapp.backend.sport.aplication.dto.response.SportPageResponse;
 import com.fitapp.backend.sport.aplication.dto.response.SportResponse;
+import com.fitapp.backend.sport.aplication.logging.SportServiceLogger;
 import com.fitapp.backend.sport.aplication.port.input.SportUseCase;
 import com.fitapp.backend.sport.domain.model.SportModel;
 

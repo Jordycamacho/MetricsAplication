@@ -1,13 +1,13 @@
 package com.fitapp.backend.category.infrastructure.persistence.adapter;
 
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.category.aplication.dto.request.ExerciseCategoryFilterRequest;
 import com.fitapp.backend.category.aplication.port.output.ExerciseCategoryPersistencePort;
 import com.fitapp.backend.category.domain.model.ExerciseCategoryModel;
 import com.fitapp.backend.category.infrastructure.persistence.entity.ExerciseCategoryEntity;
 import com.fitapp.backend.category.infrastructure.persistence.repository.ExerciseCategoryRepository;
-import com.fitapp.backend.infrastructure.persistence.specification.ExerciseCategorySpecification;
+import com.fitapp.backend.category.infrastructure.persistence.specification.ExerciseCategorySpecification;
 import com.fitapp.backend.sport.infrastructure.persistence.repository.SportRepository;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

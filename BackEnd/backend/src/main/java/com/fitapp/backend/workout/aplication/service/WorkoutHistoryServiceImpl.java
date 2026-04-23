@@ -1,12 +1,12 @@
 package com.fitapp.backend.workout.aplication.service;
 
-import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesResponse;
-import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesResponse.LastSetValueResponse;
-import com.fitapp.backend.application.dto.workout.response.LastExerciseValuesResponse.LastSetValueResponse.ParameterValue;
-import com.fitapp.backend.application.ports.input.WorkoutHistoryUseCase;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseEntity;
+import com.fitapp.backend.workout.aplication.dto.response.LastExerciseValuesResponse;
+import com.fitapp.backend.workout.aplication.dto.response.LastExerciseValuesResponse.LastSetValueResponse;
+import com.fitapp.backend.workout.aplication.dto.response.LastExerciseValuesResponse.LastSetValueResponse.ParameterValue;
+import com.fitapp.backend.workout.aplication.port.input.WorkoutHistoryUseCase;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SessionExerciseEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionParameterEntity;

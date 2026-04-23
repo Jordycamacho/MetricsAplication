@@ -1,8 +1,8 @@
 package com.fitapp.backend.workout.infrastructure.persistence.converter;
 
-import com.fitapp.backend.application.dto.workout.response.SetExecutionParameterResponse;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
+import com.fitapp.backend.workout.aplication.dto.response.SetExecutionParameterResponse;
 import com.fitapp.backend.workout.domain.model.SetExecutionParameterModel;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionParameterEntity;

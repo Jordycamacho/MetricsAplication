@@ -1,6 +1,6 @@
 package com.fitapp.backend.infrastructure.config.data;
 
-import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionLimitsEntity;
+import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionLimitsEntity;
 import com.fitapp.backend.suscription.infrastructure.persistence.repository.SpringDataSubscriptionLimitsRepository;
 
 import lombok.RequiredArgsConstructor;

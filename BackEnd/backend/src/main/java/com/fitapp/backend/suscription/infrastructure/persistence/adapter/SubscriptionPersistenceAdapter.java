@@ -1,15 +1,15 @@
 package com.fitapp.backend.suscription.infrastructure.persistence.adapter;
 
-import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionLimitsEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionStatus;
 import com.fitapp.backend.suscription.aplication.port.output.SubscriptionPersistencePort;
 import com.fitapp.backend.suscription.domain.model.SubscriptionModel;
 import com.fitapp.backend.suscription.infrastructure.persistence.converter.SubscriptionConverter;
 import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionEntity;
+import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionLimitsEntity;
 import com.fitapp.backend.suscription.infrastructure.persistence.repository.SpringDataSubscriptionLimitsRepository;
 import com.fitapp.backend.suscription.infrastructure.persistence.repository.SpringDataSubscriptionRepository;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

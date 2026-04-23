@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

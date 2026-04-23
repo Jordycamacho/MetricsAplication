@@ -12,15 +12,10 @@ import org.springframework.stereotype.Component;
 
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.Exercise.infrastructure.persistence.repository.ExerciseRepository;
-import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
-import com.fitapp.backend.domain.model.RoutineSetParameterModel;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineExerciseParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetParameterEntity;
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetTemplateEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineExerciseParameterRepository;
-import com.fitapp.backend.infrastructure.persistence.repository.RoutineSetTemplateRepository;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
 import com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.entity.PackageEntity;
@@ -30,13 +25,18 @@ import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.ent
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.request.AddExerciseToRoutineRequest;
 import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseModel;
+import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseParameterModel;
 import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseEntity;
+import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseParameterEntity;
+import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.repository.RoutineExerciseParameterRepository;
 import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.repository.RoutineExerciseRepository;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.entity.RoutineSetParameterEntity;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.entity.RoutineSetTemplateEntity;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.repository.RoutineSetTemplateRepository;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.repository.SportRepository;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

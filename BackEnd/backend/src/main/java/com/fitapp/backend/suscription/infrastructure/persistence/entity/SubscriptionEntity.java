@@ -1,10 +1,9 @@
 package com.fitapp.backend.suscription.infrastructure.persistence.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionLimitsEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

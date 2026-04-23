@@ -1,21 +1,21 @@
 package com.fitapp.backend.parameter.application.service;
 
-import com.fitapp.backend.application.logging.ParameterServiceLogger;
-import com.fitapp.backend.domain.exception.DuplicateParameterException;
-import com.fitapp.backend.domain.exception.ParameterNotFoundException;
-import com.fitapp.backend.domain.exception.UnauthorizedOperationException;
-import com.fitapp.backend.domain.exception.UserNotFoundException;
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.exception.UserNotFoundException;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.MetricAggregation;
+import com.fitapp.backend.infrastructure.shared.exception.UnauthorizedOperationException;
 import com.fitapp.backend.parameter.application.dto.request.CustomParameterFilterRequest;
 import com.fitapp.backend.parameter.application.dto.request.CustomParameterRequest;
 import com.fitapp.backend.parameter.application.dto.response.CustomParameterPageResponse;
 import com.fitapp.backend.parameter.application.dto.response.CustomParameterResponse;
+import com.fitapp.backend.parameter.application.logging.ParameterServiceLogger;
 import com.fitapp.backend.parameter.application.port.input.CustomParameterUseCase;
+import com.fitapp.backend.parameter.domain.exception.DuplicateParameterException;
+import com.fitapp.backend.parameter.domain.exception.ParameterNotFoundException;
 import com.fitapp.backend.parameter.domain.model.CustomParameterModel;
 import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.ParameterType;
 import com.fitapp.backend.suscription.aplication.service.SubscriptionLimitChecker;
-import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

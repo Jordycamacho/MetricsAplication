@@ -2,8 +2,8 @@ package com.fitapp.backend.workout.infrastructure.persistence.converter;
 
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.Exercise.infrastructure.persistence.repository.ExerciseRepository;
-import com.fitapp.backend.application.dto.workout.response.SessionExerciseResponse;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseStatus;
+import com.fitapp.backend.workout.aplication.dto.response.SessionExerciseResponse;
 import com.fitapp.backend.workout.domain.model.SessionExerciseModel;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SessionExerciseEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;

@@ -1,8 +1,8 @@
 package com.fitapp.backend.workout.infrastructure.persistence.entity;
 
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetExecutionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 
 import jakarta.persistence.*;
 import lombok.*;

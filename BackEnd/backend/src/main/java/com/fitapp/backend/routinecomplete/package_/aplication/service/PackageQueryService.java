@@ -1,7 +1,8 @@
 package com.fitapp.backend.routinecomplete.package_.aplication.service;
 
-import com.fitapp.backend.application.dto.page.PageResponse;
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
+import com.fitapp.backend.infrastructure.shared.dto.PageResponse;
 import com.fitapp.backend.routinecomplete.package_.aplication.dto.request.*;
 import com.fitapp.backend.routinecomplete.package_.aplication.dto.response.*;
 import com.fitapp.backend.routinecomplete.package_.aplication.port.input.PackageQueryUseCase;
@@ -10,7 +11,6 @@ import com.fitapp.backend.routinecomplete.package_.domain.model.CreatorModel;
 import com.fitapp.backend.routinecomplete.package_.domain.model.PackageItemModel;
 import com.fitapp.backend.routinecomplete.package_.domain.model.PackageModel;
 import com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.converter.PackageConverter;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;

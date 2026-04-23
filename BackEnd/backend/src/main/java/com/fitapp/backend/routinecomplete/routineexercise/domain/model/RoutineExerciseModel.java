@@ -1,6 +1,5 @@
 package com.fitapp.backend.routinecomplete.routineexercise.domain.model;
 
-import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
 

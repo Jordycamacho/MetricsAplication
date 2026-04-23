@@ -1,0 +1,132 @@
+package com.fitapp.backend.auth.infrastructure.persistence.entity;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import org.hibernate.annotations.BatchSize;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import jakarta.persistence.Id;
+
+import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
+import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionEntity;
+import com.fitapp.backend.workout.infrastructure.persistence.entity.PersonalRecordEntity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+
+@Entity
+@Table(name = "users", indexes = {
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_role", columnList = "role")
+})
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    private Long id;
+
+    @Column(name = "google_id", length = 128)
+    private String googleId;
+
+    @Column(nullable = false, unique = true, length = 255)
+    private String email;
+
+    @Column(name = "full_name", length = 255)
+    private String fullName;
+
+    @Column(name = "provider", length = 32)
+    @Builder.Default
+    private String provider = "LOCAL";
+
+    @Column(name = "profile_image", length = 512)
+    private String profileImage;
+
+    @Column(name = "password", nullable = true)
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private boolean isActive = true;
+
+    // ── Verificación de correo ──────────────────────────────────────────────────
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    @Column(name = "email_verification_token", length = 128)
+    private String emailVerificationToken;
+
+    @Column(name = "email_verification_token_expires_at")
+    private LocalDateTime emailVerificationTokenExpiresAt;
+
+    // ── Soft delete ─────────────────────────────────────────────────────────────
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // ── Suscripción y rutinas ───────────────────────────────────────────────────
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "subscription_id")
+    private SubscriptionEntity subscription;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
+    private List<RoutineEntity> routines = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<PersonalRecordEntity> personalRecords = new ArrayList<>();
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
+
+    public void setSubscription(SubscriptionEntity subscription) {
+        this.subscription = subscription;
+        if (subscription != null) {
+            subscription.setUser(this);
+        }
+    }
+}

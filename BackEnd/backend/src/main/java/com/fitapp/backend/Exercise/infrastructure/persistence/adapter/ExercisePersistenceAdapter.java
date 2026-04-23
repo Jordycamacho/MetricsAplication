@@ -2,20 +2,20 @@ package com.fitapp.backend.Exercise.infrastructure.persistence.adapter;
 
 import com.fitapp.backend.Exercise.aplication.dto.request.ExerciseFilterRequest;
 import com.fitapp.backend.Exercise.aplication.port.output.ExercisePersistencePort;
+import com.fitapp.backend.Exercise.domain.exception.ExerciseNotFoundException;
 import com.fitapp.backend.Exercise.domain.model.ExerciseModel;
 import com.fitapp.backend.Exercise.infrastructure.persistence.converter.ExerciseConverter;
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
+import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseRatingEntity;
 import com.fitapp.backend.Exercise.infrastructure.persistence.repository.ExerciseRatingRepository;
 import com.fitapp.backend.Exercise.infrastructure.persistence.repository.ExerciseRepository;
+import com.fitapp.backend.Exercise.infrastructure.persistence.specification.ExerciseSpecification;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.category.infrastructure.persistence.repository.ExerciseCategoryRepository;
-import com.fitapp.backend.domain.exception.ExerciseNotFoundException;
-import com.fitapp.backend.infrastructure.persistence.entity.*;
-import com.fitapp.backend.infrastructure.persistence.specification.ExerciseSpecification;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.repository.SportRepository;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

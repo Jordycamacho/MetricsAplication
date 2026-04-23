@@ -1,8 +1,8 @@
 package com.fitapp.backend.sport.infrastructure.persistence.entity;
 
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
 import com.fitapp.backend.infrastructure.config.StringMapConverter;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
 
 import jakarta.persistence.*;
 import lombok.Data;

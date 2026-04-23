@@ -1,16 +1,16 @@
 package com.fitapp.backend.suscription.aplication.service;
 
-import com.fitapp.backend.domain.exception.UserNotFoundException;
-import com.fitapp.backend.infrastructure.persistence.entity.SubscriptionHistoryEntity;
+import com.fitapp.backend.auth.domain.exception.UserNotFoundException;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionChangeReason;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
 import com.fitapp.backend.suscription.aplication.port.input.SubscriptionUseCase;
 import com.fitapp.backend.suscription.aplication.port.output.SubscriptionPersistencePort;
 import com.fitapp.backend.suscription.domain.model.SubscriptionModel;
+import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionHistoryEntity;
 import com.fitapp.backend.suscription.infrastructure.persistence.repository.SpringDataSubscriptionHistoryRepository;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

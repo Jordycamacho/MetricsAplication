@@ -1,14 +1,16 @@
 package com.fitapp.backend.routinecomplete.package_.infrastructure.persistence.adapter;
 
-import com.fitapp.backend.application.dto.page.PageResponse;
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.Exercise.infrastructure.persistence.repository.ExerciseRepository;
+import com.fitapp.backend.auth.infrastructure.persistence.entity.UserEntity;
+import com.fitapp.backend.auth.infrastructure.persistence.repository.SpringDataUserRepository;
 import com.fitapp.backend.category.infrastructure.persistence.entity.ExerciseCategoryEntity;
 import com.fitapp.backend.category.infrastructure.persistence.repository.ExerciseCategoryRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageItemType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.PackageType;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SubscriptionType;
+import com.fitapp.backend.infrastructure.shared.dto.PageResponse;
 import com.fitapp.backend.parameter.infrastructure.persistence.entity.CustomParameterEntity;
 import com.fitapp.backend.parameter.infrastructure.persistence.repository.CustomParameterRepository;
 import com.fitapp.backend.routinecomplete.package_.aplication.dto.request.PackageFilterRequest;
@@ -25,8 +27,6 @@ import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.ent
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.sport.infrastructure.persistence.entity.SportEntity;
 import com.fitapp.backend.sport.infrastructure.persistence.repository.SportRepository;
-import com.fitapp.backend.user.infrastructure.persistence.entity.UserEntity;
-import com.fitapp.backend.user.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

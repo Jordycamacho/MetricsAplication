@@ -14,10 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fitapp.backend.Exercise.aplication.port.output.ExercisePersistencePort;
-import com.fitapp.backend.application.dto.RoutineSetParameter.response.RoutineSetParameterResponse;
-import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
-import com.fitapp.backend.domain.model.RoutineExerciseParameterModel;
-import com.fitapp.backend.domain.model.RoutineSetParameterModel;
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
@@ -27,15 +25,17 @@ import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.rep
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.request.AddExerciseToRoutineRequest;
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.response.RoutineExerciseParameterResponse;
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.response.RoutineExerciseResponse;
+import com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.response.RoutineSetParameterResponse;
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.port.input.RoutineExerciseUseCase;
 import com.fitapp.backend.routinecomplete.routineexercise.aplication.port.output.RoutineExercisePersistencePort;
 import com.fitapp.backend.routinecomplete.routineexercise.domain.exception.BusinessException;
 import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseModel;
+import com.fitapp.backend.routinecomplete.routineexercise.domain.model.RoutineExerciseParameterModel;
 import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseEntity;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.dto.response.RoutineSetTemplateResponse;
+import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetParameterModel;
 import com.fitapp.backend.routinecomplete.routinesetemplate.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.suscription.aplication.service.SubscriptionLimitChecker;
-import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
-import com.fitapp.backend.user.domain.model.UserModel;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

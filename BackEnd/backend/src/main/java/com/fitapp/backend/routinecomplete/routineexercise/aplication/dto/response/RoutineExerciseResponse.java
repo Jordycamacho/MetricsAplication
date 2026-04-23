@@ -2,8 +2,8 @@ package com.fitapp.backend.routinecomplete.routineexercise.aplication.dto.respon
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fitapp.backend.application.dto.RoutineSetTemplate.response.RoutineSetTemplateResponse;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
+import com.fitapp.backend.routinecomplete.routinesetemplate.aplication.dto.response.RoutineSetTemplateResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

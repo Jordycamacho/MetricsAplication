@@ -1,20 +1,20 @@
 package com.fitapp.backend.sport.aplication.service;
 
-import com.fitapp.backend.application.logging.SportServiceLogger;
-import com.fitapp.backend.domain.exception.PredefinedSportException;
-import com.fitapp.backend.domain.exception.SportNotFoundException;
-import com.fitapp.backend.domain.exception.SportOwnershipException;
-import com.fitapp.backend.domain.exception.UserNotFoundException;
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.exception.UserNotFoundException;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SportSourceType;
 import com.fitapp.backend.sport.aplication.dto.request.SportFilterRequest;
 import com.fitapp.backend.sport.aplication.dto.request.SportRequest;
 import com.fitapp.backend.sport.aplication.dto.response.SportPageResponse;
 import com.fitapp.backend.sport.aplication.dto.response.SportResponse;
+import com.fitapp.backend.sport.aplication.logging.SportServiceLogger;
 import com.fitapp.backend.sport.aplication.port.input.SportUseCase;
 import com.fitapp.backend.sport.aplication.port.output.SportPersistencePort;
+import com.fitapp.backend.sport.domain.exception.PredefinedSportException;
+import com.fitapp.backend.sport.domain.exception.SportNotFoundException;
+import com.fitapp.backend.sport.domain.exception.SportOwnershipException;
 import com.fitapp.backend.sport.domain.model.SportModel;
 import com.fitapp.backend.suscription.aplication.service.SubscriptionLimitChecker;
-import com.fitapp.backend.user.aplication.port.output.UserPersistencePort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

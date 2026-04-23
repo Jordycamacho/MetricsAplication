@@ -4,9 +4,9 @@ import com.fitapp.backend.Exercise.aplication.dto.request.ExerciseFilterRequest;
 import com.fitapp.backend.Exercise.aplication.dto.request.ExerciseRequest;
 import com.fitapp.backend.Exercise.aplication.dto.response.ExercisePageResponse;
 import com.fitapp.backend.Exercise.aplication.dto.response.ExerciseResponse;
+import com.fitapp.backend.Exercise.aplication.logging.ExerciseLogger;
 import com.fitapp.backend.Exercise.aplication.port.input.ExerciseUseCase;
 import com.fitapp.backend.Exercise.domain.model.ExerciseModel;
-import com.fitapp.backend.application.logging.ExerciseLogger;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

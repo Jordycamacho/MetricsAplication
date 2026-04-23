@@ -1,9 +1,9 @@
 package com.fitapp.backend.workout.infrastructure.persistence.converter;
 
-import com.fitapp.backend.application.dto.workout.response.WorkoutSessionResponse;
-import com.fitapp.backend.application.dto.workout.response.WorkoutSessionSummaryResponse;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
+import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionResponse;
+import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionSummaryResponse;
 import com.fitapp.backend.workout.domain.model.WorkoutSessionModel;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
 

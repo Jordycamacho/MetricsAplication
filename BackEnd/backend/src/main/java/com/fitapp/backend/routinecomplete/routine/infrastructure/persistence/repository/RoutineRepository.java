@@ -1,7 +1,7 @@
 package com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository;
 
-import com.fitapp.backend.infrastructure.persistence.entity.RoutineSetParameterEntity;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.entity.RoutineSetParameterEntity;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;

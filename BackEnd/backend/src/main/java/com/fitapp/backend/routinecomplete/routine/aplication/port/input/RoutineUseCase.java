@@ -1,12 +1,13 @@
 package com.fitapp.backend.routinecomplete.routine.aplication.port.input;
 
+import com.fitapp.backend.infrastructure.shared.dto.PageResponse;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.CreateRoutineRequest;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.RoutineFilterRequest;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.request.UpdateRoutineRequest;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineResponse;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineStatisticsResponse;
 import com.fitapp.backend.routinecomplete.routine.aplication.dto.response.RoutineSummaryResponse;
-import com.fitapp.backend.application.dto.page.PageResponse;
+
 import java.util.List;
 import java.util.UUID;
 
