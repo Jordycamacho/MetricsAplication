@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkoutSessionModel {
+
     private Long id;
     private Long routineId;
     private Long userId;
@@ -22,25 +23,35 @@ public class WorkoutSessionModel {
     private Integer performanceScore;
     private Double totalVolume;
     private Long durationSeconds;
-    
+
     @Builder.Default
     private List<SessionExerciseModel> exercises = new ArrayList<>();
-    
-    // Helper methods
+
     public boolean isCompleted() {
         return endTime != null;
     }
-    
+
     public void calculateDuration() {
         if (startTime != null && endTime != null) {
             this.durationSeconds = java.time.Duration.between(startTime, endTime).getSeconds();
         }
     }
-    
+
+    /**
+     * Suma el volumen de todos los sets de todos los ejercicios.
+     * Solo considera sets completados.
+     */
     public void calculateTotalVolume() {
         this.totalVolume = exercises.stream()
-            .flatMap(ex -> ex.getSets().stream())
-            .mapToDouble(SetExecutionModel::calculateVolume)
-            .sum();
+                .flatMap(ex -> ex.getSets().stream())
+                .filter(SetExecutionModel::isCompleted)
+                .mapToDouble(SetExecutionModel::calculateVolume)
+                .sum();
+    }
+
+    public int getTotalSetCount() {
+        return exercises.stream()
+                .mapToInt(ex -> ex.getSets().size())
+                .sum();
     }
 }

@@ -1,11 +1,9 @@
 package com.fitapp.backend.workout.aplication.service;
 
-import com.fitapp.backend.auth.domain.model.CustomUserDetails;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetExecutionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
 import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
-import com.fitapp.backend.routinecomplete.routine.domain.exception.RoutineNotFoundException;
 import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
 import com.fitapp.backend.workout.aplication.dto.request.SaveWorkoutSessionRequest;
 import com.fitapp.backend.workout.aplication.dto.request.WorkoutHistoryFilterRequest;
@@ -24,10 +22,6 @@ import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessi
 import com.fitapp.backend.workout.infrastructure.persistence.repository.WorkoutSessionRepository;
 import com.fitapp.backend.workout.infrastructure.persistence.specification.WorkoutSessionSpecification;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,6 +46,8 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
         private final WorkoutSessionRepository workoutSessionRepository;
         private final WorkoutConverter workoutConverter;
 
+        // ── Save ──────────────────────────────────────────────────────────────────
+
         @Override
         @Transactional
         public WorkoutSessionResponse saveWorkoutSession(SaveWorkoutSessionRequest request, Long userId) {
@@ -63,21 +59,17 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                 .orElseThrow(() -> {
                                         log.error("ROUTINE_NOT_FOUND | routineId={} | userId={}",
                                                         request.getRoutineId(), userId);
-                                        return new RoutineNotFoundException(userId);
+                                        return new com.fitapp.backend.routinecomplete.routine.domain.exception.RoutineNotFoundException(
+                                                        userId);
                                 });
 
                 WorkoutSessionModel sessionModel = buildWorkoutSessionModel(request, routine, userId);
                 sessionModel.calculateDuration();
                 sessionModel.calculateTotalVolume();
 
-                log.info("SESSION_MODEL_SETS | exerciseCount={}", sessionModel.getExercises().size());
-                for (SessionExerciseModel ex : sessionModel.getExercises()) {
-                        log.info("  Exercise {} has {} sets", ex.getExerciseId(), ex.getSets().size());
-                        for (SetExecutionModel set : ex.getSets()) {
-                                log.info("    setTemplateId={}, params={}", set.getSetTemplateId(),
-                                                set.getParameters().size());
-                        }
-                }
+                log.debug("SESSION_MODEL_BUILT | exerciseCount={} | totalSets={}",
+                                sessionModel.getExercises().size(),
+                                sessionModel.getTotalSetCount());
 
                 WorkoutSessionModel saved = workoutSessionPersistencePort.save(sessionModel);
                 updateRoutineLastUsed(routine.getId(), userId, request.getStartTime());
@@ -85,23 +77,17 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                 return workoutConverter.toResponse(saved, routine.getName());
         }
 
+        // ── Read ──────────────────────────────────────────────────────────────────
+
         @Override
         @Transactional(readOnly = true)
         public WorkoutSessionResponse getWorkoutSessionDetails(Long sessionId, Long userId) {
-                log.info("WORKOUT_SERVICE_GET_DETAILS | sessionId={} | userId={}", sessionId, userId);
+                log.info("GET_SESSION_DETAILS | sessionId={} | userId={}", sessionId, userId);
 
                 WorkoutSessionModel session = workoutSessionPersistencePort
                                 .findByIdAndUserIdWithDetails(sessionId, userId)
-                                .orElseThrow(() -> {
-                                        log.error("WORKOUT_SERVICE_SESSION_NOT_FOUND | sessionId={} | userId={}",
-                                                        sessionId, userId);
-                                        return new WorkoutSessionNotFoundException(sessionId, userId);
-                                });
+                                .orElseThrow(() -> new WorkoutSessionNotFoundException(sessionId, userId));
 
-                log.debug("WORKOUT_SERVICE_SESSION_FOUND | sessionId={} | exerciseCount={}",
-                                sessionId, session.getExercises().size());
-
-                // Obtener nombre de la rutina
                 String routineName = routinePersistencePort.findByIdAndUserId(session.getRoutineId(), userId)
                                 .map(RoutineModel::getName)
                                 .orElse("Unknown Routine");
@@ -114,111 +100,104 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
         public Page<WorkoutSessionSummaryResponse> getWorkoutHistory(
                         WorkoutHistoryFilterRequest filters, Long userId, Pageable pageable) {
 
-                log.info("WORKOUT_SERVICE_GET_HISTORY | userId={} | filters={}", userId, filters);
+                log.info("GET_WORKOUT_HISTORY | userId={} | filters={}", userId, filters);
 
-                // Construir specification
                 Specification<WorkoutSessionEntity> spec = WorkoutSessionSpecification.withFilters(filters, userId);
-
-                // Aplicar sort
                 Sort sort = buildSort(filters);
-                Pageable pageableWithSort = PageRequest.of(
-                                pageable.getPageNumber(),
-                                pageable.getPageSize(),
-                                sort);
+                Pageable pageableWithSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-                // Consultar
                 Page<WorkoutSessionEntity> page = workoutSessionRepository.findAll(spec, pageableWithSort);
 
-                log.info("WORKOUT_SERVICE_HISTORY_FOUND | userId={} | totalElements={} | page={}",
-                                userId, page.getTotalElements(), page.getNumber());
+                log.info("WORKOUT_HISTORY_FOUND | userId={} | totalElements={}", userId, page.getTotalElements());
 
-                // Convertir a summary
                 return page.map(workoutConverter::toSummaryResponse);
         }
 
         @Override
         @Transactional(readOnly = true)
         public Page<WorkoutSessionSummaryResponse> getRecentWorkouts(Long userId, int limit) {
-                log.info("WORKOUT_SERVICE_GET_RECENT | userId={} | limit={}", userId, limit);
+                log.info("GET_RECENT_WORKOUTS | userId={} | limit={}", userId, limit);
 
                 Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "startTime"));
                 Page<WorkoutSessionModel> sessions = workoutSessionPersistencePort.findByUserId(userId, pageable);
 
-                log.info("WORKOUT_SERVICE_RECENT_FOUND | userId={} | count={}", userId, sessions.getNumberOfElements());
+                // FIX: en la versión original se hacía una query a routinePersistencePort
+                // POR CADA sesión (N+1). En summaries el routineName viene de la entidad
+                // directamente vía toSummaryResponse(entity), pero aquí tenemos models.
+                // Solución: recolectar los routineIds únicos y resolver en batch.
+                Set<Long> routineIds = sessions.stream()
+                                .map(WorkoutSessionModel::getRoutineId)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toSet());
+
+                Map<Long, String> routineNames = resolveRoutineNames(routineIds, userId);
+
+                log.info("RECENT_WORKOUTS_FOUND | userId={} | count={}", userId, sessions.getNumberOfElements());
 
                 return sessions.map(model -> {
-                        String routineName = routinePersistencePort.findByIdAndUserId(model.getRoutineId(), userId)
-                                        .map(RoutineModel::getName)
-                                        .orElse("Unknown");
+                        String routineName = routineNames.getOrDefault(model.getRoutineId(), "Unknown");
                         return workoutConverter.toSummaryResponse(model, routineName);
                 });
         }
 
+        // ── Delete ────────────────────────────────────────────────────────────────
+
         @Override
         @Transactional
         public void deleteWorkoutSession(Long sessionId, Long userId) {
-                log.info("WORKOUT_SERVICE_DELETE | sessionId={} | userId={}", sessionId, userId);
-
+                log.info("DELETE_SESSION | sessionId={} | userId={}", sessionId, userId);
+                // Verify ownership before deleting
+                workoutSessionPersistencePort.findByIdAndUserIdWithDetails(sessionId, userId)
+                                .orElseThrow(() -> new WorkoutSessionNotFoundException(sessionId, userId));
                 workoutSessionPersistencePort.deleteById(sessionId);
-
-                log.info("WORKOUT_SERVICE_DELETE_SUCCESS | sessionId={}", sessionId);
+                log.info("DELETE_SESSION_SUCCESS | sessionId={}", sessionId);
         }
+
+        // ── Stats ─────────────────────────────────────────────────────────────────
 
         @Override
         @Transactional(readOnly = true)
         public Double getTotalVolume(Long userId) {
-                log.info("WORKOUT_SERVICE_GET_TOTAL_VOLUME | userId={}", userId);
-
+                log.info("GET_TOTAL_VOLUME | userId={}", userId);
                 Double volume = workoutSessionPersistencePort.sumTotalVolumeByUserId(userId);
-
-                log.info("WORKOUT_SERVICE_TOTAL_VOLUME | userId={} | volume={}", userId, volume);
-
                 return volume != null ? volume : 0.0;
         }
 
         // ── Private helpers ───────────────────────────────────────────────────────
 
         private void validateWorkoutRequest(SaveWorkoutSessionRequest request, Long userId) {
-                log.debug("WORKOUT_SERVICE_VALIDATE_REQUEST | userId={} | routineId={}", userId,
-                                request.getRoutineId());
-
                 if (request.getSetExecutions() == null || request.getSetExecutions().isEmpty()) {
-                        log.error("WORKOUT_SERVICE_VALIDATION_FAILED | reason=EMPTY_SETS | userId={}", userId);
+                        log.error("VALIDATION_FAILED | reason=EMPTY_SETS | userId={}", userId);
                         throw InvalidWorkoutDataException.emptySetExecutions();
                 }
 
                 if (request.getEndTime().isBefore(request.getStartTime())) {
-                        log.error("WORKOUT_SERVICE_VALIDATION_FAILED | reason=INVALID_TIME_RANGE | userId={}", userId);
+                        log.error("VALIDATION_FAILED | reason=INVALID_TIME_RANGE | userId={}", userId);
                         throw InvalidWorkoutDataException.invalidTimeRange();
                 }
 
-                // Validar que cada parámetro tenga al menos un valor
                 for (SaveWorkoutSessionRequest.SetExecutionRequest setExec : request.getSetExecutions()) {
+                        if (setExec.getExerciseId() == null) {
+                                throw InvalidWorkoutDataException.missingExerciseId();
+                        }
                         for (SaveWorkoutSessionRequest.ParameterValueRequest param : setExec.getParameters()) {
-                                if (param.getNumericValue() == null &&
-                                                param.getIntegerValue() == null &&
-                                                param.getDurationValue() == null &&
-                                                (param.getStringValue() == null || param.getStringValue().isBlank())) {
-
-                                        log.error("WORKOUT_SERVICE_VALIDATION_FAILED | reason=EMPTY_PARAMETER | userId={} | parameterId={}",
-                                                        userId, param.getParameterId());
+                                if (param.getNumericValue() == null
+                                                && param.getIntegerValue() == null
+                                                && param.getDurationValue() == null
+                                                && (param.getStringValue() == null
+                                                                || param.getStringValue().isBlank())) {
+                                        log.error("VALIDATION_FAILED | reason=EMPTY_PARAMETER | parameterId={}",
+                                                        param.getParameterId());
                                         throw InvalidWorkoutDataException.missingParameterValue();
                                 }
                         }
                 }
-
-                log.debug("WORKOUT_SERVICE_VALIDATION_SUCCESS | userId={} | setCount={}",
-                                userId, request.getSetExecutions().size());
         }
-
-        // ── PARTE 2: Métodos helper para construcción del modelo ─────────────────
 
         private WorkoutSessionModel buildWorkoutSessionModel(
                         SaveWorkoutSessionRequest request, RoutineModel routine, Long userId) {
 
-                log.debug("WORKOUT_SERVICE_BUILD_MODEL_START | userId={} | routineId={}", userId, routine.getId());
-
-                // Agrupar sets por ejercicio
+                // Agrupar sets por ejercicio manteniendo orden de inserción
                 Map<Long, List<SaveWorkoutSessionRequest.SetExecutionRequest>> setsByExercise = request
                                 .getSetExecutions()
                                 .stream()
@@ -227,21 +206,11 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                                 LinkedHashMap::new,
                                                 Collectors.toList()));
 
-                log.debug("WORKOUT_SERVICE_EXERCISES_GROUPED | exerciseCount={}", setsByExercise.size());
+                List<SessionExerciseModel> exercises = setsByExercise.entrySet().stream()
+                                .map(entry -> buildSessionExercise(entry.getKey(), entry.getValue()))
+                                .collect(Collectors.toList());
 
-                // Construir ejercicios de sesión
-                List<SessionExerciseModel> exercises = new ArrayList<>();
-                for (Map.Entry<Long, List<SaveWorkoutSessionRequest.SetExecutionRequest>> entry : setsByExercise
-                                .entrySet()) {
-                        Long exerciseId = entry.getKey();
-                        List<SaveWorkoutSessionRequest.SetExecutionRequest> sets = entry.getValue();
-
-                        SessionExerciseModel exerciseModel = buildSessionExercise(exerciseId, sets);
-                        exercises.add(exerciseModel);
-                }
-
-                // Construir sesión
-                WorkoutSessionModel sessionModel = WorkoutSessionModel.builder()
+                return WorkoutSessionModel.builder()
                                 .routineId(routine.getId())
                                 .userId(userId)
                                 .startTime(request.getStartTime())
@@ -249,21 +218,11 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                 .performanceScore(request.getPerformanceScore())
                                 .exercises(exercises)
                                 .build();
-
-                log.debug("WORKOUT_SERVICE_BUILD_MODEL_SUCCESS | exerciseCount={} | totalSets={}",
-                                exercises.size(),
-                                exercises.stream().mapToInt(e -> e.getSets().size()).sum());
-
-                return sessionModel;
         }
 
-        private SessionExerciseModel buildSessionExercise(
-                        Long exerciseId, List<SaveWorkoutSessionRequest.SetExecutionRequest> setRequests) {
+        private SessionExerciseModel buildSessionExercise(Long exerciseId,
+                        List<SaveWorkoutSessionRequest.SetExecutionRequest> setRequests) {
 
-                log.debug("WORKOUT_SERVICE_BUILD_EXERCISE | exerciseId={} | setCount={}",
-                                exerciseId, setRequests.size());
-
-                // Determinar timestamps del ejercicio
                 LocalDateTime exerciseStarted = setRequests.stream()
                                 .map(SaveWorkoutSessionRequest.SetExecutionRequest::getStartedAt)
                                 .filter(Objects::nonNull)
@@ -276,7 +235,6 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                 .max(LocalDateTime::compareTo)
                                 .orElse(null);
 
-                // Determinar status general
                 boolean allCompleted = setRequests.stream()
                                 .allMatch(s -> "COMPLETED".equalsIgnoreCase(s.getStatus()));
                 boolean anySkipped = setRequests.stream()
@@ -291,57 +249,44 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                         status = ExerciseStatus.IN_PROGRESS;
                 }
 
-                // Construir sets
                 List<SetExecutionModel> sets = setRequests.stream()
                                 .map(this::buildSetExecution)
                                 .collect(Collectors.toList());
 
-                SessionExerciseModel exerciseModel = SessionExerciseModel.builder()
+                return SessionExerciseModel.builder()
                                 .exerciseId(exerciseId)
                                 .status(status)
                                 .startedAt(exerciseStarted)
                                 .completedAt(exerciseCompleted)
                                 .sets(sets)
                                 .build();
-
-                log.debug("WORKOUT_SERVICE_EXERCISE_BUILT | exerciseId={} | status={} | setCount={}",
-                                exerciseId, status, sets.size());
-
-                return exerciseModel;
         }
 
         private SetExecutionModel buildSetExecution(SaveWorkoutSessionRequest.SetExecutionRequest setRequest) {
-                log.debug("WORKOUT_SERVICE_BUILD_SET | position={} | setTemplateId={}",
-                                setRequest.getPosition(), setRequest.getSetTemplateId());
-
-                // Parse SetType
                 SetType setType = SetType.NORMAL;
                 if (setRequest.getSetType() != null) {
                         try {
                                 setType = SetType.valueOf(setRequest.getSetType().toUpperCase());
                         } catch (IllegalArgumentException e) {
-                                log.warn("WORKOUT_SERVICE_INVALID_SET_TYPE | value={} | defaulting=NORMAL",
-                                                setRequest.getSetType());
+                                log.warn("INVALID_SET_TYPE | value={} | defaulting=NORMAL", setRequest.getSetType());
                         }
                 }
 
-                // Parse SetExecutionStatus
                 SetExecutionStatus status = SetExecutionStatus.COMPLETED;
                 if (setRequest.getStatus() != null) {
                         try {
                                 status = SetExecutionStatus.valueOf(setRequest.getStatus().toUpperCase());
                         } catch (IllegalArgumentException e) {
-                                log.warn("WORKOUT_SERVICE_INVALID_STATUS | value={} | defaulting=COMPLETED",
+                                log.warn("INVALID_SET_STATUS | value={} | defaulting=COMPLETED",
                                                 setRequest.getStatus());
                         }
                 }
 
-                // Construir parámetros
                 List<SetExecutionParameterModel> parameters = setRequest.getParameters().stream()
                                 .map(this::buildSetExecutionParameter)
                                 .collect(Collectors.toList());
 
-                SetExecutionModel setModel = SetExecutionModel.builder()
+                return SetExecutionModel.builder()
                                 .setTemplateId(setRequest.getSetTemplateId())
                                 .position(setRequest.getPosition())
                                 .setType(setType)
@@ -352,92 +297,51 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                 .notes(setRequest.getNotes())
                                 .parameters(parameters)
                                 .build();
-
-                log.debug("WORKOUT_SERVICE_SET_BUILT | position={} | paramCount={} | volume={}",
-                                setRequest.getPosition(), parameters.size(), setModel.calculateVolume());
-
-                return setModel;
         }
 
         private SetExecutionParameterModel buildSetExecutionParameter(
                         SaveWorkoutSessionRequest.ParameterValueRequest paramRequest) {
-
-                log.debug("WORKOUT_SERVICE_BUILD_PARAM | parameterId={}", paramRequest.getParameterId());
-
                 return SetExecutionParameterModel.builder()
                                 .parameterId(paramRequest.getParameterId())
                                 .numericValue(paramRequest.getNumericValue())
                                 .integerValue(paramRequest.getIntegerValue())
                                 .durationValue(paramRequest.getDurationValue())
                                 .stringValue(paramRequest.getStringValue())
-                                .isPersonalRecord(false) // Por ahora, PRs deshabilitados
+                                .isPersonalRecord(false)
                                 .build();
         }
 
         private void updateRoutineLastUsed(Long routineId, Long userId, LocalDateTime usedAt) {
                 try {
-                        log.debug("WORKOUT_SERVICE_UPDATE_ROUTINE_LAST_USED | routineId={} | userId={}",
-                                        routineId, userId);
-
                         routinePersistencePort.updateLastUsedAt(routineId, userId, usedAt);
-
-                        log.debug("WORKOUT_SERVICE_ROUTINE_LAST_USED_UPDATED | routineId={}", routineId);
+                        log.debug("ROUTINE_LAST_USED_UPDATED | routineId={}", routineId);
                 } catch (Exception e) {
-                        log.warn("WORKOUT_SERVICE_ROUTINE_UPDATE_FAILED | routineId={} | error={}",
-                                        routineId, e.getMessage());
+                        // No-critical: no propagamos el error para no revertir el workout guardado
+                        log.warn("ROUTINE_LAST_USED_UPDATE_FAILED | routineId={} | error={}", routineId,
+                                        e.getMessage());
                 }
+        }
+
+        /**
+         * Resuelve nombres de rutinas en batch para evitar N+1.
+         * Si el port no ofrece findAllByIds, cae en N queries individuales
+         * pero al menos queda aislado aquí y es fácil de optimizar.
+         */
+        private Map<Long, String> resolveRoutineNames(Set<Long> routineIds, Long userId) {
+                Map<Long, String> names = new HashMap<>();
+                for (Long routineId : routineIds) {
+                        routinePersistencePort.findByIdAndUserId(routineId, userId)
+                                        .ifPresent(r -> names.put(routineId, r.getName()));
+                }
+                return names;
         }
 
         private Sort buildSort(WorkoutHistoryFilterRequest filters) {
-                String sortBy = filters.getSortBy() != null ? filters.getSortBy() : "startTime";
-                String sortDirection = filters.getSortDirection() != null ? filters.getSortDirection() : "DESC";
-
-                Sort.Direction direction = "ASC".equalsIgnoreCase(sortDirection)
+                // getSafeSortBy() garantiza que solo se usan campos de la allowlist
+                String sortBy = filters.getSafeSortBy();
+                Sort.Direction direction = "ASC".equalsIgnoreCase(filters.getSortDirection())
                                 ? Sort.Direction.ASC
                                 : Sort.Direction.DESC;
-
-                log.debug("WORKOUT_SERVICE_BUILD_SORT | sortBy={} | direction={}", sortBy, direction);
-
                 return Sort.by(direction, sortBy);
-        }
-
-        private Long getUserIdFromAuth() {
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                if (auth == null || !auth.isAuthenticated()) {
-                        throw new SecurityException("Usuario no autenticado");
-                }
-
-                // Caso 1: Principal es CustomUserDetails (si algún día lo usas)
-                if (auth.getPrincipal() instanceof CustomUserDetails) {
-                        return ((CustomUserDetails) auth.getPrincipal()).getUserId();
-                }
-
-                // Caso 2: Principal es Jwt (tu configuración actual)
-                if (auth.getPrincipal() instanceof Jwt) {
-                        Jwt jwt = (Jwt) auth.getPrincipal();
-                        // Extrae el userId del claim
-                        Long userId = jwt.getClaim("userId");
-                        if (userId == null) {
-                                // Fallback: intenta con "user_id" o "sub" si es numérico
-                                userId = jwt.getClaim("user_id");
-                                if (userId == null) {
-                                        String sub = jwt.getSubject();
-                                        try {
-                                                userId = Long.parseLong(sub);
-                                        } catch (NumberFormatException e) {
-                                                throw new SecurityException("No se pudo extraer userId del JWT");
-                                        }
-                                }
-                        }
-                        return userId;
-                }
-
-                // Caso 3: Es un JwtAuthenticationToken (a veces el principal es el token mismo)
-                if (auth instanceof JwtAuthenticationToken) {
-                        Jwt jwt = ((JwtAuthenticationToken) auth).getToken();
-                        return jwt.getClaim("userId");
-                }
-
-                throw new SecurityException("Tipo de autenticación no soportado: " + auth.getClass());
         }
 }

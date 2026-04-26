@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SetExecutionParameterModel {
+
     private Long id;
     private Long setExecutionId;
     private Long parameterId;
@@ -17,10 +18,10 @@ public class SetExecutionParameterModel {
     private Integer integerValue;
     private Long durationValue;
     private String stringValue;
-    
+
     @Builder.Default
     private boolean isPersonalRecord = false;
-    
+
     /**
      * Devuelve el valor como Double para comparaciones uniformes.
      */
@@ -30,12 +31,9 @@ public class SetExecutionParameterModel {
         if (durationValue != null) return durationValue.doubleValue();
         return null;
     }
-    
-    /**
-     * Verifica si tiene algún valor poblado.
-     */
+
     public boolean hasValue() {
-        return numericValue != null || integerValue != null || 
-               durationValue != null || stringValue != null;
+        return numericValue != null || integerValue != null
+                || durationValue != null || stringValue != null;
     }
 }

@@ -2,63 +2,64 @@ package com.fitapp.backend.workout.infrastructure.persistence.specification;
 
 import com.fitapp.backend.workout.aplication.dto.request.WorkoutHistoryFilterRequest;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
-
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * JPA Specification builder for WorkoutSessionEntity queries.
+ *
+ * <p>Do NOT add SLF4J log calls inside the Specification lambda — it executes
+ * on every row evaluation by the JPA criteria engine, flooding the log.
+ * Logging belongs in the service layer before/after the query.
+ */
 @Slf4j
 public class WorkoutSessionSpecification {
 
+    private WorkoutSessionSpecification() {
+        // utility class
+    }
+
     public static Specification<WorkoutSessionEntity> withFilters(
             WorkoutHistoryFilterRequest filters, Long userId) {
-        
-        return (root, query, criteriaBuilder) -> {
+
+        log.debug("WORKOUT_SPEC_BUILD | userId={} | filters={}", userId, filters);
+
+        return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(criteriaBuilder.equal(root.get("userId"), userId));
-            
-            log.debug("WORKOUT_SPEC_USER_FILTER | userId={}", userId);
+            predicates.add(cb.equal(root.get("userId"), userId));
 
-            // Filtro por rutina específica
             if (filters.getRoutineId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("routine").get("id"), filters.getRoutineId()));
-                log.debug("WORKOUT_SPEC_ROUTINE_FILTER | routineId={}", filters.getRoutineId());
+                predicates.add(cb.equal(root.get("routine").get("id"), filters.getRoutineId()));
             }
 
-            // Filtro por rango de fechas
             if (filters.getFromDate() != null) {
-                LocalDateTime fromDateTime = LocalDateTime.of(filters.getFromDate(), LocalTime.MIN);
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("startTime"), fromDateTime));
-                log.debug("WORKOUT_SPEC_FROM_DATE_FILTER | fromDate={}", fromDateTime);
+                LocalDateTime from = filters.getFromDate().atStartOfDay();
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startTime"), from));
             }
 
             if (filters.getToDate() != null) {
-                LocalDateTime toDateTime = LocalDateTime.of(filters.getToDate(), LocalTime.MAX);
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("endTime"), toDateTime));
-                log.debug("WORKOUT_SPEC_TO_DATE_FILTER | toDate={}", toDateTime);
+                LocalDateTime to = filters.getToDate().atTime(LocalTime.MAX);
+                predicates.add(cb.lessThanOrEqualTo(root.get("endTime"), to));
             }
 
             if (filters.getMinPerformanceScore() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
+                predicates.add(cb.greaterThanOrEqualTo(
                         root.get("performanceScore"), filters.getMinPerformanceScore()));
-                log.debug("WORKOUT_SPEC_MIN_SCORE_FILTER | minScore={}", filters.getMinPerformanceScore());
             }
 
             if (filters.getMaxPerformanceScore() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
+                predicates.add(cb.lessThanOrEqualTo(
                         root.get("performanceScore"), filters.getMaxPerformanceScore()));
-                log.debug("WORKOUT_SPEC_MAX_SCORE_FILTER | maxScore={}", filters.getMaxPerformanceScore());
             }
 
-            log.debug("WORKOUT_SPEC_BUILT | predicateCount={}", predicates.size());
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }

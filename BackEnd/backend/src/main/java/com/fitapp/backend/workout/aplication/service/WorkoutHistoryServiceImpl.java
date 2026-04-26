@@ -11,13 +11,13 @@ import com.fitapp.backend.workout.infrastructure.persistence.entity.SessionExerc
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionParameterEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.repository.SessionExerciseRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,10 +44,10 @@ public class WorkoutHistoryServiceImpl implements WorkoutHistoryUseCase {
     @Override
     @Transactional(readOnly = true)
     public Map<Long, LastExerciseValuesResponse> getLastValuesForExercises(List<Long> exerciseIds, Long userId) {
-        log.info("GET_LAST_VALUES_FOR_EXERCISES | exerciseIds={} | userId={}", exerciseIds.size(), userId);
+        log.info("GET_LAST_VALUES_BATCH | exerciseCount={} | userId={}", exerciseIds.size(), userId);
 
         if (exerciseIds == null || exerciseIds.isEmpty()) {
-            return new HashMap<>();
+            return Collections.emptyMap();
         }
 
         List<SessionExerciseEntity> lastExecutions = sessionExerciseRepository
@@ -58,11 +58,9 @@ public class WorkoutHistoryServiceImpl implements WorkoutHistoryUseCase {
                 .collect(Collectors.toMap(
                         LastExerciseValuesResponse::getExerciseId,
                         response -> response,
-                        (existing, replacement) -> existing // En caso de duplicados, mantener el primero
-                ));
+                        (existing, replacement) -> existing));
 
         log.info("GET_LAST_VALUES_RESULT | found={} | requested={}", result.size(), exerciseIds.size());
-
         return result;
     }
 
@@ -71,36 +69,28 @@ public class WorkoutHistoryServiceImpl implements WorkoutHistoryUseCase {
     public Map<Long, LastExerciseValuesResponse> getLastValuesForRoutine(Long routineId, Long userId) {
         log.info("GET_LAST_VALUES_FOR_ROUTINE | routineId={} | userId={}", routineId, userId);
 
-        // Obtener la rutina con sus ejercicios
         RoutineEntity routine = routineRepository.findByIdAndUserId(routineId, userId)
                 .orElseThrow(() -> {
                     log.error("ROUTINE_NOT_FOUND | routineId={} | userId={}", routineId, userId);
                     return new RuntimeException("Routine not found: " + routineId);
                 });
 
-        // Extraer IDs de ejercicios de la rutina
         List<Long> exerciseIds = routine.getExercises().stream()
                 .map(RoutineExerciseEntity::getExercise)
-                .map(exercise -> exercise.getId())
+                .map(ex -> ex.getId())
                 .distinct()
                 .collect(Collectors.toList());
 
         log.debug("ROUTINE_EXERCISES_EXTRACTED | routineId={} | exerciseCount={}", routineId, exerciseIds.size());
 
-        // Obtener últimos valores para todos esos ejercicios
         return getLastValuesForExercises(exerciseIds, userId);
     }
 
-    // ── Private Helpers ───────────────────────────────────────────────────────
+    // ── Private converters ────────────────────────────────────────────────────
 
     private LastExerciseValuesResponse convertToResponse(SessionExerciseEntity sessionExercise) {
-        log.debug("CONVERT_TO_RESPONSE | sessionExerciseId={} | exerciseId={}", 
-                  sessionExercise.getId(), 
-                  sessionExercise.getExercise().getId());
-
-        // Convertir sets
         List<LastSetValueResponse> sets = sessionExercise.getSets().stream()
-                .sorted((a, b) -> Integer.compare(a.getPosition(), b.getPosition()))
+                .sorted(Comparator.comparingInt(SetExecutionEntity::getPosition))
                 .map(this::convertSetToResponse)
                 .collect(Collectors.toList());
 
@@ -114,11 +104,6 @@ public class WorkoutHistoryServiceImpl implements WorkoutHistoryUseCase {
     }
 
     private LastSetValueResponse convertSetToResponse(SetExecutionEntity setExecution) {
-        log.debug("CONVERT_SET_TO_RESPONSE | setId={} | position={}", 
-                  setExecution.getId(), 
-                  setExecution.getPosition());
-
-        // Convertir parámetros
         List<ParameterValue> parameters = setExecution.getParameters().stream()
                 .map(this::convertParameterToValue)
                 .collect(Collectors.toList());
@@ -131,15 +116,11 @@ public class WorkoutHistoryServiceImpl implements WorkoutHistoryUseCase {
     }
 
     private ParameterValue convertParameterToValue(SetExecutionParameterEntity param) {
-        log.debug("CONVERT_PARAMETER_TO_VALUE | parameterId={} | value={}", 
-                  param.getParameter().getId(), 
-                  param.getValueAsDouble());
-
         return ParameterValue.builder()
                 .parameterId(param.getParameter().getId())
                 .parameterName(param.getParameter().getName())
-                .parameterType(param.getParameter().getParameterType() != null 
-                        ? param.getParameter().getParameterType().name() 
+                .parameterType(param.getParameter().getParameterType() != null
+                        ? param.getParameter().getParameterType().name()
                         : null)
                 .unit(param.getParameter().getUnit())
                 .numericValue(param.getNumericValue())

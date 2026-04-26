@@ -1,12 +1,10 @@
 package com.fitapp.backend.workout.infrastructure.persistence.converter;
 
-import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionResponse;
 import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionSummaryResponse;
 import com.fitapp.backend.workout.domain.model.WorkoutSessionModel;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,13 +30,12 @@ public class WorkoutConverter {
         log.debug("WORKOUT_CONVERTER_TO_DOMAIN | sessionId={} | routineId={}",
                 entity.getId(), entity.getRoutine() != null ? entity.getRoutine().getId() : null);
 
+        // FIX: userId se toma de la columna directa en la entidad, no de routine.user
+        // (routine.user puede no estar cargado y causar LazyInitializationException)
         WorkoutSessionModel model = WorkoutSessionModel.builder()
                 .id(entity.getId())
                 .userId(entity.getUserId())
                 .routineId(entity.getRoutine() != null ? entity.getRoutine().getId() : null)
-                .userId(entity.getRoutine() != null && entity.getRoutine().getUser() != null
-                        ? entity.getRoutine().getUser().getId()
-                        : null)
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .performanceScore(entity.getPerformanceScore())
@@ -73,21 +70,21 @@ public class WorkoutConverter {
         entity.setEndTime(model.getEndTime());
         entity.setPerformanceScore(model.getPerformanceScore());
         entity.setTotalVolume(model.getTotalVolume());
+        // durationSeconds es @Formula en la entidad, no se setea manualmente
 
-        // Cargar routine
         if (model.getRoutineId() != null && model.getUserId() != null) {
-            RoutineEntity routine = routineRepository.findByIdAndUserId(model.getRoutineId(), model.getUserId())
-                    .orElseThrow(() -> {
-                        log.error("WORKOUT_CONVERTER_ROUTINE_NOT_FOUND_OR_UNAUTHORIZED | routineId={} | userId={}",
-                                model.getRoutineId(), model.getUserId());
-                        return new RuntimeException(
-                                "Routine not found or unauthorized: routineId=" + model.getRoutineId() +
-                                        ", userId=" + model.getUserId());
-                    });
-            entity.setRoutine(routine);
+            routineRepository.findByIdAndUserId(model.getRoutineId(), model.getUserId())
+                    .ifPresentOrElse(
+                            entity::setRoutine,
+                            () -> {
+                                log.error("WORKOUT_CONVERTER_ROUTINE_NOT_FOUND | routineId={} | userId={}",
+                                        model.getRoutineId(), model.getUserId());
+                                throw new RuntimeException(
+                                        "Routine not found or unauthorized: routineId=" + model.getRoutineId()
+                                                + ", userId=" + model.getUserId());
+                            });
         }
 
-        // Convertir ejercicios
         if (model.getExercises() != null && !model.getExercises().isEmpty()) {
             entity.setExercises(model.getExercises().stream()
                     .map(exerciseModel -> sessionExerciseConverter.toEntity(exerciseModel, entity))
@@ -138,8 +135,7 @@ public class WorkoutConverter {
             return null;
         }
 
-        log.debug("WORKOUT_CONVERTER_TO_SUMMARY | sessionId={} | routineId={}",
-                entity.getId(), entity.getRoutine() != null ? entity.getRoutine().getId() : null);
+        log.debug("WORKOUT_CONVERTER_TO_SUMMARY | sessionId={}", entity.getId());
 
         int exerciseCount = entity.getExercises() != null ? entity.getExercises().size() : 0;
         int setCount = entity.getExercises() != null
@@ -161,8 +157,6 @@ public class WorkoutConverter {
                 .setCount(setCount)
                 .build();
     }
-
-    // ── Model → Summary Response ──────────────────────────────────────────────
 
     public WorkoutSessionSummaryResponse toSummaryResponse(WorkoutSessionModel model, String routineName) {
         if (model == null) {
