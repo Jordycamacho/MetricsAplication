@@ -4,51 +4,114 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="10dp"
     app:cardBackgroundColor="@color/surface_dark"
     app:cardCornerRadius="12dp"
-    app:cardElevation="2dp">
+    app:cardElevation="0dp"
+    app:strokeColor="@color/divider_dark"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <!-- Header del ejercicio -->
+        <!-- Header: nombre del ejercicio -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:paddingHorizontal="14dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="10dp">
+
+            <!-- Stripe lateral -->
+            <View
+                android:layout_width="3dp"
+                android:layout_height="20dp"
+                android:background="@color/gold_primary"
+                android:layout_marginEnd="10dp" />
 
             <TextView
                 android:id="@+id/tv_exercise_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Press Banca"
                 android:textColor="@color/text_primary_dark"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
+            <!-- Badge: número de sets -->
             <TextView
-                android:id="@+id/tv_exercise_volume"
+                android:id="@+id/tv_set_count_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1,200 kg"
-                android:textColor="@color/gold_primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:background="@drawable/bg_card_dark"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="11sp" />
 
         </LinearLayout>
 
-        <!-- Lista de sets -->
+        <!-- Separador -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/divider_dark"
+            android:layout_marginHorizontal="14dp" />
+
+        <!-- Cabecera de columnas: ANTERIOR | SET | ACTUAL -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="ANTERIOR"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="9sp"
+                android:letterSpacing="0.08"
+                android:gravity="start" />
+
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:text="SET"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="9sp"
+                android:letterSpacing="0.08"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="ACTUAL"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="9sp"
+                android:letterSpacing="0.08"
+                android:gravity="end" />
+
+        </LinearLayout>
+
+        <!-- Lista de sets (filas de comparación) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_sets"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="12dp"
+            android:clipToPadding="false"
             android:nestedScrollingEnabled="false" />
 
     </LinearLayout>

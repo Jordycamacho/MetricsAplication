@@ -47,6 +47,8 @@ interface WorkoutService {
     @GET("api/workouts/stats/total-volume")
     suspend fun getTotalVolume(): Response<Double>
 
+    // ── History endpoints ─────────────────────────────────────────────────────
+
     @GET("api/workouts/history/exercises/{exerciseId}/last-values")
     suspend fun getLastExerciseValues(
         @Path("exerciseId") exerciseId: Long
@@ -57,7 +59,8 @@ interface WorkoutService {
         @Body exerciseIds: List<Long>
     ): Response<Map<String, LastExerciseValuesResponse>>
 
-    @GET("api/workouts/history/routines/{routineId}/last-values")
+    // FIX: URL corregida — el endpoint canónico está en WorkoutController, no en WorkoutHistoryController
+    @GET("api/workouts/start/{routineId}/last-values")
     suspend fun getLastValuesForRoutine(
         @Path("routineId") routineId: Long
     ): Response<Map<String, LastExerciseValuesResponse>>

@@ -9,40 +9,63 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_dark">
+        android:background="@color/surface_dark"
+        app:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="Detalle de sesión"
-            app:titleTextColor="@color/text_primary_dark"
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="@color/gold_primary" />
+            app:navigationIconTint="@color/text_primary_dark"
+            app:title="Detalle del Entrenamiento"
+            app:titleTextColor="@color/text_primary_dark" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <ScrollView
+    <!-- Loading -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/gold_primary"
+        android:visibility="gone" />
+
+    <!-- Error -->
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="16dp"
+        android:textColor="@color/red"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone" />
+
+    <!-- Main content -->
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:padding="16dp"
         android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- Tarjeta de información general -->
+            <!-- ── Header card ──────────────────────────────────────────── -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
+                android:layout_marginBottom="12dp"
                 app:cardBackgroundColor="@color/surface_dark"
-                app:cardElevation="4dp">
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -51,26 +74,29 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/tv_routine_name"
+                        android:id="@+id/tvRoutineName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="18sp"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary_dark" />
+                        android:layout_marginBottom="4dp" />
 
                     <TextView
-                        android:id="@+id/tv_date"
+                        android:id="@+id/tvDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/text_secondary_dark" />
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="16dp" />
 
+                    <!-- Stats row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
                         android:orientation="horizontal">
 
+                        <!-- Duration -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -82,21 +108,26 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="DURACIÓN"
-                                android:textSize="10sp"
                                 android:textColor="@color/text_secondary_dark"
-                                android:letterSpacing="0.1" />
+                                android:textSize="10sp"
+                                android:letterSpacing="0.08" />
 
                             <TextView
-                                android:id="@+id/tv_duration"
+                                android:id="@+id/tvDuration"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textSize="16sp"
+                                android:textColor="@color/text_primary_dark"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/gold_primary" />
-
+                                android:layout_marginTop="4dp" />
                         </LinearLayout>
 
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="40dp"
+                            android:background="@color/divider_dark" />
+
+                        <!-- Exercises -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -108,21 +139,26 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="EJERCICIOS"
-                                android:textSize="10sp"
                                 android:textColor="@color/text_secondary_dark"
-                                android:letterSpacing="0.1" />
+                                android:textSize="10sp"
+                                android:letterSpacing="0.08" />
 
                             <TextView
-                                android:id="@+id/tv_exercise_count"
+                                android:id="@+id/tvExerciseCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textSize="16sp"
+                                android:textColor="@color/text_primary_dark"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/text_primary_dark" />
-
+                                android:layout_marginTop="4dp" />
                         </LinearLayout>
 
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="40dp"
+                            android:background="@color/divider_dark" />
+
+                        <!-- Sets -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -134,119 +170,26 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="SETS"
-                                android:textSize="10sp"
                                 android:textColor="@color/text_secondary_dark"
-                                android:letterSpacing="0.1" />
+                                android:textSize="10sp"
+                                android:letterSpacing="0.08" />
 
                             <TextView
-                                android:id="@+id/tv_set_count"
+                                android:id="@+id/tvSetCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textSize="16sp"
+                                android:textColor="@color/text_primary_dark"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/text_primary_dark" />
-
+                                android:layout_marginTop="4dp" />
                         </LinearLayout>
 
-                    </LinearLayout>
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="40dp"
+                            android:background="@color/divider_dark" />
 
-                    <TextView
-                        android:id="@+id/tv_volume"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Volumen: -- kg"
-                        android:textColor="@color/gold_primary"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Performance Score -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/layout_performance"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="@color/surface_dark"
-                android:visibility="gone">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="RENDIMIENTO"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary_dark"
-                        android:letterSpacing="0.1" />
-
-                    <TextView
-                        android:id="@+id/tv_performance_score"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/gold_primary" />
-
-                    <ProgressBar
-                        android:id="@+id/progress_performance"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="6dp"
-                        android:layout_marginTop="8dp"
-                        android:progressTint="@color/gold_primary"
-                        android:max="100" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Comparación con sesión anterior -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/layout_comparison"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="@color/surface_dark"
-                android:visibility="gone">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="COMPARACIÓN CON ANTERIOR"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary_dark"
-                        android:letterSpacing="0.1" />
-
-                    <TextView
-                        android:id="@+id/tv_comparison_date"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary_dark"
-                        android:layout_marginTop="4dp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal">
-
+                        <!-- Volume -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -258,19 +201,148 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="VOLUMEN"
+                                android:textColor="@color/text_secondary_dark"
                                 android:textSize="10sp"
-                                android:textColor="@color/text_secondary_dark" />
+                                android:letterSpacing="0.08" />
 
                             <TextView
-                                android:id="@+id/tv_volume_comparison"
+                                android:id="@+id/tvVolume"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
+                                android:textColor="@color/gold_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
                         </LinearLayout>
 
+                    </LinearLayout>
+
+                    <!-- Performance score (optional) -->
+                    <LinearLayout
+                        android:id="@+id/layoutPerformance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="12dp"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Rendimiento"
+                                android:textColor="@color/text_secondary_dark"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvPerformanceScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/gold_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/progressPerformance"
+                            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="6dp"
+                            android:max="100"
+                            android:progressTint="@color/gold_primary"
+                            android:progressBackgroundTint="@color/divider_dark" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ── Comparison card ─────────────────────────────────────── -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layoutComparison"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="vs Sesión Anterior"
+                            android:textColor="@color/text_primary_dark"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvComparisonDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <!-- Comparison stats row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- Volume diff -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="VOLUMEN"
+                                android:textColor="@color/text_secondary_dark"
+                                android:textSize="10sp"
+                                android:letterSpacing="0.08" />
+
+                            <TextView
+                                android:id="@+id/tvVolumeComparison"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="40dp"
+                            android:background="@color/divider_dark" />
+
+                        <!-- Duration diff -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -282,19 +354,25 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="DURACIÓN"
+                                android:textColor="@color/text_secondary_dark"
                                 android:textSize="10sp"
-                                android:textColor="@color/text_secondary_dark" />
+                                android:letterSpacing="0.08" />
 
                             <TextView
-                                android:id="@+id/tv_duration_comparison"
+                                android:id="@+id/tvDurationComparison"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
                         </LinearLayout>
 
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="40dp"
+                            android:background="@color/divider_dark" />
+
+                        <!-- Sets diff -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -306,33 +384,33 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="SETS"
+                                android:textColor="@color/text_secondary_dark"
                                 android:textSize="10sp"
-                                android:textColor="@color/text_secondary_dark" />
+                                android:letterSpacing="0.08" />
 
                             <TextView
-                                android:id="@+id/tv_sets_comparison"
+                                android:id="@+id/tvSetsComparison"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
                         </LinearLayout>
 
                     </LinearLayout>
 
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Récords personales -->
+            <!-- ── Personal Records card ───────────────────────────────── -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/layout_personal_records"
+                android:id="@+id/layoutPersonalRecords"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
+                android:layout_marginBottom="12dp"
                 app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
                 android:visibility="gone">
 
                 <LinearLayout
@@ -344,50 +422,41 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🏆 RÉCORDS PERSONALES"
-                        android:textSize="12sp"
+                        android:text="🏆  Récords personales"
                         android:textColor="@color/gold_primary"
-                        android:letterSpacing="0.1" />
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
 
                     <TextView
-                        android:id="@+id/tv_personal_records"
+                        android:id="@+id/tvPersonalRecords"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
                         android:textColor="@color/text_primary_dark"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:lineSpacingMultiplier="1.4" />
 
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Lista de ejercicios -->
+            <!-- ── Exercises section ───────────────────────────────────── -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EJERCICIOS"
+                android:textColor="@color/text_secondary_dark"
+                android:textSize="11sp"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp" />
+
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_exercises"
+                android:id="@+id/rvExercises"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false" />
 
         </LinearLayout>
 
-    </ScrollView>
-
-    <!-- Loading y error -->
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:indeterminateTint="@color/gold_primary"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/tv_error"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:textColor="@color/red"
-        android:visibility="gone"
-        android:padding="32dp" />
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
