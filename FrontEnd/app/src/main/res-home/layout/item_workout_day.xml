@@ -29,16 +29,18 @@
                 android:background="@color/gold_primary"
                 android:layout_marginEnd="10dp" />
 
-            <!-- ⭐ CHECKBOX DE DÍA -->
+            <!-- CHECKBOX CIRCULAR DEL DÍA -->
             <CheckBox
                 android:id="@+id/checkbox_day_completed"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_marginEnd="10dp"
-                android:button="@drawable/checkbox_selector"
+                android:button="@drawable/checkbox_circular_selector"
                 android:clickable="true"
                 android:focusable="true"
-                android:contentDescription="Marcar día completado"/>
+                android:contentDescription="Marcar día completado"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"/>
 
             <LinearLayout
                 android:layout_width="0dp"

@@ -3,6 +3,7 @@ package com.fitapp.appfit.feature.workout.presentation.execution
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -29,10 +30,17 @@ class WorkoutExerciseAdapter(
 
     private var exercises: List<RoutineExerciseResponse> = emptyList()
     private val expandedPositions = mutableSetOf<Int>()
+    private val viewHolders = mutableMapOf<Int, ExerciseViewHolder>()
 
     fun submitExercises(list: List<RoutineExerciseResponse>) {
         exercises = list.sortedBy { it.position }
         expandedPositions.clear()
+        viewHolders.clear()
+        notifyDataSetChanged()
+    }
+
+    fun updateExercises(list: List<RoutineExerciseResponse>) {
+        exercises = list.sortedBy { it.position }
         notifyDataSetChanged()
     }
 
@@ -41,7 +49,17 @@ class WorkoutExerciseAdapter(
             ?.sortedWith(compareBy<RoutineExerciseResponse> { it.dayOfWeek ?: "" }.thenBy { it.position })
             ?: emptyList()
         expandedPositions.clear()
+        viewHolders.clear()
         notifyDataSetChanged()
+    }
+
+    /**
+     * NUEVO: Refrescar solo los checkboxes sin colapsar expandidos
+     */
+    fun refreshCheckboxes() {
+        viewHolders.forEach { (_, holder) ->
+            holder.refreshCheckboxState()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -50,10 +68,21 @@ class WorkoutExerciseAdapter(
                 .inflate(R.layout.item_workout_exercise, parent, false)
         )
 
-    override fun onBindViewHolder(h: ExerciseViewHolder, pos: Int) = h.bind(exercises[pos], pos)
+    override fun onBindViewHolder(h: ExerciseViewHolder, pos: Int) {
+        h.bind(exercises[pos], pos)
+        viewHolders[pos] = h
+    }
+
     override fun getItemCount() = exercises.size
-    override fun onViewRecycled(h: ExerciseViewHolder) { super.onViewRecycled(h); h.stopTimer() }
-    override fun onViewDetachedFromWindow(h: ExerciseViewHolder) { super.onViewDetachedFromWindow(h); h.stopTimer() }
+    override fun onViewRecycled(h: ExerciseViewHolder) {
+        super.onViewRecycled(h)
+        h.stopTimer()
+        viewHolders.remove(h.adapterPosition)
+    }
+    override fun onViewDetachedFromWindow(h: ExerciseViewHolder) {
+        super.onViewDetachedFromWindow(h)
+        h.stopTimer()
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -76,6 +105,10 @@ class WorkoutExerciseAdapter(
         private val tvNotesBadge: TextView = itemView.findViewById(R.id.tv_notes_badge)
         private val tvSpecialModeInfo: TextView = itemView.findViewById(R.id.tv_special_mode_info)
 
+        // NUEVO: Checkbox y contador de sets
+        private val checkboxExerciseCompleted: CheckBox = itemView.findViewById(R.id.checkbox_exercise_completed)
+        private val tvSetsProgress: TextView = itemView.findViewById(R.id.tv_sets_progress)
+
         private var currentExercise: RoutineExerciseResponse? = null
         private var restSeconds = 0
         private var restTimerActive = false
@@ -89,6 +122,7 @@ class WorkoutExerciseAdapter(
                     },
                     onSetCompletedToggled = { set, completed ->
                         currentExercise?.let { onSetCompletedToggled(it, set, completed) }
+                        updateSetCounter()
                     },
                     onSequenceComplete = {
                         if (restSeconds > 0 && itemView.isAttachedToWindow) {
@@ -107,6 +141,7 @@ class WorkoutExerciseAdapter(
                     },
                     onSetCompletedToggled = { set, completed ->
                         currentExercise?.let { onSetCompletedToggled(it, set, completed) }
+                        updateSetCounter()
                     },
                     onSequenceComplete = {
                         if (restSeconds > 0 && itemView.isAttachedToWindow) {
@@ -171,6 +206,46 @@ class WorkoutExerciseAdapter(
                 }
                 true
             }
+
+            // CORREGIDO: Checkbox del ejercicio propaga a todos los sets
+            // SIN notifyDataSetChanged() - solo refrescar checkboxes
+            checkboxExerciseCompleted.setOnCheckedChangeListener { _, isChecked ->
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    val exercise = exercises[pos]
+                    exercise.setsTemplate?.forEach { set ->
+                        completionState.markSetCompleted(set.id, exercise.exerciseId, isChecked)
+                        onSetCompletedToggled(exercise, set, isChecked)
+                    }
+                    // Solo refrescar los checkboxes de sets, no todo
+                    (setAdapter as? WorkoutSetAdapterClassic)?.refreshCheckboxes()
+                    //(setAdapter as? WorkoutSetAdapter)?.refreshCheckboxes()
+                    updateSetCounter()
+                }
+            }
+        }
+
+        /**
+         * NUEVO: Refrescar solo el checkbox del ejercicio sin afectar expandidos
+         */
+        fun refreshCheckboxState() {
+            currentExercise?.let { exercise ->
+                checkboxExerciseCompleted.setOnCheckedChangeListener(null)
+                checkboxExerciseCompleted.isChecked = completionState.isExerciseCompleted(exercise.exerciseId)
+                checkboxExerciseCompleted.setOnCheckedChangeListener { _, isChecked ->
+                    val pos = adapterPosition
+                    if (pos != RecyclerView.NO_POSITION) {
+                        val currentEx = exercises[pos]
+                        currentEx.setsTemplate?.forEach { set ->
+                            completionState.markSetCompleted(set.id, currentEx.exerciseId, isChecked)
+                            onSetCompletedToggled(currentEx, set, isChecked)
+                        }
+                        (setAdapter as? WorkoutSetAdapterClassic)?.refreshCheckboxes()
+                        //(setAdapter as? WorkoutSetAdapter)?.refreshCheckboxes()
+                        updateSetCounter()
+                    }
+                }
+            }
         }
 
         fun bind(exercise: RoutineExerciseResponse, position: Int) {
@@ -178,12 +253,26 @@ class WorkoutExerciseAdapter(
             currentExercise = exercise
             tvExerciseName.text = exercise.exerciseName ?: "Ejercicio ${exercise.position}"
 
+            // Actualizar checkbox
+            refreshCheckboxState()
+
             bindGroupStripe(exercise)
             bindBadges(exercise)
             bindSpecialModeInfo(exercise)
             bindRestTimer(exercise)
             bindSets(exercise)
             bindExpandState(position)
+            updateSetCounter()
+        }
+
+        // ── Actualizar contador de sets ──────────────────────────────────────
+
+        private fun updateSetCounter() {
+            currentExercise?.let { exercise ->
+                val completed = completionState.getCompletedSetsCount(exercise.exerciseId)
+                val total = completionState.getTotalSetsCount(exercise.exerciseId)
+                tvSetsProgress.text = "$completed/$total"
+            }
         }
 
         // ── Franja lateral de color según agrupación ──────────────────────────
@@ -191,11 +280,11 @@ class WorkoutExerciseAdapter(
         private fun bindGroupStripe(exercise: RoutineExerciseResponse) {
             val color = when {
                 !exercise.circuitGroupId.isNullOrBlank() ->
-                    ContextCompat.getColor(itemView.context, R.color.set_type_giant)       // verde circuito
+                    ContextCompat.getColor(itemView.context, R.color.set_type_giant)
                 !exercise.superSetGroupId.isNullOrBlank() ->
-                    ContextCompat.getColor(itemView.context, R.color.set_type_super)       // azul superset
+                    ContextCompat.getColor(itemView.context, R.color.set_type_super)
                 else ->
-                    ContextCompat.getColor(itemView.context, R.color.gold_primary)         // dorado normal
+                    ContextCompat.getColor(itemView.context, R.color.gold_primary)
             }
             viewGroupStripe.setBackgroundColor(color)
         }
@@ -205,7 +294,6 @@ class WorkoutExerciseAdapter(
         private fun bindBadges(exercise: RoutineExerciseResponse) {
             var anyBadge = false
 
-            // Badge de modo especial
             val specialMode = detectSpecialMode(exercise)
             if (specialMode != null) {
                 tvSpecialModeBadge.text = specialMode.label
@@ -217,7 +305,6 @@ class WorkoutExerciseAdapter(
                 tvSpecialModeBadge.isVisible = false
             }
 
-            // Badge de agrupación
             val groupLabel = when {
                 !exercise.circuitGroupId.isNullOrBlank() ->
                     "Circuito · ${exercise.circuitRoundCount ?: "?"} rondas"
@@ -236,7 +323,6 @@ class WorkoutExerciseAdapter(
                 tvGroupBadge.isVisible = false
             }
 
-            // Badge de nota
             val hasNotes = !exercise.notes.isNullOrBlank()
             tvNotesBadge.isVisible = hasNotes
             if (hasNotes) anyBadge = true
@@ -319,27 +405,22 @@ class WorkoutExerciseAdapter(
         private fun showExerciseContextMenu(exercise: RoutineExerciseResponse) {
             val popup = PopupMenu(itemView.context, itemView)
 
-            // Opción: ver/ocultar nota (sólo si tiene)
             if (!exercise.notes.isNullOrBlank()) {
                 popup.menu.add(0, MENU_VIEW_NOTES, 0, "📝  Ver nota")
             }
 
-            // Opción: info del modo especial (sólo si tiene)
             val specialMode = detectSpecialMode(exercise)
             if (specialMode != null) {
                 popup.menu.add(0, MENU_VIEW_MODE_INFO, 1, "${specialMode.emoji}  Info ${specialMode.label}")
             }
 
-            // Opción: info de agrupación (sólo si tiene)
             if (!exercise.circuitGroupId.isNullOrBlank() || !exercise.superSetGroupId.isNullOrBlank()) {
                 popup.menu.add(0, MENU_VIEW_GROUP_INFO, 2, "🔗  Info agrupación")
             }
 
-            // Separador visual — siempre aparece la siguiente sección
             popup.menu.add(0, MENU_MARK_ALL_DONE, 3, "✅  Marcar todos los sets completos")
             popup.menu.add(0, MENU_CLEAR_SETS, 4, "↩️  Limpiar sets completados")
 
-            // Expandir / colapsar
             val pos = adapterPosition
             if (pos != RecyclerView.NO_POSITION) {
                 if (expandedPositions.contains(pos)) {
@@ -419,7 +500,8 @@ class WorkoutExerciseAdapter(
                 completionState.markSetCompleted(set.id, exercise.exerciseId, true)
                 onSetCompletedToggled(exercise, set, true)
             }
-            notifyItemChanged(adapterPosition)
+            updateSetCounter()
+            refreshCheckboxState()
         }
 
         private fun clearAllSetsCompleted(exercise: RoutineExerciseResponse) {
@@ -427,7 +509,8 @@ class WorkoutExerciseAdapter(
                 completionState.markSetCompleted(set.id, exercise.exerciseId, false)
                 onSetCompletedToggled(exercise, set, false)
             }
-            notifyItemChanged(adapterPosition)
+            updateSetCounter()
+            refreshCheckboxState()
         }
 
         // ── Helpers de modo especial ──────────────────────────────────────────
@@ -469,8 +552,6 @@ class WorkoutExerciseAdapter(
         }
     }
 
-    // ── Constantes del menú ───────────────────────────────────────────────────
-
     companion object {
         private const val MENU_VIEW_NOTES     = 1
         private const val MENU_VIEW_MODE_INFO = 2
@@ -480,8 +561,6 @@ class WorkoutExerciseAdapter(
         private const val MENU_EXPAND         = 6
         private const val MENU_COLLAPSE       = 7
     }
-
-    // ── Data class auxiliar ───────────────────────────────────────────────────
 
     private data class SpecialModeInfo(
         val label: String,

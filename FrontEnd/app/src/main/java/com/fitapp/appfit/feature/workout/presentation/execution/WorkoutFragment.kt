@@ -53,16 +53,14 @@ class WorkoutFragment : Fragment() {
     private lateinit var stateManager: SetParameterStateManager
     private val completionState = WorkoutCompletionState()
 
-    // Timing
+    // Timing: usar timestamps
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
     private val timerHandler = Handler(Looper.getMainLooper())
-    private var elapsedSeconds = 0
     private var timerRunning = false
 
     private val timerRunnable = object : Runnable {
         override fun run() {
-            elapsedSeconds++
             updateTimerDisplay()
             timerHandler.postDelayed(this, 1000)
         }
@@ -176,7 +174,6 @@ class WorkoutFragment : Fragment() {
         routineViewModel.getRoutineForTraining(args.routineId)
         routineViewModel.markRoutineAsUsed(args.routineId)
         workoutStartedAt = System.currentTimeMillis()
-        elapsedSeconds = 0
     }
 
     // ── Observers ──────────────────────────────────────────────────────────
@@ -318,13 +315,19 @@ class WorkoutFragment : Fragment() {
                         }
                     }
                 }
-
                 binding.fabSaveWorkout.isInvisible = false
             },
             onSetCompletedToggled = { exercise, set, isCompleted ->
                 completionState.markSetCompleted(set.id, exercise.exerciseId, isCompleted)
                 if (isCompleted) stateManager.initializeSet(set.id, exercise.exerciseId, set)
                 binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
+
+                val dayPosition = adapter.findDayIndexForExercise(exercise.exerciseId)
+                if (dayPosition != -1) {
+                    binding.recyclerView.post {
+                        adapter.notifyItemChanged(dayPosition)
+                    }
+                }
             },
             completionState = completionState
         )
@@ -332,7 +335,6 @@ class WorkoutFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
     }
-
     private fun initializeCompletionStructure(routine: RoutineResponse) {
         routine.exercises?.forEach { exercise ->
             completionState.registerExercise(exercise.exerciseId, exercise.dayOfWeek ?: "SIN_DIA")
@@ -393,9 +395,14 @@ class WorkoutFragment : Fragment() {
 
     private fun updateTimerDisplay() {
         if (_binding == null) return
+
+        val elapsedMs = System.currentTimeMillis() - workoutStartedAt
+        val elapsedSeconds = elapsedMs / 1000
+
         val h = elapsedSeconds / 3600
         val m = (elapsedSeconds % 3600) / 60
         val s = elapsedSeconds % 60
+
         binding.tvTimer.text = if (h > 0) "%d:%02d:%02d".format(h, m, s)
         else "%02d:%02d".format(m, s)
     }

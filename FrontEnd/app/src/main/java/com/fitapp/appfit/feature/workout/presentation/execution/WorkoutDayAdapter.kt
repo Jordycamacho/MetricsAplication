@@ -3,6 +3,7 @@ package com.fitapp.appfit.feature.workout.presentation.execution
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -67,6 +68,12 @@ class WorkoutDayAdapter(
         notifyDataSetChanged()
     }
 
+    fun findDayIndexForExercise(exerciseId: Long): Int {
+        return days.indexOfFirst { day ->
+            day.exercises.any { it.exerciseId == exerciseId }
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_workout_day, parent, false)
@@ -85,13 +92,18 @@ class WorkoutDayAdapter(
         private val recyclerExercises: RecyclerView = itemView.findViewById(R.id.recycler_exercises)
         private val container: View = itemView.findViewById(R.id.layout_day_container)
         private val tvExerciseCount: TextView = itemView.findViewById(R.id.tv_exercise_count)
-        private val exerciseAdapter =
-            WorkoutExerciseAdapter(onSetValueChanged, onSetCompletedToggled, completionState)
+        private val tvDayProgress: TextView = itemView.findViewById(R.id.tv_day_progress)
+        private val checkboxDayCompleted: CheckBox = itemView.findViewById(R.id.checkbox_day_completed)
+
+        private lateinit var exerciseAdapter: WorkoutExerciseAdapter
 
         init {
             recyclerExercises.layoutManager = LinearLayoutManager(itemView.context)
-            recyclerExercises.adapter = exerciseAdapter
             recyclerExercises.isNestedScrollingEnabled = false
+
+            // ✅ CREAR ADAPTER UNA SOLA VEZ
+            exerciseAdapter = WorkoutExerciseAdapter(onSetValueChanged, onSetCompletedToggled, completionState)
+            recyclerExercises.adapter = exerciseAdapter
 
             itemView.setOnClickListener {
                 val pos = adapterPosition
@@ -106,13 +118,47 @@ class WorkoutDayAdapter(
                     ivExpand.animate().rotation(180f).setDuration(200).start()
                 }
             }
+
+            checkboxDayCompleted.setOnCheckedChangeListener { _, isChecked ->
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    val day = days[pos]
+                    day.exercises.forEach { exercise ->
+                        exercise.setsTemplate?.forEach { set ->
+                            completionState.markSetCompleted(set.id, exercise.exerciseId, isChecked)
+                            onSetCompletedToggled(exercise, set, isChecked)
+                        }
+                    }
+                    exerciseAdapter.refreshCheckboxes()
+                    updateDayProgress(day)
+                }
+            }
         }
 
         fun bind(day: WorkoutDay, position: Int) {
             tvDay.text = DAY_NAMES_ES[day.dayOfWeek] ?: day.dayOfWeek
-            val count = day.exercises.size
-            tvExerciseCount.text = "$count ejercicio${if (count != 1) "s" else ""}"
-            exerciseAdapter.submitExercises(day.exercises)
+            tvExerciseCount.text = "${day.exercises.size} ejercicio${if (day.exercises.size != 1) "s" else ""}"
+            updateDayProgress(day)
+
+            // ✅ Actualizar datos SIN perder expansión de ejercicios
+            exerciseAdapter.updateExercises(day.exercises)
+
+            checkboxDayCompleted.setOnCheckedChangeListener(null)
+            checkboxDayCompleted.isChecked = completionState.isDayCompleted(day.dayOfWeek)
+            checkboxDayCompleted.setOnCheckedChangeListener { _, isChecked ->
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    val currentDay = days[pos]
+                    currentDay.exercises.forEach { exercise ->
+                        exercise.setsTemplate?.forEach { set ->
+                            completionState.markSetCompleted(set.id, exercise.exerciseId, isChecked)
+                            onSetCompletedToggled(exercise, set, isChecked)
+                        }
+                    }
+                    exerciseAdapter.refreshCheckboxes()
+                    updateDayProgress(currentDay)
+                }
+            }
 
             if (expandedDays.contains(position)) {
                 container.visibility = View.VISIBLE
@@ -120,6 +166,17 @@ class WorkoutDayAdapter(
             } else {
                 container.visibility = View.GONE
                 ivExpand.rotation = 0f
+            }
+        }
+
+        private fun updateDayProgress(day: WorkoutDay) {
+            val completedCount = completionState.getCompletedExercisesCount(day.dayOfWeek)
+            val totalCount = day.exercises.size
+            if (completedCount > 0) {
+                tvDayProgress.text = " · $completedCount/$totalCount completados"
+                tvDayProgress.visibility = View.VISIBLE
+            } else {
+                tvDayProgress.visibility = View.GONE
             }
         }
     }

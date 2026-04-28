@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Estado CHECKED: círculo relleno dorado con checkmark blanco -->
+    <item android:state_checked="true">
+        <inset android:inset="4dp">
+            <layer-list>
+                <item>
+                    <shape android:shape="oval">
+                        <solid android:color="#78703F"/>
+                    </shape>
+                </item>
+                <item android:gravity="center">
+                    <vector xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:width="14dp"
+                        android:height="14dp"
+                        android:viewportWidth="24"
+                        android:viewportHeight="24">
+                        <path
+                            android:pathData="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z"
+                            android:fillColor="#FFFFFF"/>
+                    </vector>
+                </item>
+            </layer-list>
+        </inset>
+    </item>
+
+    <!-- Estado UNCHECKED: círculo vacío con borde dorado -->
+    <item android:state_checked="false">
+        <inset android:inset="4dp">
+            <shape android:shape="oval">
+                <solid android:color="#1E1E1E"/>
+                <stroke android:color="#78703F" android:width="2dp"/>
+            </shape>
+        </inset>
+    </item>
+
+</selector>

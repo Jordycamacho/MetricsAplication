@@ -44,15 +44,18 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
+                    <!-- CHECKBOX CIRCULAR DEL EJERCICIO -->
                     <CheckBox
                         android:id="@+id/checkbox_exercise_completed"
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:layout_marginEnd="12dp"
-                        android:button="@drawable/checkbox_selector"
+                        android:button="@drawable/checkbox_circular_selector"
                         android:clickable="true"
                         android:focusable="true"
-                        android:contentDescription="Marcar ejercicio completado"/>
+                        android:contentDescription="Marcar ejercicio completado"
+                        android:paddingStart="2dp"
+                        android:paddingEnd="2dp"/>
 
                     <TextView
                         android:id="@+id/tv_exercise_name"
@@ -64,6 +67,7 @@
                         android:textSize="18sp"
                         android:textStyle="bold"/>
 
+                    <!-- CONTADOR DE SETS DINÁMICO -->
                     <TextView
                         android:id="@+id/tv_sets_progress"
                         android:layout_width="wrap_content"

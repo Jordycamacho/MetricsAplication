@@ -32,17 +32,28 @@ class WorkoutSetAdapterClassic(
     private val paramLabel      = mutableMapOf<Long, String>()
     private val paramType       = mutableMapOf<Long, String>()
     private var activeSequenceIndex = -1
+    private val viewHolders = mutableMapOf<Int, SetViewHolder>()
 
     fun submitList(newSets: List<RoutineSetTemplateResponse>) {
         sets = newSets
         currentReps.clear(); currentParam.clear(); currentDuration.clear()
         paramLabel.clear(); paramType.clear()
         activeSequenceIndex = -1
+        viewHolders.clear()
         sets.forEach { initSetState(it.id, it.parameters ?: emptyList()) }
         notifyDataSetChanged()
     }
 
     fun isSequenceMode() = sets.isNotEmpty() && sets.all { currentDuration.containsKey(it.id) }
+
+    /**
+     * NUEVO: Refrescar solo checkboxes sin afectar expandidos
+     */
+    fun refreshCheckboxes() {
+        viewHolders.forEach { (_, holder) ->
+            holder.refreshCheckboxState()
+        }
+    }
 
     private fun initSetState(setId: Long, params: List<RoutineSetParameterResponse>) {
         params.firstOrNull { it.repetitions != null }
@@ -78,10 +89,21 @@ class WorkoutSetAdapterClassic(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         SetViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_workout_set_classic, parent, false))
 
-    override fun onBindViewHolder(h: SetViewHolder, pos: Int) = h.bind(sets[pos], pos)
+    override fun onBindViewHolder(h: SetViewHolder, pos: Int) {
+        h.bind(sets[pos], pos)
+        viewHolders[pos] = h
+    }
+
     override fun getItemCount() = sets.size
-    override fun onViewRecycled(h: SetViewHolder) { super.onViewRecycled(h); h.stopAllTimers() }
-    override fun onViewDetachedFromWindow(h: SetViewHolder) { super.onViewDetachedFromWindow(h); h.stopAllTimers() }
+    override fun onViewRecycled(h: SetViewHolder) {
+        super.onViewRecycled(h)
+        h.stopAllTimers()
+        viewHolders.remove(h.adapterPosition)
+    }
+    override fun onViewDetachedFromWindow(h: SetViewHolder) {
+        super.onViewDetachedFromWindow(h)
+        h.stopAllTimers()
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -169,6 +191,19 @@ class WorkoutSetAdapterClassic(
             restTimer.stop(); durationTimer.stop()
         }
 
+        /**
+         * NUEVO: Refrescar solo el checkbox sin afectar el estado de expansión
+         */
+        fun refreshCheckboxState() {
+            checkboxCompleted.setOnCheckedChangeListener(null)
+            checkboxCompleted.isChecked = completionState.isSetCompleted(currentSetId)
+            checkboxCompleted.setOnCheckedChangeListener { _, checked ->
+                completionState.markSetCompleted(currentSetId, 0L, checked)
+                onSetCompletedToggled(sets[myIndex], checked)
+                updateCompletionVisuals(checked)
+            }
+        }
+
         fun bind(set: RoutineSetTemplateResponse, position: Int) {
             stopAllTimers()
             durationDisplayView = null
@@ -201,7 +236,6 @@ class WorkoutSetAdapterClassic(
             cardRoot?.alpha = alpha
         }
 
-
         private fun bindTypeDecoration(set: RoutineSetTemplateResponse) {
             val (label, colorRes) = setTypeMeta(set.setType ?: "NORMAL")
             val color = ContextCompat.getColor(itemView.context, colorRes)
@@ -227,7 +261,6 @@ class WorkoutSetAdapterClassic(
             "ISOMETRIC"       -> "Isométrico"      to R.color.set_type_isometric
             else              -> "Normal"          to R.color.set_type_normal
         }
-
 
         private fun bindControls(set: RoutineSetTemplateResponse, position: Int) {
             val hasReps     = currentReps.containsKey(set.id)

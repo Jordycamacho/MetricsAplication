@@ -41,16 +41,18 @@
                 android:gravity="center_vertical"
                 android:layout_marginBottom="14dp">
 
-                <!-- ⭐ CHECKBOX DE COMPLETADO -->
+                <!-- CHECKBOX CIRCULAR PARA SETS -->
                 <CheckBox
                     android:id="@+id/checkbox_set_completed"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
                     android:layout_marginEnd="12dp"
-                    android:button="@drawable/checkbox_selector"
+                    android:button="@drawable/checkbox_circular_selector"
                     android:clickable="true"
                     android:focusable="true"
-                    android:contentDescription="Marcar como completado"/>
+                    android:contentDescription="Marcar como completado"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="2dp"/>
 
                 <TextView
                     android:id="@+id/tv_param_summary"
@@ -155,6 +157,7 @@
                     android:orientation="vertical"
                     android:gravity="center">
 
+                    <!-- UNIDAD CORRECTA - NO "PESO" -->
                     <TextView
                         android:id="@+id/tv_weight_unit"
                         android:layout_width="wrap_content"
