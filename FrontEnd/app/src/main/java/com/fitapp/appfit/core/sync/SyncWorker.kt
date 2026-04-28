@@ -14,7 +14,7 @@ import androidx.work.WorkerParameters
 import com.fitapp.appfit.core.database.AppDatabase
 import com.fitapp.appfit.core.database.dao.PendingSyncOperation
 import com.fitapp.appfit.core.network.ApiClient
-import com.fitapp.appfit.feature.workout.data.WorkoutRepository
+import com.fitapp.appfit.feature.workout.data.repository.WorkoutRepositoryImpl
 import com.fitapp.appfit.feature.routine.model.rutine.request.CreateRoutineRequest
 import com.fitapp.appfit.feature.routine.model.rutine.request.UpdateRoutineRequest
 import com.google.gson.Gson
@@ -31,7 +31,7 @@ class SyncWorker(
     private val routineDao = db.routineDao()
     private val gson = Gson()
     private val networkChecker = NetworkChecker(context)
-    private val workoutRepository = WorkoutRepository(context)
+    private val workoutRepositoryImpl = WorkoutRepositoryImpl(context)
 
     override suspend fun doWork(): Result {
         if (!networkChecker.isOnline()) {
@@ -43,7 +43,7 @@ class SyncWorker(
 
         val routineSuccess = processRoutineQueue()
 
-        val workoutSynced = workoutRepository.syncAllPendingSessions()
+        val workoutSynced = workoutRepositoryImpl.syncAllPendingSessions()
         Timber.Forest.i("SyncWorker: $workoutSynced sesiones de workout sincronizadas")
 
         return if (routineSuccess) Result.success() else Result.retry()

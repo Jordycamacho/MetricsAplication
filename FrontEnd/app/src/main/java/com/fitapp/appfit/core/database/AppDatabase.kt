@@ -12,15 +12,15 @@ import com.fitapp.appfit.feature.routine.database.dao.RoutineDao
 import com.fitapp.appfit.feature.routine.database.dao.RoutineExerciseDao
 import com.fitapp.appfit.feature.routine.database.dao.SetParameterDao
 import com.fitapp.appfit.feature.routine.database.dao.SetTemplateDao
-import com.fitapp.appfit.feature.workout.database.dao.WorkoutSessionDao
-import com.fitapp.appfit.feature.workout.database.dao.WorkoutSetResultDao
+import com.fitapp.appfit.feature.workout.data.database.dao.WorkoutSessionDao
+import com.fitapp.appfit.feature.workout.data.database.dao.WorkoutSetResultDao
 import com.fitapp.appfit.core.database.dao.PendingSyncOperation
 import com.fitapp.appfit.feature.routine.database.entity.RoutineEntity
 import com.fitapp.appfit.feature.routine.database.entity.RoutineExerciseEntity
 import com.fitapp.appfit.feature.routine.database.entity.SetParameterEntity
 import com.fitapp.appfit.feature.routine.database.entity.SetTemplateEntity
-import com.fitapp.appfit.feature.workout.database.entity.WorkoutSessionEntity
-import com.fitapp.appfit.feature.workout.database.entity.WorkoutSetResultEntity
+import com.fitapp.appfit.feature.workout.data.database.entity.WorkoutSessionEntity
+import com.fitapp.appfit.feature.workout.data.database.entity.WorkoutSetResultEntity
 
 @Database(
     entities = [

@@ -139,7 +139,7 @@
 
     <fragment
         android:id="@+id/navigation_workout"
-        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutFragment"
+        android:name="com.fitapp.appfit.feature.workout.presentation.execution.WorkoutFragment"
         android:label="Entrenamiento"
         tools:layout="@layout/fragment_workout">
         <argument
@@ -152,7 +152,7 @@
 
     <fragment
         android:id="@+id/navigation_workout_preferences"
-        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutPreferencesFragment"
+        android:name="com.fitapp.appfit.feature.workout.presentation.preferences.WorkoutPreferencesFragment"
         android:label="Configuración"
         tools:layout="@layout/fragment_workout_preferences" />
 
@@ -413,7 +413,7 @@
 
     <fragment
         android:id="@+id/navigation_workout_history"
-        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutHistoryFragment"
+        android:name="com.fitapp.appfit.feature.workout.presentation.history.WorkoutHistoryFragment"
         android:label="Historial"
         tools:layout="@layout/fragment_workout_history">
 
@@ -425,7 +425,7 @@
 
     <fragment
         android:id="@+id/workoutHistoryFragment"
-        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutHistoryFragment"
+        android:name="com.fitapp.appfit.feature.workout.presentation.history.WorkoutHistoryFragment"
         android:label="Historial"
         tools:layout="@layout/fragment_workout_history">
 
@@ -437,7 +437,7 @@
 
     <fragment
         android:id="@+id/workoutSessionDetailFragment"
-        android:name="com.fitapp.appfit.feature.workout.ui.WorkoutSessionDetailFragment"
+        android:name="com.fitapp.appfit.feature.workout.presentation.history.WorkoutSessionDetailFragment"
         android:label="Detalle de sesión"
         tools:layout="@layout/fragment_workout_session_detail">
 
