@@ -30,17 +30,11 @@ class WorkoutExerciseAdapter(
 
     private var exercises: List<RoutineExerciseResponse> = emptyList()
     private val expandedPositions = mutableSetOf<Int>()
-    private val viewHolders = mutableMapOf<Int, ExerciseViewHolder>()
+    private var isProcessingCheckbox = false
 
     fun submitExercises(list: List<RoutineExerciseResponse>) {
         exercises = list.sortedBy { it.position }
-        expandedPositions.clear()
-        viewHolders.clear()
-        notifyDataSetChanged()
-    }
-
-    fun updateExercises(list: List<RoutineExerciseResponse>) {
-        exercises = list.sortedBy { it.position }
+        // NO limpiar expandedPositions
         notifyDataSetChanged()
     }
 
@@ -49,17 +43,7 @@ class WorkoutExerciseAdapter(
             ?.sortedWith(compareBy<RoutineExerciseResponse> { it.dayOfWeek ?: "" }.thenBy { it.position })
             ?: emptyList()
         expandedPositions.clear()
-        viewHolders.clear()
         notifyDataSetChanged()
-    }
-
-    /**
-     * NUEVO: Refrescar solo los checkboxes sin colapsar expandidos
-     */
-    fun refreshCheckboxes() {
-        viewHolders.forEach { (_, holder) ->
-            holder.refreshCheckboxState()
-        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -68,21 +52,10 @@ class WorkoutExerciseAdapter(
                 .inflate(R.layout.item_workout_exercise, parent, false)
         )
 
-    override fun onBindViewHolder(h: ExerciseViewHolder, pos: Int) {
-        h.bind(exercises[pos], pos)
-        viewHolders[pos] = h
-    }
-
+    override fun onBindViewHolder(h: ExerciseViewHolder, pos: Int) = h.bind(exercises[pos], pos)
     override fun getItemCount() = exercises.size
-    override fun onViewRecycled(h: ExerciseViewHolder) {
-        super.onViewRecycled(h)
-        h.stopTimer()
-        viewHolders.remove(h.adapterPosition)
-    }
-    override fun onViewDetachedFromWindow(h: ExerciseViewHolder) {
-        super.onViewDetachedFromWindow(h)
-        h.stopTimer()
-    }
+    override fun onViewRecycled(h: ExerciseViewHolder) { super.onViewRecycled(h); h.stopTimer() }
+    override fun onViewDetachedFromWindow(h: ExerciseViewHolder) { super.onViewDetachedFromWindow(h); h.stopTimer() }
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -105,11 +78,12 @@ class WorkoutExerciseAdapter(
         private val tvNotesBadge: TextView = itemView.findViewById(R.id.tv_notes_badge)
         private val tvSpecialModeInfo: TextView = itemView.findViewById(R.id.tv_special_mode_info)
 
-        // NUEVO: Checkbox y contador de sets
+        // Checkbox y contador de sets
         private val checkboxExerciseCompleted: CheckBox = itemView.findViewById(R.id.checkbox_exercise_completed)
         private val tvSetsProgress: TextView = itemView.findViewById(R.id.tv_sets_progress)
 
         private var currentExercise: RoutineExerciseResponse? = null
+        private var currentExerciseIndex = -1
         private var restSeconds = 0
         private var restTimerActive = false
 
@@ -182,7 +156,6 @@ class WorkoutExerciseAdapter(
             recyclerSets.adapter = setAdapter as RecyclerView.Adapter<RecyclerView.ViewHolder>
             recyclerSets.isNestedScrollingEnabled = false
 
-            // Tap: expandir/colapsar sets
             cardExercise.setOnClickListener {
                 val pos = adapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
@@ -198,7 +171,6 @@ class WorkoutExerciseAdapter(
                 }
             }
 
-            // Long-press: menú contextual
             cardExercise.setOnLongClickListener {
                 val pos = adapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
@@ -207,43 +179,20 @@ class WorkoutExerciseAdapter(
                 true
             }
 
-            // CORREGIDO: Checkbox del ejercicio propaga a todos los sets
-            // SIN notifyDataSetChanged() - solo refrescar checkboxes
             checkboxExerciseCompleted.setOnCheckedChangeListener { _, isChecked ->
+                if (isProcessingCheckbox) return@setOnCheckedChangeListener
                 val pos = adapterPosition
-                if (pos != RecyclerView.NO_POSITION) {
-                    val exercise = exercises[pos]
-                    exercise.setsTemplate?.forEach { set ->
-                        completionState.markSetCompleted(set.id, exercise.exerciseId, isChecked)
-                        onSetCompletedToggled(exercise, set, isChecked)
-                    }
-                    // Solo refrescar los checkboxes de sets, no todo
-                    (setAdapter as? WorkoutSetAdapterClassic)?.refreshCheckboxes()
-                    //(setAdapter as? WorkoutSetAdapter)?.refreshCheckboxes()
-                    updateSetCounter()
-                }
-            }
-        }
+                if (pos == RecyclerView.NO_POSITION) return@setOnCheckedChangeListener
+                if (currentExerciseIndex != pos) return@setOnCheckedChangeListener
 
-        /**
-         * NUEVO: Refrescar solo el checkbox del ejercicio sin afectar expandidos
-         */
-        fun refreshCheckboxState() {
-            currentExercise?.let { exercise ->
-                checkboxExerciseCompleted.setOnCheckedChangeListener(null)
-                checkboxExerciseCompleted.isChecked = completionState.isExerciseCompleted(exercise.exerciseId)
-                checkboxExerciseCompleted.setOnCheckedChangeListener { _, isChecked ->
-                    val pos = adapterPosition
-                    if (pos != RecyclerView.NO_POSITION) {
-                        val currentEx = exercises[pos]
-                        currentEx.setsTemplate?.forEach { set ->
-                            completionState.markSetCompleted(set.id, currentEx.exerciseId, isChecked)
-                            onSetCompletedToggled(currentEx, set, isChecked)
-                        }
-                        (setAdapter as? WorkoutSetAdapterClassic)?.refreshCheckboxes()
-                        //(setAdapter as? WorkoutSetAdapter)?.refreshCheckboxes()
-                        updateSetCounter()
-                    }
+                isProcessingCheckbox = true
+                try {
+                    val exercise = exercises[pos]
+                    completionState.setExerciseCompleted(exercise.exerciseId, isChecked)
+                    updateSetCounter()
+                    (recyclerSets.adapter as? WorkoutSetAdapterClassic)?.notifyDataSetChanged()
+                } finally {
+                    isProcessingCheckbox = false
                 }
             }
         }
@@ -251,10 +200,10 @@ class WorkoutExerciseAdapter(
         fun bind(exercise: RoutineExerciseResponse, position: Int) {
             stopTimer()
             currentExercise = exercise
+            currentExerciseIndex = position
             tvExerciseName.text = exercise.exerciseName ?: "Ejercicio ${exercise.position}"
 
-            // Actualizar checkbox
-            refreshCheckboxState()
+            checkboxExerciseCompleted.isChecked = completionState.isExerciseCompleted(exercise.exerciseId)
 
             bindGroupStripe(exercise)
             bindBadges(exercise)
@@ -501,7 +450,7 @@ class WorkoutExerciseAdapter(
                 onSetCompletedToggled(exercise, set, true)
             }
             updateSetCounter()
-            refreshCheckboxState()
+            notifyItemChanged(adapterPosition)
         }
 
         private fun clearAllSetsCompleted(exercise: RoutineExerciseResponse) {
@@ -510,7 +459,7 @@ class WorkoutExerciseAdapter(
                 onSetCompletedToggled(exercise, set, false)
             }
             updateSetCounter()
-            refreshCheckboxState()
+            notifyItemChanged(adapterPosition)
         }
 
         // ── Helpers de modo especial ──────────────────────────────────────────

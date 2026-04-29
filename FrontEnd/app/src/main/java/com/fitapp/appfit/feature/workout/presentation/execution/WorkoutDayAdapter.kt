@@ -23,6 +23,7 @@ class WorkoutDayAdapter(
 
     private var days: List<WorkoutDay> = emptyList()
     private val expandedDays = mutableSetOf<Int>()
+    private var isProcessingCheckbox = false
 
     companion object {
         private val DAY_ORDER = mapOf(
@@ -68,12 +69,6 @@ class WorkoutDayAdapter(
         notifyDataSetChanged()
     }
 
-    fun findDayIndexForExercise(exerciseId: Long): Int {
-        return days.indexOfFirst { day ->
-            day.exercises.any { it.exerciseId == exerciseId }
-        }
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_workout_day, parent, false)
@@ -95,16 +90,15 @@ class WorkoutDayAdapter(
         private val tvDayProgress: TextView = itemView.findViewById(R.id.tv_day_progress)
         private val checkboxDayCompleted: CheckBox = itemView.findViewById(R.id.checkbox_day_completed)
 
-        private lateinit var exerciseAdapter: WorkoutExerciseAdapter
+        private var exerciseAdapter: WorkoutExerciseAdapter? = null
+        private var currentDayIndex = -1
+        private var currentDayOfWeek = ""
 
         init {
             recyclerExercises.layoutManager = LinearLayoutManager(itemView.context)
             recyclerExercises.isNestedScrollingEnabled = false
 
-            // ✅ CREAR ADAPTER UNA SOLA VEZ
-            exerciseAdapter = WorkoutExerciseAdapter(onSetValueChanged, onSetCompletedToggled, completionState)
-            recyclerExercises.adapter = exerciseAdapter
-
+            // Expansión del día
             itemView.setOnClickListener {
                 val pos = adapterPosition
                 if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
@@ -118,47 +112,46 @@ class WorkoutDayAdapter(
                     ivExpand.animate().rotation(180f).setDuration(200).start()
                 }
             }
-
-            checkboxDayCompleted.setOnCheckedChangeListener { _, isChecked ->
-                val pos = adapterPosition
-                if (pos != RecyclerView.NO_POSITION) {
-                    val day = days[pos]
-                    day.exercises.forEach { exercise ->
-                        exercise.setsTemplate?.forEach { set ->
-                            completionState.markSetCompleted(set.id, exercise.exerciseId, isChecked)
-                            onSetCompletedToggled(exercise, set, isChecked)
-                        }
-                    }
-                    exerciseAdapter.refreshCheckboxes()
-                    updateDayProgress(day)
-                }
-            }
         }
 
         fun bind(day: WorkoutDay, position: Int) {
+            currentDayIndex = position
+            currentDayOfWeek = day.dayOfWeek
+
             tvDay.text = DAY_NAMES_ES[day.dayOfWeek] ?: day.dayOfWeek
-            tvExerciseCount.text = "${day.exercises.size} ejercicio${if (day.exercises.size != 1) "s" else ""}"
-            updateDayProgress(day)
+            val count = day.exercises.size
+            tvExerciseCount.text = "$count ejercicio${if (count != 1) "s" else ""}"
 
-            // ✅ Actualizar datos SIN perder expansión de ejercicios
-            exerciseAdapter.updateExercises(day.exercises)
+            if (exerciseAdapter == null) {
+                exerciseAdapter = WorkoutExerciseAdapter(
+                    onSetValueChanged,
+                    onSetCompletedToggled,
+                    completionState
+                )
+                recyclerExercises.adapter = exerciseAdapter
+            }
+            exerciseAdapter?.submitExercises(day.exercises)
 
-            checkboxDayCompleted.setOnCheckedChangeListener(null)
+            // --- CHECKBOX DEL DÍA ---
+            checkboxDayCompleted.setOnCheckedChangeListener(null)  // Limpia listener anterior
             checkboxDayCompleted.isChecked = completionState.isDayCompleted(day.dayOfWeek)
             checkboxDayCompleted.setOnCheckedChangeListener { _, isChecked ->
+                if (isProcessingCheckbox) return@setOnCheckedChangeListener
                 val pos = adapterPosition
-                if (pos != RecyclerView.NO_POSITION) {
-                    val currentDay = days[pos]
-                    currentDay.exercises.forEach { exercise ->
-                        exercise.setsTemplate?.forEach { set ->
-                            completionState.markSetCompleted(set.id, exercise.exerciseId, isChecked)
-                            onSetCompletedToggled(exercise, set, isChecked)
-                        }
-                    }
-                    exerciseAdapter.refreshCheckboxes()
-                    updateDayProgress(currentDay)
+                if (pos == RecyclerView.NO_POSITION) return@setOnCheckedChangeListener
+                if (currentDayIndex != pos) return@setOnCheckedChangeListener
+
+                isProcessingCheckbox = true
+                try {
+                    completionState.setDayCompleted(day.dayOfWeek, isChecked)
+                    updateDayProgress(day)
+                    exerciseAdapter?.notifyItemRangeChanged(0, exerciseAdapter?.itemCount ?: 0)
+                } finally {
+                    isProcessingCheckbox = false
                 }
             }
+
+            updateDayProgress(day)
 
             if (expandedDays.contains(position)) {
                 container.visibility = View.VISIBLE

@@ -53,7 +53,7 @@ class WorkoutFragment : Fragment() {
     private lateinit var stateManager: SetParameterStateManager
     private val completionState = WorkoutCompletionState()
 
-    // Timing: usar timestamps
+    // Timing - CORREGIDO: usar timestamps, no contador
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
     private val timerHandler = Handler(Looper.getMainLooper())
@@ -315,19 +315,14 @@ class WorkoutFragment : Fragment() {
                         }
                     }
                 }
+
                 binding.fabSaveWorkout.isInvisible = false
             },
             onSetCompletedToggled = { exercise, set, isCompleted ->
-                completionState.markSetCompleted(set.id, exercise.exerciseId, isCompleted)
-                if (isCompleted) stateManager.initializeSet(set.id, exercise.exerciseId, set)
-                binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
-
-                val dayPosition = adapter.findDayIndexForExercise(exercise.exerciseId)
-                if (dayPosition != -1) {
-                    binding.recyclerView.post {
-                        adapter.notifyItemChanged(dayPosition)
-                    }
+                if (isCompleted) {
+                    stateManager.initializeSet(set.id, exercise.exerciseId, set)
                 }
+                binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
             },
             completionState = completionState
         )
@@ -335,6 +330,7 @@ class WorkoutFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
     }
+
     private fun initializeCompletionStructure(routine: RoutineResponse) {
         routine.exercises?.forEach { exercise ->
             completionState.registerExercise(exercise.exerciseId, exercise.dayOfWeek ?: "SIN_DIA")
@@ -396,6 +392,7 @@ class WorkoutFragment : Fragment() {
     private fun updateTimerDisplay() {
         if (_binding == null) return
 
+        // CORREGIDO: calcular basado en timestamps, no en contador
         val elapsedMs = System.currentTimeMillis() - workoutStartedAt
         val elapsedSeconds = elapsedMs / 1000
 

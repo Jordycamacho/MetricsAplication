@@ -11,10 +11,8 @@ data class WorkoutCompletionState(
     private val completedExercises: MutableMap<Long, Boolean> = mutableMapOf(),
     private val completedDays: MutableMap<String, Boolean> = mutableMapOf(),
     private val exercisesByDay: MutableMap<String, MutableList<Long>> = mutableMapOf(),
-    // FIX: was MutableMap<Long, List<Long>> — cast to MutableList was fragile
     private val setsByExercise: MutableMap<Long, MutableList<Long>> = mutableMapOf(),
-    // Track which day each exercise belongs to for recalculation
-    private val exerciseDayMap: MutableMap<Long, String> = mutableMapOf()
+    private val exerciseDayMap: MutableMap<Long, MutableSet<String>> = mutableMapOf()
 ) {
 
     // ── Set level ─────────────────────────────────────────────────────────────
@@ -64,8 +62,8 @@ data class WorkoutCompletionState(
     }
 
     private fun recalculateDayCompletionForExercise(exerciseId: Long) {
-        val day = exerciseDayMap[exerciseId] ?: return
-        recalculateDayCompletion(day)
+        val days = exerciseDayMap[exerciseId] ?: return
+        days.forEach { day -> recalculateDayCompletion(day) }
     }
 
     // ── Day level ─────────────────────────────────────────────────────────────
@@ -92,6 +90,21 @@ data class WorkoutCompletionState(
         return shouldComplete
     }
 
+    fun setExerciseCompleted(exerciseId: Long, completed: Boolean) {
+        val sets = setsByExercise[exerciseId] ?: return
+        sets.forEach { setId -> completedSets[setId] = completed }
+        completedExercises[exerciseId] = completed
+
+        val days = exerciseDayMap[exerciseId] ?: return
+        days.forEach { day -> recalculateDayCompletion(day) }
+    }
+
+    fun setDayCompleted(dayOfWeek: String, completed: Boolean) {
+        val exercises = exercisesByDay[dayOfWeek] ?: return
+        exercises.forEach { exerciseId -> setExerciseCompleted(exerciseId, completed) }
+        completedDays[dayOfWeek] = completed
+    }
+
     private fun recalculateDayCompletion(dayOfWeek: String) {
         val exercises = exercisesByDay[dayOfWeek] ?: emptyList<Long>()
         completedDays[dayOfWeek] = exercises.any { isExerciseCompleted(it) }
@@ -113,7 +126,7 @@ data class WorkoutCompletionState(
         exercisesByDay.getOrPut(dayOfWeek) { mutableListOf() }.apply {
             if (!contains(exerciseId)) add(exerciseId)
         }
-        exerciseDayMap[exerciseId] = dayOfWeek
+        exerciseDayMap.getOrPut(exerciseId) { mutableSetOf() }.add(dayOfWeek)
     }
 
     // ── Stats ─────────────────────────────────────────────────────────────────
