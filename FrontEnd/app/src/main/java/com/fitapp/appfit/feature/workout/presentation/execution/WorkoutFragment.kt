@@ -333,9 +333,9 @@ class WorkoutFragment : Fragment() {
 
     private fun initializeCompletionStructure(routine: RoutineResponse) {
         routine.exercises?.forEach { exercise ->
-            completionState.registerExercise(exercise.exerciseId, exercise.dayOfWeek ?: "SIN_DIA")
+            completionState.registerExercise(exercise.id, exercise.dayOfWeek ?: "SIN_DIA")
             exercise.setsTemplate?.forEach { set ->
-                completionState.registerSet(set.id, exercise.exerciseId)
+                completionState.registerSet(set.id, exercise.id)
             }
         }
     }
@@ -392,7 +392,7 @@ class WorkoutFragment : Fragment() {
     private fun updateTimerDisplay() {
         if (_binding == null) return
 
-        // CORREGIDO: calcular basado en timestamps, no en contador
+
         val elapsedMs = System.currentTimeMillis() - workoutStartedAt
         val elapsedSeconds = elapsedMs / 1000
 

@@ -26,20 +26,28 @@ class WorkoutSetAdapterClassic(
 ) : RecyclerView.Adapter<WorkoutSetAdapterClassic.SetViewHolder>() {
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()
-    private val currentReps     = mutableMapOf<Long, Int>()
-    private val currentParam    = mutableMapOf<Long, Double>()
+    private val currentReps = mutableMapOf<Long, Int>()
+    private val currentParam = mutableMapOf<Long, Double>()
     private val currentDuration = mutableMapOf<Long, Long>()
-    private val paramLabel      = mutableMapOf<Long, String>()
-    private val paramType       = mutableMapOf<Long, String>()
+    private val paramLabel = mutableMapOf<Long, String>()
+    private val paramType = mutableMapOf<Long, String>()
     private var activeSequenceIndex = -1
 
-    fun submitList(newSets: List<RoutineSetTemplateResponse>) {
+    // 🔥 NUEVO: ID del ejercicio de rutina actual (se actualiza en cada bind)
+    private var currentRoutineExerciseId: Long = 0L
+
+    fun submitList(newSets: List<RoutineSetTemplateResponse>, routineExerciseId: Long) {
+        this.currentRoutineExerciseId = routineExerciseId
         sets = newSets
         currentReps.clear(); currentParam.clear(); currentDuration.clear()
         paramLabel.clear(); paramType.clear()
         activeSequenceIndex = -1
         sets.forEach { initSetState(it.id, it.parameters ?: emptyList()) }
         notifyDataSetChanged()
+    }
+
+    fun updateRoutineExerciseId(routineExerciseId: Long) {
+        this.currentRoutineExerciseId = routineExerciseId
     }
 
     fun isSequenceMode() = sets.isNotEmpty() && sets.all { currentDuration.containsKey(it.id) }
@@ -56,11 +64,11 @@ class WorkoutSetAdapterClassic(
         if (numericParam != null) {
             currentParam[setId] = numericParam.numericValue ?: numericParam.integerValue?.toDouble() ?: 0.0
             paramLabel[setId] = numericParam.unit ?: inferUnit(numericParam.parameterType, numericParam.parameterName)
-            paramType[setId]  = numericParam.parameterType?.lowercase() ?: "number"
+            paramType[setId] = numericParam.parameterType?.lowercase() ?: "number"
         } else {
             currentParam[setId] = 0.0
             paramLabel[setId] = "KG"
-            paramType[setId]  = "number"
+            paramType[setId] = "number"
         }
     }
 
@@ -87,29 +95,24 @@ class WorkoutSetAdapterClassic(
 
     inner class SetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val checkboxCompleted: CheckBox = itemView.findViewById(R.id.checkbox_set_completed)
-        // Header
         private val viewTypeStripe: View = itemView.findViewById(R.id.view_type_stripe)
         private val tvSetBadge: TextView = itemView.findViewById(R.id.tv_set_badge)
         private val tvParamSummary: TextView = itemView.findViewById(R.id.tv_param_summary)
-        // Columna izquierda
         private val layoutReps: LinearLayout = itemView.findViewById(R.id.layout_reps_container)
         private val tvRepsLabel: TextView = itemView.findViewById(R.id.tv_reps_label)
         private val tvRepsValue: TextView = itemView.findViewById(R.id.tv_reps_value)
         private val btnDecReps: ImageButton = itemView.findViewById(R.id.btn_decrease_reps)
         private val btnIncReps: ImageButton = itemView.findViewById(R.id.btn_increase_reps)
         private val viewDivider: View = itemView.findViewById(R.id.view_divider)
-        // Columna derecha
         private val layoutParam: LinearLayout = itemView.findViewById(R.id.layout_param_container)
         private val tvParamUnit: TextView = itemView.findViewById(R.id.tv_weight_unit)
         private val tvParamValue: TextView = itemView.findViewById(R.id.tv_weight_value)
         private val btnDecParam: ImageButton = itemView.findViewById(R.id.btn_decrease_weight)
         private val btnIncParam: ImageButton = itemView.findViewById(R.id.btn_increase_weight)
-        // Bloque extra de duración
         private val layoutDurationExtra: View = itemView.findViewById(R.id.layout_duration_extra)
         private val tvDurationTimer: TextView = itemView.findViewById(R.id.tv_duration_timer)
         private val btnDecDurationExtra: ImageButton = itemView.findViewById(R.id.btn_decrease_duration_extra)
         private val btnIncDurationExtra: ImageButton = itemView.findViewById(R.id.btn_increase_duration_extra)
-        // Descanso
         private val layoutRestContainer: View = itemView.findViewById(R.id.layout_rest_container)
         private val tvRestTimer: TextView = itemView.findViewById(R.id.tv_rest_timer)
         private val tvRestHint: TextView = itemView.findViewById(R.id.tv_rest_hint)
@@ -187,7 +190,7 @@ class WorkoutSetAdapterClassic(
 
             checkboxCompleted.setOnCheckedChangeListener(null)
             checkboxCompleted.setOnCheckedChangeListener { _, checked ->
-                completionState.markSetCompleted(set.id, 0L, checked)
+                completionState.markSetCompleted(set.id, currentRoutineExerciseId, checked)
                 onSetCompletedToggled(set, checked)
                 updateCompletionVisuals(checked)
             }

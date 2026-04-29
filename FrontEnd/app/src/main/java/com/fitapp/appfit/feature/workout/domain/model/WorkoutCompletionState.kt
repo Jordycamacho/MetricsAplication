@@ -3,66 +3,63 @@ package com.fitapp.appfit.feature.workout.domain.model
 /**
  * Tracks completion state for sets, exercises, and days during a workout session.
  *
- * All internal collections are properly typed as MutableList to avoid ClassCastException
- * from the previous pattern of storing MutableList behind a List type.
  */
 data class WorkoutCompletionState(
     private val completedSets: MutableMap<Long, Boolean> = mutableMapOf(),
-    private val completedExercises: MutableMap<Long, Boolean> = mutableMapOf(),
+    private val completedExercises: MutableMap<Long, Boolean> = mutableMapOf(), // clave = routineExerciseId
     private val completedDays: MutableMap<String, Boolean> = mutableMapOf(),
-    private val exercisesByDay: MutableMap<String, MutableList<Long>> = mutableMapOf(),
-    private val setsByExercise: MutableMap<Long, MutableList<Long>> = mutableMapOf(),
-    private val exerciseDayMap: MutableMap<Long, MutableSet<String>> = mutableMapOf()
+    private val exercisesByDay: MutableMap<String, MutableList<Long>> = mutableMapOf(), // valor = list of routineExerciseId
+    private val setsByExercise: MutableMap<Long, MutableList<Long>> = mutableMapOf(), // clave = routineExerciseId
+    private val exerciseDayMap: MutableMap<Long, MutableSet<String>> = mutableMapOf() // clave = routineExerciseId
 ) {
 
     // ── Set level ─────────────────────────────────────────────────────────────
 
     fun isSetCompleted(setId: Long): Boolean = completedSets[setId] ?: false
 
-    fun toggleSet(setId: Long, exerciseId: Long): Boolean {
+    fun toggleSet(setId: Long, routineExerciseId: Long): Boolean {
         val newState = !isSetCompleted(setId)
         completedSets[setId] = newState
-        recalculateExerciseCompletion(exerciseId)
-        recalculateDayCompletionForExercise(exerciseId)
+        recalculateExerciseCompletion(routineExerciseId)
+        recalculateDayCompletionForExercise(routineExerciseId)
         return newState
     }
 
-    fun markSetCompleted(setId: Long, exerciseId: Long, completed: Boolean) {
+    fun markSetCompleted(setId: Long, routineExerciseId: Long, completed: Boolean) {
         completedSets[setId] = completed
-        // Only recalculate if exerciseId is known
-        if (exerciseId != 0L) {
-            recalculateExerciseCompletion(exerciseId)
-            recalculateDayCompletionForExercise(exerciseId)
+        if (routineExerciseId != 0L) {
+            recalculateExerciseCompletion(routineExerciseId)
+            recalculateDayCompletionForExercise(routineExerciseId)
         }
     }
 
-    // ── Exercise level ────────────────────────────────────────────────────────
+    // ── Exercise level (usando routineExerciseId) ─────────────────────────────
 
-    fun isExerciseCompleted(exerciseId: Long): Boolean {
-        val sets = setsByExercise[exerciseId] ?: return false
+    fun isExerciseCompleted(routineExerciseId: Long): Boolean {
+        val sets = setsByExercise[routineExerciseId] ?: return false
         if (sets.isEmpty()) return false
         return sets.any { completedSets[it] == true }
     }
 
-    fun toggleExercise(exerciseId: Long, dayOfWeek: String): Boolean {
-        val sets = setsByExercise[exerciseId] ?: emptyList<Long>()
-        if (sets.isEmpty()) return false
+    /**
+     * Asigna directamente el estado completado a todos los sets de este ejercicio.
+     */
+    fun setExerciseCompleted(routineExerciseId: Long, completed: Boolean) {
+        val sets = setsByExercise[routineExerciseId] ?: return
+        sets.forEach { setId -> completedSets[setId] = completed }
+        completedExercises[routineExerciseId] = completed
 
-        val shouldComplete = sets.none { completedSets[it] == true }
-        sets.forEach { setId -> completedSets[setId] = shouldComplete }
-
-        completedExercises[exerciseId] = shouldComplete
-        recalculateDayCompletion(dayOfWeek)
-        return shouldComplete
+        val days = exerciseDayMap[routineExerciseId] ?: return
+        days.forEach { day -> recalculateDayCompletion(day) }
     }
 
-    private fun recalculateExerciseCompletion(exerciseId: Long) {
-        val sets = setsByExercise[exerciseId] ?: emptyList<Long>()
-        completedExercises[exerciseId] = sets.any { completedSets[it] == true }
+    private fun recalculateExerciseCompletion(routineExerciseId: Long) {
+        val sets = setsByExercise[routineExerciseId] ?: emptyList()
+        completedExercises[routineExerciseId] = sets.any { completedSets[it] == true }
     }
 
-    private fun recalculateDayCompletionForExercise(exerciseId: Long) {
-        val days = exerciseDayMap[exerciseId] ?: return
+    private fun recalculateDayCompletionForExercise(routineExerciseId: Long) {
+        val days = exerciseDayMap[routineExerciseId] ?: return
         days.forEach { day -> recalculateDayCompletion(day) }
     }
 
@@ -74,47 +71,27 @@ data class WorkoutCompletionState(
         return exercises.any { isExerciseCompleted(it) }
     }
 
-    fun toggleDay(dayOfWeek: String): Boolean {
-        val exercises = exercisesByDay[dayOfWeek] ?: emptyList<Long>()
-        if (exercises.isEmpty()) return false
-
-        val shouldComplete = exercises.none { isExerciseCompleted(it) }
-        exercises.forEach { exerciseId ->
-            setsByExercise[exerciseId]?.forEach { setId ->
-                completedSets[setId] = shouldComplete
-            }
-            completedExercises[exerciseId] = shouldComplete
-        }
-
-        completedDays[dayOfWeek] = shouldComplete
-        return shouldComplete
-    }
-
-    fun setExerciseCompleted(exerciseId: Long, completed: Boolean) {
-        val sets = setsByExercise[exerciseId] ?: return
-        sets.forEach { setId -> completedSets[setId] = completed }
-        completedExercises[exerciseId] = completed
-
-        val days = exerciseDayMap[exerciseId] ?: return
-        days.forEach { day -> recalculateDayCompletion(day) }
-    }
-
+    /**
+     * Marca todos los ejercicios de un día como completados o no.
+     */
     fun setDayCompleted(dayOfWeek: String, completed: Boolean) {
         val exercises = exercisesByDay[dayOfWeek] ?: return
-        exercises.forEach { exerciseId -> setExerciseCompleted(exerciseId, completed) }
+        exercises.forEach { routineExerciseId -> setExerciseCompleted(routineExerciseId, completed) }
         completedDays[dayOfWeek] = completed
     }
 
     private fun recalculateDayCompletion(dayOfWeek: String) {
-        val exercises = exercisesByDay[dayOfWeek] ?: emptyList<Long>()
+        val exercises = exercisesByDay[dayOfWeek] ?: emptyList()
         completedDays[dayOfWeek] = exercises.any { isExerciseCompleted(it) }
     }
 
     // ── Registration ──────────────────────────────────────────────────────────
 
-    fun registerSet(setId: Long, exerciseId: Long) {
-        // FIX: use getOrPut to avoid the old MutableList cast pattern
-        setsByExercise.getOrPut(exerciseId) { mutableListOf() }.apply {
+    /**
+     * Registra un set asociado a un ejercicio de rutina (routineExerciseId).
+     */
+    fun registerSet(setId: Long, routineExerciseId: Long) {
+        setsByExercise.getOrPut(routineExerciseId) { mutableListOf() }.apply {
             if (!contains(setId)) add(setId)
         }
         if (!completedSets.containsKey(setId)) {
@@ -122,20 +99,26 @@ data class WorkoutCompletionState(
         }
     }
 
-    fun registerExercise(exerciseId: Long, dayOfWeek: String) {
+    /**
+     * Registra un ejercicio de rutina (con su ID único) en un día.
+     */
+    fun registerExercise(routineExerciseId: Long, dayOfWeek: String) {
         exercisesByDay.getOrPut(dayOfWeek) { mutableListOf() }.apply {
-            if (!contains(exerciseId)) add(exerciseId)
+            if (!contains(routineExerciseId)) add(routineExerciseId)
         }
-        exerciseDayMap.getOrPut(exerciseId) { mutableSetOf() }.add(dayOfWeek)
+        exerciseDayMap.getOrPut(routineExerciseId) { mutableSetOf() }.add(dayOfWeek)
+        if (!completedExercises.containsKey(routineExerciseId)) {
+            completedExercises[routineExerciseId] = false
+        }
     }
 
     // ── Stats ─────────────────────────────────────────────────────────────────
 
-    fun getCompletedSetsCount(exerciseId: Long): Int =
-        setsByExercise[exerciseId]?.count { completedSets[it] == true } ?: 0
+    fun getCompletedSetsCount(routineExerciseId: Long): Int =
+        setsByExercise[routineExerciseId]?.count { completedSets[it] == true } ?: 0
 
-    fun getTotalSetsCount(exerciseId: Long): Int =
-        setsByExercise[exerciseId]?.size ?: 0
+    fun getTotalSetsCount(routineExerciseId: Long): Int =
+        setsByExercise[routineExerciseId]?.size ?: 0
 
     fun getCompletedExercisesCount(dayOfWeek: String): Int =
         exercisesByDay[dayOfWeek]?.count { isExerciseCompleted(it) } ?: 0

@@ -188,7 +188,7 @@ class WorkoutExerciseAdapter(
                 isProcessingCheckbox = true
                 try {
                     val exercise = exercises[pos]
-                    completionState.setExerciseCompleted(exercise.exerciseId, isChecked)
+                    completionState.setExerciseCompleted(exercise.id, isChecked)
                     updateSetCounter()
                     (recyclerSets.adapter as? WorkoutSetAdapterClassic)?.notifyDataSetChanged()
                 } finally {
@@ -203,7 +203,7 @@ class WorkoutExerciseAdapter(
             currentExerciseIndex = position
             tvExerciseName.text = exercise.exerciseName ?: "Ejercicio ${exercise.position}"
 
-            checkboxExerciseCompleted.isChecked = completionState.isExerciseCompleted(exercise.exerciseId)
+            checkboxExerciseCompleted.isChecked = completionState.isExerciseCompleted(exercise.id)
 
             bindGroupStripe(exercise)
             bindBadges(exercise)
@@ -218,8 +218,8 @@ class WorkoutExerciseAdapter(
 
         private fun updateSetCounter() {
             currentExercise?.let { exercise ->
-                val completed = completionState.getCompletedSetsCount(exercise.exerciseId)
-                val total = completionState.getTotalSetsCount(exercise.exerciseId)
+                val completed = completionState.getCompletedSetsCount(exercise.id)
+                val total = completionState.getTotalSetsCount(exercise.id)
                 tvSetsProgress.text = "$completed/$total"
             }
         }
@@ -333,9 +333,9 @@ class WorkoutExerciseAdapter(
         private fun bindSets(exercise: RoutineExerciseResponse) {
             when (setAdapter) {
                 is WorkoutSetAdapterClassic ->
-                    (setAdapter as WorkoutSetAdapterClassic).submitList(exercise.setsTemplate ?: emptyList())
+                    (setAdapter as WorkoutSetAdapterClassic).submitList(exercise.setsTemplate ?: emptyList(), exercise.id)
                 is WorkoutSetAdapter ->
-                    (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList())
+                    (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList(), )//exercise.id)
             }
         }
 
