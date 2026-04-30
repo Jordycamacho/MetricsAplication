@@ -17,12 +17,14 @@ import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
+import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class WorkoutExerciseAdapter(
+    private val stateManager: SetParameterStateManager,
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit,
     private val completionState: WorkoutCompletionState
@@ -34,7 +36,6 @@ class WorkoutExerciseAdapter(
 
     fun submitExercises(list: List<RoutineExerciseResponse>) {
         exercises = list.sortedBy { it.position }
-        // NO limpiar expandedPositions
         notifyDataSetChanged()
     }
 
@@ -71,14 +72,12 @@ class WorkoutExerciseAdapter(
         private val tvExerciseRestHint: TextView = itemView.findViewById(R.id.tv_exercise_rest_hint)
         private val viewGroupStripe: View = itemView.findViewById(R.id.view_group_stripe)
 
-        // Badges v2
         private val layoutBadges: LinearLayout = itemView.findViewById(R.id.layout_exercise_badges)
         private val tvSpecialModeBadge: TextView = itemView.findViewById(R.id.tv_special_mode_badge)
         private val tvGroupBadge: TextView = itemView.findViewById(R.id.tv_group_badge)
         private val tvNotesBadge: TextView = itemView.findViewById(R.id.tv_notes_badge)
         private val tvSpecialModeInfo: TextView = itemView.findViewById(R.id.tv_special_mode_info)
 
-        // Checkbox y contador de sets
         private val checkboxExerciseCompleted: CheckBox = itemView.findViewById(R.id.checkbox_exercise_completed)
         private val tvSetsProgress: TextView = itemView.findViewById(R.id.tv_sets_progress)
 
@@ -87,10 +86,12 @@ class WorkoutExerciseAdapter(
         private var restSeconds = 0
         private var restTimerActive = false
 
+        // El setAdapter se crea una sola vez por ViewHolder y recibe el stateManager
         private val setAdapter: RecyclerView.Adapter<*> by lazy {
             val viewType = WorkoutPreferences.getSetViewType(itemView.context)
             when (viewType) {
                 WorkoutPreferences.SetViewType.CLASSIC -> WorkoutSetAdapterClassic(
+                    stateManager = stateManager,
                     onValueChanged = { set, type, value ->
                         currentExercise?.let { onSetValueChanged(it, set, type, value) }
                     },
@@ -173,9 +174,7 @@ class WorkoutExerciseAdapter(
 
             cardExercise.setOnLongClickListener {
                 val pos = adapterPosition
-                if (pos != RecyclerView.NO_POSITION) {
-                    showExerciseContextMenu(exercises[pos])
-                }
+                if (pos != RecyclerView.NO_POSITION) showExerciseContextMenu(exercises[pos])
                 true
             }
 
@@ -190,7 +189,9 @@ class WorkoutExerciseAdapter(
                     val exercise = exercises[pos]
                     completionState.setExerciseCompleted(exercise.id, isChecked)
                     updateSetCounter()
-                    (recyclerSets.adapter as? WorkoutSetAdapterClassic)?.notifyDataSetChanged()
+                    // Solo notifica al adapter de sets para refrescar los checkboxes,
+                    // NO llama a submitList, por lo que el stateManager no se toca.
+                    (setAdapter as? WorkoutSetAdapterClassic)?.notifyDataSetChanged()
                 } finally {
                     isProcessingCheckbox = false
                 }
@@ -202,7 +203,6 @@ class WorkoutExerciseAdapter(
             currentExercise = exercise
             currentExerciseIndex = position
             tvExerciseName.text = exercise.exerciseName ?: "Ejercicio ${exercise.position}"
-
             checkboxExerciseCompleted.isChecked = completionState.isExerciseCompleted(exercise.id)
 
             bindGroupStripe(exercise)
@@ -214,8 +214,6 @@ class WorkoutExerciseAdapter(
             updateSetCounter()
         }
 
-        // ── Actualizar contador de sets ──────────────────────────────────────
-
         private fun updateSetCounter() {
             currentExercise?.let { exercise ->
                 val completed = completionState.getCompletedSetsCount(exercise.id)
@@ -223,8 +221,6 @@ class WorkoutExerciseAdapter(
                 tvSetsProgress.text = "$completed/$total"
             }
         }
-
-        // ── Franja lateral de color según agrupación ──────────────────────────
 
         private fun bindGroupStripe(exercise: RoutineExerciseResponse) {
             val color = when {
@@ -238,11 +234,8 @@ class WorkoutExerciseAdapter(
             viewGroupStripe.setBackgroundColor(color)
         }
 
-        // ── Badges: modo especial + agrupación + notas ────────────────────────
-
         private fun bindBadges(exercise: RoutineExerciseResponse) {
             var anyBadge = false
-
             val specialMode = detectSpecialMode(exercise)
             if (specialMode != null) {
                 tvSpecialModeBadge.text = specialMode.label
@@ -275,36 +268,24 @@ class WorkoutExerciseAdapter(
             val hasNotes = !exercise.notes.isNullOrBlank()
             tvNotesBadge.isVisible = hasNotes
             if (hasNotes) anyBadge = true
-
             layoutBadges.isVisible = anyBadge
         }
 
-        // ── Info del modo especial debajo de badges ───────────────────────────
-
         private fun bindSpecialModeInfo(exercise: RoutineExerciseResponse) {
             val info = buildSpecialModeInfo(exercise)
-            if (info != null) {
-                tvSpecialModeInfo.text = info
-                tvSpecialModeInfo.isVisible = true
-            } else {
-                tvSpecialModeInfo.isVisible = false
-            }
+            tvSpecialModeInfo.text = info
+            tvSpecialModeInfo.isVisible = info != null
         }
 
         private fun buildSpecialModeInfo(exercise: RoutineExerciseResponse): String? = when {
             (exercise.amrapDurationSeconds ?: 0) > 0 ->
                 "⏱ ${formatSeconds(exercise.amrapDurationSeconds!!)} máx repeticiones"
-
             (exercise.emomIntervalSeconds ?: 0) > 0 ->
                 "⏱ ${formatSeconds(exercise.emomIntervalSeconds!!)} · ${exercise.emomTotalRounds ?: "?"} rondas"
-
             (exercise.tabataWorkSeconds ?: 0) > 0 ->
                 "▶ ${formatSeconds(exercise.tabataWorkSeconds!!)}  ·  ⏸ ${formatSeconds(exercise.tabataRestSeconds ?: 0)}  ·  ${exercise.tabataRounds ?: "?"} rondas"
-
             else -> null
         }
-
-        // ── Descanso del ejercicio ────────────────────────────────────────────
 
         private fun bindRestTimer(exercise: RoutineExerciseResponse) {
             restSeconds = exercise.restAfterExercise ?: 0
@@ -328,14 +309,15 @@ class WorkoutExerciseAdapter(
             }
         }
 
-        // ── Sets ──────────────────────────────────────────────────────────────
-
         private fun bindSets(exercise: RoutineExerciseResponse) {
             when (setAdapter) {
                 is WorkoutSetAdapterClassic ->
-                    (setAdapter as WorkoutSetAdapterClassic).submitList(exercise.setsTemplate ?: emptyList(), exercise.id)
+                    (setAdapter as WorkoutSetAdapterClassic).submitList(
+                        exercise.setsTemplate ?: emptyList(),
+                        exercise.id
+                    )
                 is WorkoutSetAdapter ->
-                    (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList(), )//exercise.id)
+                    (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList())
             }
         }
 
@@ -349,63 +331,45 @@ class WorkoutExerciseAdapter(
             }
         }
 
-        // ── Menú contextual (long-press) ──────────────────────────────────────
+        // ── Context menu ──────────────────────────────────────────────────────
 
         private fun showExerciseContextMenu(exercise: RoutineExerciseResponse) {
             val popup = PopupMenu(itemView.context, itemView)
-
-            if (!exercise.notes.isNullOrBlank()) {
-                popup.menu.add(0, MENU_VIEW_NOTES, 0, "📝  Ver nota")
-            }
-
+            if (!exercise.notes.isNullOrBlank()) popup.menu.add(0, MENU_VIEW_NOTES, 0, "📝  Ver nota")
             val specialMode = detectSpecialMode(exercise)
-            if (specialMode != null) {
-                popup.menu.add(0, MENU_VIEW_MODE_INFO, 1, "${specialMode.emoji}  Info ${specialMode.label}")
-            }
-
-            if (!exercise.circuitGroupId.isNullOrBlank() || !exercise.superSetGroupId.isNullOrBlank()) {
+            if (specialMode != null) popup.menu.add(0, MENU_VIEW_MODE_INFO, 1, "${specialMode.emoji}  Info ${specialMode.label}")
+            if (!exercise.circuitGroupId.isNullOrBlank() || !exercise.superSetGroupId.isNullOrBlank())
                 popup.menu.add(0, MENU_VIEW_GROUP_INFO, 2, "🔗  Info agrupación")
-            }
-
             popup.menu.add(0, MENU_MARK_ALL_DONE, 3, "✅  Marcar todos los sets completos")
             popup.menu.add(0, MENU_CLEAR_SETS, 4, "↩️  Limpiar sets completados")
-
             val pos = adapterPosition
             if (pos != RecyclerView.NO_POSITION) {
-                if (expandedPositions.contains(pos)) {
-                    popup.menu.add(0, MENU_COLLAPSE, 5, "▲  Colapsar ejercicio")
-                } else {
-                    popup.menu.add(0, MENU_EXPAND, 5, "▼  Expandir ejercicio")
-                }
+                if (expandedPositions.contains(pos)) popup.menu.add(0, MENU_COLLAPSE, 5, "▲  Colapsar ejercicio")
+                else popup.menu.add(0, MENU_EXPAND, 5, "▼  Expandir ejercicio")
             }
 
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
-                    MENU_VIEW_NOTES -> showNotesDialog(exercise)
+                    MENU_VIEW_NOTES     -> showNotesDialog(exercise)
                     MENU_VIEW_MODE_INFO -> showModeInfoDialog(exercise, specialMode)
                     MENU_VIEW_GROUP_INFO -> showGroupInfoDialog(exercise)
-                    MENU_MARK_ALL_DONE -> markAllSetsCompleted(exercise)
-                    MENU_CLEAR_SETS -> clearAllSetsCompleted(exercise)
+                    MENU_MARK_ALL_DONE  -> markAllSetsCompleted(exercise)
+                    MENU_CLEAR_SETS     -> clearAllSetsCompleted(exercise)
                     MENU_EXPAND -> {
                         val p = adapterPosition
                         if (p != RecyclerView.NO_POSITION) {
-                            expandedPositions.add(p)
-                            layoutSets.visibility = View.VISIBLE
-                            ivExpand.rotation = 180f
+                            expandedPositions.add(p); layoutSets.visibility = View.VISIBLE; ivExpand.rotation = 180f
                         }
                     }
                     MENU_COLLAPSE -> {
                         val p = adapterPosition
                         if (p != RecyclerView.NO_POSITION) {
-                            expandedPositions.remove(p)
-                            layoutSets.visibility = View.GONE
-                            ivExpand.rotation = 0f
+                            expandedPositions.remove(p); layoutSets.visibility = View.GONE; ivExpand.rotation = 0f
                         }
                     }
                 }
                 true
             }
-
             popup.show()
         }
 
@@ -413,8 +377,7 @@ class WorkoutExerciseAdapter(
             MaterialAlertDialogBuilder(itemView.context)
                 .setTitle("📝  ${exercise.exerciseName ?: "Ejercicio"}")
                 .setMessage(exercise.notes)
-                .setPositiveButton("Cerrar", null)
-                .show()
+                .setPositiveButton("Cerrar", null).show()
         }
 
         private fun showModeInfoDialog(exercise: RoutineExerciseResponse, mode: SpecialModeInfo?) {
@@ -423,8 +386,7 @@ class WorkoutExerciseAdapter(
             MaterialAlertDialogBuilder(itemView.context)
                 .setTitle("${mode.emoji}  ${mode.label}")
                 .setMessage(detail)
-                .setPositiveButton("Cerrar", null)
-                .show()
+                .setPositiveButton("Cerrar", null).show()
         }
 
         private fun showGroupInfoDialog(exercise: RoutineExerciseResponse) {
@@ -440,8 +402,7 @@ class WorkoutExerciseAdapter(
             MaterialAlertDialogBuilder(itemView.context)
                 .setTitle("🔗  Agrupación")
                 .setMessage(sb.toString().trimEnd())
-                .setPositiveButton("Cerrar", null)
-                .show()
+                .setPositiveButton("Cerrar", null).show()
         }
 
         private fun markAllSetsCompleted(exercise: RoutineExerciseResponse) {
@@ -462,8 +423,6 @@ class WorkoutExerciseAdapter(
             notifyItemChanged(adapterPosition)
         }
 
-        // ── Helpers de modo especial ──────────────────────────────────────────
-
         private fun detectSpecialMode(exercise: RoutineExerciseResponse): SpecialModeInfo? = when {
             (exercise.amrapDurationSeconds ?: 0) > 0 ->
                 SpecialModeInfo("AMRAP", "⏱", R.color.set_type_super)
@@ -477,27 +436,16 @@ class WorkoutExerciseAdapter(
         private fun buildSpecialModeDetail(exercise: RoutineExerciseResponse): String? = when {
             (exercise.amrapDurationSeconds ?: 0) > 0 ->
                 "Realiza el máximo de repeticiones posibles en:\n\n${formatSeconds(exercise.amrapDurationSeconds!!)}"
-
             (exercise.emomIntervalSeconds ?: 0) > 0 ->
-                "Cada minuto en el minuto:\n\n" +
-                        "• Intervalo: ${formatSeconds(exercise.emomIntervalSeconds!!)}\n" +
-                        "• Rondas totales: ${exercise.emomTotalRounds ?: "?"}"
-
+                "Cada minuto en el minuto:\n\n• Intervalo: ${formatSeconds(exercise.emomIntervalSeconds!!)}\n• Rondas totales: ${exercise.emomTotalRounds ?: "?"}"
             (exercise.tabataWorkSeconds ?: 0) > 0 ->
-                "Protocolo Tabata:\n\n" +
-                        "• Trabajo: ${formatSeconds(exercise.tabataWorkSeconds!!)}\n" +
-                        "• Descanso: ${formatSeconds(exercise.tabataRestSeconds ?: 0)}\n" +
-                        "• Rondas: ${exercise.tabataRounds ?: "?"}"
-
+                "Protocolo Tabata:\n\n• Trabajo: ${formatSeconds(exercise.tabataWorkSeconds!!)}\n• Descanso: ${formatSeconds(exercise.tabataRestSeconds ?: 0)}\n• Rondas: ${exercise.tabataRounds ?: "?"}"
             else -> null
         }
 
         private fun formatSeconds(seconds: Int): String {
-            val m = seconds / 60
-            val s = seconds % 60
-            return if (m > 0 && s > 0) "${m}m ${s}s"
-            else if (m > 0) "${m}m"
-            else "${s}s"
+            val m = seconds / 60; val s = seconds % 60
+            return if (m > 0 && s > 0) "${m}m ${s}s" else if (m > 0) "${m}m" else "${s}s"
         }
     }
 
@@ -511,9 +459,5 @@ class WorkoutExerciseAdapter(
         private const val MENU_COLLAPSE       = 7
     }
 
-    private data class SpecialModeInfo(
-        val label: String,
-        val emoji: String,
-        val colorRes: Int
-    )
+    private data class SpecialModeInfo(val label: String, val emoji: String, val colorRes: Int)
 }

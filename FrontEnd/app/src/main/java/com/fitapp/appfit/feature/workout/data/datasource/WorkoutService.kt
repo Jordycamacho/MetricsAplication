@@ -64,7 +64,6 @@ interface WorkoutService {
         @Body exerciseIds: List<Long>
     ): Response<Map<String, LastExerciseValuesResponse>>
 
-    // FIX: URL corregida — el endpoint canónico está en WorkoutController, no en WorkoutHistoryController
     @GET("api/workouts/start/{routineId}/last-values")
     suspend fun getLastValuesForRoutine(
         @Path("routineId") routineId: Long

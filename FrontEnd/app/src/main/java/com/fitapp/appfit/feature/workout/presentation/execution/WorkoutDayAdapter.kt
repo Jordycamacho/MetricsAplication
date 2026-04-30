@@ -14,8 +14,10 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExe
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutDay
+import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 
 class WorkoutDayAdapter(
+    private val stateManager: SetParameterStateManager,
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit,
     private val completionState: WorkoutCompletionState
@@ -75,13 +77,13 @@ class WorkoutDayAdapter(
         return DayViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: DayViewHolder, position: Int) =
         holder.bind(days[position], position)
-    }
 
     override fun getItemCount() = days.size
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         private val tvDay: TextView = itemView.findViewById(R.id.tv_day_title)
         private val ivExpand: ImageView = itemView.findViewById(R.id.iv_expand_day)
         private val recyclerExercises: RecyclerView = itemView.findViewById(R.id.recycler_exercises)
@@ -90,6 +92,7 @@ class WorkoutDayAdapter(
         private val tvDayProgress: TextView = itemView.findViewById(R.id.tv_day_progress)
         private val checkboxDayCompleted: CheckBox = itemView.findViewById(R.id.checkbox_day_completed)
 
+        // El exerciseAdapter se crea una sola vez por DayViewHolder
         private var exerciseAdapter: WorkoutExerciseAdapter? = null
         private var currentDayIndex = -1
         private var currentDayOfWeek = ""
@@ -98,7 +101,6 @@ class WorkoutDayAdapter(
             recyclerExercises.layoutManager = LinearLayoutManager(itemView.context)
             recyclerExercises.isNestedScrollingEnabled = false
 
-            // Expansión del día
             itemView.setOnClickListener {
                 val pos = adapterPosition
                 if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
@@ -124,16 +126,16 @@ class WorkoutDayAdapter(
 
             if (exerciseAdapter == null) {
                 exerciseAdapter = WorkoutExerciseAdapter(
-                    onSetValueChanged,
-                    onSetCompletedToggled,
-                    completionState
+                    stateManager = stateManager,
+                    onSetValueChanged = onSetValueChanged,
+                    onSetCompletedToggled = onSetCompletedToggled,
+                    completionState = completionState
                 )
                 recyclerExercises.adapter = exerciseAdapter
             }
             exerciseAdapter?.submitExercises(day.exercises)
 
-            // --- CHECKBOX DEL DÍA ---
-            checkboxDayCompleted.setOnCheckedChangeListener(null)  // Limpia listener anterior
+            checkboxDayCompleted.setOnCheckedChangeListener(null)
             checkboxDayCompleted.isChecked = completionState.isDayCompleted(day.dayOfWeek)
             checkboxDayCompleted.setOnCheckedChangeListener { _, isChecked ->
                 if (isProcessingCheckbox) return@setOnCheckedChangeListener
@@ -145,7 +147,9 @@ class WorkoutDayAdapter(
                 try {
                     completionState.setDayCompleted(day.dayOfWeek, isChecked)
                     updateDayProgress(day)
-                    exerciseAdapter?.notifyItemRangeChanged(0, exerciseAdapter?.itemCount ?: 0)
+                    // notifyDataSetChanged en el exerciseAdapter solo refresca checkboxes,
+                    // los valores los lee del stateManager así que no se pierden.
+                    exerciseAdapter?.notifyDataSetChanged()
                 } finally {
                     isProcessingCheckbox = false
                 }

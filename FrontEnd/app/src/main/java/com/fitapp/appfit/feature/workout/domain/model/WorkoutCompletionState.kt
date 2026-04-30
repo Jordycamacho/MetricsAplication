@@ -1,16 +1,21 @@
 package com.fitapp.appfit.feature.workout.domain.model
 
 /**
- * Tracks completion state for sets, exercises, and days during a workout session.
+ * Rastrea el estado de completado de sets, ejercicios y días durante el entrenamiento.
  *
+ * Ciclo de vida esperado:
+ *  1. registerExercise / registerSet  → al cargar la rutina
+ *  2. markSetCompleted / toggleSet    → al interactuar
+ *  3. resetValues                     → para limpiar checks sin borrar la estructura
+ *  4. reset                           → al terminar/guardar (limpia todo)
  */
 data class WorkoutCompletionState(
     private val completedSets: MutableMap<Long, Boolean> = mutableMapOf(),
-    private val completedExercises: MutableMap<Long, Boolean> = mutableMapOf(), // clave = routineExerciseId
+    private val completedExercises: MutableMap<Long, Boolean> = mutableMapOf(),
     private val completedDays: MutableMap<String, Boolean> = mutableMapOf(),
-    private val exercisesByDay: MutableMap<String, MutableList<Long>> = mutableMapOf(), // valor = list of routineExerciseId
-    private val setsByExercise: MutableMap<Long, MutableList<Long>> = mutableMapOf(), // clave = routineExerciseId
-    private val exerciseDayMap: MutableMap<Long, MutableSet<String>> = mutableMapOf() // clave = routineExerciseId
+    private val exercisesByDay: MutableMap<String, MutableList<Long>> = mutableMapOf(),
+    private val setsByExercise: MutableMap<Long, MutableList<Long>> = mutableMapOf(),
+    private val exerciseDayMap: MutableMap<Long, MutableSet<String>> = mutableMapOf()
 ) {
 
     // ── Set level ─────────────────────────────────────────────────────────────
@@ -33,7 +38,7 @@ data class WorkoutCompletionState(
         }
     }
 
-    // ── Exercise level (usando routineExerciseId) ─────────────────────────────
+    // ── Exercise level ────────────────────────────────────────────────────────
 
     fun isExerciseCompleted(routineExerciseId: Long): Boolean {
         val sets = setsByExercise[routineExerciseId] ?: return false
@@ -41,14 +46,10 @@ data class WorkoutCompletionState(
         return sets.any { completedSets[it] == true }
     }
 
-    /**
-     * Asigna directamente el estado completado a todos los sets de este ejercicio.
-     */
     fun setExerciseCompleted(routineExerciseId: Long, completed: Boolean) {
         val sets = setsByExercise[routineExerciseId] ?: return
         sets.forEach { setId -> completedSets[setId] = completed }
         completedExercises[routineExerciseId] = completed
-
         val days = exerciseDayMap[routineExerciseId] ?: return
         days.forEach { day -> recalculateDayCompletion(day) }
     }
@@ -59,8 +60,7 @@ data class WorkoutCompletionState(
     }
 
     private fun recalculateDayCompletionForExercise(routineExerciseId: Long) {
-        val days = exerciseDayMap[routineExerciseId] ?: return
-        days.forEach { day -> recalculateDayCompletion(day) }
+        exerciseDayMap[routineExerciseId]?.forEach { day -> recalculateDayCompletion(day) }
     }
 
     // ── Day level ─────────────────────────────────────────────────────────────
@@ -71,12 +71,9 @@ data class WorkoutCompletionState(
         return exercises.any { isExerciseCompleted(it) }
     }
 
-    /**
-     * Marca todos los ejercicios de un día como completados o no.
-     */
     fun setDayCompleted(dayOfWeek: String, completed: Boolean) {
         val exercises = exercisesByDay[dayOfWeek] ?: return
-        exercises.forEach { routineExerciseId -> setExerciseCompleted(routineExerciseId, completed) }
+        exercises.forEach { setExerciseCompleted(it, completed) }
         completedDays[dayOfWeek] = completed
     }
 
@@ -87,21 +84,13 @@ data class WorkoutCompletionState(
 
     // ── Registration ──────────────────────────────────────────────────────────
 
-    /**
-     * Registra un set asociado a un ejercicio de rutina (routineExerciseId).
-     */
     fun registerSet(setId: Long, routineExerciseId: Long) {
         setsByExercise.getOrPut(routineExerciseId) { mutableListOf() }.apply {
             if (!contains(setId)) add(setId)
         }
-        if (!completedSets.containsKey(setId)) {
-            completedSets[setId] = false
-        }
+        if (!completedSets.containsKey(setId)) completedSets[setId] = false
     }
 
-    /**
-     * Registra un ejercicio de rutina (con su ID único) en un día.
-     */
     fun registerExercise(routineExerciseId: Long, dayOfWeek: String) {
         exercisesByDay.getOrPut(dayOfWeek) { mutableListOf() }.apply {
             if (!contains(routineExerciseId)) add(routineExerciseId)
@@ -126,25 +115,32 @@ data class WorkoutCompletionState(
     fun getTotalExercisesCount(dayOfWeek: String): Int =
         exercisesByDay[dayOfWeek]?.size ?: 0
 
-    fun getAllCompletedSets(): Set<Long> =
-        completedSets.filterValues { it }.keys
+    fun getAllCompletedSets(): Set<Long> = completedSets.filterValues { it }.keys
 
-    fun getSkippedSets(): Set<Long> =
-        completedSets.filterValues { !it }.keys
+    fun hasAnyCompletedSets(): Boolean = completedSets.values.any { it }
 
-    fun hasAnyCompletedSets(): Boolean =
-        completedSets.values.any { it }
+    // ── Reset ─────────────────────────────────────────────────────────────────
 
-    fun reset() {
+    /**
+     * Pone todos los checks a false sin borrar la estructura registrada.
+     * Útil si quieres reutilizar el objeto con la misma rutina.
+     */
+    fun resetValues() {
         completedSets.replaceAll { _, _ -> false }
-        completedExercises.clear()
-        completedDays.clear()
+        completedExercises.replaceAll { _, _ -> false }
+        completedDays.replaceAll { _, _ -> false }
     }
 
-    fun debugPrint() {
-        println("=== WORKOUT COMPLETION STATE ===")
-        println("Sets: ${completedSets.filterValues { it }.size}/${completedSets.size} completed")
-        println("Exercises: ${completedExercises.filterValues { it }.size}/${completedExercises.size} completed")
-        println("Days: ${completedDays.filterValues { it }.size}/${completedDays.size} completed")
+    /**
+     * Limpia absolutamente todo. Usar al finalizar/guardar el entrenamiento.
+     * Después de esto hay que volver a llamar a registerExercise/registerSet.
+     */
+    fun reset() {
+        completedSets.clear()
+        completedExercises.clear()
+        completedDays.clear()
+        exercisesByDay.clear()
+        setsByExercise.clear()
+        exerciseDayMap.clear()
     }
 }
