@@ -314,7 +314,8 @@ class WorkoutExerciseAdapter(
                 is WorkoutSetAdapterClassic ->
                     (setAdapter as WorkoutSetAdapterClassic).submitList(
                         exercise.setsTemplate ?: emptyList(),
-                        exercise.id
+                        exercise.id,
+                        exercise.exerciseId
                     )
                 is WorkoutSetAdapter ->
                     (setAdapter as WorkoutSetAdapter).submitList(exercise.setsTemplate ?: emptyList())

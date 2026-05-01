@@ -337,7 +337,12 @@ class WorkoutFragment : Fragment() {
         adapter = WorkoutDayAdapter(
             stateManager = stateManager,
             onSetValueChanged = { exercise, set, valueType, newValue ->
-                stateManager.initializeSet(set.id, exercise.id, set)
+                stateManager.initializeSet(
+                    setId = set.id,
+                    routineExerciseId = exercise.id,
+                    exerciseId = exercise.exerciseId,
+                    setTemplate = set
+                )
                 when (valueType) {
                     "reps" -> stateManager.updateReps(set.id, newValue.toInt())
                     "param" -> set.parameters?.firstOrNull()?.let { param ->
@@ -354,15 +359,18 @@ class WorkoutFragment : Fragment() {
                         }
                     }
                 }
-                // Persiste en cache cada vez que cambia un valor
                 workoutViewModel.persistParamState(stateManager.exportState())
                 binding.fabSaveWorkout.isInvisible = false
             },
             onSetCompletedToggled = { exercise, set, isCompleted ->
                 if (isCompleted) {
-                    stateManager.initializeSet(set.id, exercise.id, set)
+                    stateManager.initializeSet(
+                        setId = set.id,
+                        routineExerciseId = exercise.id,
+                        exerciseId = exercise.exerciseId,
+                        setTemplate = set
+                    )
                 }
-                // Persiste en cache el estado de completado
                 workoutViewModel.persistCompletedSets(completionState.getAllCompletedSets())
                 workoutViewModel.persistParamState(stateManager.exportState())
                 binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
