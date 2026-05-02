@@ -42,15 +42,23 @@
                 android:layout_marginBottom="14dp">
 
                 <!-- CHECKBOX CIRCULAR PARA SETS -->
-                <CheckBox
+                <androidx.appcompat.widget.AppCompatCheckBox
                     android:id="@+id/checkbox_set_completed"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_marginEnd="12dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="10dp"
                     android:button="@drawable/checkbox_selector"
+                    android:background="@null"
+                    android:buttonTint="@null"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="0dp"
+                    android:scaleX="1"
+                    android:scaleY="1"
+                    android:gravity="center"
                     android:clickable="true"
                     android:focusable="true"
-                    android:contentDescription="Marcar como completado"/>
+                    android:contentDescription="Marcar día completado"/>
 
                 <TextView
                     android:id="@+id/tv_param_summary"

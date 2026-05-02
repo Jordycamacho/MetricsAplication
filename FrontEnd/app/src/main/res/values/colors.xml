@@ -47,4 +47,5 @@
 
     <!-- Completed set color -->
     <color name="set_completed_green">#4CAF50</color>
+    <color name="warning">#2A1F00</color>
 </resources>
