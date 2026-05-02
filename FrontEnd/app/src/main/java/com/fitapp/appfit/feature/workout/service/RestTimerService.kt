@@ -7,9 +7,9 @@ import android.os.Binder
 import android.os.CountDownTimer
 import android.os.IBinder
 import com.fitapp.appfit.core.notification.WorkoutNotificationManager
+import com.fitapp.appfit.feature.workout.util.TimerSoundPlayer
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
-import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -57,6 +57,7 @@ class RestTimerService : Service() {
     override fun onCreate() {
         super.onCreate()
         WorkoutNotificationManager.createChannel(this)
+        TimerSoundPlayer.init(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -97,8 +98,12 @@ class RestTimerService : Service() {
                     WorkoutHaptics.restFinished(this@RestTimerService)
                 }
 
+                // Reproduce sonido en hilo IO para no bloquear y funcione con pantalla apagada
                 scope.launch(Dispatchers.IO) {
-                    WorkoutSoundManager.playRestFinished(this@RestTimerService)
+                    TimerSoundPlayer.playTimerSound(
+                        this@RestTimerService,
+                        WorkoutPreferences.TimerSoundType.EXERCISE_REST
+                    )
                 }
 
                 WorkoutNotificationManager.notifyRestFinished(this@RestTimerService, exerciseName)
@@ -114,6 +119,7 @@ class RestTimerService : Service() {
     override fun onDestroy() {
         timer?.cancel()
         timer = null
+        TimerSoundPlayer.release()
         super.onDestroy()
     }
 }

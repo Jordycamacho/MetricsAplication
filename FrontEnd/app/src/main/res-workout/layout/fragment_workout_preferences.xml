@@ -121,7 +121,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="20dp"
                     app:cardBackgroundColor="#1E1E1E"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
@@ -174,9 +174,20 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Tipo de sonido -->
+                <!-- Volumen de timers -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="VOLUMEN"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="4dp" />
+
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_sound_type"
+                    android:id="@+id/card_timer_volume"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
@@ -194,50 +205,294 @@
                         android:paddingTop="14dp"
                         android:paddingBottom="14dp">
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Volumen de timers"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_volume_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="70%"
+                                android:textColor="#78703F"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/slider_timer_volume"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:valueFrom="0"
+                            android:valueTo="100"
+                            android:stepSize="5" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Sonidos por tipo de timer -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="SONIDOS POR TIPO"
+                    android:textColor="#78703F"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_timer_sounds"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#333333"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
+
+                        <!-- DESCANSO DE SET -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tipo de sonido"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
+                            android:text="⏱ Descanso de Set"
+                            android:textColor="#78703F"
+                            android:textSize="12sp"
                             android:textStyle="bold"
-                            android:layout_marginBottom="12dp" />
+                            android:layout_marginBottom="10dp"
+                            android:layout_marginTop="6dp" />
 
                         <RadioGroup
-                            android:id="@+id/rg_sound_type"
+                            android:id="@+id/rg_set_rest_sound"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
 
                             <RadioButton
-                                android:id="@+id/rb_beep"
+                                android:id="@+id/rb_set_rest_beep"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Pitido doble — discreto"
+                                android:text="Beep — pitido doble"
                                 android:textColor="#FFFFFF"
                                 android:textSize="13sp"
                                 android:buttonTint="#78703F"
-                                android:paddingVertical="6dp" />
+                                android:paddingVertical="4dp" />
 
                             <RadioButton
-                                android:id="@+id/rb_bell"
+                                android:id="@+id/rb_set_rest_bell"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Campana — suave"
+                                android:text="Bell — campana"
                                 android:textColor="#FFFFFF"
                                 android:textSize="13sp"
                                 android:buttonTint="#78703F"
-                                android:paddingVertical="6dp" />
+                                android:paddingVertical="4dp" />
 
                             <RadioButton
-                                android:id="@+id/rb_chime"
+                                android:id="@+id/rb_set_rest_chime"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Chime — tono suave"
                                 android:textColor="#FFFFFF"
                                 android:textSize="13sp"
                                 android:buttonTint="#78703F"
-                                android:paddingVertical="6dp" />
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_set_rest_buzz"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Buzz — zumbido"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_set_rest_ping"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Ping — sonido agudo"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                        </RadioGroup>
+
+                        <!-- SEPARATOR -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#333333"
+                            android:layout_marginVertical="12dp"
+                            android:alpha="0.5" />
+
+                        <!-- DESCANSO DE EJERCICIO -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Descanso de Ejercicio"
+                            android:textColor="#78703F"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="10dp"
+                            android:layout_marginTop="6dp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_exercise_rest_sound"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/rb_exercise_rest_beep"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Beep — pitido doble"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_exercise_rest_bell"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Bell — campana"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_exercise_rest_chime"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Chime — tono suave"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_exercise_rest_buzz"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Buzz — zumbido"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_exercise_rest_ping"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Ping — sonido agudo"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                        </RadioGroup>
+
+                        <!-- SEPARATOR -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#333333"
+                            android:layout_marginVertical="12dp"
+                            android:alpha="0.5" />
+
+                        <!-- DURACIÓN COMPLETADA -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Duración Completada"
+                            android:textColor="#78703F"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="10dp"
+                            android:layout_marginTop="6dp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_duration_complete_sound"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/rb_duration_beep"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Beep — pitido doble"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_duration_bell"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Bell — campana"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_duration_chime"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Chime — tono suave"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_duration_buzz"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Buzz — zumbido"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_duration_ping"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Ping — sonido agudo"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:buttonTint="#78703F"
+                                android:paddingVertical="4dp" />
 
                         </RadioGroup>
 
