@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.R
+import android.util.Log
 import com.fitapp.appfit.core.util.RestTimer
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
@@ -285,8 +286,16 @@ class WorkoutSetAdapterClassic(
         private fun getParamUnit(): String {
             val p = currentSet?.parameters?.firstOrNull { it.parameterType?.uppercase() in
                     listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE") }
-                ?: return "KG"
-            return p.unit ?: inferUnit(p.parameterType, p.parameterName)
+                ?: return ""
+
+            Log.d("PARAM_UNIT_DEBUG", "paramName=${p.parameterName}, serverUnit=${p.unit}, paramType=${p.parameterType}")
+
+            return p.unit ?: when (p.parameterType?.uppercase()) {
+                "DISTANCE"   -> "M"
+                "PERCENTAGE" -> "%"
+                "INTEGER"    -> "REP"
+                else         -> "KG"
+            }
         }
 
         private fun getParamType(): String {
@@ -375,7 +384,11 @@ class WorkoutSetAdapterClassic(
             val btnInc  = if (isLeft) btnIncReps   else btnIncParam
 
             layout.visibility = View.VISIBLE
-            tvLabel.text = "TIEMPO"
+
+            val durationParam = set.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" }
+            val unitText = durationParam?.unit?.take(3)?.uppercase() ?: "SEG"
+            tvLabel.text = unitText
+
             tvValue.text = formatDuration(getDurationValue())
             tvValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
             tvValue.textSize = 32f
@@ -392,6 +405,10 @@ class WorkoutSetAdapterClassic(
 
         private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
             layoutDurationExtra.visibility = View.VISIBLE
+
+            val durationParam = set.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" }
+            val unitText = durationParam?.unit?.take(3)?.uppercase() ?: "SEG"
+
             tvDurationTimer.text = formatDuration(getDurationValue())
             durationDisplayView = tvDurationTimer
 
@@ -424,8 +441,7 @@ class WorkoutSetAdapterClassic(
 
         private fun adjustDuration(set: RoutineSetTemplateResponse, delta: Long) {
             if (durationTimerActive) return
-            val durationParam = currentSet?.parameters
-                ?.firstOrNull { it.parameterType?.uppercase() == "DURATION" } ?: return
+            val durationParam = set.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" } ?: return
             val newVal = (getDurationValue() + delta).coerceAtLeast(5L)
             stateManager.updateDurationValue(currentSetId, durationParam.parameterId, newVal)
             durationDisplayView?.text = formatDuration(newVal)
@@ -504,8 +520,8 @@ class WorkoutSetAdapterClassic(
         private fun inferUnit(type: String?, name: String?): String = when (type?.uppercase()) {
             "DISTANCE"   -> "M"
             "PERCENTAGE" -> "%"
-            "INTEGER"    -> name?.take(3)?.uppercase() ?: "REP"
-            else         -> name?.take(3)?.uppercase() ?: "KG"
+            "INTEGER"    -> "REP"
+            else         -> "KG"
         }
 
         private fun stepFor(unit: String, type: String): Double = when {
