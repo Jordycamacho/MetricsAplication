@@ -11,10 +11,10 @@
         android:icon="@drawable/ic_training"
         android:title="@string/title_training" />
 
-    <item
+ <!--   <item
         android:id="@+id/navigation_marketplace"
         android:icon="@drawable/ic_shopping_bag"
-        android:title="Marketplace" />
+        android:title="Marketplace" /> -->
 
     <item
         android:id="@+id/navigation_metrics"
