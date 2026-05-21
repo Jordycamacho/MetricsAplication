@@ -30,11 +30,9 @@ class WorkoutSetAdapterClassic(
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()
     private var currentRoutineExerciseId: Long = 0L
-    private var currentExerciseId: Long = 0L           // ← NUEVO: ID real del ejercicio
+    private var currentExerciseId: Long = 0L
     private var activeSequenceIndex = -1
 
-    // ── Submit ────────────────────────────────────────────────────────────────
-    // AHORA recibe también el exerciseId real
     fun submitList(newSets: List<RoutineSetTemplateResponse>, routineExerciseId: Long, exerciseId: Long) {
         this.currentRoutineExerciseId = routineExerciseId
         this.currentExerciseId = exerciseId
@@ -153,7 +151,6 @@ class WorkoutSetAdapterClassic(
             currentSet = set
             myIndex = position
 
-            // AHORA usamos currentExerciseId (el real) en lugar de una variable inexistente
             stateManager.initializeSet(set.id, currentRoutineExerciseId, currentExerciseId, set)
 
             bindCheckbox(set)
@@ -162,13 +159,307 @@ class WorkoutSetAdapterClassic(
             bindRestTimer(set)
         }
 
-        // ... el resto de la clase (bindCheckbox, bindTypeDecoration, bindControls, etc.)
-        // se mantiene EXACTAMENTE IGUAL que en tu código original.
-        // Solo cambió la línea de initializeSet arriba.
+        // ═══════════════════════════════════════════════════════════════════════
+        // CORE: Identificar parámetros por NOMBRE, no por tipo de dato
+        // ═══════════════════════════════════════════════════════════════════════
 
-        // (Aquí va todo el código que sigue, sin modificaciones)
-        // Para no alargar, copia el resto de tu clase original desde aquí hasta el final.
-        // Yo lo incluyo por completitud, pero puedes dejarlo igual.
+        /**
+         * Obtiene el parámetro "Repeticiones" (identificado por nombre "Repeticiones")
+         */
+        private fun getRepsParameter(): RoutineSetParameterResponse? {
+            return currentSet?.parameters?.firstOrNull { param ->
+                param.parameterName?.lowercase() == "repeticiones"
+                        || param.parameterName?.lowercase() == "reps"
+            }
+        }
+
+        /**
+         * Obtiene el parámetro numérico (Peso, Distancia, etc.)
+         * EXCLUYE el parámetro de Repeticiones
+         */
+        private fun getNumericParameter(): RoutineSetParameterResponse? {
+            return currentSet?.parameters?.firstOrNull { param ->
+                (param.parameterName?.lowercase() != "repeticiones"
+                        && param.parameterName?.lowercase() != "reps")
+                        && (param.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
+                        || param.numericValue != null
+                        || param.integerValue != null)
+            }
+        }
+
+        /**
+         * Obtiene el parámetro de duración
+         */
+        private fun getDurationParameter(): RoutineSetParameterResponse? {
+            return currentSet?.parameters?.firstOrNull { param ->
+                param.parameterType?.uppercase() == "DURATION" && param.durationValue != null
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // VALORES
+        // ═══════════════════════════════════════════════════════════════════════
+
+        private fun getRepsValue(): Int? {
+            val repsParam = getRepsParameter() ?: return null
+            val values = stateManager.getParameterValues(currentSetId, repsParam.parameterId)
+
+            return values?.integerValue
+                ?: values?.repetitions
+                ?: repsParam.integerValue
+                ?: repsParam.repetitions
+        }
+
+        private fun getNumericValue(): Double? {
+            val numericParam = getNumericParameter() ?: return null
+            val values = stateManager.getParameterValues(currentSetId, numericParam.parameterId)
+
+            return values?.numericValue
+                ?: values?.integerValue?.toDouble()
+                ?: numericParam.numericValue
+                ?: numericParam.integerValue?.toDouble()
+        }
+
+        private fun getDurationValue(): Long {
+            val durationParam = getDurationParameter() ?: return 0L
+            return stateManager.getParameterValues(currentSetId, durationParam.parameterId)?.durationValue
+                ?: durationParam.durationValue ?: 0L
+        }
+
+        private fun getNumericUnit(): String {
+            val param = getNumericParameter() ?: return "KG"
+            Log.d("PARAM_UNIT_DEBUG", "paramName=${param.parameterName}, serverUnit=${param.unit}, paramType=${param.parameterType}")
+            return param.unit ?: when (param.parameterType?.uppercase()) {
+                "DISTANCE"   -> "M"
+                "PERCENTAGE" -> "%"
+                "INTEGER"    -> "REP"
+                else         -> "KG"
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // BINDCONTROLS: Determina qué se muestra
+        // ═══════════════════════════════════════════════════════════════════════
+
+        private fun bindControls(set: RoutineSetTemplateResponse, position: Int) {
+            val hasReps     = getRepsParameter() != null
+            val hasDuration = getDurationValue() > 0L
+            val hasNumeric  = getNumericParameter() != null
+
+            Log.d("BINDCONTROLS", "set=${set.id} | hasReps=$hasReps | hasNumeric=$hasNumeric | hasDuration=$hasDuration")
+
+            tvParamSummary.text = buildSummary(hasReps, hasDuration, hasNumeric)
+
+            layoutReps.visibility = View.GONE
+            layoutParam.visibility = View.GONE
+            viewDivider.visibility = View.GONE
+            layoutDurationExtra.visibility = View.GONE
+            resetTextDefaults()
+
+            when {
+                // CASO 1: Reps + Peso (+ Duración opcional)
+                hasReps && hasNumeric && !hasDuration -> {
+                    setupRepsColumn(set)
+                    setupNumericColumn(set)
+                    viewDivider.visibility = View.VISIBLE
+                    Log.d("BINDCONTROLS", "→ Mostrando REPS + NUMERIC")
+                }
+
+                // CASO 2: Solo Reps
+                hasReps && !hasNumeric && !hasDuration -> {
+                    setupRepsColumn(set)
+                    setColumnWeight(layoutReps, 2f)
+                    Log.d("BINDCONTROLS", "→ Mostrando REPS solo")
+                }
+
+                // CASO 3: Duración + Peso
+                !hasReps && hasDuration && hasNumeric -> {
+                    setupDurationInColumn(set, position, isLeft = true)
+                    setupNumericColumn(set)
+                    viewDivider.visibility = View.VISIBLE
+                    Log.d("BINDCONTROLS", "→ Mostrando DURATION + NUMERIC")
+                }
+
+                // CASO 4: Solo Duración
+                !hasReps && hasDuration && !hasNumeric -> {
+                    setupDurationInColumn(set, position, isLeft = true)
+                    setColumnWeight(layoutReps, 2f)
+                    Log.d("BINDCONTROLS", "→ Mostrando DURATION solo")
+                }
+
+                // CASO 5: Reps + Duración (sin Peso)
+                hasReps && hasDuration && !hasNumeric -> {
+                    setupRepsColumn(set)
+                    setupDurationInColumn(set, position, isLeft = false)
+                    viewDivider.visibility = View.VISIBLE
+                    Log.d("BINDCONTROLS", "→ Mostrando REPS + DURATION")
+                }
+
+                // CASO 6: Reps + Peso + Duración (3 parámetros)
+                hasReps && hasNumeric && hasDuration -> {
+                    setupRepsColumn(set)
+                    setupNumericColumn(set)
+                    viewDivider.visibility = View.VISIBLE
+                    setupDurationExtra(set, position)
+                    Log.d("BINDCONTROLS", "→ Mostrando REPS + NUMERIC + DURATION extra")
+                }
+
+                // CASO 7: Solo Peso
+                !hasReps && !hasDuration && hasNumeric -> {
+                    setupNumericColumn(set)
+                    setColumnWeight(layoutParam, 2f)
+                    Log.d("BINDCONTROLS", "→ Mostrando NUMERIC solo")
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SETUP COLUMNS
+        // ═══════════════════════════════════════════════════════════════════════
+
+        private fun setupRepsColumn(set: RoutineSetTemplateResponse) {
+            layoutReps.visibility = View.VISIBLE
+            tvRepsLabel.text = when (set.setType?.uppercase()) {
+                "ISOMETRIC", "REST_PAUSE" -> "SERIES"
+                "DROP_SET" -> "REPS ↓"
+                else -> "REPS"
+            }
+            val reps = getRepsValue() ?: 0
+            tvRepsValue.text = reps.toString()
+
+            val repsParam = getRepsParameter() ?: return
+
+            btnDecReps.setOnClickListener {
+                val cur = getRepsValue() ?: 0
+                if (cur > 0) {
+                    val n = cur - 1
+                    stateManager.updateIntegerValue(currentSetId, repsParam.parameterId, n)
+                    tvRepsValue.text = n.toString()
+                    onValueChanged(set, "reps", n.toDouble())
+                }
+            }
+            btnIncReps.setOnClickListener {
+                val n = (getRepsValue() ?: 0) + 1
+                stateManager.updateIntegerValue(currentSetId, repsParam.parameterId, n)
+                tvRepsValue.text = n.toString()
+                onValueChanged(set, "reps", n.toDouble())
+            }
+        }
+
+        private fun setupNumericColumn(set: RoutineSetTemplateResponse) {
+            layoutParam.visibility = View.VISIBLE
+            val value = getNumericValue() ?: 0.0
+            val unit  = getNumericUnit()
+            val numericParam = getNumericParameter() ?: return
+
+            tvParamUnit.text = unit
+            tvParamValue.text = formatValue(value, numericParam.parameterType?.uppercase() ?: "NUMBER")
+
+            val step = stepFor(unit, numericParam.parameterType?.uppercase() ?: "NUMBER")
+
+            btnDecParam.setOnClickListener {
+                val cur = getNumericValue() ?: 0.0
+                if (cur >= step) {
+                    val n = cur - step
+                    updateNumericInStateManager(numericParam.parameterId, n, numericParam.parameterType?.uppercase() ?: "NUMBER")
+                    tvParamValue.text = formatValue(n, numericParam.parameterType?.uppercase() ?: "NUMBER")
+                    onValueChanged(set, "param", n)
+                }
+            }
+            btnIncParam.setOnClickListener {
+                val n = (getNumericValue() ?: 0.0) + step
+                updateNumericInStateManager(numericParam.parameterId, n, numericParam.parameterType?.uppercase() ?: "NUMBER")
+                tvParamValue.text = formatValue(n, numericParam.parameterType?.uppercase() ?: "NUMBER")
+                onValueChanged(set, "param", n)
+            }
+        }
+
+        private fun updateNumericInStateManager(paramId: Long, value: Double, type: String) {
+            when (type) {
+                "INTEGER" -> stateManager.updateIntegerValue(currentSetId, paramId, value.toInt())
+                else -> stateManager.updateNumericValue(currentSetId, paramId, value)
+            }
+        }
+
+        private fun setupDurationInColumn(
+            set: RoutineSetTemplateResponse,
+            position: Int,
+            isLeft: Boolean
+        ) {
+            val layout  = if (isLeft) layoutReps  else layoutParam
+            val tvLabel = if (isLeft) tvRepsLabel  else tvParamUnit
+            val tvValue = if (isLeft) tvRepsValue  else tvParamValue
+            val btnDec  = if (isLeft) btnDecReps   else btnDecParam
+            val btnInc  = if (isLeft) btnIncReps   else btnIncParam
+
+            layout.visibility = View.VISIBLE
+
+            val durationParam = getDurationParameter()
+            val unitText = durationParam?.unit?.take(3)?.uppercase() ?: "SEG"
+            tvLabel.text = unitText
+
+            tvValue.text = formatDuration(getDurationValue())
+            tvValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
+            tvValue.textSize = 32f
+            tvValue.isClickable = true
+            tvValue.isFocusable = true
+            durationDisplayView = tvValue
+
+            tvValue.setOnClickListener { toggleDuration(set, position) }
+            btnDec.setOnClickListener { adjustDuration(set, -5L) }
+            btnInc.setOnClickListener { adjustDuration(set, +5L) }
+
+            autoStartIfSequence(set, position)
+        }
+
+        private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
+            layoutDurationExtra.visibility = View.VISIBLE
+
+            val durationParam = getDurationParameter()
+            val unitText = durationParam?.unit?.take(3)?.uppercase() ?: "SEG"
+
+            tvDurationTimer.text = formatDuration(getDurationValue())
+            durationDisplayView = tvDurationTimer
+
+            tvDurationTimer.setOnClickListener { toggleDuration(set, position) }
+            btnDecDurationExtra.setOnClickListener { adjustDuration(set, -5L) }
+            btnIncDurationExtra.setOnClickListener { adjustDuration(set, +5L) }
+
+            autoStartIfSequence(set, position)
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════════════
+
+        private fun autoStartIfSequence(set: RoutineSetTemplateResponse, position: Int) {
+            if (isSequenceMode() && activeSequenceIndex == position && !durationTimerActive) {
+                WorkoutHaptics.exerciseStart(itemView.context)
+                durationTimerActive = true
+                durationTimer.start(getDurationValue().toInt())
+            }
+        }
+
+        private fun toggleDuration(set: RoutineSetTemplateResponse, position: Int) {
+            if (durationTimerActive) {
+                durationTimerActive = false
+                durationTimer.stop()
+                durationDisplayView?.text = formatDuration(getDurationValue())
+            } else {
+                WorkoutHaptics.exerciseStart(itemView.context)
+                durationTimerActive = true
+                durationTimer.start(getDurationValue().toInt())
+            }
+        }
+
+        private fun adjustDuration(set: RoutineSetTemplateResponse, delta: Long) {
+            if (durationTimerActive) return
+            val durationParam = getDurationParameter() ?: return
+            val newVal = (getDurationValue() + delta).coerceAtLeast(5L)
+            stateManager.updateDurationValue(currentSetId, durationParam.parameterId, newVal)
+            durationDisplayView?.text = formatDuration(newVal)
+            onValueChanged(set, "duration", newVal.toDouble())
+        }
 
         private fun bindCheckbox(set: RoutineSetTemplateResponse) {
             val isCompleted = completionState.isSetCompleted(set.id)
@@ -211,241 +502,6 @@ class WorkoutSetAdapterClassic(
             "ECCENTRIC"       -> "Excéntrico"      to R.color.set_type_eccentric
             "ISOMETRIC"       -> "Isométrico"      to R.color.set_type_isometric
             else              -> "Normal"          to R.color.set_type_normal
-        }
-
-        private fun bindControls(set: RoutineSetTemplateResponse, position: Int) {
-            val hasReps     = getRepsValue() != null
-            val hasDuration = getDurationValue() > 0L
-            val hasParam    = getParamValue() != null
-
-            tvParamSummary.text = buildSummary(hasReps, hasDuration, hasParam, set)
-
-            layoutReps.visibility = View.GONE
-            layoutParam.visibility = View.GONE
-            viewDivider.visibility = View.GONE
-            layoutDurationExtra.visibility = View.GONE
-            resetTextDefaults()
-
-            when {
-                hasReps && hasParam && !hasDuration -> {
-                    setupRepsColumn(set)
-                    setupParamColumn(set)
-                    viewDivider.visibility = View.VISIBLE
-                }
-                hasReps && !hasParam && !hasDuration -> {
-                    setupRepsColumn(set)
-                    setColumnWeight(layoutReps, 2f)
-                }
-                !hasReps && hasDuration && hasParam -> {
-                    setupDurationInColumn(set, position, isLeft = true)
-                    setupParamColumn(set)
-                    viewDivider.visibility = View.VISIBLE
-                }
-                !hasReps && hasDuration && !hasParam -> {
-                    setupDurationInColumn(set, position, isLeft = true)
-                    setColumnWeight(layoutReps, 2f)
-                }
-                hasReps && hasDuration && !hasParam -> {
-                    setupRepsColumn(set)
-                    setupDurationInColumn(set, position, isLeft = false)
-                    viewDivider.visibility = View.VISIBLE
-                }
-                hasReps && hasParam && hasDuration -> {
-                    setupRepsColumn(set)
-                    setupParamColumn(set)
-                    viewDivider.visibility = View.VISIBLE
-                    setupDurationExtra(set, position)
-                }
-            }
-        }
-
-        private fun getRepsValue(): Int? {
-            val params = stateManager.getParameterValues(currentSetId, getFirstParamId(isReps = true))
-                ?: return currentSet?.parameters?.firstOrNull { it.repetitions != null }?.repetitions
-            return params.repetitions
-        }
-
-        private fun getDurationValue(): Long {
-            val durationParamId = currentSet?.parameters
-                ?.firstOrNull { it.parameterType?.uppercase() == "DURATION" }
-                ?.parameterId ?: return 0L
-            return stateManager.getParameterValues(currentSetId, durationParamId)?.durationValue
-                ?: currentSet?.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" }?.durationValue
-                ?: 0L
-        }
-
-        private fun getParamValue(): Double? {
-            val numericParam = currentSet?.parameters?.firstOrNull { p ->
-                p.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
-            } ?: return null
-            val values = stateManager.getParameterValues(currentSetId, numericParam.parameterId)
-            return values?.numericValue ?: values?.integerValue?.toDouble()
-            ?: numericParam.numericValue ?: numericParam.integerValue?.toDouble()
-        }
-
-        private fun getParamUnit(): String {
-            val p = currentSet?.parameters?.firstOrNull { it.parameterType?.uppercase() in
-                    listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE") }
-                ?: return ""
-
-            Log.d("PARAM_UNIT_DEBUG", "paramName=${p.parameterName}, serverUnit=${p.unit}, paramType=${p.parameterType}")
-
-            return p.unit ?: when (p.parameterType?.uppercase()) {
-                "DISTANCE"   -> "M"
-                "PERCENTAGE" -> "%"
-                "INTEGER"    -> "REP"
-                else         -> "KG"
-            }
-        }
-
-        private fun getParamType(): String {
-            return currentSet?.parameters?.firstOrNull { it.parameterType?.uppercase() in
-                    listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE") }
-                ?.parameterType?.lowercase() ?: "number"
-        }
-
-        private fun getFirstParamId(isReps: Boolean): Long {
-            return currentSet?.parameters?.firstOrNull {
-                if (isReps) it.repetitions != null
-                else it.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
-            }?.parameterId ?: -1L
-        }
-
-        private fun setupRepsColumn(set: RoutineSetTemplateResponse) {
-            layoutReps.visibility = View.VISIBLE
-            tvRepsLabel.text = when (set.setType?.uppercase()) {
-                "ISOMETRIC", "REST_PAUSE" -> "SERIES"
-                "DROP_SET" -> "REPS ↓"
-                else -> "REPS"
-            }
-            val reps = getRepsValue() ?: 0
-            tvRepsValue.text = reps.toString()
-
-            btnDecReps.setOnClickListener {
-                val cur = getRepsValue() ?: 0
-                if (cur > 0) {
-                    val n = cur - 1
-                    stateManager.updateReps(currentSetId, n)
-                    tvRepsValue.text = n.toString()
-                    onValueChanged(set, "reps", n.toDouble())
-                }
-            }
-            btnIncReps.setOnClickListener {
-                val n = (getRepsValue() ?: 0) + 1
-                stateManager.updateReps(currentSetId, n)
-                tvRepsValue.text = n.toString()
-                onValueChanged(set, "reps", n.toDouble())
-            }
-        }
-
-        private fun setupParamColumn(set: RoutineSetTemplateResponse) {
-            layoutParam.visibility = View.VISIBLE
-            val value = getParamValue() ?: 0.0
-            val unit  = getParamUnit()
-            val type  = getParamType()
-            val paramId = currentSet?.parameters?.firstOrNull { it.parameterType?.uppercase() in
-                    listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE") }?.parameterId ?: return
-
-            tvParamUnit.text = unit
-            tvParamValue.text = formatValue(value, type)
-
-            val step = stepFor(unit, type)
-            btnDecParam.setOnClickListener {
-                val cur = getParamValue() ?: 0.0
-                if (cur >= step) {
-                    val n = cur - step
-                    updateParamInStateManager(paramId, n, type)
-                    tvParamValue.text = formatValue(n, type)
-                    onValueChanged(set, "param", n)
-                }
-            }
-            btnIncParam.setOnClickListener {
-                val n = (getParamValue() ?: 0.0) + step
-                updateParamInStateManager(paramId, n, type)
-                tvParamValue.text = formatValue(n, type)
-                onValueChanged(set, "param", n)
-            }
-        }
-
-        private fun updateParamInStateManager(paramId: Long, value: Double, type: String) {
-            if (type == "integer") stateManager.updateIntegerValue(currentSetId, paramId, value.toInt())
-            else stateManager.updateNumericValue(currentSetId, paramId, value)
-        }
-
-        private fun setupDurationInColumn(
-            set: RoutineSetTemplateResponse,
-            position: Int,
-            isLeft: Boolean
-        ) {
-            val layout  = if (isLeft) layoutReps  else layoutParam
-            val tvLabel = if (isLeft) tvRepsLabel  else tvParamUnit
-            val tvValue = if (isLeft) tvRepsValue  else tvParamValue
-            val btnDec  = if (isLeft) btnDecReps   else btnDecParam
-            val btnInc  = if (isLeft) btnIncReps   else btnIncParam
-
-            layout.visibility = View.VISIBLE
-
-            val durationParam = set.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" }
-            val unitText = durationParam?.unit?.take(3)?.uppercase() ?: "SEG"
-            tvLabel.text = unitText
-
-            tvValue.text = formatDuration(getDurationValue())
-            tvValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.gold_primary))
-            tvValue.textSize = 32f
-            tvValue.isClickable = true
-            tvValue.isFocusable = true
-            durationDisplayView = tvValue
-
-            tvValue.setOnClickListener { toggleDuration(set, position) }
-            btnDec.setOnClickListener { adjustDuration(set, -5L) }
-            btnInc.setOnClickListener { adjustDuration(set, +5L) }
-
-            autoStartIfSequence(set, position)
-        }
-
-        private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
-            layoutDurationExtra.visibility = View.VISIBLE
-
-            val durationParam = set.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" }
-            val unitText = durationParam?.unit?.take(3)?.uppercase() ?: "SEG"
-
-            tvDurationTimer.text = formatDuration(getDurationValue())
-            durationDisplayView = tvDurationTimer
-
-            tvDurationTimer.setOnClickListener { toggleDuration(set, position) }
-            btnDecDurationExtra.setOnClickListener { adjustDuration(set, -5L) }
-            btnIncDurationExtra.setOnClickListener { adjustDuration(set, +5L) }
-
-            autoStartIfSequence(set, position)
-        }
-
-        private fun autoStartIfSequence(set: RoutineSetTemplateResponse, position: Int) {
-            if (isSequenceMode() && activeSequenceIndex == position && !durationTimerActive) {
-                WorkoutHaptics.exerciseStart(itemView.context)
-                durationTimerActive = true
-                durationTimer.start(getDurationValue().toInt())
-            }
-        }
-
-        private fun toggleDuration(set: RoutineSetTemplateResponse, position: Int) {
-            if (durationTimerActive) {
-                durationTimerActive = false
-                durationTimer.stop()
-                durationDisplayView?.text = formatDuration(getDurationValue())
-            } else {
-                WorkoutHaptics.exerciseStart(itemView.context)
-                durationTimerActive = true
-                durationTimer.start(getDurationValue().toInt())
-            }
-        }
-
-        private fun adjustDuration(set: RoutineSetTemplateResponse, delta: Long) {
-            if (durationTimerActive) return
-            val durationParam = set.parameters?.firstOrNull { it.parameterType?.uppercase() == "DURATION" } ?: return
-            val newVal = (getDurationValue() + delta).coerceAtLeast(5L)
-            stateManager.updateDurationValue(currentSetId, durationParam.parameterId, newVal)
-            durationDisplayView?.text = formatDuration(newVal)
-            onValueChanged(set, "duration", newVal.toDouble())
         }
 
         private fun bindRestTimer(set: RoutineSetTemplateResponse) {
@@ -506,35 +562,27 @@ class WorkoutSetAdapterClassic(
         private fun buildSummary(
             hasReps: Boolean,
             hasDuration: Boolean,
-            hasParam: Boolean,
-            set: RoutineSetTemplateResponse
+            hasNumeric: Boolean
         ): String {
-            val unit = getParamUnit()
+            val unit = getNumericUnit()
             return listOfNotNull(
                 if (hasReps) "REPS" else null,
                 if (hasDuration) "TIEMPO" else null,
-                if (hasParam) unit else null
+                if (hasNumeric) unit else null
             ).joinToString(" · ")
         }
 
-        private fun inferUnit(type: String?, name: String?): String = when (type?.uppercase()) {
-            "DISTANCE"   -> "M"
-            "PERCENTAGE" -> "%"
-            "INTEGER"    -> "REP"
-            else         -> "KG"
-        }
-
         private fun stepFor(unit: String, type: String): Double = when {
-            type == "percentage" -> 5.0
-            type == "distance"   -> 1.0
+            type == "PERCENTAGE" -> 5.0
+            type == "DISTANCE"   -> 1.0
             unit.uppercase() == "KG" -> 2.5
             unit.uppercase() == "LB" -> 5.0
             else -> 1.0
         }
 
         private fun formatValue(v: Double, type: String): String = when (type) {
-            "percentage" -> "%.0f".format(v)
-            "integer"    -> v.toInt().toString()
+            "PERCENTAGE" -> "%.0f".format(v)
+            "INTEGER"    -> v.toInt().toString()
             else         -> if (v % 1.0 == 0.0) v.toInt().toString() else "%.1f".format(v)
         }
 

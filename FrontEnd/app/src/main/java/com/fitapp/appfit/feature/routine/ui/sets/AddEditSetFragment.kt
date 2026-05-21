@@ -1,6 +1,5 @@
 package com.fitapp.appfit.feature.routine.ui.sets
 
-import android.R
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -52,10 +51,7 @@ class AddEditSetFragment : Fragment() {
     private var retainedRest: String = ""
     private var retainedSubSetBase: Int? = null
 
-    /** Almacena si el guardado en curso debe navegar atrás o no. */
     private var pendingSaveNavigateBack: Boolean? = null
-
-    // ─────────────────────────────────────────────────────────────────────────
 
     companion object {
         private val SET_TYPES = listOf(
@@ -115,9 +111,9 @@ class AddEditSetFragment : Fragment() {
     private fun setupSetTypeSpinner() {
         binding.spinnerSetType.adapter = ArrayAdapter(
             requireContext(),
-            R.layout.simple_spinner_item,
+            android.R.layout.simple_spinner_item,
             SET_TYPE_LABELS
-        ).also { it.setDropDownViewResource(R.layout.simple_spinner_dropdown_item) }
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
     }
 
     private fun setupParameterList() {
@@ -146,7 +142,10 @@ class AddEditSetFragment : Fragment() {
         }
 
         binding.etParameterSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) { loadParameters(); true } else false
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                loadParameters()
+                true
+            } else false
         }
     }
 
@@ -265,9 +264,7 @@ class AddEditSetFragment : Fragment() {
                         findNavController().navigateUp()
                     } else {
                         nextPosition++
-
                         retainedSubSetBase = retainedSubSetBase?.plus(1)
-
                         restoreRetainedFields()
 
                         pendingParameters.clear()
@@ -339,7 +336,8 @@ class AddEditSetFragment : Fragment() {
         }
     }
 
-    // ── Retención de campos ─────────────────────────────────────────────────
+    // ── Retención de campos ───────────────────────────────────────────────────
+
     private fun captureRetainedFields() {
         retainedTypeIndex  = binding.spinnerSetType.selectedItemPosition
         retainedGroupId    = binding.etGroupId.text.toString()
@@ -355,50 +353,88 @@ class AddEditSetFragment : Fragment() {
         binding.etSubSetNumber.setText(retainedSubSetBase?.toString() ?: "")
     }
 
+    // ── Diálogo de parámetros (MEJORADO) ──────────────────────────────────────
 
     private fun showAddParameterDialog(parameter: CustomParameterResponse) {
         val dialogBinding = DialogAddParameterBinding.inflate(layoutInflater)
 
+        // Configurar header
         dialogBinding.tvParameterName.text = parameter.name
-        dialogBinding.tvParameterType.text = "Tipo: ${parameter.parameterType}"
+        dialogBinding.tvParameterType.text = parameter.parameterType ?: "Tipo desconocido"
+
         if (!parameter.unit.isNullOrEmpty()) {
-            dialogBinding.tvParameterUnit.text = "Unidad: ${parameter.unit}"
+            dialogBinding.tvParameterUnit.text = parameter.unit
             dialogBinding.tvParameterUnit.visibility = View.VISIBLE
         }
 
-        dialogBinding.layoutRepetitions.visibility = View.VISIBLE
+        // Mostrar campos según el tipo de parámetro
         when (parameter.parameterType) {
-            "NUMBER", "DISTANCE", "PERCENTAGE" -> dialogBinding.layoutNumericValue.visibility = View.VISIBLE
-            "INTEGER"  -> dialogBinding.layoutIntegerValue.visibility  = View.VISIBLE
-            "DURATION" -> dialogBinding.layoutDurationValue.visibility = View.VISIBLE
-            else       -> dialogBinding.layoutNumericValue.visibility  = View.VISIBLE
+            "REPETITIONS" -> {
+                // Solo repeticiones
+                dialogBinding.layoutRepetitions.visibility = View.VISIBLE
+                dialogBinding.layoutHelperInfo.visibility = View.VISIBLE
+                dialogBinding.tvHelperText.text = "Ingresa solo el número de repeticiones"
+            }
+            "NUMBER", "DISTANCE", "PERCENTAGE" -> {
+                // Valor numérico decimal
+                dialogBinding.layoutNumericValue.visibility = View.VISIBLE
+                dialogBinding.layoutHelperInfo.visibility = View.VISIBLE
+                dialogBinding.tvHelperText.text = "Ingresa el valor en ${parameter.unit ?: "unidades"}"
+            }
+            "INTEGER" -> {
+                // Valor entero
+                dialogBinding.layoutIntegerValue.visibility = View.VISIBLE
+                dialogBinding.layoutHelperInfo.visibility = View.VISIBLE
+                dialogBinding.tvHelperText.text = "Ingresa un número entero"
+            }
+            "DURATION" -> {
+                // Duración en segundos
+                dialogBinding.layoutDurationValue.visibility = View.VISIBLE
+                dialogBinding.layoutHelperInfo.visibility = View.VISIBLE
+                dialogBinding.tvHelperText.text = "Ingresa duración en segundos"
+            }
+            else -> {
+                // Por defecto: numérico
+                dialogBinding.layoutNumericValue.visibility = View.VISIBLE
+            }
         }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Añadir ${parameter.name}")
             .setView(dialogBinding.root)
             .setPositiveButton("Añadir") { _, _ ->
+                // Validar que al menos un valor está presente
+                val repetitions = dialogBinding.etRepetitions.text.toString().toIntOrNull()
+                val numericValue = dialogBinding.etNumericValue.text.toString().toDoubleOrNull()
+                val integerValue = dialogBinding.etIntegerValue.text.toString().toIntOrNull()
+                val durationValue = dialogBinding.etDurationValue.text.toString().toLongOrNull()
+
+                if (repetitions == null && numericValue == null && integerValue == null && durationValue == null) {
+                    showError("Por favor ingresa un valor")
+                    return@setPositiveButton
+                }
+
+                // Crear nuevo parámetro
                 val newParam = UpdateSetParameterRequest(
                     id            = null,
                     parameterId   = parameter.id,
-                    repetitions   = dialogBinding.etRepetitions.text.toString().toIntOrNull(),
-                    numericValue  = when (parameter.parameterType) {
-                        "NUMBER", "DISTANCE", "PERCENTAGE" ->
-                            dialogBinding.etNumericValue.text.toString().toDoubleOrNull()
-                        else -> null
-                    },
-                    integerValue  = when (parameter.parameterType) {
-                        "INTEGER" -> dialogBinding.etIntegerValue.text.toString().toIntOrNull()
-                        else -> null
-                    },
-                    durationValue = when (parameter.parameterType) {
-                        "DURATION" -> dialogBinding.etDurationValue.text.toString().toLongOrNull()
-                        else -> null
-                    }
+                    repetitions   = repetitions,
+                    numericValue  = numericValue,
+                    integerValue  = integerValue,
+                    durationValue = durationValue
                 )
+
+                // Verificar si ya existe un parámetro con este ID
+                val exists = pendingParameters.any { it.parameterId == parameter.id }
+                if (exists) {
+                    showError("Este parámetro ya ha sido agregado al set")
+                    return@setPositiveButton
+                }
+
                 pendingParameters.add(newParam)
                 refreshParameterChips()
                 binding.layoutParameterSection.visibility = View.GONE
+                Snackbar.make(binding.root, "✓ ${parameter.name} añadido", Snackbar.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -412,10 +448,12 @@ class AddEditSetFragment : Fragment() {
         } else {
             binding.tvNoSelectedParameters.visibility = View.GONE
             binding.layoutSelectedParameters.visibility = View.VISIBLE
+
             pendingParameters.forEach { param ->
+                val displayText = buildParameterDisplayText(param)
+
                 val chip = Chip(requireContext()).apply {
-                    text = "Parámetro ${param.parameterId}" +
-                            (param.repetitions?.let { " × $it" } ?: "")
+                    text = displayText
                     isCloseIconVisible = true
                     setOnCloseIconClickListener {
                         pendingParameters.remove(param)
@@ -424,6 +462,16 @@ class AddEditSetFragment : Fragment() {
                 }
                 binding.chipGroupSelected.addView(chip)
             }
+        }
+    }
+
+    private fun buildParameterDisplayText(param: UpdateSetParameterRequest): String {
+        return when {
+            param.repetitions != null -> "Reps: ${param.repetitions}"
+            param.numericValue != null -> "Valor: ${param.numericValue}"
+            param.integerValue != null -> "Valor: ${param.integerValue}"
+            param.durationValue != null -> "Duración: ${param.durationValue}s"
+            else -> "Parámetro"
         }
     }
 
@@ -445,14 +493,11 @@ class AddEditSetFragment : Fragment() {
 
     // ── UI helpers ────────────────────────────────────────────────────────────
 
-    /** Actualiza el campo de posición y el badge "SET #N" del nuevo layout. */
     private fun refreshPositionUI() {
         binding.etSetPosition.setText(nextPosition.toString())
-        // tvSetCounterBadge sólo existe en el nuevo layout; el ?. lo hace seguro.
         binding.tvSetCounterBadge?.text = "SET #$nextPosition"
     }
 
-    /** Parpadeo del badge para confirmar el guardado sin abandonar la pantalla. */
     private fun showSavedFeedback() {
         val badge = binding.tvSetCounterBadge
         if (badge == null) {

@@ -5,69 +5,100 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:paddingHorizontal="24dp"
+    android:paddingTop="28dp"
+    android:paddingBottom="24dp"
+    android:background="#0D0D0D">
 
-    <!-- Nombre del parámetro -->
-    <TextView
-        android:id="@+id/tv_parameter_name"
+    <!-- ══ HEADER INFORMACIÓN ══ -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="4dp" />
+        android:orientation="vertical"
+        android:layout_marginBottom="24dp">
 
-    <!-- Tipo -->
-    <TextView
-        android:id="@+id/tv_parameter_type"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#B3B3B3"
-        android:textSize="13sp"
-        android:layout_marginBottom="2dp" />
+        <!-- Nombre del parámetro (destacado) -->
+        <TextView
+            android:id="@+id/tv_parameter_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.01"
+            android:layout_marginBottom="8dp" />
 
-    <!-- Unidad (oculto si no aplica) -->
-    <TextView
-        android:id="@+id/tv_parameter_unit"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#B3B3B3"
-        android:textSize="13sp"
-        android:layout_marginBottom="20dp"
-        android:visibility="gone" />
+        <!-- Tipo y unidad en una línea -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-    <!-- Separador -->
+            <TextView
+                android:id="@+id/tv_parameter_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#B3B3B3"
+                android:textSize="12sp"
+                android:letterSpacing="0.05" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="16dp"
+                android:background="#444444"
+                android:layout_marginHorizontal="10dp" />
+
+            <TextView
+                android:id="@+id/tv_parameter_unit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#C8B560"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ══ DIVISOR ══ -->
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#78703F"
-        android:alpha="0.3"
-        android:layout_marginBottom="20dp" />
+        android:layout_height="0.5dp"
+        android:background="#2E2E2E"
+        android:layout_marginBottom="24dp" />
 
-    <!-- Repeticiones (siempre visible) -->
+    <!-- ══ CAMPOS DE ENTRADA (Dinámicos según tipo) ══ -->
+
+    <!-- Repeticiones (SIEMPRE disponible, pero oculto si no aplica) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_repetitions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="14dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:boxBackgroundColor="#1E1E1E"
-        app:boxCornerRadiusTopStart="10dp"
-        app:boxCornerRadiusTopEnd="10dp"
-        app:boxCornerRadiusBottomStart="10dp"
-        app:boxCornerRadiusBottomEnd="10dp"
-        app:boxStrokeColor="#333333"
-        app:hintTextColor="#B3B3B3"
+        app:boxBackgroundColor="#151515"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxStrokeColor="#2E2E2E"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="#666666"
         android:hint="Repeticiones (opcional)">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_repetitions"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#555555"
             android:inputType="number"
-            android:paddingVertical="14dp" />
+            android:paddingVertical="14dp"
+            android:textSize="15sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -76,25 +107,28 @@
         android:id="@+id/layout_numeric_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="14dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:boxBackgroundColor="#1E1E1E"
-        app:boxCornerRadiusTopStart="10dp"
-        app:boxCornerRadiusTopEnd="10dp"
-        app:boxCornerRadiusBottomStart="10dp"
-        app:boxCornerRadiusBottomEnd="10dp"
-        app:boxStrokeColor="#333333"
-        app:hintTextColor="#B3B3B3"
+        app:boxBackgroundColor="#151515"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxStrokeColor="#2E2E2E"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="#666666"
         android:hint="Valor">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_numeric_value"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#555555"
             android:inputType="numberDecimal"
-            android:paddingVertical="14dp" />
+            android:paddingVertical="14dp"
+            android:textSize="15sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -103,25 +137,28 @@
         android:id="@+id/layout_integer_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="14dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:boxBackgroundColor="#1E1E1E"
-        app:boxCornerRadiusTopStart="10dp"
-        app:boxCornerRadiusTopEnd="10dp"
-        app:boxCornerRadiusBottomStart="10dp"
-        app:boxCornerRadiusBottomEnd="10dp"
-        app:boxStrokeColor="#333333"
-        app:hintTextColor="#B3B3B3"
-        android:hint="Valor entero">
+        app:boxBackgroundColor="#151515"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxStrokeColor="#2E2E2E"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="#666666"
+        android:hint="Valor">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_integer_value"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#555555"
             android:inputType="number"
-            android:paddingVertical="14dp" />
+            android:paddingVertical="14dp"
+            android:textSize="15sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -130,26 +167,61 @@
         android:id="@+id/layout_duration_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="24dp"
         android:visibility="gone"
         app:boxBackgroundMode="outline"
-        app:boxBackgroundColor="#1E1E1E"
-        app:boxCornerRadiusTopStart="10dp"
-        app:boxCornerRadiusTopEnd="10dp"
-        app:boxCornerRadiusBottomStart="10dp"
-        app:boxCornerRadiusBottomEnd="10dp"
-        app:boxStrokeColor="#333333"
-        app:hintTextColor="#B3B3B3"
+        app:boxBackgroundColor="#151515"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxStrokeColor="#2E2E2E"
+        app:boxStrokeWidth="1dp"
+        app:hintTextColor="#666666"
         android:hint="Duración (segundos)">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_duration_value"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:textColor="#FFFFFF"
+            android:textColorHint="#555555"
             android:inputType="number"
-            android:paddingVertical="14dp" />
+            android:paddingVertical="14dp"
+            android:textSize="15sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- ══ INFO HELPER (Mostrar qué llenar) ══ -->
+    <LinearLayout
+        android:id="@+id/layout_helper_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#1A1A1A"
+        android:padding="12dp"
+        android:layout_marginBottom="24dp"
+        android:visibility="gone"
+        android:alpha="0.8">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@android:drawable/ic_dialog_info"
+            android:tint="#C8B560"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tv_helper_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#B3B3B3"
+            android:textSize="12sp"
+            android:lineSpacingMultiplier="1.2"
+            android:letterSpacing="0.02" />
+
+    </LinearLayout>
 
 </LinearLayout>
