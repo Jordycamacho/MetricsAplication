@@ -158,6 +158,27 @@ public class WorkoutConverter {
                 .build();
     }
 
+    public WorkoutSessionResponse toResponse(WorkoutSessionEntity entity, String routineName) {
+    if (entity == null) return null;
+    
+    return WorkoutSessionResponse.builder()
+            .id(entity.getId())
+            .routineId(entity.getRoutine() != null ? entity.getRoutine().getId() : null)
+            .routineName(routineName)
+            .userId(entity.getUserId())
+            .startTime(entity.getStartTime())
+            .endTime(entity.getEndTime())
+            .durationSeconds(entity.getDurationSeconds())
+            .performanceScore(entity.getPerformanceScore())
+            .totalVolume(entity.getTotalVolume())
+            .exercises(entity.getExercises() != null
+                    ? entity.getExercises().stream()
+                            .map(sessionExerciseConverter::toResponseFromEntity)
+                            .collect(Collectors.toList())
+                    : null)
+            .build();
+}
+
     public WorkoutSessionSummaryResponse toSummaryResponse(WorkoutSessionModel model, String routineName) {
         if (model == null) {
             log.warn("WORKOUT_CONVERTER_NULL_MODEL | Attempting to convert null model to summary");

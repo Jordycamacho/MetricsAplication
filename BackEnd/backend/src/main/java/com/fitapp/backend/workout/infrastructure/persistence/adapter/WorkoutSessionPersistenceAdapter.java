@@ -5,6 +5,7 @@ import com.fitapp.backend.workout.domain.model.WorkoutSessionModel;
 import com.fitapp.backend.workout.infrastructure.persistence.converter.WorkoutConverter;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SessionExerciseEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SetExecutionEntity;
+import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.repository.WorkoutSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +108,13 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<WorkoutSessionEntity> findEntityByIdAndUserIdWithDetails(Long id, Long userId) {
+        log.debug("WORKOUT_PERSISTENCE_FIND_ENTITY | sessionId={} | userId={}", id, userId);
+        return workoutSessionRepository.findByIdAndUserIdWithDetails(id, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<WorkoutSessionModel> findRecentByUserId(Long userId, int limit) {
         log.debug("WORKOUT_PERSISTENCE_FIND_RECENT | userId={} | limit={}", userId, limit);
         return workoutSessionRepository.findRecentByUserId(userId, limit)
@@ -151,14 +159,16 @@ public class WorkoutSessionPersistenceAdapter implements WorkoutSessionPersisten
                 entity.getId(),
                 entity.getExercises() != null ? entity.getExercises().size() : 0);
 
-        if (entity.getExercises() == null) return;
+        if (entity.getExercises() == null)
+            return;
 
         for (SessionExerciseEntity ex : entity.getExercises()) {
             log.debug("  Exercise={} sets={}",
                     ex.getExercise() != null ? ex.getExercise().getId() : "null",
                     ex.getSets() != null ? ex.getSets().size() : 0);
 
-            if (ex.getSets() == null) continue;
+            if (ex.getSets() == null)
+                continue;
             for (SetExecutionEntity set : ex.getSets()) {
                 // FIX: setTemplate puede ser null (set añadido libremente)
                 Long templateId = set.getSetTemplate() != null ? set.getSetTemplate().getId() : null;

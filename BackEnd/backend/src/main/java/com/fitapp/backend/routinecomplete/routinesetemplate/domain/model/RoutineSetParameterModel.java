@@ -22,19 +22,22 @@ public class RoutineSetParameterModel {
     
     public void validate() {
         int valueCount = 0;
+        if (repetitions != null) valueCount++;
         if (numericValue != null) valueCount++;
         if (durationValue != null) valueCount++;
         if (integerValue != null) valueCount++;
         
         if (valueCount == 0) {
-            throw new IllegalArgumentException("At least one value must be provided");
+            throw new IllegalArgumentException(
+                "At least one value must be provided (repetitions, numericValue, integerValue, or durationValue)"
+            );
         }
     }
     
-public void logModelData(String operation) {
-    log.debug("RoutineSetParameterModel {} | id={} | setTemplateId={} | parameterId={} | "
-            + "repetitions={} | numericValue={} | durationValue={} | integerValue={}",
-            operation, id, setTemplateId, parameterId,
-            repetitions, numericValue, durationValue, integerValue);
-}
+    public void logModelData(String operation) {
+        log.debug("RoutineSetParameterModel {} | id={} | setTemplateId={} | parameterId={} | "
+                + "repetitions={} | numericValue={} | durationValue={} | integerValue={}",
+                operation, id, setTemplateId, parameterId,
+                repetitions, numericValue, durationValue, integerValue);
+    }
 }

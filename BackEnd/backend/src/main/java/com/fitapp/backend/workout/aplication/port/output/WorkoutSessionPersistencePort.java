@@ -1,6 +1,8 @@
 package com.fitapp.backend.workout.aplication.port.output;
 
 import com.fitapp.backend.workout.domain.model.WorkoutSessionModel;
+import com.fitapp.backend.workout.infrastructure.persistence.entity.WorkoutSessionEntity;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -29,6 +31,8 @@ public interface WorkoutSessionPersistencePort {
     List<WorkoutSessionModel> findRecentByUserId(Long userId, int limit);
 
     Double sumTotalVolumeByUserId(Long userId);
+
+    Optional<WorkoutSessionEntity> findEntityByIdAndUserIdWithDetails(Long id, Long userId);
 
     Double sumTotalVolumeByUserIdAndDateRange(Long userId, LocalDateTime fromDate, LocalDateTime toDate);
 

@@ -84,15 +84,15 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
         public WorkoutSessionResponse getWorkoutSessionDetails(Long sessionId, Long userId) {
                 log.info("GET_SESSION_DETAILS | sessionId={} | userId={}", sessionId, userId);
 
-                WorkoutSessionModel session = workoutSessionPersistencePort
-                                .findByIdAndUserIdWithDetails(sessionId, userId)
+                WorkoutSessionEntity entity = workoutSessionPersistencePort
+                                .findEntityByIdAndUserIdWithDetails(sessionId, userId)
                                 .orElseThrow(() -> new WorkoutSessionNotFoundException(sessionId, userId));
 
-                String routineName = routinePersistencePort.findByIdAndUserId(session.getRoutineId(), userId)
+                String routineName = routinePersistencePort.findByIdAndUserId(entity.getRoutine().getId(), userId)
                                 .map(RoutineModel::getName)
                                 .orElse("Unknown Routine");
 
-                return workoutConverter.toResponse(session, routineName);
+                return workoutConverter.toResponse(entity, routineName);
         }
 
         @Override
