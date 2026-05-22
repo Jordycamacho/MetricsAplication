@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Id;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
-import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.suscription.infrastructure.persistence.entity.SubscriptionEntity;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.PersonalRecordEntity;
 

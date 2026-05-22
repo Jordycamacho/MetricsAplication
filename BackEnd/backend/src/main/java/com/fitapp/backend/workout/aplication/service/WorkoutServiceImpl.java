@@ -3,8 +3,8 @@ package com.fitapp.backend.workout.aplication.service;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetExecutionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
-import com.fitapp.backend.routinecomplete.routine.aplication.port.output.RoutinePersistencePort;
-import com.fitapp.backend.routinecomplete.routine.domain.model.RoutineModel;
+import com.fitapp.backend.routinecomplete.aplication.port.output.RoutinePersistencePort;
+import com.fitapp.backend.routinecomplete.domain.model.RoutineModel;
 import com.fitapp.backend.workout.aplication.dto.request.SaveWorkoutSessionRequest;
 import com.fitapp.backend.workout.aplication.dto.request.WorkoutHistoryFilterRequest;
 import com.fitapp.backend.workout.aplication.dto.response.WorkoutSessionResponse;
@@ -59,7 +59,7 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                 .orElseThrow(() -> {
                                         log.error("ROUTINE_NOT_FOUND | routineId={} | userId={}",
                                                         request.getRoutineId(), userId);
-                                        return new com.fitapp.backend.routinecomplete.routine.domain.exception.RoutineNotFoundException(
+                                        return new com.fitapp.backend.routinecomplete.domain.exception.RoutineNotFoundException(
                                                         userId);
                                 });
 

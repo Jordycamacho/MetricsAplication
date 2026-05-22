@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hibernate.annotations.Formula;
 
-import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineEntity;
 
 import jakarta.persistence.Id;
 

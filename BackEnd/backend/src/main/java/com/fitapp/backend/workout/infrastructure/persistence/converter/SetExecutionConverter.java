@@ -2,8 +2,8 @@ package com.fitapp.backend.workout.infrastructure.persistence.converter;
 
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetExecutionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
-import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.entity.RoutineSetTemplateEntity;
-import com.fitapp.backend.routinecomplete.routinesetemplate.infrastructure.persistence.repository.RoutineSetTemplateRepository;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineSetTemplateEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.repository.RoutineSetTemplateRepository;
 import com.fitapp.backend.workout.aplication.dto.response.SetExecutionResponse;
 import com.fitapp.backend.workout.domain.model.SetExecutionModel;
 import com.fitapp.backend.workout.infrastructure.persistence.entity.SessionExerciseEntity;

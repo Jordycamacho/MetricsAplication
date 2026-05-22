@@ -1,8 +1,8 @@
 package com.fitapp.backend.workout.aplication.service;
 
-import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.entity.RoutineEntity;
-import com.fitapp.backend.routinecomplete.routine.infrastructure.persistence.repository.RoutineRepository;
-import com.fitapp.backend.routinecomplete.routineexercise.infrastructure.persistence.entity.RoutineExerciseEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineExerciseEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.repository.RoutineRepository;
 import com.fitapp.backend.workout.aplication.dto.response.LastExerciseValuesResponse;
 import com.fitapp.backend.workout.aplication.dto.response.LastExerciseValuesResponse.LastSetValueResponse;
 import com.fitapp.backend.workout.aplication.dto.response.LastExerciseValuesResponse.LastSetValueResponse.ParameterValue;
