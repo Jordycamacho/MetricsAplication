@@ -1,9 +1,5 @@
 package com.fitapp.backend.routinecomplete.aplication.service;
 
-import com.fitapp.backend.Exercise.aplication.port.output.ExercisePersistencePort;
-import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
-import com.fitapp.backend.auth.domain.model.UserModel;
-import com.fitapp.backend.parameter.infrastructure.persistence.adapter.CustomParameterPersistencePort;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutineExercisePersistencePort;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutinePersistencePort;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutineSetParameterPersistencePort;
@@ -16,27 +12,23 @@ import com.fitapp.backend.sport.aplication.port.output.SportPersistencePort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
- * Orquesta la generación y persistencia de las rutinas predefinidas opcionales.
+ * Servicio de rutinas predefinidas.
  *
- * Resuelve todos los IDs (ejercicios, parámetros, deportes) ANTES de llamar
- * al generator — así el modelo de dominio solo trabaja con IDs, sin nombres.
+ * Ahora usa RoutineYamlBuilder para cargar configuraciones desde YAML,
+ * lo que permite personalizar rutinas sin tocar código Java.
  *
- * Flujo (igual que el manual del usuario):
- * 1. Crear rutina base → RoutinePersistencePort.save
- * 2. Crear cada RoutineExercise → RoutineExercisePersistencePort.save
- * 3. Crear sets + parámetros → setTemplatePersistencePort +
- * setParameterPersistencePort
+ * Flujo:
+ * 1. Builder carga YAML
+ * 2. Builder resuelve IDs y construye modelos
+ * 3. Este servicio persiste en 3 pasos (rutina → ejercicios → sets + parámetros)
  */
 @Slf4j
 @Service
@@ -47,13 +39,10 @@ public class DefaultRoutineService {
     private final RoutineExercisePersistencePort routineExercisePersistencePort;
     private final RoutineSetTemplatePersistencePort setTemplatePersistencePort;
     private final RoutineSetParameterPersistencePort setParameterPersistencePort;
-    private final ExercisePersistencePort exercisePersistencePort;
     private final SportPersistencePort sportPersistencePort;
-    private final CustomParameterPersistencePort parameterPersistencePort;
-    private final UserPersistencePort userPersistencePort;
-    private final DefaultRoutineGenerator generator;
+    private final RoutineYamlBuilder yamlBuilder;
 
-    // ── API pública ───────────────────────────────────────────────────────────
+    // ── API pública ────────────────────────────────────────────────────────────
 
     @Transactional
     @Caching(evict = {
@@ -65,17 +54,14 @@ public class DefaultRoutineService {
     public RoutineModel generateGymRoutine(String userEmail) {
         log.info("GENERATE_GYM_ROUTINE | userEmail={}", userEmail);
 
-        Long userId = resolveUserId(userEmail);
         Long gymSportId = sportPersistencePort.findIdByName("Musculación")
-                .orElseThrow(() -> new IllegalStateException("Sport 'Musculación' no encontrado"));
+                .orElseThrow(() -> new IllegalStateException("Sport 'Musculación' not found"));
 
-        Map<String, Long> paramIds = resolveParamIds("Repeticiones", "Peso", "Duración");
-        Map<String, Long> exerciseIds = resolveExerciseIds(GYM_EXERCISE_NAMES);
+        RoutineModel routine = yamlBuilder.buildRoutineFromYaml("gym_routine.yaml", userEmail, gymSportId);
+        RoutineModel saved = persistRoutine(routine);
 
-        RoutineModel saved = persistRoutine(
-                generator.buildGymRoutine(userId, gymSportId, exerciseIds, paramIds));
-
-        log.info("GENERATE_GYM_ROUTINE_OK | userId={} | routineId={}", userId, saved.getId());
+        log.info("GENERATE_GYM_ROUTINE_OK | userId={} | routineId={}", 
+                routine.getUserId(), saved.getId());
         return saved;
     }
 
@@ -89,32 +75,55 @@ public class DefaultRoutineService {
     public RoutineModel generateBoxingRoutine(String userEmail) {
         log.info("GENERATE_BOXING_ROUTINE | userEmail={}", userEmail);
 
-        Long userId = resolveUserId(userEmail);
         Long boxeoSportId = sportPersistencePort.findIdByName("Boxeo")
-                .orElseThrow(() -> new IllegalStateException("Sport 'Boxeo' no encontrado"));
+                .orElseThrow(() -> new IllegalStateException("Sport 'Boxeo' not found"));
 
-        Map<String, Long> paramIds = resolveParamIds("Repeticiones", "Peso", "Duración");
-        Map<String, Long> exerciseIds = resolveExerciseIds(BOXING_EXERCISE_NAMES);
+        RoutineModel routine = yamlBuilder.buildRoutineFromYaml("boxing_routine.yaml", userEmail, boxeoSportId);
+        RoutineModel saved = persistRoutine(routine);
 
-        RoutineModel saved = persistRoutine(
-                generator.buildBoxingRoutine(userId, boxeoSportId, exerciseIds, paramIds));
-
-        log.info("GENERATE_BOXING_ROUTINE_OK | userId={} | routineId={}", userId, saved.getId());
+        log.info("GENERATE_BOXING_ROUTINE_OK | userId={} | routineId={}", 
+                routine.getUserId(), saved.getId());
         return saved;
     }
 
-    // ── Persistencia en 3 pasos ───────────────────────────────────────────────
+    /**
+     * Método genérico para generar cualquier rutina desde YAML
+     * Útil para futuras rutinas sin tocar código Java
+     */
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "routines", allEntries = true),
+            @CacheEvict(value = "userRoutines", allEntries = true),
+            @CacheEvict(value = "recentRoutines", allEntries = true),
+            @CacheEvict(value = "routineStats", allEntries = true)
+    })
+    public RoutineModel generateRoutineFromYaml(String yamlFileName, String userEmail, Long sportId) {
+        log.info("GENERATE_ROUTINE_FROM_YAML | file={} | userEmail={}", yamlFileName, userEmail);
 
+        RoutineModel routine = yamlBuilder.buildRoutineFromYaml(yamlFileName, userEmail, sportId);
+        RoutineModel saved = persistRoutine(routine);
+
+        log.info("ROUTINE_GENERATED_FROM_YAML | routineId={} | name={}", saved.getId(), saved.getName());
+        return saved;
+    }
+
+    // ── Persistencia en 3 pasos ────────────────────────────────────────────────
+
+    /**
+     * Paso 1: Guardar rutina base
+     * Paso 2: Guardar ejercicios
+     * Paso 3: Guardar sets y parámetros
+     */
     private RoutineModel persistRoutine(RoutineModel model) {
         List<RoutineExerciseModel> exercises = model.getExercises();
         model.setExercises(null);
 
-        // Paso 1 — rutina base
+        // Paso 1 — Rutina base
         RoutineModel savedRoutine = routinePersistencePort.save(model);
         Long routineId = savedRoutine.getId();
         log.debug("ROUTINE_CREATED | routineId={}", routineId);
 
-        // Pasos 2 + 3 — ejercicios, sets y parámetros
+        // Pasos 2 + 3 — Ejercicios, sets y parámetros
         if (exercises != null) {
             for (RoutineExerciseModel ex : exercises) {
                 persistExerciseWithSets(ex, routineId);
@@ -129,13 +138,13 @@ public class DefaultRoutineService {
         exerciseModel.setSets(null);
         exerciseModel.setRoutineId(routineId);
 
-        // Paso 2 — ejercicio en la rutina
+        // Paso 2 — Ejercicio en la rutina
         RoutineExerciseModel savedExercise = routineExercisePersistencePort.save(exerciseModel);
         Long routineExerciseId = savedExercise.getId();
         log.debug("EXERCISE_ADDED | routineId={} | exerciseId={} | reId={}",
                 routineId, exerciseModel.getExerciseId(), routineExerciseId);
 
-        // Paso 3 — sets y parámetros
+        // Paso 3 — Sets y parámetros
         if (sets != null) {
             for (RoutineSetTemplateModel setModel : sets) {
                 persistSetWithParameters(setModel, routineExerciseId);
@@ -151,58 +160,13 @@ public class DefaultRoutineService {
         RoutineSetTemplateModel savedSet = setTemplatePersistencePort.save(setModel);
         Long setTemplateId = savedSet.getId();
 
+        // Cada parámetro se guarda independientemente
         if (parameters != null && !parameters.isEmpty()) {
             parameters.forEach(p -> p.setSetTemplateId(setTemplateId));
             setParameterPersistencePort.saveAll(parameters);
+            
+            log.debug("SET_PARAMETERS_SAVED | setId={} | paramCount={}",
+                    setTemplateId, parameters.size());
         }
     }
-
-    // ── Resolución de IDs en batch ────────────────────────────────────────────
-
-    private Long resolveUserId(String userEmail) {
-        return userPersistencePort.findByEmail(userEmail)
-                .map(UserModel::getId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
-    }
-
-    private Map<String, Long> resolveParamIds(String... names) {
-        return java.util.Arrays.stream(names).collect(Collectors.toMap(
-                name -> name,
-                name -> parameterPersistencePort.findIdByNameAndGlobal(name)
-                        .orElseThrow(() -> new IllegalStateException(
-                                "Parámetro global no encontrado: '" + name + "'"))));
-    }
-
-    private Map<String, Long> resolveExerciseIds(List<String> names) {
-        return names.stream().collect(Collectors.toMap(
-                name -> name,
-                name -> exercisePersistencePort.findIdByName(name)
-                        .orElseThrow(() -> new IllegalStateException(
-                                "Ejercicio no encontrado: '" + name + "'"))));
-    }
-
-    // ── Listas de nombres de ejercicio por rutina ─────────────────────────────
-
-    private static final List<String> GYM_EXERCISE_NAMES = List.of(
-            "Press de Banca", "Press Inclinado con Barra", "Fondos en Paralelas",
-            "Fly con Mancuernas", "Skull Crushers", "Jalón de Tríceps con Cuerda", "Fondos en Banco",
-            "Sentadilla con Barra", "Prensa de Pierna", "Zancadas Caminando",
-            "Extensión de Piernas en Máquina", "Elevación de Talones de Pie",
-            "Crunch Declinado con Peso", "Plancha", "Rueda Abdominal", "Crunch Lateral",
-            "Dominadas Lastradas", "Remo con Barra", "Jalón al Pecho", "Remo en Máquina T",
-            "Curl con Barra", "Curl con Mancuernas Tipo Martillo", "Curl Inclinado con Mancuernas",
-            "Press Militar con Barra", "Elevaciones Laterales", "Elevaciones Frontales",
-            "Encogimientos de Hombros con Mancuernas",
-            "Tijeras", "Plancha Lateral", "Elevación de Piernas Colgado",
-            "Sentadilla Búlgara", "Curl Femoral Acostado", "Dominadas",
-            "Pullover con Mancuerna", "Remo en Máquina");
-
-    private static final List<String> BOXING_EXERCISE_NAMES = List.of(
-            "Salto a la Comba", "Shadowboxing", "Jab – Cross",
-            "Combo 1-2-3-2 (Jab-Cross-Hook-Cross)", "Press de Banca con Mancuernas",
-            "Remo con Mancuernas (Boxeo)", "Flexiones Explosivas",
-            "Burpees", "Rounds de Saco (Cardio)", "Planchas con Rotación",
-            "Medicine Ball Slam", "Mountain Climbers",
-            "Combinaciones en Saco", "Defensa y Contraataque", "Sprints de Velocidad",
-            "Press Militar con Barra", "Dominadas");
 }
