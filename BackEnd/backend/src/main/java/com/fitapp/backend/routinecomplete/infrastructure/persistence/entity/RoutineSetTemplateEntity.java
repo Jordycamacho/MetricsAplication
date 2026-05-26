@@ -48,6 +48,6 @@ public class RoutineSetTemplateEntity {
 
     private Integer restAfterSet; // opcional
 
-    @OneToMany(mappedBy = "setTemplate", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "setTemplate", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoutineSetParameterEntity> parameters;
 }

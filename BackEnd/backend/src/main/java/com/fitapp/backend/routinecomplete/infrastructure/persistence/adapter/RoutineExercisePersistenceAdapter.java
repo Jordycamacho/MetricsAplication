@@ -88,21 +88,19 @@ public class RoutineExercisePersistenceAdapter implements RoutineExercisePersist
     @Transactional
     public void deleteByIdAndRoutineId(Long id, Long routineId) {
         log.info("DELETE_ROUTINE_EXERCISE | id={} | routineId={}", id, routineId);
-        int deleted = routineExerciseRepository.deleteByIdAndRoutineId(id, routineId);
-        if (deleted > 0) {
-            log.info("DELETE_ROUTINE_EXERCISE_OK | id={} | routineId={}", id, routineId);
-        } else {
-            log.warn("DELETE_ROUTINE_EXERCISE_NOT_FOUND | id={} | routineId={}", id, routineId);
-            throw new RuntimeException("Exercise not found in routine: id=" + id + " routineId=" + routineId);
-        }
+        RoutineExerciseEntity entity = routineExerciseRepository.findByIdAndRoutineIdWithSets(id, routineId)
+                .orElseThrow(() -> new RuntimeException("RoutineExercise not found: id=" + id + ", routineId=" + routineId));
+        routineExerciseRepository.delete(entity);
+        log.info("DELETE_ROUTINE_EXERCISE_OK | id={} | routineId={}", id, routineId);
     }
 
     @Override
     @Transactional
     public void deleteByRoutineId(Long routineId) {
         log.info("DELETE_ALL_EXERCISES | routineId={}", routineId);
-        int deleted = routineExerciseRepository.deleteByRoutineId(routineId);
-        log.info("DELETE_ALL_EXERCISES_OK | routineId={} | deleted={}", routineId, deleted);
+        List<RoutineExerciseEntity> exercises = routineExerciseRepository.findByRoutineId(routineId);
+        routineExerciseRepository.deleteAll(exercises);
+        log.info("DELETE_ALL_EXERCISES_OK | routineId={} | deleted={}", routineId, exercises.size());
     }
 
     @Override
