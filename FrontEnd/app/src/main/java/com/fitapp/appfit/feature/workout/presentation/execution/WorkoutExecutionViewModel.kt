@@ -7,16 +7,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
-import com.fitapp.appfit.feature.workout.domain.manager.LastWorkoutValuesApplier
-import com.fitapp.appfit.feature.workout.domain.usecase.LoadLastExerciseValuesUseCase
+import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
+import com.fitapp.appfit.feature.workout.domain.usecase.LoadLocalLastExecutionValuesUseCase
 import com.fitapp.appfit.feature.workout.domain.usecase.SaveWorkoutSessionUseCase
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import kotlinx.coroutines.launch
 
 class WorkoutExecutionViewModel(
     private val saveWorkoutSessionUseCase: SaveWorkoutSessionUseCase,
-    private val loadLastExerciseValuesUseCase: LoadLastExerciseValuesUseCase,
-    private val lastWorkoutValuesApplier: LastWorkoutValuesApplier,
+    private val loadLocalLastExecutionValuesUseCase: LoadLocalLastExecutionValuesUseCase,
+    private val saveLastExecutionValuesHelper: SaveLastExecutionValuesHelper,
     val activeWorkoutCache: ActiveWorkoutCache
 ) : ViewModel() {
 
@@ -77,29 +77,18 @@ class WorkoutExecutionViewModel(
     // ── Last values ───────────────────────────────────────────────────────────
 
     /**
-     * Carga los últimos valores del backend y los aplica a la rutina.
-     * Si falla, emite la rutina original para que el entrenamiento no se bloquee.
+     * Carga los últimos valores DESDE SQLITE LOCAL (no desde servidor)
      */
-    fun loadAndApplyLastValues(routine: RoutineResponse) {
-        Log.i(TAG, "LOAD_AND_APPLY_LAST_VALUES | routineId=${routine.id}")
+    fun loadAndApplyLastValuesLocal(routine: RoutineResponse) {
+        Log.i(TAG, "LOAD_AND_APPLY_LAST_VALUES_LOCAL | routineId=${routine.id}")
         _routineWithValuesState.value = Resource.Loading()
 
         viewModelScope.launch {
             try {
-                val result = loadLastExerciseValuesUseCase(routine.id)
-                val lastValues = (result as? Resource.Success)?.data ?: emptyMap()
-
-                if (lastValues.isEmpty()) {
-                    Log.i(TAG, "NO_LAST_VALUES | emitting original routine")
-                } else {
-                    Log.i(TAG, "LAST_VALUES_LOADED | count=${lastValues.size}")
-                }
-
-                val routineWithValues = lastWorkoutValuesApplier.applyValuesToRoutine(routine, lastValues)
-                _routineWithValuesState.value = Resource.Success(routineWithValues)
-
+                val resourceWithValues = loadLocalLastExecutionValuesUseCase(routine)
+                _routineWithValuesState.value = resourceWithValues
             } catch (e: Exception) {
-                Log.e(TAG, "EXCEPTION_LOADING_VALUES | error=${e.message}", e)
+                Log.e(TAG, "ERROR_LOADING_LOCAL_VALUES | ${e.message}", e)
                 _routineWithValuesState.value = Resource.Success(routine)
             }
         }

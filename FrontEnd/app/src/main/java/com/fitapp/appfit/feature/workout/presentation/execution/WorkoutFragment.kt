@@ -23,16 +23,20 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.fitapp.appfit.core.database.AppDatabase
 import com.fitapp.appfit.core.notification.WorkoutNotificationManager
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentWorkoutBinding
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
+import com.fitapp.appfit.feature.workout.data.repository.LocalLastExecutionValuesHelper
+import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.domain.manager.LastWorkoutValuesApplier
 import com.fitapp.appfit.feature.workout.domain.usecase.LoadLastExerciseValuesUseCase
 import com.fitapp.appfit.feature.workout.domain.usecase.SaveWorkoutSessionUseCase
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.data.repository.WorkoutRepositoryImpl
+import com.fitapp.appfit.feature.workout.domain.usecase.LoadLocalLastExecutionValuesUseCase
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.service.RestTimerService
@@ -122,13 +126,29 @@ class WorkoutFragment : Fragment() {
         currentUserId = "usuario_temporal"
         WorkoutNotificationManager.createChannel(requireContext())
 
+        // Obtener base de datos y crear helpers locales
+        val appDatabase = AppDatabase.getInstance(requireContext())
+        val lastSetExecutionDao = appDatabase.lastSetExecutionDao()
+
+        val localLastExecutionHelper = LocalLastExecutionValuesHelper(lastSetExecutionDao)
+        val saveLastExecutionHelper = SaveLastExecutionValuesHelper(lastSetExecutionDao)
+
+        // Crear los use cases
         val repository = WorkoutRepositoryImpl(requireContext())
-        val saveUseCase = SaveWorkoutSessionUseCase(repository)
-        val loadUseCase = LoadLastExerciseValuesUseCase(repository)
+        val saveUseCase = SaveWorkoutSessionUseCase(repository, saveLastExecutionHelper)
+        val loadLocalUseCase = LoadLocalLastExecutionValuesUseCase(localLastExecutionHelper)
+
         val applier = LastWorkoutValuesApplier()
         val cache = ActiveWorkoutCache(requireContext())
 
-        val factory = WorkoutExecutionViewModelFactory(saveUseCase, loadUseCase, applier, cache)
+        // Crear el ViewModel
+        val factory = WorkoutExecutionViewModelFactory(
+            saveUseCase,
+            loadLocalUseCase,
+            applier,
+            saveLastExecutionHelper,
+            cache
+        )
         workoutViewModel = ViewModelProvider(this, factory)[WorkoutExecutionViewModel::class.java]
 
         stateManager = SetParameterStateManager()
@@ -327,8 +347,8 @@ class WorkoutFragment : Fragment() {
     }
 
     private fun loadLastValuesAndSubmit(routine: RoutineResponse) {
-        Log.i(TAG, "LOAD_LAST_VALUES_AND_SUBMIT | routineId=${routine.id}")
-        workoutViewModel.loadAndApplyLastValues(routine)
+        Log.i(TAG, "LOAD_LAST_VALUES_FROM_LOCAL | routineId=${routine.id}")
+        workoutViewModel.loadAndApplyLastValuesLocal(routine)
     }
 
     // ── RecyclerView ───────────────────────────────────────────────────────

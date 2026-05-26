@@ -19,6 +19,8 @@ import com.fitapp.appfit.feature.routine.database.entity.RoutineEntity
 import com.fitapp.appfit.feature.routine.database.entity.RoutineExerciseEntity
 import com.fitapp.appfit.feature.routine.database.entity.SetParameterEntity
 import com.fitapp.appfit.feature.routine.database.entity.SetTemplateEntity
+import com.fitapp.appfit.feature.workout.data.database.dao.LastSetExecutionDao
+import com.fitapp.appfit.feature.workout.data.database.entity.LastSetExecutionEntity
 import com.fitapp.appfit.feature.workout.data.database.entity.WorkoutSessionEntity
 import com.fitapp.appfit.feature.workout.data.database.entity.WorkoutSetResultEntity
 
@@ -30,14 +32,16 @@ import com.fitapp.appfit.feature.workout.data.database.entity.WorkoutSetResultEn
         SetParameterEntity::class,
         PendingSyncOperation::class,
         WorkoutSessionEntity::class,
-        WorkoutSetResultEntity::class
+        WorkoutSetResultEntity::class,
+        LastSetExecutionEntity::class
     ],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
+    abstract fun lastSetExecutionDao(): LastSetExecutionDao
     abstract fun routineDao(): RoutineDao
     abstract fun routineExerciseDao(): RoutineExerciseDao
     abstract fun setTemplateDao(): SetTemplateDao
@@ -129,6 +133,67 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS `last_set_executions` (
+                `routineId` INTEGER NOT NULL,
+                `setTemplateId` INTEGER NOT NULL,
+                `parameterId` INTEGER NOT NULL,
+                `parameterName` TEXT,
+                `parameterType` TEXT,
+                `unit` TEXT,
+                `lastRepetitions` INTEGER,
+                `lastNumericValue` REAL,
+                `lastDurationValue` INTEGER,
+                `lastIntegerValue` INTEGER,
+                `recordedAt` INTEGER NOT NULL,
+                PRIMARY KEY (`routineId`, `setTemplateId`, `parameterId`),
+                FOREIGN KEY (`routineId`) REFERENCES `routines`(`id`) ON DELETE CASCADE
+            )
+            """.trimIndent()
+                )
+
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_last_set_executions_routineId` " +
+                            "ON `last_set_executions` (`routineId`)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_last_set_executions_setTemplateId` " +
+                            "ON `last_set_executions` (`setTemplateId`)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_last_set_executions_routineId_setTemplateId` " +
+                            "ON `last_set_executions` (`routineId`, `setTemplateId`)"
+                )
+            }
+        }
+
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `last_set_executions` (
+                        `routineId` INTEGER NOT NULL,
+                        `setTemplateId` INTEGER NOT NULL,
+                        `parameterId` INTEGER NOT NULL,
+                        `parameterName` TEXT,
+                        `parameterType` TEXT,
+                        `unit` TEXT,
+                        `lastRepetitions` INTEGER,
+                        `lastNumericValue` REAL,
+                        `lastDurationValue` INTEGER,
+                        `lastIntegerValue` INTEGER,
+                        `recordedAt` INTEGER NOT NULL,
+                        PRIMARY KEY (`routineId`, `setTemplateId`, `parameterId`),
+                        FOREIGN KEY (`routineId`) REFERENCES `routines`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_last_set_executions_routineId ON last_set_executions(routineId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_last_set_executions_setTemplateId ON last_set_executions(setTemplateId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_last_set_executions_routineId_setTemplateId ON last_set_executions(routineId, setTemplateId)")
+            }
+        }
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -136,7 +201,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "fitapp_offline.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8 )
                     .build()
                 INSTANCE = instance
                 instance

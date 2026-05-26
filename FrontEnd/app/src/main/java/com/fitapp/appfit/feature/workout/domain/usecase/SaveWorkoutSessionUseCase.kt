@@ -1,12 +1,13 @@
 package com.fitapp.appfit.feature.workout.domain.usecase
 
 import android.util.Log
+import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
+import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.domain.repository.IWorkoutRepository
-import com.fitapp.appfit.feature.workout.model.request.SaveWorkoutSessionRequest
-
 
 class SaveWorkoutSessionUseCase(
-    private val workoutRepository: IWorkoutRepository
+    private val workoutRepository: IWorkoutRepository,
+    private val saveLastExecutionValuesHelper: SaveLastExecutionValuesHelper
 ) {
 
     companion object {
@@ -41,7 +42,7 @@ class SaveWorkoutSessionUseCase(
         }
 
         return try {
-            workoutRepository.saveWorkoutSession(
+            val result = workoutRepository.saveWorkoutSession(
                 routineId = routineId,
                 userId = userId,
                 setParamState = setParamState,
@@ -49,12 +50,28 @@ class SaveWorkoutSessionUseCase(
                 startedAt = startedAt,
                 finishedAt = finishedAt,
                 performanceScore = performanceScore
-            ).also {
-                when {
-                    it.isSuccess -> Log.i(TAG, "SAVE_SUCCESS | sessionId=${it.getOrNull()}")
-                    else -> Log.e(TAG, "SAVE_FAILED | error=${it.exceptionOrNull()?.message}")
+            )
+
+            if (result.isSuccess) {
+                try {
+
+                    saveLastExecutionValuesHelper.saveExecutedValues(
+                        routineId,
+                        setParamState,
+                        emptyMap()
+                    )
+                    Log.i(TAG, "EXECUTION_VALUES_SAVED_TO_LOCAL_DB | routineId=$routineId | sets=${setParamState.size}")
+                } catch (e: Exception) {
+                    Log.e(TAG, "ERROR_SAVING_TO_LOCAL_DB | ${e.message}", e)
                 }
             }
+
+            when {
+                result.isSuccess -> Log.i(TAG, "SAVE_SUCCESS | sessionId=${result.getOrNull()}")
+                else -> Log.e(TAG, "SAVE_FAILED | error=${result.exceptionOrNull()?.message}")
+            }
+
+            result
         } catch (e: Exception) {
             Log.e(TAG, "EXCEPTION_DURING_SAVE | error=${e.message}", e)
             Result.failure(e)

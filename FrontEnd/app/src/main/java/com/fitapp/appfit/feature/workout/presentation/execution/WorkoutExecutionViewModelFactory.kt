@@ -2,15 +2,17 @@ package com.fitapp.appfit.feature.workout.presentation.execution
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.domain.manager.LastWorkoutValuesApplier
-import com.fitapp.appfit.feature.workout.domain.usecase.LoadLastExerciseValuesUseCase
+import com.fitapp.appfit.feature.workout.domain.usecase.LoadLocalLastExecutionValuesUseCase
 import com.fitapp.appfit.feature.workout.domain.usecase.SaveWorkoutSessionUseCase
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 
 class WorkoutExecutionViewModelFactory(
     private val saveWorkoutSessionUseCase: SaveWorkoutSessionUseCase,
-    private val loadLastExerciseValuesUseCase: LoadLastExerciseValuesUseCase,
+    private val loadLocalLastExecutionValuesUseCase: LoadLocalLastExecutionValuesUseCase,
     private val lastWorkoutValuesApplier: LastWorkoutValuesApplier,
+    private val saveLastExecutionValuesHelper: SaveLastExecutionValuesHelper,
     private val activeWorkoutCache: ActiveWorkoutCache
 ) : ViewModelProvider.Factory {
 
@@ -19,8 +21,8 @@ class WorkoutExecutionViewModelFactory(
         if (modelClass.isAssignableFrom(WorkoutExecutionViewModel::class.java)) {
             return WorkoutExecutionViewModel(
                 saveWorkoutSessionUseCase,
-                loadLastExerciseValuesUseCase,
-                lastWorkoutValuesApplier,
+                loadLocalLastExecutionValuesUseCase,
+                saveLastExecutionValuesHelper,
                 activeWorkoutCache
             ) as T
         }
