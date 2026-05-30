@@ -1,0 +1,28 @@
+---
+description: Sync offline Android — WorkManager, cola y estados
+globs: FrontEnd/**/sync/**/*.kt
+alwaysApply: false
+---
+
+# Sync offline
+
+## Componentes
+- `SyncWorker` — procesa cola `PendingSyncOperation` + sesiones workout pendientes
+- `NetworkMonitor` — dispara sync al recuperar conectividad
+- `RoutineRepository` — cache Room + encola operaciones offline
+- `WorkoutRepositoryImpl.syncAllPendingSessions()` — sube sesiones locales
+
+## Tipos de entidad en cola
+- `ROUTINE` — implementado
+- `ROUTINE_EXERCISE` — **stub** (borra op sin sincronizar; pendiente fix)
+- `SET_TEMPLATE` — definido pero no procesado en SyncWorker
+
+## Problemas conocidos
+- `SyncWorker.schedulePeriodic()` y `NetworkMonitor.start()` **no se invocan al arrancar** (`App.kt`)
+- Verificar wiring antes de asumir que sync funciona
+
+## Al implementar sync
+1. Encolar con tipo y operación correctos
+2. Procesar en SyncWorker con idempotencia
+3. Actualizar estado Room a `SYNCED` solo tras éxito API
+4. Probar offline → online manualmente

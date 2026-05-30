@@ -1,0 +1,33 @@
+---
+description: Convenciones Android Kotlin MVVM
+globs: FrontEnd/**/*.kt
+alwaysApply: false
+---
+
+# Android (Kotlin)
+
+## Arquitectura
+- **MVVM + Repository** por feature bajo `feature/{nombre}/`
+- Capas: `presentation/` (Fragment, ViewModel), `domain/`, `data/` (Retrofit + Room)
+- Core compartido: `core/database/`, `core/sync/`, `core/network/`
+
+## Room (`AppDatabase` v8)
+Entidades: rutinas, ejercicios de rutina, sets, parámetros, cola sync, sesiones workout.
+Estados sync: `SYNCED`, `PENDING_CREATE`, `PENDING_UPDATE`, `PENDING_DELETE`.
+
+## Reglas
+- minSdk **31**, compileSdk **36**
+- Navegación: `res/navigation/mobile_navigation.xml`
+- Errores: usar handlers existentes (`RoutineErrorHandler`, etc.) cuando aplique
+- **No dejar `TODO()`** en branches de UI — crashea en runtime
+- Preferir datos locales en ejecución de rutina cuando el backlog lo indique
+
+## Flavors API
+- `dev` → `http://192.168.1.15:8080/`
+- `local` → `http://192.168.1.15:8082/`
+- `prod` → `https://api.jnobfit.online/`
+
+## Áreas sensibles v1
+- `feature/workout/presentation/execution/` — ejecución de rutinas
+- `core/sync/SyncWorker.kt` — cola offline
+- `feature/routine/` — CRUD rutinas y sets

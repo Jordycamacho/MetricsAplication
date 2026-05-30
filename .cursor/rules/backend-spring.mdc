@@ -1,0 +1,30 @@
+---
+description: Convenciones backend Spring Boot hexagonal
+globs: BackEnd/**/*.java
+alwaysApply: false
+---
+
+# Backend Spring Boot
+
+## Arquitectura hexagonal
+```
+infrastructure/  → controllers, JPA entities, adapters, config, security
+application/       → services (casos de uso), DTOs, ports in/out
+domain/            → modelos puro de negocio, excepciones
+```
+
+## Reglas
+- Nuevos endpoints: controller → service (port) → adapter persistence
+- DTOs en `application/dto`; mapeo con MapStruct cuando ya exista el patrón
+- Migraciones Flyway en `src/main/resources/db/migration/V{N}__desc.sql`
+- **Prod:** `ddl-auto=validate` — nunca depender de auto-update en producción
+- JWT + Redis blacklist; OAuth2 Google ya configurado
+- Puerto interno Docker: **8080**; expuesto en host como **8082**
+
+## Módulos API principales
+`/api/auth`, `/api/users`, `/api/exercises`, `/api/categories`, `/api/routines`,
+`/api/routine-set-templates`, `/api/packages`, `/api/workouts`, `/api/subscriptions`
+
+## Evitar
+- Renombrar paquetes existentes (`Exercise`, `suscription`, `aplication` — typos históricos)
+- Crear métricas API sin acordarlo (entidades existen, API aún no)

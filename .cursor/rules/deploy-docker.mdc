@@ -1,0 +1,35 @@
+---
+description: Docker, variables de entorno y despliegue VPS
+globs: BackEnd/**/{docker-compose.yml,Dockerfile,.env*,application*.properties}
+alwaysApply: false
+---
+
+# Deploy e infraestructura
+
+## Docker Compose (`BackEnd/backend/`)
+Servicios: `db` (PostgreSQL 17), `redis`, `app` (Spring), `prometheus`, `grafana`.
+
+| Servicio | Puerto host |
+|----------|-------------|
+| Backend API | 8082 → 8080 |
+| Prometheus | 127.0.0.1:9090 |
+| Grafana | 127.0.0.1:3000 |
+
+## Setup
+```bash
+cd BackEnd/backend
+cp .env.example .env   # editar valores reales
+docker compose up -d
+curl http://localhost:8082/actuator/health
+```
+
+## Variables críticas
+`DB_*`, `REDIS_*`, `JWT_SECRET`, `GOOGLE_*`, `APP_BASE_URL`, `CORS_*`, `MAIL_*`, `GRAFANA_*`
+
+## Perfiles Spring
+- `dev` — Swagger activo, logs SQL (local sin Docker app)
+- `prod` — Docker ENTRYPOINT fuerza `-Dspring.profiles.active=prod`
+
+## VPS
+- Dominio prod API: `https://api.jnobfit.online/`
+- Grafana/Prometheus solo localhost en compose (túnel SSH si necesitas acceso remoto)

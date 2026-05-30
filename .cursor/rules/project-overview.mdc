@@ -1,0 +1,27 @@
+---
+description: Visión general de JNOBFIT — stack, objetivo v1 e idioma
+alwaysApply: true
+---
+
+# JNOBFIT — Contexto del proyecto
+
+App fitness full-stack: **JNOBFIT** (package Android `com.fitapp.appfit`, backend `com.fitapp.backend`).
+
+## Stack
+- **Backend:** Spring Boot 3.5.3, Java 21, arquitectura hexagonal, PostgreSQL 17, Flyway, Redis, Docker
+- **Android:** Kotlin, MVVM + Repository, Room (SQLite), Retrofit, WorkManager sync
+- **Deploy:** Docker Compose en VPS; prod en `https://api.jnobfit.online/`
+
+## Estructura
+- `BackEnd/backend/` — API REST (~14 controllers)
+- `FrontEnd/` — app Android (flavors: dev `:8080`, local `:8082`, prod)
+- `docs/BACKLOG.md` — lista priorizada de tareas; consultar antes de implementar
+
+## Objetivo actual
+**Primera versión funcional (v1)** con el mínimo de errores. Priorizar fixes de Android (ejecución de rutinas, workout, sync) sobre features nuevas.
+
+## Convenciones de trabajo
+- Responder y documentar en **español**
+- Cambios **mínimos y focalizados**; no refactor masivo en fixes de v1
+- No commitear sin que el usuario lo pida
+- Rama principal de referencia: `main` (también existe `develop`)
