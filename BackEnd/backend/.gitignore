@@ -31,7 +31,7 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
-.vscode/
+.vscode/settings.json  
 
 # ══════════════════════════════════════════════════════════
 # .gitignore — raíz del proyecto
@@ -65,3 +65,7 @@ Thumbs.db
 # ── Logs ──────────────────────────────────────────────────
 *.log
 logs/
+
+# ── SQL TOOLS ────────────────────────────────────────
+*.sql
+*.db
