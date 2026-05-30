@@ -2,6 +2,7 @@ package com.fitapp.appfit.feature.workout.presentation.execution
 
 import android.graphics.Color
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
@@ -18,9 +19,16 @@ import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetP
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
+import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
+import com.fitapp.appfit.feature.workout.util.WorkoutRepeatButtonHelper
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutSetAdapterClassic(
+    private val onShowNumericInput: (
+        RoutineSetParameterResponse,
+        Double,
+        (Double) -> Unit
+    ) -> Unit,
     private val stateManager: SetParameterStateManager,
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
@@ -93,6 +101,13 @@ class WorkoutSetAdapterClassic(
         private var durationTimerActive = false
         private var durationDisplayView: TextView? = null
 
+        private val decRepsHelper = WorkoutRepeatButtonHelper()
+        private val incRepsHelper = WorkoutRepeatButtonHelper()
+        private val decParamHelper = WorkoutRepeatButtonHelper()
+        private val incParamHelper = WorkoutRepeatButtonHelper()
+        private val decDurationHelper = WorkoutRepeatButtonHelper()
+        private val incDurationHelper = WorkoutRepeatButtonHelper()
+
         private val restTimer = RestTimer(
             onTick = { s ->
                 if (restTimerActive && itemView.isAttachedToWindow) {
@@ -142,6 +157,22 @@ class WorkoutSetAdapterClassic(
             durationTimerActive = false
             restTimer.stop()
             durationTimer.stop()
+            clearButtonHelpers()
+        }
+
+        private fun clearButtonHelpers() {
+            decRepsHelper.clear()
+            incRepsHelper.clear()
+            decParamHelper.clear()
+            incParamHelper.clear()
+            decDurationHelper.clear()
+            incDurationHelper.clear()
+            btnDecReps.setOnTouchListener(null)
+            btnIncReps.setOnTouchListener(null)
+            btnDecParam.setOnTouchListener(null)
+            btnIncParam.setOnTouchListener(null)
+            btnDecDurationExtra.setOnTouchListener(null)
+            btnIncDurationExtra.setOnTouchListener(null)
         }
 
         fun bind(set: RoutineSetTemplateResponse, position: Int) {
@@ -166,26 +197,11 @@ class WorkoutSetAdapterClassic(
         /**
          * Obtiene el parámetro "Repeticiones" (identificado por nombre "Repeticiones")
          */
-        private fun getRepsParameter(): RoutineSetParameterResponse? {
-            return currentSet?.parameters?.firstOrNull { param ->
-                param.parameterName?.lowercase() == "repeticiones"
-                        || param.parameterName?.lowercase() == "reps"
-            }
-        }
+        private fun getRepsParameter(): RoutineSetParameterResponse? =
+            WorkoutParameterHelper.findRepsParameter(currentSet?.parameters)
 
-        /**
-         * Obtiene el parámetro numérico (Peso, Distancia, etc.)
-         * EXCLUYE el parámetro de Repeticiones
-         */
-        private fun getNumericParameter(): RoutineSetParameterResponse? {
-            return currentSet?.parameters?.firstOrNull { param ->
-                (param.parameterName?.lowercase() != "repeticiones"
-                        && param.parameterName?.lowercase() != "reps")
-                        && (param.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
-                        || param.numericValue != null
-                        || param.integerValue != null)
-            }
-        }
+        private fun getNumericParameter(): RoutineSetParameterResponse? =
+            WorkoutParameterHelper.findNumericParameter(currentSet?.parameters)
 
         /**
          * Obtiene el parámetro de duración
@@ -212,12 +228,7 @@ class WorkoutSetAdapterClassic(
 
         private fun getNumericValue(): Double? {
             val numericParam = getNumericParameter() ?: return null
-            val values = stateManager.getParameterValues(currentSetId, numericParam.parameterId)
-
-            return values?.numericValue
-                ?: values?.integerValue?.toDouble()
-                ?: numericParam.numericValue
-                ?: numericParam.integerValue?.toDouble()
+            return WorkoutParameterHelper.readNumericValue(currentSetId, numericParam, stateManager)
         }
 
         private fun getDurationValue(): Long {
@@ -227,14 +238,9 @@ class WorkoutSetAdapterClassic(
         }
 
         private fun getNumericUnit(): String {
-            val param = getNumericParameter() ?: return "KG"
+            val param = getNumericParameter() ?: return "—"
             Log.d("PARAM_UNIT_DEBUG", "paramName=${param.parameterName}, serverUnit=${param.unit}, paramType=${param.parameterType}")
-            return param.unit ?: when (param.parameterType?.uppercase()) {
-                "DISTANCE"   -> "M"
-                "PERCENTAGE" -> "%"
-                "INTEGER"    -> "REP"
-                else         -> "KG"
-            }
+            return WorkoutParameterHelper.displayUnit(param)
         }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -329,7 +335,7 @@ class WorkoutSetAdapterClassic(
 
             val repsParam = getRepsParameter() ?: return
 
-            btnDecReps.setOnClickListener {
+            decRepsHelper.attach(btnDecReps, onStep = {
                 val cur = getRepsValue() ?: 0
                 if (cur > 0) {
                     val n = cur - 1
@@ -337,47 +343,115 @@ class WorkoutSetAdapterClassic(
                     tvRepsValue.text = n.toString()
                     onValueChanged(set, "reps", n.toDouble())
                 }
-            }
-            btnIncReps.setOnClickListener {
+            })
+            incRepsHelper.attach(btnIncReps, onStep = {
                 val n = (getRepsValue() ?: 0) + 1
                 stateManager.updateIntegerValue(currentSetId, repsParam.parameterId, n)
                 tvRepsValue.text = n.toString()
                 onValueChanged(set, "reps", n.toDouble())
+            })
+
+            attachManualInputLongPress(tvRepsValue, repsParam) {
+                showManualNumericInput(set, repsParam)
             }
         }
 
         private fun setupNumericColumn(set: RoutineSetTemplateResponse) {
             layoutParam.visibility = View.VISIBLE
-            val value = getNumericValue() ?: 0.0
-            val unit  = getNumericUnit()
             val numericParam = getNumericParameter() ?: return
+            val value = getNumericValue() ?: 0.0
+            val unit = getNumericUnit()
 
             tvParamUnit.text = unit
-            tvParamValue.text = formatValue(value, numericParam.parameterType?.uppercase() ?: "NUMBER")
+            tvParamValue.text = WorkoutParameterHelper.formatNumericValue(value, numericParam)
 
-            val step = stepFor(unit, numericParam.parameterType?.uppercase() ?: "NUMBER")
-
-            btnDecParam.setOnClickListener {
+            decParamHelper.attach(btnDecParam, onStep = {
                 val cur = getNumericValue() ?: 0.0
-                if (cur >= step) {
-                    val n = cur - step
-                    updateNumericInStateManager(numericParam.parameterId, n, numericParam.parameterType?.uppercase() ?: "NUMBER")
-                    tvParamValue.text = formatValue(n, numericParam.parameterType?.uppercase() ?: "NUMBER")
-                    onValueChanged(set, "param", n)
+                if (cur > 0.0) {
+                    val n = WorkoutParameterHelper.adjustNumericByButton(cur, -1)
+                    applyNumericValue(set, numericParam, n)
                 }
-            }
-            btnIncParam.setOnClickListener {
-                val n = (getNumericValue() ?: 0.0) + step
-                updateNumericInStateManager(numericParam.parameterId, n, numericParam.parameterType?.uppercase() ?: "NUMBER")
-                tvParamValue.text = formatValue(n, numericParam.parameterType?.uppercase() ?: "NUMBER")
-                onValueChanged(set, "param", n)
+            })
+            incParamHelper.attach(btnIncParam, onStep = {
+                val cur = getNumericValue() ?: 0.0
+                val n = WorkoutParameterHelper.adjustNumericByButton(cur, 1)
+                applyNumericValue(set, numericParam, n)
+            })
+
+            attachManualInputLongPress(tvParamValue, numericParam) {
+                showManualNumericInput(set, numericParam)
             }
         }
 
-        private fun updateNumericInStateManager(paramId: Long, value: Double, type: String) {
-            when (type) {
-                "INTEGER" -> stateManager.updateIntegerValue(currentSetId, paramId, value.toInt())
-                else -> stateManager.updateNumericValue(currentSetId, paramId, value)
+        private fun applyNumericValue(
+            set: RoutineSetTemplateResponse,
+            numericParam: RoutineSetParameterResponse,
+            value: Double
+        ) {
+            updateNumericInStateManager(numericParam, value)
+            tvParamValue.text = WorkoutParameterHelper.formatNumericValue(value, numericParam)
+            onValueChanged(set, "param", value)
+        }
+
+        private fun showManualNumericInput(
+            set: RoutineSetTemplateResponse,
+            param: RoutineSetParameterResponse
+        ) {
+            val current = if (WorkoutParameterHelper.isRepsParameter(param)) {
+                (getRepsValue() ?: 0).toDouble()
+            } else {
+                getNumericValue() ?: 0.0
+            }
+            onShowNumericInput(param, current) { newValue ->
+                applyParameterValue(set, param, newValue)
+            }
+        }
+
+        private fun applyParameterValue(
+            set: RoutineSetTemplateResponse,
+            param: RoutineSetParameterResponse,
+            value: Double
+        ) {
+            if (WorkoutParameterHelper.isRepsParameter(param)) {
+                val intVal = value.toInt()
+                stateManager.updateIntegerValue(currentSetId, param.parameterId, intVal)
+                tvRepsValue.text = intVal.toString()
+                onValueChanged(set, "reps", value)
+            } else {
+                applyNumericValue(set, param, value)
+            }
+        }
+
+        private fun attachManualInputLongPress(
+            valueView: TextView,
+            param: RoutineSetParameterResponse,
+            onShow: () -> Unit
+        ) {
+            if (!WorkoutParameterHelper.supportsManualInput(param)) return
+
+            valueView.isClickable = true
+            valueView.isLongClickable = true
+            valueView.setOnTouchListener { v, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN ->
+                        v.parent?.requestDisallowInterceptTouchEvent(true)
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
+                        v.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+                false
+            }
+            valueView.setOnLongClickListener {
+                WorkoutHaptics.exerciseStart(itemView.context)
+                onShow()
+                true
+            }
+        }
+
+        private fun updateNumericInStateManager(param: RoutineSetParameterResponse, value: Double) {
+            if (WorkoutParameterHelper.isIntegerInput(param)) {
+                stateManager.updateIntegerValue(currentSetId, param.parameterId, value.toInt())
+            } else {
+                stateManager.updateNumericValue(currentSetId, param.parameterId, value)
             }
         }
 
@@ -406,8 +480,8 @@ class WorkoutSetAdapterClassic(
             durationDisplayView = tvValue
 
             tvValue.setOnClickListener { toggleDuration(set, position) }
-            btnDec.setOnClickListener { adjustDuration(set, -5L) }
-            btnInc.setOnClickListener { adjustDuration(set, +5L) }
+            decDurationHelper.attach(btnDec, onStep = { adjustDuration(set, -5L) })
+            incDurationHelper.attach(btnInc, onStep = { adjustDuration(set, 5L) })
 
             autoStartIfSequence(set, position)
         }
@@ -422,8 +496,8 @@ class WorkoutSetAdapterClassic(
             durationDisplayView = tvDurationTimer
 
             tvDurationTimer.setOnClickListener { toggleDuration(set, position) }
-            btnDecDurationExtra.setOnClickListener { adjustDuration(set, -5L) }
-            btnIncDurationExtra.setOnClickListener { adjustDuration(set, +5L) }
+            decDurationHelper.attach(btnDecDurationExtra, onStep = { adjustDuration(set, -5L) })
+            incDurationHelper.attach(btnIncDurationExtra, onStep = { adjustDuration(set, 5L) })
 
             autoStartIfSequence(set, position)
         }
@@ -544,13 +618,17 @@ class WorkoutSetAdapterClassic(
             tvRepsValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary_dark))
             tvRepsValue.textSize = 38f
             tvRepsValue.isClickable = false
+            tvRepsValue.isLongClickable = false
             tvRepsValue.isFocusable = false
             tvRepsValue.setOnClickListener(null)
+            tvRepsValue.setOnLongClickListener(null)
             tvParamValue.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary_dark))
             tvParamValue.textSize = 38f
             tvParamValue.isClickable = false
+            tvParamValue.isLongClickable = false
             tvParamValue.isFocusable = false
             tvParamValue.setOnClickListener(null)
+            tvParamValue.setOnLongClickListener(null)
         }
 
         private fun setColumnWeight(layout: LinearLayout, weight: Float) {
@@ -570,20 +648,6 @@ class WorkoutSetAdapterClassic(
                 if (hasDuration) "TIEMPO" else null,
                 if (hasNumeric) unit else null
             ).joinToString(" · ")
-        }
-
-        private fun stepFor(unit: String, type: String): Double = when {
-            type == "PERCENTAGE" -> 5.0
-            type == "DISTANCE"   -> 1.0
-            unit.uppercase() == "KG" -> 2.5
-            unit.uppercase() == "LB" -> 5.0
-            else -> 1.0
-        }
-
-        private fun formatValue(v: Double, type: String): String = when (type) {
-            "PERCENTAGE" -> "%.0f".format(v)
-            "INTEGER"    -> v.toInt().toString()
-            else         -> if (v % 1.0 == 0.0) v.toInt().toString() else "%.1f".format(v)
         }
 
         private fun formatDuration(seconds: Long): String {

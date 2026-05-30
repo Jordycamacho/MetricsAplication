@@ -39,6 +39,7 @@ import com.fitapp.appfit.feature.workout.data.repository.WorkoutRepositoryImpl
 import com.fitapp.appfit.feature.workout.domain.usecase.LoadLocalLastExecutionValuesUseCase
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
+import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 import com.fitapp.appfit.feature.workout.service.RestTimerService
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -355,6 +356,15 @@ class WorkoutFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = WorkoutDayAdapter(
+            onShowNumericInput = { param, current, onConfirm ->
+                if (!isAdded) return@WorkoutDayAdapter
+                WorkoutNumericValueBottomSheet.show(
+                    fragmentManager = parentFragmentManager,
+                    param = param,
+                    currentValue = current,
+                    onConfirm = onConfirm
+                )
+            },
             stateManager = stateManager,
             onSetValueChanged = { exercise, set, valueType, newValue ->
                 stateManager.initializeSet(
@@ -364,19 +374,20 @@ class WorkoutFragment : Fragment() {
                     setTemplate = set
                 )
                 when (valueType) {
-                    "reps" -> stateManager.updateReps(set.id, newValue.toInt())
-                    "param" -> set.parameters?.firstOrNull()?.let { param ->
-                        when (param.parameterType?.uppercase()) {
-                            "NUMBER", "DISTANCE", "PERCENTAGE" ->
-                                stateManager.updateNumericValue(set.id, param.parameterId, newValue)
-                            "INTEGER" ->
-                                stateManager.updateIntegerValue(set.id, param.parameterId, newValue.toInt())
+                    "reps" -> WorkoutParameterHelper.findRepsParameter(set.parameters)?.let { repsParam ->
+                        stateManager.updateIntegerValue(set.id, repsParam.parameterId, newValue.toInt())
+                    }
+                    "param" -> WorkoutParameterHelper.findNumericParameter(set.parameters)?.let { param ->
+                        if (WorkoutParameterHelper.isIntegerInput(param)) {
+                            stateManager.updateIntegerValue(set.id, param.parameterId, newValue.toInt())
+                        } else {
+                            stateManager.updateNumericValue(set.id, param.parameterId, newValue)
                         }
                     }
-                    "duration" -> set.parameters?.firstOrNull()?.let { param ->
-                        if (param.parameterType?.uppercase() == "DURATION") {
-                            stateManager.updateDurationValue(set.id, param.parameterId, newValue.toLong())
-                        }
+                    "duration" -> set.parameters?.firstOrNull { param ->
+                        param.parameterType?.uppercase() == "DURATION"
+                    }?.let { param ->
+                        stateManager.updateDurationValue(set.id, param.parameterId, newValue.toLong())
                     }
                 }
                 workoutViewModel.persistParamState(stateManager.exportState())

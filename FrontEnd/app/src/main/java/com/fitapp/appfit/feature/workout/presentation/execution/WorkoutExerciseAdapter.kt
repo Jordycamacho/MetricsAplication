@@ -16,6 +16,7 @@ import com.fitapp.appfit.core.util.RestTimer
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
+import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
@@ -24,6 +25,7 @@ import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class WorkoutExerciseAdapter(
+    private val onShowNumericInput: (RoutineSetParameterResponse, Double, (Double) -> Unit) -> Unit,
     private val stateManager: SetParameterStateManager,
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit,
@@ -91,6 +93,7 @@ class WorkoutExerciseAdapter(
             val viewType = WorkoutPreferences.getSetViewType(itemView.context)
             when (viewType) {
                 WorkoutPreferences.SetViewType.CLASSIC -> WorkoutSetAdapterClassic(
+                    onShowNumericInput = onShowNumericInput,
                     stateManager = stateManager,
                     onValueChanged = { set, type, value ->
                         currentExercise?.let { onSetValueChanged(it, set, type, value) }

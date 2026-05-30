@@ -12,11 +12,13 @@ import com.fitapp.appfit.R
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
+import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutDay
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 
 class WorkoutDayAdapter(
+    private val onShowNumericInput: (RoutineSetParameterResponse, Double, (Double) -> Unit) -> Unit,
     private val stateManager: SetParameterStateManager,
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit,
@@ -126,6 +128,7 @@ class WorkoutDayAdapter(
 
             if (exerciseAdapter == null) {
                 exerciseAdapter = WorkoutExerciseAdapter(
+                    onShowNumericInput = onShowNumericInput,
                     stateManager = stateManager,
                     onSetValueChanged = onSetValueChanged,
                     onSetCompletedToggled = onSetCompletedToggled,

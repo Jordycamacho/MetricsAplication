@@ -21,6 +21,7 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSet
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
+import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutSetAdapter(
@@ -58,17 +59,14 @@ class WorkoutSetAdapter(
             ?.let { currentReps[setId] = it.repetitions!! }
         params.firstOrNull { it.parameterType?.uppercase() == "DURATION" && it.durationValue != null }
             ?.let { currentDuration[setId] = it.durationValue!! }
-        val numericParam = params.firstOrNull { p ->
-            p.parameterType?.uppercase() in listOf("NUMBER", "INTEGER", "DISTANCE", "PERCENTAGE")
-                    && (p.numericValue != null || p.integerValue != null)
-        }
+        val numericParam = WorkoutParameterHelper.findNumericParameter(params)
         if (numericParam != null) {
             currentParam[setId] = numericParam.numericValue ?: numericParam.integerValue?.toDouble() ?: 0.0
-            paramLabel[setId]   = numericParam.unit ?: inferUnit(numericParam.parameterType, numericParam.parameterName)
-            paramType[setId]    = numericParam.parameterType?.lowercase() ?: "number"
+            paramLabel[setId] = WorkoutParameterHelper.displayUnit(numericParam)
+            paramType[setId] = numericParam.parameterType?.lowercase() ?: "number"
         } else {
             currentParam[setId] = 0.0
-            paramLabel[setId]   = "KG"
+            paramLabel[setId]   = "—"
             paramType[setId]    = "number"
         }
     }
@@ -318,11 +316,12 @@ class WorkoutSetAdapter(
         private fun setupParamPicker(set: RoutineSetTemplateResponse) {
             layoutParam.visibility = View.VISIBLE
             pickerParam.visibility = View.VISIBLE
-            val unit  = paramLabel[set.id] ?: "KG"
-            val type  = paramType[set.id]  ?: "number"
+            val numericParam = WorkoutParameterHelper.findNumericParameter(set.parameters) ?: return
+            val unit = WorkoutParameterHelper.displayUnit(numericParam)
+            val type = numericParam.parameterType?.lowercase() ?: "number"
             tvParamUnit.text = unit
 
-            val step   = stepFor(unit, type)
+            val step = 1.0
             val values = generateParamValues(type, step)
             val initialValue = currentParam[set.id] ?: 0.0
             val startPos = values.indexOfFirst { it >= initialValue }.coerceAtLeast(0)
@@ -796,12 +795,11 @@ class WorkoutSetAdapter(
             }
         }
 
-        private fun stepFor(unit: String, type: String): Double = when {
-            type == "percentage" -> 5.0
-            type == "distance"   -> 1.0
-            unit.uppercase() == "KG" -> 2.5
-            unit.uppercase() == "LB" -> 5.0
-            else -> 1.0
+        private fun stepFor(unit: String, type: String): Double = when (type) {
+            "percentage" -> 5.0
+            "distance"   -> 1.0
+            "integer"    -> 1.0
+            else         -> 1.0
         }
 
         private fun formatValue(v: Double, type: String): String = when (type) {
