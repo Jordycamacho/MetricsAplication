@@ -535,10 +535,16 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
     // ── Ribbon ─────────────────────────────────────────────────────────────
 
     private fun setupRibbon() {
-        binding.btnFilter.setOnClickListener { showFilterSheet() }
-        binding.btnAutoMode.setOnClickListener { toggleAutoMode() }
-        binding.btnNext.setOnClickListener { goToNextIncomplete() }
-        binding.btnRestSettings.setOnClickListener {
+        binding.chipFilter.setOnClickListener { showFilterSheet() }
+        binding.chipAutoMode.setOnCheckedChangeListener { _, checked ->
+            executionConfig.autoRestEnabled = checked
+            WorkoutPreferences.setAutoRestEnabled(requireContext(), checked)
+            if (checked) {
+                Snackbar.make(binding.root, "Modo automático activado", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+        binding.chipNext.setOnClickListener { goToNextIncomplete() }
+        binding.chipSettings.setOnClickListener {
             findNavController().navigate(WorkoutFragmentDirections.actionWorkoutToPreferences())
         }
         binding.btnSkipRest.setOnClickListener { stopRestCountdown() }
@@ -565,34 +571,21 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
 
     private fun showFilterSheet() {
         val routine = currentRoutine ?: return
-        val maxSession = adapter.availableSessionNumbers().maxOrNull()
-            ?: routine.sessionsPerWeek?.coerceAtLeast(1)
-            ?: 1
         WorkoutFilterBottomSheet.show(
             fragment = this,
             usesDayGrouping = usesDayGrouping,
-            maxSession = maxSession,
             currentMode = adapter.filterMode,
             currentSession = adapter.filterSessionNumber,
             currentDayOfWeek = adapter.filterDayOfWeek,
-            availableDays = adapter.availableDays()
+            availableDays = adapter.availableDays(),
+            availableSessions = adapter.availableSessionNumbers().ifEmpty {
+                listOf(routine.sessionsPerWeek?.coerceAtLeast(1) ?: 1)
+            }
         )
     }
 
-    private fun toggleAutoMode() {
-        executionConfig.autoRestEnabled = !executionConfig.autoRestEnabled
-        WorkoutPreferences.setAutoRestEnabled(requireContext(), executionConfig.autoRestEnabled)
-        updateAutoModeUi()
-        val msg = if (executionConfig.autoRestEnabled) "Modo automático activado" else "Modo automático desactivado"
-        Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
-    }
-
     private fun updateAutoModeUi() {
-        val active = executionConfig.autoRestEnabled
-        val gold = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.gold_primary)
-        val dim = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.text_secondary_dark)
-        binding.ivAutoMode.setColorFilter(if (active) gold else dim)
-        binding.tvAutoLabel.setTextColor(if (active) gold else dim)
+        binding.chipAutoMode.isChecked = executionConfig.autoRestEnabled
     }
 
     private fun updateFilterUi() {
@@ -607,12 +600,16 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                     ?: "Día"
             }
         }
-        binding.tvFilterLabel.text = label
-        val active = adapter.filterMode != WorkoutPreferences.WorkoutFilterMode.ALL
+        binding.chipFilter.text = label
         val gold = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.gold_primary)
         val dim = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.text_secondary_dark)
-        binding.tvFilterLabel.setTextColor(if (active) gold else dim)
+        binding.chipFilter.chipStrokeColor = android.content.res.ColorStateList.valueOf(
+            if (adapter.filterMode != WorkoutPreferences.WorkoutFilterMode.ALL) gold else dim
+        )
     }
+
+    private fun shouldAutoFocusNext(): Boolean =
+        executionConfig.autoRestEnabled || executionConfig.expandActiveOnly
 
     private fun goToNextIncomplete() {
         val target = adapter.findNextIncomplete(completionState)
@@ -620,16 +617,19 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
             Toast.makeText(requireContext(), "¡Rutina completada!", Toast.LENGTH_SHORT).show()
             return
         }
-        adapter.focusTarget(target)
+        adapter.focusTarget(target, collapseOthers = shouldAutoFocusNext())
         binding.recyclerView.post {
-            binding.recyclerView.smoothScrollToPosition(target.dayIndex)
+            (binding.recyclerView.layoutManager as? LinearLayoutManager)?.let { lm ->
+                lm.scrollToPositionWithOffset(target.dayIndex, 0)
+            } ?: binding.recyclerView.smoothScrollToPosition(target.dayIndex)
         }
     }
 
     private fun updateProgressBadge() {
         if (_binding == null) return
         val (completed, total) = adapter.getProgress(completionState)
-        binding.tvProgressBadge.text = "$completed/$total sets"
+        val pct = if (total > 0) (completed * 100 / total) else 0
+        binding.tvProgressBadge.text = if (total > 0) "$completed/$total sets · $pct%" else "0 sets"
     }
 
     // ── Rest countdown (RestTimerService) ───────────────────────────────────
@@ -677,7 +677,7 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
         localRestTimer = null
         restTimerService?.onTick = null
         restTimerService?.onFinish = null
-        if (executionConfig.expandActiveOnly) {
+        if (shouldAutoFocusNext()) {
             goToNextIncomplete()
         }
     }

@@ -58,7 +58,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="#78703F"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:maxLines="1"
                             android:ellipsize="end"
                             android:visibility="gone" />
@@ -150,152 +150,53 @@
 
                 </LinearLayout>
 
-                <!-- Fila 2: Acciones ribbon -->
+                <!-- Fila 2: Acciones ribbon (chips) -->
                 <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scrollbars="none">
 
-                    <LinearLayout
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_ribbon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        app:singleLine="true"
+                        app:singleSelection="false"
+                        app:chipSpacingHorizontal="8dp">
 
-                        <LinearLayout
-                            android:id="@+id/btn_filter"
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_filter"
+                            style="@style/WorkoutRibbonChip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:minWidth="60dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:background="?attr/selectableItemBackgroundBorderless">
+                            android:text="Filtro"
+                            android:checkable="false" />
 
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:src="@drawable/ic_menu"
-                                app:tint="#78703F" />
-
-                            <TextView
-                                android:id="@+id/tv_filter_label"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Filtro"
-                                android:textColor="#B3B3B3"
-                            android:textSize="11sp"
-                            android:layout_marginTop="4dp" />
-
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="36dp"
-                            android:background="#2A2A2A"
-                            android:layout_marginHorizontal="4dp" />
-
-                        <LinearLayout
-                            android:id="@+id/btn_auto_mode"
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_auto_mode"
+                            style="@style/WorkoutRibbonChip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:minWidth="60dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:background="?attr/selectableItemBackgroundBorderless">
+                            android:text="Automático"
+                            android:checkable="true" />
 
-                            <ImageView
-                                android:id="@+id/iv_auto_mode"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_auto_mode"
-                                app:tint="#78703F" />
-
-                            <TextView
-                                android:id="@+id/tv_auto_label"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Automático"
-                                android:textColor="#B3B3B3"
-                                android:textSize="11sp"
-                                android:layout_marginTop="4dp" />
-
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="36dp"
-                            android:background="#2A2A2A"
-                            android:layout_marginHorizontal="4dp" />
-
-                        <LinearLayout
-                            android:id="@+id/btn_next"
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_next"
+                            style="@style/WorkoutRibbonChip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:minWidth="60dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:background="?attr/selectableItemBackgroundBorderless">
+                            android:text="Siguiente"
+                            android:checkable="false" />
 
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_chevron_right"
-                                app:tint="#78703F" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Siguiente"
-                                android:textColor="#B3B3B3"
-                                android:textSize="11sp"
-                                android:layout_marginTop="4dp" />
-
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="36dp"
-                            android:background="#2A2A2A"
-                            android:layout_marginHorizontal="4dp" />
-
-                        <LinearLayout
-                            android:id="@+id/btn_rest_settings"
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_settings"
+                            style="@style/WorkoutRibbonChip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center"
-                            android:padding="8dp"
-                            android:minWidth="60dp"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:background="?attr/selectableItemBackgroundBorderless">
+                            android:text="Ajustes"
+                            android:checkable="false" />
 
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_settings_24"
-                                app:tint="#78703F" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Ajustes"
-                                android:textColor="#B3B3B3"
-                                android:textSize="11sp"
-                                android:layout_marginTop="4dp" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
+                    </com.google.android.material.chip.ChipGroup>
 
                 </HorizontalScrollView>
 

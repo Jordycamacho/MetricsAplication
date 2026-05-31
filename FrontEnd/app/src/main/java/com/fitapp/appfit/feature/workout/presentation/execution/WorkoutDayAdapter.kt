@@ -36,6 +36,7 @@ class WorkoutDayAdapter(
     private var isProcessingCheckbox = false
     private var usesDayGrouping = true
     private var pendingFocus: WorkoutFocusTarget? = null
+    private var pendingFocusCollapseOthers = false
 
     var filterMode: WorkoutPreferences.WorkoutFilterMode = WorkoutPreferences.WorkoutFilterMode.ALL
         private set
@@ -166,8 +167,9 @@ class WorkoutDayAdapter(
         return true
     }
 
-    fun focusTarget(target: WorkoutFocusTarget) {
+    fun focusTarget(target: WorkoutFocusTarget, collapseOthers: Boolean = false) {
         pendingFocus = target
+        pendingFocusCollapseOthers = collapseOthers
         expandedDays.add(target.dayIndex)
         notifyItemChanged(target.dayIndex)
     }
@@ -299,7 +301,10 @@ class WorkoutDayAdapter(
 
             val focus = pendingFocus
             if (focus != null && focus.dayIndex == position) {
-                exerciseAdapter?.focusExercise(focus.exerciseIndex, executionConfig.expandActiveOnly)
+                val collapse = pendingFocusCollapseOthers || executionConfig.expandActiveOnly
+                exerciseAdapter?.focusExercise(focus.exerciseIndex, collapse)
+                pendingFocus = null
+                pendingFocusCollapseOthers = false
             }
 
             val dayKeyForCompletion = day.dayOfWeek ?: day.groupKey
