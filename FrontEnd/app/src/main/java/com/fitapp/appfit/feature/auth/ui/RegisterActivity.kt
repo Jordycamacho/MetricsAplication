@@ -6,12 +6,14 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Patterns
 import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.fitapp.appfit.MainActivity
 import com.fitapp.appfit.core.session.SessionManager
 import com.fitapp.appfit.core.util.Resource
+import com.fitapp.appfit.core.util.applySystemBarInsets
 import com.fitapp.appfit.databinding.ActivityAuthRegisterBinding
 import com.fitapp.appfit.feature.auth.AuthViewModel
 import com.google.android.material.snackbar.Snackbar
@@ -22,9 +24,12 @@ class RegisterActivity : AppCompatActivity() {
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityAuthRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        binding.root.applySystemBarInsets(applyTop = true, applyBottom = true)
 
         SessionManager.initialize(applicationContext)
 

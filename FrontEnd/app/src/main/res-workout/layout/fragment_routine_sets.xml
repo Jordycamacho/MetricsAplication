@@ -90,7 +90,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="20dp"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="16dp"
         android:src="@drawable/ic_add"
         android:contentDescription="Nuevo set"
         app:backgroundTint="#78703F"

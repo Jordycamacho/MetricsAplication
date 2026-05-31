@@ -5,8 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -80,7 +78,6 @@ class AddExercisesToRoutineFragment : Fragment() {
             return
         }
 
-        adjustFabForBottomNav()
         setupToolbar()
         setupRecyclerView()
         setupSearch()
@@ -93,19 +90,6 @@ class AddExercisesToRoutineFragment : Fragment() {
 
         loadExercises()
         routineViewModel.getRoutine(routineId)
-    }
-
-    private fun adjustFabForBottomNav() {
-        val density = resources.displayMetrics.density
-        val bottomNavHeightPx = (56 * density).toInt()
-        val extraMarginPx = (20 * density).toInt()
-        ViewCompat.setOnApplyWindowInsetsListener(binding.btnAddExercise) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val params = v.layoutParams as ViewGroup.MarginLayoutParams
-            params.bottomMargin = bottomNavHeightPx + systemBars.bottom + extraMarginPx
-            v.layoutParams = params
-            insets
-        }
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────────

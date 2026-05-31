@@ -95,7 +95,7 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="16dp"
                 android:paddingTop="20dp"
-                android:paddingBottom="100dp">
+                android:paddingBottom="16dp">
 
                 <!-- Día -->
                 <TextView
