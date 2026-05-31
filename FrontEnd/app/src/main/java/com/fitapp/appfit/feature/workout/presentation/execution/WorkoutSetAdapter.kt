@@ -28,7 +28,8 @@ class WorkoutSetAdapter(
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
     private val onSequenceComplete: () -> Unit = {},
-    private val completionState: WorkoutCompletionState
+    private val completionState: WorkoutCompletionState,
+    private val executionConfig: WorkoutExecutionConfig = WorkoutExecutionConfig()
 ) : RecyclerView.Adapter<WorkoutSetAdapter.SetViewHolder>() {
 
     private var sets: List<RoutineSetTemplateResponse> = emptyList()

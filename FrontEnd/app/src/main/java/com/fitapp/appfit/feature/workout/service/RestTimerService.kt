@@ -23,12 +23,19 @@ class RestTimerService : Service() {
         const val ACTION_STOP  = "com.fitapp.appfit.REST_TIMER_STOP"
         const val EXTRA_SECONDS       = "extra_seconds"
         const val EXTRA_EXERCISE_NAME = "extra_exercise_name"
+        const val EXTRA_SOUND_TYPE    = "extra_sound_type"
 
-        fun startTimer(context: Context, seconds: Int, exerciseName: String) {
+        fun startTimer(
+            context: Context,
+            seconds: Int,
+            exerciseName: String,
+            soundType: WorkoutPreferences.TimerSoundType = WorkoutPreferences.TimerSoundType.SET_REST
+        ) {
             val intent = Intent(context, RestTimerService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_SECONDS, seconds)
                 putExtra(EXTRA_EXERCISE_NAME, exerciseName)
+                putExtra(EXTRA_SOUND_TYPE, soundType.name)
             }
             context.startForegroundService(intent)
         }
@@ -65,14 +72,22 @@ class RestTimerService : Service() {
             ACTION_START -> {
                 val seconds = intent.getIntExtra(EXTRA_SECONDS, 0)
                 val exerciseName = intent.getStringExtra(EXTRA_EXERCISE_NAME) ?: "Ejercicio"
-                startCountdown(seconds, exerciseName)
+                val soundTypeName = intent.getStringExtra(EXTRA_SOUND_TYPE)
+                val soundType = soundTypeName?.let {
+                    runCatching { WorkoutPreferences.TimerSoundType.valueOf(it) }.getOrNull()
+                } ?: WorkoutPreferences.TimerSoundType.SET_REST
+                startCountdown(seconds, exerciseName, soundType)
             }
             ACTION_STOP -> stopSelf()
         }
         return START_NOT_STICKY
     }
 
-    private fun startCountdown(totalSeconds: Int, exerciseName: String) {
+    private fun startCountdown(
+        totalSeconds: Int,
+        exerciseName: String,
+        soundType: WorkoutPreferences.TimerSoundType
+    ) {
         timer?.cancel()
 
         val notification = WorkoutNotificationManager
@@ -102,7 +117,7 @@ class RestTimerService : Service() {
                 scope.launch(Dispatchers.IO) {
                     TimerSoundPlayer.playTimerSound(
                         this@RestTimerService,
-                        WorkoutPreferences.TimerSoundType.EXERCISE_REST
+                        soundType
                     )
                 }
 

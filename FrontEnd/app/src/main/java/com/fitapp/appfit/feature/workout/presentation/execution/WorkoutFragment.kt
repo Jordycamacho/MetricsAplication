@@ -11,9 +11,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -32,19 +34,21 @@ import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
 import com.fitapp.appfit.feature.workout.data.repository.LocalLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.domain.manager.LastWorkoutValuesApplier
-import com.fitapp.appfit.feature.workout.domain.usecase.LoadLastExerciseValuesUseCase
-import com.fitapp.appfit.feature.workout.domain.usecase.SaveWorkoutSessionUseCase
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
+import com.fitapp.appfit.feature.workout.domain.model.WorkoutLayoutResolver
 import com.fitapp.appfit.feature.workout.data.repository.WorkoutRepositoryImpl
 import com.fitapp.appfit.feature.workout.domain.usecase.LoadLocalLastExecutionValuesUseCase
+import com.fitapp.appfit.feature.workout.domain.usecase.SaveWorkoutSessionUseCase
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
+import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 import com.fitapp.appfit.feature.workout.service.RestTimerService
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
-class WorkoutFragment : Fragment() {
+class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
 
     private var _binding: FragmentWorkoutBinding? = null
     private val binding get() = _binding!!
@@ -54,16 +58,20 @@ class WorkoutFragment : Fragment() {
     private val routineViewModel: RoutineViewModel by viewModels()
 
     private lateinit var adapter: WorkoutDayAdapter
+    private lateinit var contentController: SetsWorkoutContentController
     private lateinit var stateManager: SetParameterStateManager
     private val completionState = WorkoutCompletionState()
+    private val executionConfig = WorkoutExecutionConfig()
 
     private var workoutStartedAt: Long = System.currentTimeMillis()
     private var currentUserId: String = ""
     private val timerHandler = Handler(Looper.getMainLooper())
     private var timerRunning = false
+    private var timerPaused = false
+    private var pausedElapsedMs: Long = 0
     private var currentRoutine: RoutineResponse? = null
+    private var usesDayGrouping = true
 
-    // Evita iniciar la carga de últimos valores si el cache ya restauró el estado
     private var sessionRestoredFromCache = false
 
     private val timerRunnable = object : Runnable {
@@ -75,6 +83,7 @@ class WorkoutFragment : Fragment() {
 
     private var restTimerService: RestTimerService? = null
     private var serviceBound = false
+    private var localRestTimer: android.os.CountDownTimer? = null
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -91,8 +100,6 @@ class WorkoutFragment : Fragment() {
         private const val TAG = "WorkoutFragment"
     }
 
-    // ── Lifecycle ──────────────────────────────────────────────────────────
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -106,35 +113,41 @@ class WorkoutFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         Log.i(TAG, "WORKOUT_FRAGMENT_CREATED | routineId=${args.routineId}")
 
+        loadExecutionPreferences()
         initializeDependencies()
         setupRecyclerView()
         setupRibbon()
         setupBackPressHandler()
+        applyKeepScreenOn()
 
         observeRestoredCache()
         observeRoutineState()
         observeWorkoutState()
         observeSaveState()
 
-        // Comprueba cache ANTES de cargar desde red
         workoutViewModel.checkAndRestoreActiveSession(args.routineId)
 
         resumeTimer()
         binding.fabSaveWorkout.setOnClickListener { saveWorkout() }
     }
 
+    private fun loadExecutionPreferences() {
+        val ctx = requireContext()
+        executionConfig.autoRestEnabled = WorkoutPreferences.isAutoRestEnabled(ctx)
+        executionConfig.defaultRestSeconds = WorkoutPreferences.getDefaultRestSeconds(ctx)
+        executionConfig.expandActiveOnly = WorkoutPreferences.isExpandActiveOnly(ctx)
+    }
+
     private fun initializeDependencies() {
         currentUserId = "usuario_temporal"
         WorkoutNotificationManager.createChannel(requireContext())
 
-        // Obtener base de datos y crear helpers locales
         val appDatabase = AppDatabase.getInstance(requireContext())
         val lastSetExecutionDao = appDatabase.lastSetExecutionDao()
 
         val localLastExecutionHelper = LocalLastExecutionValuesHelper(lastSetExecutionDao)
         val saveLastExecutionHelper = SaveLastExecutionValuesHelper(lastSetExecutionDao)
 
-        // Crear los use cases
         val repository = WorkoutRepositoryImpl(requireContext())
         val saveUseCase = SaveWorkoutSessionUseCase(repository, saveLastExecutionHelper)
         val loadLocalUseCase = LoadLocalLastExecutionValuesUseCase(localLastExecutionHelper)
@@ -142,7 +155,6 @@ class WorkoutFragment : Fragment() {
         val applier = LastWorkoutValuesApplier()
         val cache = ActiveWorkoutCache(requireContext())
 
-        // Crear el ViewModel
         val factory = WorkoutExecutionViewModelFactory(
             saveUseCase,
             loadLocalUseCase,
@@ -153,14 +165,21 @@ class WorkoutFragment : Fragment() {
         workoutViewModel = ViewModelProvider(this, factory)[WorkoutExecutionViewModel::class.java]
 
         stateManager = SetParameterStateManager()
+
+        executionConfig.onAutoRestRequested = { seconds, label, _ ->
+            startRestCountdown(seconds, label)
+        }
+        executionConfig.onSetCompleted = { updateProgressBadge() }
     }
 
     override fun onStart() {
         super.onStart()
         requireContext().bindService(
             Intent(requireContext(), RestTimerService::class.java),
-            serviceConnection, 0
+            serviceConnection,
+            0
         )
+        applyKeepScreenOn()
     }
 
     override fun onStop() {
@@ -169,28 +188,24 @@ class WorkoutFragment : Fragment() {
             requireContext().unbindService(serviceConnection)
             serviceBound = false
         }
+        clearKeepScreenOn()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         timerHandler.removeCallbacks(timerRunnable)
         timerRunning = false
-        // No limpiamos el cache aquí: puede que el usuario solo giró la pantalla.
-        // El cache se limpia solo al guardar correctamente o al abandonar explícitamente.
+        clearKeepScreenOn()
+        stopRestCountdown()
         stateManager.clear()
         _binding = null
     }
 
     // ── Observers ──────────────────────────────────────────────────────────
 
-    /**
-     * Si hay sesión activa en cache, restaura estado local y arranca el timer
-     * desde el timestamp guardado, sin tocar el servidor.
-     */
     private fun observeRestoredCache() {
         workoutViewModel.restoredCacheState.observe(viewLifecycleOwner) { restored ->
             if (restored == null) {
-                // No hay cache: carga rutina normalmente
                 loadRoutineData()
                 return@observe
             }
@@ -200,20 +215,14 @@ class WorkoutFragment : Fragment() {
             workoutStartedAt = restored.startedAt
             workoutViewModel.activeWorkoutCache.saveRoutineId(args.routineId)
 
-            // Restaura parámetros en el stateManager
             restored.paramState.forEach { (setId, setData) ->
                 val exerciseId = setData["exerciseId"] as? Long ?: return@forEach
                 @Suppress("UNCHECKED_CAST")
                 val params = setData["parameters"] as? Map<Long, Map<String, Any?>>
                     ?: return@forEach
-                // Usamos initializeSet con datos vacíos y luego sobreescribimos
-                // No tenemos el RoutineSetTemplateResponse aquí, pero el stateManager
-                // solo necesita el exerciseId y los parámetros ya estaban inicializados.
-                // Aplicamos directamente al estado interno vía el mapa exportado.
                 stateManager.restoreFromExport(setId, exerciseId, params)
             }
 
-            // Carga la rutina para tener el esqueleto visual; no aplica valores históricos
             loadRoutineData()
 
             binding.fabSaveWorkout.isInvisible = restored.completedSetIds.isEmpty()
@@ -232,16 +241,14 @@ class WorkoutFragment : Fragment() {
                     binding.progressBar.isVisible = false
                     binding.recyclerView.isVisible = true
                     resource.data?.let { routine ->
-                        binding.tvRoutineName.text = routine.name ?: "Entrenamiento"
+                        onRoutineLoaded(routine)
                         if (adapter.itemCount == 0) {
                             if (sessionRestoredFromCache) {
-                                // Tenemos cache: mostramos la rutina y restauramos checks
                                 currentRoutine = routine
-                                adapter.submitRoutine(routine)
+                                applyRoutineToAdapter(routine)
                                 initializeCompletionStructure(routine)
                                 restoreCompletedSetsIntoCompletionState()
                             } else {
-                                // Flujo normal: carga últimos valores del backend
                                 loadLastValuesAndSubmit(routine)
                             }
                         }
@@ -262,11 +269,10 @@ class WorkoutFragment : Fragment() {
                 is Resource.Success -> {
                     resource.data?.let { routineWithValues ->
                         Log.i(TAG, "ROUTINE_WITH_VALUES_RECEIVED")
-                        currentRoutine = routineWithValues
-                        adapter.submitRoutine(routineWithValues)
+                        onRoutineLoaded(routineWithValues)
+                        applyRoutineToAdapter(routineWithValues)
                         initializeCompletionStructure(routineWithValues)
 
-                        // Guarda el routineId y el startedAt en cache desde el primer momento
                         workoutViewModel.activeWorkoutCache.saveRoutineId(args.routineId)
                         workoutViewModel.activeWorkoutCache.saveStartedAt(workoutStartedAt)
 
@@ -296,8 +302,7 @@ class WorkoutFragment : Fragment() {
                 is Resource.Success -> {
                     binding.progressBar.isVisible = false
                     binding.fabSaveWorkout.isEnabled = true
-                    val sessionId = resource.data ?: -1L
-                    Log.i(TAG, "WORKOUT_SAVED | sessionId=$sessionId")
+                    Log.i(TAG, "WORKOUT_SAVED | sessionId=${resource.data}")
 
                     stateManager.clear()
                     completionState.reset()
@@ -309,19 +314,62 @@ class WorkoutFragment : Fragment() {
                 is Resource.Error -> {
                     binding.progressBar.isVisible = false
                     binding.fabSaveWorkout.isEnabled = true
-                    Log.e(TAG, "SAVE_FAILED | error=${resource.message}")
-                    Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_LONG).show()
+                    if (!resource.message.isNullOrBlank()) {
+                        Log.e(TAG, "SAVE_FAILED | error=${resource.message}")
+                        Toast.makeText(requireContext(), "Error: ${resource.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
     }
 
-    // ── Cache restore helpers ──────────────────────────────────────────────
+    private fun onRoutineLoaded(routine: RoutineResponse) {
+        currentRoutine = routine
+        usesDayGrouping = routine.exercises.orEmpty().any { it.dayOfWeek != null }
 
-    /**
-     * Aplica los setIds completados del cache al CompletionState una vez que
-     * la estructura de la rutina ya está registrada.
-     */
+        val sportPrefix = routine.sportName?.takeIf { it.isNotBlank() }?.let { "$it · " }.orEmpty()
+        binding.tvRoutineName.text = sportPrefix + (routine.name ?: "Entrenamiento")
+
+        val profile = WorkoutLayoutResolver.resolve(routine)
+        Log.i(TAG, "EXECUTION_PROFILE | profile=$profile | sport=${routine.sportName}")
+    }
+
+    private fun applyRoutineToAdapter(routine: RoutineResponse) {
+        contentController.bindRoutine(routine)
+        applyInitialFilter(routine)
+        updateProgressBadge()
+        updateFilterUi()
+    }
+
+    private fun applyInitialFilter(routine: RoutineResponse) {
+        val ctx = requireContext()
+        val savedMode = WorkoutPreferences.getLastFilterMode(ctx)
+        val savedSession = WorkoutPreferences.getLastFilterSession(ctx)
+        val savedDay = WorkoutPreferences.getLastFilterDay(ctx)
+
+        val mode = when {
+            savedMode != WorkoutPreferences.WorkoutFilterMode.ALL -> savedMode
+            WorkoutPreferences.isFilterTodayOnStart(ctx) &&
+                usesDayGrouping &&
+                routine.trainingDays?.contains(LocalDate.now().dayOfWeek.name) == true ->
+                WorkoutPreferences.WorkoutFilterMode.TODAY
+            !usesDayGrouping -> WorkoutPreferences.WorkoutFilterMode.SESSION
+            else -> WorkoutPreferences.WorkoutFilterMode.ALL
+        }
+
+        val session = if (mode == WorkoutPreferences.WorkoutFilterMode.SESSION) {
+            adapter.suggestSessionNumber(routine.sessionsPerWeek).coerceAtLeast(1)
+        } else savedSession
+
+        val day = if (mode == WorkoutPreferences.WorkoutFilterMode.DAY) {
+            savedDay ?: adapter.availableDays().firstOrNull()?.first
+        } else null
+
+        adapter.setFilter(mode, session, day)
+    }
+
+    // ── Cache restore ──────────────────────────────────────────────────────
+
     private fun restoreCompletedSetsIntoCompletionState() {
         val cachedCompletedSets = workoutViewModel.activeWorkoutCache.loadCompletedSets()
         if (cachedCompletedSets.isEmpty()) return
@@ -333,6 +381,7 @@ class WorkoutFragment : Fragment() {
                 }
             }
         }
+        updateProgressBadge()
         Log.i(TAG, "COMPLETION_STATE_RESTORED | completedSets=${cachedCompletedSets.size}")
     }
 
@@ -405,9 +454,20 @@ class WorkoutFragment : Fragment() {
                 workoutViewModel.persistCompletedSets(completionState.getAllCompletedSets())
                 workoutViewModel.persistParamState(stateManager.exportState())
                 binding.fabSaveWorkout.isInvisible = !completionState.hasAnyCompletedSets()
+                updateProgressBadge()
             },
-            completionState = completionState
+            completionState = completionState,
+            executionConfig = executionConfig
         )
+
+        adapter.onFilterSubtitleChanged = { subtitle ->
+            if (_binding != null) {
+                binding.tvFilterSubtitle.text = subtitle
+                binding.tvFilterSubtitle.isVisible = !subtitle.isNullOrBlank()
+            }
+        }
+
+        contentController = SetsWorkoutContentController(adapter)
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
@@ -415,11 +475,13 @@ class WorkoutFragment : Fragment() {
 
     private fun initializeCompletionStructure(routine: RoutineResponse) {
         routine.exercises?.forEach { exercise ->
-            completionState.registerExercise(exercise.id, exercise.dayOfWeek ?: "SIN_DIA")
+            val dayKey = exercise.dayOfWeek ?: "SESSION_${exercise.sessionNumber ?: 0}"
+            completionState.registerExercise(exercise.id, dayKey)
             exercise.setsTemplate?.forEach { set ->
                 completionState.registerSet(set.id, exercise.id)
             }
         }
+        updateProgressBadge()
     }
 
     // ── Save workout ───────────────────────────────────────────────────────
@@ -449,10 +511,6 @@ class WorkoutFragment : Fragment() {
         )
     }
 
-    /**
-     * Construye el mapa de parámetros solo para los sets completados.
-     * Extraído como función para reutilizarlo en saveWorkout y en el back-press.
-     */
     private fun buildParamStateForSave(): Map<Long, Map<String, Any?>> {
         val fullParamState = mutableMapOf<Long, Map<String, Any?>>()
         val addedSetIds = mutableSetOf<Long>()
@@ -477,17 +535,167 @@ class WorkoutFragment : Fragment() {
     // ── Ribbon ─────────────────────────────────────────────────────────────
 
     private fun setupRibbon() {
-        binding.btnExpandAll.setOnClickListener { adapter.expandAll() }
-        binding.btnCollapseAll.setOnClickListener { adapter.collapseAll() }
-        binding.btnHistory.setOnClickListener {
-            Toast.makeText(requireContext(), "Progreso — próximamente", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnFilter.setOnClickListener { showFilterSheet() }
+        binding.btnAutoMode.setOnClickListener { toggleAutoMode() }
+        binding.btnNext.setOnClickListener { goToNextIncomplete() }
         binding.btnRestSettings.setOnClickListener {
             findNavController().navigate(WorkoutFragmentDirections.actionWorkoutToPreferences())
         }
+        binding.btnSkipRest.setOnClickListener { stopRestCountdown() }
+        binding.layoutTimer.setOnClickListener { toggleSessionTimerPause() }
+
+        updateAutoModeUi()
+        updateFilterUi()
     }
 
-    // ── Timer ──────────────────────────────────────────────────────────────
+    override fun onFilterApplied(
+        mode: WorkoutPreferences.WorkoutFilterMode,
+        sessionNumber: Int,
+        dayOfWeek: String?
+    ) {
+        adapter.setFilter(mode, sessionNumber, dayOfWeek)
+        WorkoutPreferences.setLastFilterMode(requireContext(), mode)
+        WorkoutPreferences.setLastFilterSession(requireContext(), sessionNumber)
+        WorkoutPreferences.setLastFilterDay(requireContext(), dayOfWeek)
+        updateFilterUi()
+    }
+
+    override fun onExpandAll() = adapter.expandAll()
+    override fun onCollapseAll() = adapter.collapseAll()
+
+    private fun showFilterSheet() {
+        val routine = currentRoutine ?: return
+        val maxSession = adapter.availableSessionNumbers().maxOrNull()
+            ?: routine.sessionsPerWeek?.coerceAtLeast(1)
+            ?: 1
+        WorkoutFilterBottomSheet.show(
+            fragment = this,
+            usesDayGrouping = usesDayGrouping,
+            maxSession = maxSession,
+            currentMode = adapter.filterMode,
+            currentSession = adapter.filterSessionNumber,
+            currentDayOfWeek = adapter.filterDayOfWeek,
+            availableDays = adapter.availableDays()
+        )
+    }
+
+    private fun toggleAutoMode() {
+        executionConfig.autoRestEnabled = !executionConfig.autoRestEnabled
+        WorkoutPreferences.setAutoRestEnabled(requireContext(), executionConfig.autoRestEnabled)
+        updateAutoModeUi()
+        val msg = if (executionConfig.autoRestEnabled) "Modo automático activado" else "Modo automático desactivado"
+        Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun updateAutoModeUi() {
+        val active = executionConfig.autoRestEnabled
+        val gold = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.gold_primary)
+        val dim = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.text_secondary_dark)
+        binding.ivAutoMode.setColorFilter(if (active) gold else dim)
+        binding.tvAutoLabel.setTextColor(if (active) gold else dim)
+    }
+
+    private fun updateFilterUi() {
+        val label = when (adapter.filterMode) {
+            WorkoutPreferences.WorkoutFilterMode.ALL -> "Filtro"
+            WorkoutPreferences.WorkoutFilterMode.TODAY -> "Hoy"
+            WorkoutPreferences.WorkoutFilterMode.SESSION -> "Ses. ${adapter.filterSessionNumber}"
+            WorkoutPreferences.WorkoutFilterMode.DAY -> {
+                adapter.availableDays()
+                    .firstOrNull { it.first == adapter.filterDayOfWeek }
+                    ?.second
+                    ?: "Día"
+            }
+        }
+        binding.tvFilterLabel.text = label
+        val active = adapter.filterMode != WorkoutPreferences.WorkoutFilterMode.ALL
+        val gold = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.gold_primary)
+        val dim = ContextCompat.getColor(requireContext(), com.fitapp.appfit.R.color.text_secondary_dark)
+        binding.tvFilterLabel.setTextColor(if (active) gold else dim)
+    }
+
+    private fun goToNextIncomplete() {
+        val target = adapter.findNextIncomplete(completionState)
+        if (target == null) {
+            Toast.makeText(requireContext(), "¡Rutina completada!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        adapter.focusTarget(target)
+        binding.recyclerView.post {
+            binding.recyclerView.smoothScrollToPosition(target.dayIndex)
+        }
+    }
+
+    private fun updateProgressBadge() {
+        if (_binding == null) return
+        val (completed, total) = adapter.getProgress(completionState)
+        binding.tvProgressBadge.text = "$completed/$total sets"
+    }
+
+    // ── Rest countdown (RestTimerService) ───────────────────────────────────
+
+    private fun startRestCountdown(seconds: Int, label: String) {
+        stopRestCountdown(notifyService = false)
+
+        RestTimerService.startTimer(
+            requireContext(),
+            seconds,
+            label,
+            WorkoutPreferences.TimerSoundType.SET_REST
+        )
+
+        restTimerService?.onTick = { remaining ->
+            if (_binding != null) {
+                binding.layoutRestCountdown.isVisible = true
+                binding.tvRestCountdown.text = "Descanso ${remaining}s"
+            }
+        }
+        restTimerService?.onFinish = {
+            onRestCountdownFinished()
+        }
+
+        localRestTimer = object : android.os.CountDownTimer(seconds * 1000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                if (_binding != null) {
+                    val remaining = (millisUntilFinished / 1000).toInt() + 1
+                    binding.layoutRestCountdown.isVisible = true
+                    binding.tvRestCountdown.text = "Descanso ${remaining}s"
+                }
+            }
+            override fun onFinish() {
+                onRestCountdownFinished()
+            }
+        }.start()
+
+        binding.layoutRestCountdown.isVisible = true
+        binding.tvRestCountdown.text = "Descanso ${seconds}s"
+    }
+
+    private fun onRestCountdownFinished() {
+        if (_binding == null) return
+        binding.layoutRestCountdown.isVisible = false
+        localRestTimer = null
+        restTimerService?.onTick = null
+        restTimerService?.onFinish = null
+        if (executionConfig.expandActiveOnly) {
+            goToNextIncomplete()
+        }
+    }
+
+    private fun stopRestCountdown(notifyService: Boolean = true) {
+        localRestTimer?.cancel()
+        localRestTimer = null
+        if (notifyService) {
+            RestTimerService.stopTimer(requireContext())
+        }
+        restTimerService?.onTick = null
+        restTimerService?.onFinish = null
+        if (_binding != null) {
+            binding.layoutRestCountdown.isVisible = false
+        }
+    }
+
+    // ── Session timer ──────────────────────────────────────────────────────
 
     private fun resumeTimer() {
         if (timerRunning) return
@@ -496,14 +704,43 @@ class WorkoutFragment : Fragment() {
         updateTimerDisplay()
     }
 
+    private fun toggleSessionTimerPause() {
+        if (timerPaused) {
+            workoutStartedAt = System.currentTimeMillis() - pausedElapsedMs
+            timerPaused = false
+            Snackbar.make(binding.root, "Cronómetro reanudado", Snackbar.LENGTH_SHORT).show()
+        } else {
+            pausedElapsedMs = System.currentTimeMillis() - workoutStartedAt
+            timerPaused = true
+            Snackbar.make(binding.root, "Cronómetro pausado", Snackbar.LENGTH_SHORT).show()
+        }
+        updateTimerDisplay()
+    }
+
     private fun updateTimerDisplay() {
         if (_binding == null) return
-        val elapsedSeconds = (System.currentTimeMillis() - workoutStartedAt) / 1000
+        val elapsedMs = if (timerPaused) {
+            pausedElapsedMs
+        } else {
+            System.currentTimeMillis() - workoutStartedAt
+        }
+        val elapsedSeconds = elapsedMs / 1000
         val h = elapsedSeconds / 3600
         val m = (elapsedSeconds % 3600) / 60
         val s = elapsedSeconds % 60
         binding.tvTimer.text = if (h > 0) "%d:%02d:%02d".format(h, m, s)
         else "%02d:%02d".format(m, s)
+        binding.tvTimer.alpha = if (timerPaused) 0.6f else 1f
+    }
+
+    private fun applyKeepScreenOn() {
+        if (WorkoutPreferences.isKeepScreenOn(requireContext())) {
+            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    private fun clearKeepScreenOn() {
+        activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     // ── Back press ─────────────────────────────────────────────────────────
@@ -519,7 +756,6 @@ class WorkoutFragment : Fragment() {
                     .setMessage("Si sales ahora, el progreso se guardará si hay sets completados. ¿Seguro?")
                     .setPositiveButton("Salir") { _, _ ->
                         if (completionState.hasAnyCompletedSets()) {
-                            // CORREGIDO: usa buildParamStateForSave en lugar de exportState()
                             val paramState = buildParamStateForSave()
                             if (paramState.isNotEmpty()) {
                                 lifecycleScope.launch {
@@ -535,7 +771,6 @@ class WorkoutFragment : Fragment() {
                                 }
                             }
                         }
-                        // Limpia el cache al salir explícitamente
                         workoutViewModel.activeWorkoutCache.clear()
                         findNavController().navigateUp()
                     }
@@ -547,5 +782,12 @@ class WorkoutFragment : Fragment() {
                 handler.postDelayed({ backPressedOnce = false }, 2000)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadExecutionPreferences()
+        updateAutoModeUi()
+        applyKeepScreenOn()
     }
 }

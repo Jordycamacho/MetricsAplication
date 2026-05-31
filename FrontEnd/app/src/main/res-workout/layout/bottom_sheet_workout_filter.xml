@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Filtrar rutina"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/tv_filter_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Elige qué parte de la rutina ver"
+        android:textColor="#B3B3B3"
+        android:textSize="13sp"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_filter_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rb_filter_all"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Todo — rutina completa"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:buttonTint="#78703F"
+            android:paddingVertical="8dp" />
+
+        <RadioButton
+            android:id="@+id/rb_filter_today"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hoy — día actual del calendario"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:buttonTint="#78703F"
+            android:paddingVertical="8dp" />
+
+        <RadioButton
+            android:id="@+id/rb_filter_pick_day"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Elegir un día de la rutina"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:buttonTint="#78703F"
+            android:paddingVertical="8dp"
+            android:visibility="gone" />
+
+        <RadioButton
+            android:id="@+id/rb_filter_session"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sesión — una sesión concreta"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:buttonTint="#78703F"
+            android:paddingVertical="8dp" />
+
+    </RadioGroup>
+
+    <LinearLayout
+        android:id="@+id/layout_day_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Día de la rutina"
+            android:textColor="#78703F"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_day_picker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_session_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Número de sesión"
+            android:textColor="#78703F"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider_session"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:valueFrom="1"
+            android:valueTo="7"
+            android:stepSize="1" />
+
+        <TextView
+            android:id="@+id/tv_session_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sesión 1"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#333333"
+        android:layout_marginVertical="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LISTA"
+        android:textColor="#78703F"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.1"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_expand_all"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Expandir todo (días y sets)"
+        android:textColor="#FFFFFF"
+        app:strokeColor="#78703F"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_collapse_all"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Colapsar todo (días y sets)"
+        android:textColor="#FFFFFF"
+        app:strokeColor="#78703F"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_apply_filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aplicar"
+        app:backgroundTint="#78703F"
+        android:textColor="#121212" />
+
+</LinearLayout>

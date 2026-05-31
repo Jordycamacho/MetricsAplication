@@ -29,7 +29,8 @@ class WorkoutExerciseAdapter(
     private val stateManager: SetParameterStateManager,
     private val onSetValueChanged: (RoutineExerciseResponse, RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineExerciseResponse, RoutineSetTemplateResponse, Boolean) -> Unit,
-    private val completionState: WorkoutCompletionState
+    private val completionState: WorkoutCompletionState,
+    private val executionConfig: WorkoutExecutionConfig
 ) : RecyclerView.Adapter<WorkoutExerciseAdapter.ExerciseViewHolder>() {
 
     private var exercises: List<RoutineExerciseResponse> = emptyList()
@@ -38,6 +39,27 @@ class WorkoutExerciseAdapter(
 
     fun submitExercises(list: List<RoutineExerciseResponse>) {
         exercises = list.sortedBy { it.position }
+        notifyDataSetChanged()
+    }
+
+    fun focusExercise(exerciseIndex: Int, collapseOthers: Boolean) {
+        if (collapseOthers) {
+            expandedPositions.clear()
+        }
+        if (exerciseIndex in exercises.indices) {
+            expandedPositions.add(exerciseIndex)
+            notifyDataSetChanged()
+        }
+    }
+
+    fun expandAllExercises() {
+        expandedPositions.clear()
+        exercises.indices.forEach { expandedPositions.add(it) }
+        notifyDataSetChanged()
+    }
+
+    fun collapseAllExercises() {
+        expandedPositions.clear()
         notifyDataSetChanged()
     }
 
@@ -99,8 +121,13 @@ class WorkoutExerciseAdapter(
                         currentExercise?.let { onSetValueChanged(it, set, type, value) }
                     },
                     onSetCompletedToggled = { set, completed ->
-                        currentExercise?.let { onSetCompletedToggled(it, set, completed) }
+                        currentExercise?.let { ex ->
+                            onSetCompletedToggled(ex, set, completed)
+                            val name = ex.exerciseName ?: "Ejercicio"
+                            executionConfig.triggerAutoRestIfNeeded(set, name, completed)
+                        }
                         updateSetCounter()
+                        executionConfig.onSetCompleted?.invoke()
                     },
                     onSequenceComplete = {
                         if (restSeconds > 0 && itemView.isAttachedToWindow) {
@@ -111,15 +138,21 @@ class WorkoutExerciseAdapter(
                             restTimer.start(restSeconds)
                         }
                     },
-                    completionState = completionState
+                    completionState = completionState,
+                    executionConfig = executionConfig
                 )
                 WorkoutPreferences.SetViewType.MODERN -> WorkoutSetAdapter(
                     onValueChanged = { set, type, value ->
                         currentExercise?.let { onSetValueChanged(it, set, type, value) }
                     },
                     onSetCompletedToggled = { set, completed ->
-                        currentExercise?.let { onSetCompletedToggled(it, set, completed) }
+                        currentExercise?.let { ex ->
+                            onSetCompletedToggled(ex, set, completed)
+                            val name = ex.exerciseName ?: "Ejercicio"
+                            executionConfig.triggerAutoRestIfNeeded(set, name, completed)
+                        }
                         updateSetCounter()
+                        executionConfig.onSetCompleted?.invoke()
                     },
                     onSequenceComplete = {
                         if (restSeconds > 0 && itemView.isAttachedToWindow) {
@@ -130,7 +163,8 @@ class WorkoutExerciseAdapter(
                             restTimer.start(restSeconds)
                         }
                     },
-                    completionState = completionState
+                    completionState = completionState,
+                    executionConfig = executionConfig
                 )
             }
         }

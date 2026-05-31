@@ -48,6 +48,15 @@ class WorkoutPreferencesFragment : Fragment() {
 
         binding.switchVibration.isChecked = vibrationEnabled
         binding.switchSound.isChecked = soundEnabled
+        binding.switchFilterToday.isChecked = WorkoutPreferences.isFilterTodayOnStart(ctx)
+        binding.switchAutoRest.isChecked = WorkoutPreferences.isAutoRestEnabled(ctx)
+        binding.switchKeepScreenOn.isChecked = WorkoutPreferences.isKeepScreenOn(ctx)
+        binding.switchExpandActive.isChecked = WorkoutPreferences.isExpandActiveOnly(ctx)
+
+        val defaultRest = WorkoutPreferences.getDefaultRestSeconds(ctx)
+        binding.sliderDefaultRest.value = defaultRest.toFloat()
+        binding.tvDefaultRestValue.text = if (defaultRest == 0) "Desactivado" else "${defaultRest}s"
+
         binding.cardTimerVolume.alpha = if (soundEnabled) 1f else 0.4f
         binding.cardTimerVolume.isEnabled = soundEnabled
         binding.cardTimerSounds.alpha = if (soundEnabled) 1f else 0.4f
@@ -105,6 +114,33 @@ class WorkoutPreferencesFragment : Fragment() {
     }
 
     private fun setupListeners() {
+        binding.switchFilterToday.setOnCheckedChangeListener { _, checked ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            WorkoutPreferences.setFilterTodayOnStart(requireContext(), checked)
+        }
+
+        binding.switchAutoRest.setOnCheckedChangeListener { _, checked ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            WorkoutPreferences.setAutoRestEnabled(requireContext(), checked)
+        }
+
+        binding.switchKeepScreenOn.setOnCheckedChangeListener { _, checked ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            WorkoutPreferences.setKeepScreenOn(requireContext(), checked)
+        }
+
+        binding.switchExpandActive.setOnCheckedChangeListener { _, checked ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            WorkoutPreferences.setExpandActiveOnly(requireContext(), checked)
+        }
+
+        binding.sliderDefaultRest.addOnChangeListener { _, value, fromUser ->
+            if (!fromUser || isLoadingPreferences) return@addOnChangeListener
+            val seconds = value.toInt()
+            WorkoutPreferences.setDefaultRestSeconds(requireContext(), seconds)
+            binding.tvDefaultRestValue.text = if (seconds == 0) "Desactivado" else "${seconds}s"
+        }
+
         binding.switchVibration.setOnCheckedChangeListener { _, checked ->
             if (isLoadingPreferences) return@setOnCheckedChangeListener
             WorkoutPreferences.setVibrationEnabled(requireContext(), checked)
