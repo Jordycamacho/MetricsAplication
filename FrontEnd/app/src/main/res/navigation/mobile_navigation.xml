@@ -20,6 +20,12 @@
         <action
             android:id="@+id/action_home_to_routine_exercises"
             app:destination="@id/navigation_routine_exercises" />
+        <action
+            android:id="@+id/action_home_to_workout_history"
+            app:destination="@id/navigation_workout_history" />
+        <action
+            android:id="@+id/action_home_to_workout_detail"
+            app:destination="@id/workoutSessionDetailFragment" />
     </fragment>
 
     <fragment

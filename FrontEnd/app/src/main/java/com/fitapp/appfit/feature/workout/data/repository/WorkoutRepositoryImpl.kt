@@ -19,6 +19,7 @@ import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -143,14 +144,22 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
 
     override suspend fun getWorkoutHistory(
         routineId: Long?,
+        fromDate: String?,
+        toDate: String?,
         page: Int,
         size: Int
     ): Resource<PageResponse<WorkoutSessionSummaryResponse>> {
 
-        Log.i(TAG, "GET_WORKOUT_HISTORY | routineId=$routineId | page=$page | size=$size")
+        Log.i(TAG, "GET_WORKOUT_HISTORY | routineId=$routineId | from=$fromDate | to=$toDate | page=$page | size=$size")
 
         val networkResult = call {
-            service.getWorkoutHistory(routineId = routineId, page = page, size = size)
+            service.getWorkoutHistory(
+                routineId = routineId,
+                fromDate = fromDate,
+                toDate = toDate,
+                page = page,
+                size = size
+            )
         }
 
         if (networkResult is Resource.Success) return networkResult
@@ -159,7 +168,10 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
         return try {
             val local = if (routineId != null) sessionDao.getSessionsByRoutine(routineId)
             else sessionDao.getAllSessions()
-            val summaries = local.map { it.toSummary() }
+            val filtered = local.filter { session ->
+                matchesDateRange(session.startedAt, fromDate, toDate)
+            }
+            val summaries = filtered.map { it.toSummary() }
             Resource.Success(summaries.toPageResponse())
         } catch (e: Exception) {
             Log.e(TAG, "FALLBACK_FAILED | error=${e.message}", e)
@@ -365,6 +377,18 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
             Instant.ofEpochMilli(timestamp), ZoneId.systemDefault()
         )
         return dateTime.format(ISO_FORMATTER)
+    }
+
+    private fun matchesDateRange(startedAt: Long, fromDate: String?, toDate: String?): Boolean {
+        if (fromDate == null && toDate == null) return true
+        val sessionDate = Instant.ofEpochMilli(startedAt)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+        val from = fromDate?.let { LocalDate.parse(it) }
+        val to = toDate?.let { LocalDate.parse(it) }
+        if (from != null && sessionDate.isBefore(from)) return false
+        if (to != null && sessionDate.isAfter(to)) return false
+        return true
     }
 
     private fun WorkoutSessionEntity.toSummary() = WorkoutSessionSummaryResponse(

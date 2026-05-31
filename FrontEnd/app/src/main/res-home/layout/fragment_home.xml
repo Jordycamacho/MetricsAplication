@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="@color/background_dark">
 
-    <!-- Header: saludo + FAB crear -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,7 +15,7 @@
         android:background="@color/surface_dark"
         android:paddingHorizontal="20dp"
         android:paddingTop="20dp"
-        android:paddingBottom="16dp">
+        android:paddingBottom="14dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -60,7 +60,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/gold_primary"
-        android:alpha="0.4" />
+        android:alpha="0.35" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -73,14 +73,260 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="28dp">
 
-            <!-- ESTADÍSTICAS -->
+            <!-- Atajos -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_shortcut_history"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Historial"
+                    android:textColor="@color/text_primary_dark"
+                    app:chipBackgroundColor="@color/surface_dark"
+                    app:chipStrokeColor="#333333"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_shortcut_routines"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Rutinas"
+                    android:textColor="@color/text_primary_dark"
+                    app:chipBackgroundColor="@color/surface_dark"
+                    app:chipStrokeColor="#333333"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_shortcut_create"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Crear rutina"
+                    android:textColor="@color/gold_primary"
+                    app:chipBackgroundColor="@color/surface_dark"
+                    app:chipStrokeColor="@color/gold_primary"
+                    app:chipStrokeWidth="1dp" />
+
+            </LinearLayout>
+
+            <!-- Continuar entreno -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_continue_workout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#152015"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/gold_primary"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Entreno en curso"
+                            android:textColor="@color/gold_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_continue_workout_hint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Toca para retomar"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_continue_workout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Continuar"
+                        android:textSize="13sp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        app:backgroundTint="@color/gold_primary"
+                        android:textColor="#121212" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Hero última rutina (compacto, tap → rutina) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_hero_routine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#3D3520"
+                app:strokeWidth="1dp"
+                app:rippleColor="#33FFD700">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:minHeight="72dp">
+
+                    <View
+                        android:layout_width="3dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/gold_primary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="12dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="4dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Última rutina"
+                                android:textColor="@color/gold_primary"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.08"
+                                android:alpha="0.9" />
+
+                            <TextView
+                                android:id="@+id/tv_hero_planned_badge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Hoy"
+                                android:textColor="#121212"
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:paddingHorizontal="7dp"
+                                android:paddingVertical="2dp"
+                                android:background="@color/gold_primary"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_hero_routine_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Rutina"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+
+                        <TextView
+                            android:id="@+id/tv_hero_subtitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:textColor="#888888"
+                            android:textSize="12sp"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="14dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="#666666" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- También toca hoy -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_planned_today"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#333333"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:id="@+id/tv_planned_today"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_planned_start"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Entrenar"
+                        android:textColor="@color/gold_primary" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Stats semanales (3 tarjetas) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="RESUMEN"
+                android:text="ESTA SEMANA"
                 android:textColor="@color/gold_primary"
                 android:textSize="11sp"
                 android:textStyle="bold"
@@ -91,13 +337,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="28dp">
+                android:layout_marginBottom="20dp">
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginEnd="4dp"
                     app:cardBackgroundColor="@color/surface_dark"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
@@ -108,24 +354,24 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp"
+                        android:padding="12dp"
                         android:gravity="center">
 
                         <TextView
-                            android:id="@+id/tv_stat_total"
+                            android:id="@+id/tv_stat_sessions"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="—"
                             android:textColor="@color/gold_primary"
-                            android:textSize="28sp"
+                            android:textSize="24sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Total"
+                            android:text="Sesiones"
                             android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
+                            android:textSize="10sp"
                             android:layout_marginTop="4dp" />
 
                     </LinearLayout>
@@ -135,7 +381,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginHorizontal="3dp"
+                    android:layout_marginHorizontal="4dp"
                     app:cardBackgroundColor="@color/surface_dark"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
@@ -146,34 +392,37 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp"
+                        android:padding="12dp"
                         android:gravity="center">
 
                         <TextView
-                            android:id="@+id/tv_stat_active"
+                            android:id="@+id/tv_stat_volume"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="—"
                             android:textColor="@color/gold_primary"
-                            android:textSize="28sp"
+                            android:textSize="24sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Activas"
+                            android:text="Volumen"
                             android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
+                            android:textSize="10sp"
                             android:layout_marginTop="4dp" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_streak"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:cardBackgroundColor="@color/surface_dark"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
@@ -184,24 +433,24 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp"
+                        android:padding="12dp"
                         android:gravity="center">
 
                         <TextView
-                            android:id="@+id/tv_stat_inactive"
+                            android:id="@+id/tv_stat_streak"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="—"
-                            android:textColor="@color/text_secondary_dark"
-                            android:textSize="28sp"
+                            android:textColor="@color/gold_primary"
+                            android:textSize="24sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Inactivas"
+                            android:text="Racha sem."
                             android:textColor="@color/text_secondary_dark"
-                            android:textSize="11sp"
+                            android:textSize="10sp"
                             android:layout_marginTop="4dp" />
 
                     </LinearLayout>
@@ -209,13 +458,87 @@
 
             </LinearLayout>
 
-            <!-- RUTINAS RECIENTES -->
+            <!-- Mini calendario semana -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ACTIVIDAD"
+                android:textColor="@color/gold_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="10dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:id="@+id/layout_week_activity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="14dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Último entrenamiento -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_last_session"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ÚLTIMO ENTRENAMIENTO"
+                        android:textColor="@color/gold_primary"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.12"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:id="@+id/tv_last_session_summary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Otras rutinas usadas -->
             <LinearLayout
+                android:id="@+id/layout_other_routines_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="12dp"
+                android:visibility="gone">
 
                 <View
                     android:layout_width="3dp"
@@ -227,7 +550,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Recientes"
+                    android:text="Otras rutinas usadas"
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary_dark" />
@@ -254,7 +577,6 @@
                 android:visibility="gone"
                 android:indeterminateTint="@color/gold_primary" />
 
-            <!-- Estado vacío -->
             <LinearLayout
                 android:id="@+id/layout_empty_routines"
                 android:layout_width="match_parent"
@@ -289,7 +611,6 @@
 
             </LinearLayout>
 
-            <!-- RecyclerView rutinas (vertical, nestedScrolling desactivado) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_recent_routines"
                 android:layout_width="match_parent"

@@ -86,6 +86,11 @@ class ActiveWorkoutCache(context: Context) {
 
     fun getRoutineId(): Long = prefs.getLong(KEY_ROUTINE_ID, NO_ACTIVE_WORKOUT)
 
+    fun getActiveRoutineIdOrNull(): Long? {
+        val id = prefs.getLong(KEY_ROUTINE_ID, NO_ACTIVE_WORKOUT)
+        return id.takeIf { it != NO_ACTIVE_WORKOUT }
+    }
+
     fun getStartedAt(): Long = prefs.getLong(KEY_STARTED_AT, System.currentTimeMillis())
 
     fun hasActiveWorkout(routineId: Long): Boolean =

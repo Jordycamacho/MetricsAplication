@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -65,10 +66,20 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
                     .collect(Collectors.groupingBy(p -> p.getSetTemplate().getId()));
 
             routine.getExercises().forEach(
-                    e -> e.getSets().forEach(s -> s.setParameters(grouped.getOrDefault(s.getId(), List.of()))));
+                    e -> e.getSets().forEach(s -> attachSetParameters(s, grouped.getOrDefault(s.getId(), List.of()))));
         }
 
         return Optional.of(routineConverter.toDomain(routine));
+    }
+
+    /** No reemplazar la lista JPA (orphanRemoval); mutar la colección existente. */
+    private void attachSetParameters(RoutineSetTemplateEntity set, List<RoutineSetParameterEntity> params) {
+        if (set.getParameters() == null) {
+            set.setParameters(new ArrayList<>(params));
+            return;
+        }
+        set.getParameters().clear();
+        set.getParameters().addAll(params);
     }
 
     @Override
@@ -219,7 +230,7 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
                     .collect(Collectors.groupingBy(p -> p.getSetTemplate().getId()));
 
             routine.getExercises().forEach(
-                    e -> e.getSets().forEach(s -> s.setParameters(grouped.getOrDefault(s.getId(), List.of()))));
+                    e -> e.getSets().forEach(s -> attachSetParameters(s, grouped.getOrDefault(s.getId(), List.of()))));
         }
 
         return Optional.of(routineConverter.toDomain(routine));

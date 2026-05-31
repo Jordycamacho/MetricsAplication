@@ -22,6 +22,8 @@ interface IWorkoutRepository {
 
     suspend fun getWorkoutHistory(
         routineId: Long? = null,
+        fromDate: String? = null,
+        toDate: String? = null,
         page: Int = 0,
         size: Int = 20
     ): Resource<PageResponse<WorkoutSessionSummaryResponse>>
