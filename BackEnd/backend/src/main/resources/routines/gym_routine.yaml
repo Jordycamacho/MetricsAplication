@@ -1,8 +1,8 @@
 gym_routine:
-  name: "Push / Pull / Legs — Gym"
-  description: "Rutina clásica de 5 días dividida por grupos musculares. Ideal desde principiantes hasta nivel avanzado."
+  name: "Fuerza + Prep Box — 5 días"
+  description: "Rutina de 5 días orientada a fuerza de empuje y tirón, core, postura y preparación para boxeo. Incluye antebrazos, abdomen y espalda."
   sessions_per_week: 5
-  goal: "Hipertrofia y fuerza general con progresión lineal por grupos musculares"
+  goal: "Hipertrofia y fuerza funcional con énfasis en potencia de golpe, core y postura"
   training_days:
     - MONDAY
     - TUESDAY
@@ -11,7 +11,7 @@ gym_routine:
     - FRIDAY
 
   exercises:
-    # ── Lunes: Pecho + Tríceps ────────────────────────────────────────────
+    # ── Lunes: Pecho + Tríceps + Hombro (empuje) ─────────────────────────────
     - name: "Press de Banca"
       day: MONDAY
       position: 1
@@ -59,6 +59,8 @@ gym_routine:
           parameters:
             - name: "Repeticiones"
               value: 12
+            - name: "Peso"
+              value: 30.0
         - position: 2
           type: NORMAL
           rest_after_set: 90
@@ -66,7 +68,7 @@ gym_routine:
             - name: "Repeticiones"
               value: 8
             - name: "Peso"
-              value: 50.0
+              value: 45.0
         - position: 3
           type: NORMAL
           rest_after_set: 90
@@ -74,7 +76,7 @@ gym_routine:
             - name: "Repeticiones"
               value: 8
             - name: "Peso"
-              value: 55.0
+              value: 50.0
         - position: 4
           type: NORMAL
           rest_after_set: null
@@ -82,7 +84,7 @@ gym_routine:
             - name: "Repeticiones"
               value: 8
             - name: "Peso"
-              value: 60.0
+              value: 55.0
 
     - name: "Fondos en Paralelas"
       day: MONDAY
@@ -94,34 +96,42 @@ gym_routine:
           rest_after_set: 45
           parameters:
             - name: "Repeticiones"
-              value: 8
+              value: 10
+            - name: "Peso"
+              value: 0.0
         - position: 2
           type: NORMAL
           rest_after_set: 90
           parameters:
             - name: "Repeticiones"
               value: 8
+            - name: "Peso"
+              value: 5.0
         - position: 3
           type: NORMAL
           rest_after_set: 90
           parameters:
             - name: "Repeticiones"
               value: 8
+            - name: "Peso"
+              value: 10.0
         - position: 4
           type: NORMAL
           rest_after_set: null
           parameters:
             - name: "Repeticiones"
               value: 8
+            - name: "Peso"
+              value: 10.0
 
-    - name: "Fly con Mancuernas"
+    - name: "Press de Hombros con Mancuernas"
       day: MONDAY
       position: 4
-      rest_after_exercise: 60
+      rest_after_exercise: 75
       sets:
         - position: 1
           type: WARM_UP
-          rest_after_set: 30
+          rest_after_set: 45
           parameters:
             - name: "Repeticiones"
               value: 12
@@ -129,70 +139,32 @@ gym_routine:
               value: 8.0
         - position: 2
           type: NORMAL
-          rest_after_set: 60
+          rest_after_set: 75
           parameters:
             - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 14.0
-        - position: 3
-          type: NORMAL
-          rest_after_set: 60
-          parameters:
-            - name: "Repeticiones"
-              value: 10
+              value: 8
             - name: "Peso"
               value: 16.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 75
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 18.0
         - position: 4
           type: NORMAL
           rest_after_set: null
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 18.0
-
-    - name: "Skull Crushers"
-      day: MONDAY
-      position: 5
-      rest_after_exercise: 75
-      sets:
-        - position: 1
-          type: WARM_UP
-          rest_after_set: 30
-          parameters:
-            - name: "Repeticiones"
-              value: 12
-            - name: "Peso"
-              value: 10.0
-        - position: 2
-          type: NORMAL
-          rest_after_set: 75
           parameters:
             - name: "Repeticiones"
               value: 8
             - name: "Peso"
               value: 20.0
-        - position: 3
-          type: NORMAL
-          rest_after_set: 75
-          parameters:
-            - name: "Repeticiones"
-              value: 8
-            - name: "Peso"
-              value: 22.0
-        - position: 4
-          type: NORMAL
-          rest_after_set: null
-          parameters:
-            - name: "Repeticiones"
-              value: 8
-            - name: "Peso"
-              value: 24.0
 
-    - name: "Jalón de Tríceps con Cuerda"
+    - name: "Crossover en Poleas"
       day: MONDAY
-      position: 6
+      position: 5
       rest_after_exercise: 60
       sets:
         - position: 1
@@ -202,63 +174,79 @@ gym_routine:
             - name: "Repeticiones"
               value: 15
             - name: "Peso"
-              value: 10.0
+              value: 5.0
         - position: 2
-          type: DROP_SET
-          rest_after_set: 0
+          type: NORMAL
+          rest_after_set: 60
           parameters:
             - name: "Repeticiones"
               value: 12
             - name: "Peso"
-              value: 15.0
+              value: 10.0
         - position: 3
-          type: DROP_SET
-          rest_after_set: 0
+          type: NORMAL
+          rest_after_set: 60
           parameters:
             - name: "Repeticiones"
               value: 12
             - name: "Peso"
               value: 12.0
         - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 14.0
+
+    - name: "Jalón de Tríceps con Cuerda"
+      day: MONDAY
+      position: 6
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+            - name: "Peso"
+              value: 20.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+            - name: "Peso"
+              value: 22.0
+        - position: 3
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 18.0
+        - position: 4
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 14.0
+        - position: 5
           type: DROP_SET
           rest_after_set: null
           parameters:
             - name: "Repeticiones"
               value: 12
             - name: "Peso"
-              value: 9.0
+              value: 10.0
 
-    - name: "Fondos en Banco"
-      day: MONDAY
-      position: 7
-      rest_after_exercise: 120
-      sets:
-        - position: 1
-          type: WARM_UP
-          rest_after_set: 30
-          parameters:
-            - name: "Repeticiones"
-              value: 15
-        - position: 2
-          type: NORMAL
-          rest_after_set: 90
-          parameters:
-            - name: "Repeticiones"
-              value: 12
-        - position: 3
-          type: NORMAL
-          rest_after_set: 90
-          parameters:
-            - name: "Repeticiones"
-              value: 12
-        - position: 4
-          type: NORMAL
-          rest_after_set: null
-          parameters:
-            - name: "Repeticiones"
-              value: 12
-
-    # ── Martes: Pierna + Abdomen ──────────────────────────────────────────
+    # ── Martes: Pierna + Abdomen / Core ──────────────────────────────────────
     - name: "Sentadilla con Barra"
       day: TUESDAY
       position: 1
@@ -277,7 +265,7 @@ gym_routine:
           rest_after_set: 120
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 8
             - name: "Peso"
               value: 80.0
         - position: 3
@@ -285,17 +273,17 @@ gym_routine:
           rest_after_set: 120
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 8
             - name: "Peso"
-              value: 85.0
+              value: 90.0
         - position: 4
           type: NORMAL
           rest_after_set: null
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 8
             - name: "Peso"
-              value: 90.0
+              value: 100.0
 
     - name: "Prensa de Pierna"
       day: TUESDAY
@@ -335,7 +323,219 @@ gym_routine:
             - name: "Peso"
               value: 140.0
 
-    # ── Miércoles: Espalda + Bíceps ───────────────────────────────────────
+    - name: "Extensión de Piernas en Máquina"
+      day: TUESDAY
+      position: 3
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 25.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 40.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 45.0
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 50.0
+
+    - name: "Elevación de Talones de Pie"
+      day: TUESDAY
+      position: 4
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 40.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 60.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 70.0
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 80.0
+
+    - name: "Plancha"
+      day: TUESDAY
+      position: 5
+      rest_after_exercise: 45
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Duración"
+              value: 30
+        - position: 2
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Duración"
+              value: 45
+        - position: 3
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Duración"
+              value: 45
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Duración"
+              value: 60
+
+    - name: "Crunch Lateral"
+      day: TUESDAY
+      position: 6
+      rest_after_exercise: 45
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+        - position: 2
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+        - position: 3
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+
+    - name: "Tijeras"
+      day: TUESDAY
+      position: 7
+      rest_after_exercise: 45
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+        - position: 2
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 20
+        - position: 3
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 20
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 20
+
+    - name: "Crunch Declinado con Peso"
+      day: TUESDAY
+      position: 8
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 25.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 30.0
+        - position: 3
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 22.0
+        - position: 4
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 18.0
+        - position: 5
+          type: DROP_SET
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 14.0
+
+    # ── Miércoles: Espalda + Bíceps + Antebrazos ─────────────────────────────
     - name: "Dominadas Lastradas"
       day: WEDNESDAY
       position: 1
@@ -356,7 +556,7 @@ gym_routine:
             - name: "Repeticiones"
               value: 6
             - name: "Peso"
-              value: 10.0
+              value: 5.0
         - position: 3
           type: NORMAL
           rest_after_set: 120
@@ -364,7 +564,7 @@ gym_routine:
             - name: "Repeticiones"
               value: 6
             - name: "Peso"
-              value: 15.0
+              value: 10.0
         - position: 4
           type: NORMAL
           rest_after_set: null
@@ -372,9 +572,9 @@ gym_routine:
             - name: "Repeticiones"
               value: 6
             - name: "Peso"
-              value: 20.0
+              value: 15.0
 
-    - name: "Remo con Barra"
+    - name: "Remo en Máquina"
       day: WEDNESDAY
       position: 2
       rest_after_exercise: 90
@@ -384,37 +584,75 @@ gym_routine:
           rest_after_set: 45
           parameters:
             - name: "Repeticiones"
-              value: 10
+              value: 12
             - name: "Peso"
-              value: 40.0
+              value: 30.0
         - position: 2
           type: NORMAL
           rest_after_set: 90
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 8
             - name: "Peso"
-              value: 60.0
+              value: 50.0
         - position: 3
           type: NORMAL
           rest_after_set: 90
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 8
             - name: "Peso"
-              value: 65.0
+              value: 55.0
         - position: 4
           type: NORMAL
           rest_after_set: null
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 8
             - name: "Peso"
-              value: 70.0
+              value: 60.0
+
+    - name: "Face Pull"
+      day: WEDNESDAY
+      position: 3
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 10.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 15.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 17.0
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 20.0
 
     - name: "Curl con Barra"
       day: WEDNESDAY
-      position: 5
+      position: 4
       rest_after_exercise: 75
       sets:
         - position: 1
@@ -450,7 +688,53 @@ gym_routine:
             - name: "Peso"
               value: 34.0
 
-    # ── Jueves: Hombros + Abdomen ─────────────────────────────────────────
+    - name: "Curl con Mancuernas Tipo Martillo"
+      day: WEDNESDAY
+      position: 5
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+            - name: "Peso"
+              value: 12.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+            - name: "Peso"
+              value: 14.0
+        - position: 3
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 10.0
+        - position: 4
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 8.0
+        - position: 5
+          type: DROP_SET
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 6.0
+
+    # ── Jueves: Hombro + Core rotacional + Postura ───────────────────────────
     - name: "Press Militar con Barra"
       day: THURSDAY
       position: 1
@@ -495,29 +779,212 @@ gym_routine:
       rest_after_exercise: 60
       sets:
         - position: 1
-          type: WARM_UP
-          rest_after_set: 30
+          type: NORMAL
+          rest_after_set: 60
           parameters:
             - name: "Repeticiones"
               value: 12
             - name: "Peso"
-              value: 4.0
+              value: 8.0
         - position: 2
           type: NORMAL
           rest_after_set: 60
           parameters:
             - name: "Repeticiones"
-              value: 10
+              value: 12
+            - name: "Peso"
+              value: 10.0
+        - position: 3
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 15
             - name: "Peso"
               value: 8.0
+        - position: 4
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 6.0
+        - position: 5
+          type: DROP_SET
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+            - name: "Peso"
+              value: 4.0
+
+    - name: "Planchas con Rotación"
+      day: THURSDAY
+      position: 3
+      rest_after_exercise: 60
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 12
         - position: 3
           type: NORMAL
           rest_after_set: 60
           parameters:
             - name: "Repeticiones"
+              value: 12
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 15
+
+    - name: "Plancha Lateral"
+      day: THURSDAY
+      position: 4
+      rest_after_exercise: 45
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 30
+          parameters:
+            - name: "Duración"
+              value: 20
+        - position: 2
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Duración"
+              value: 30
+        - position: 3
+          type: NORMAL
+          rest_after_set: 45
+          parameters:
+            - name: "Duración"
+              value: 30
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Duración"
+              value: 40
+
+    - name: "Remo en Máquina T"
+      day: THURSDAY
+      position: 5
+      rest_after_exercise: 90
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 30.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 90
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 50.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 90
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 55.0
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 60.0
+
+    # ── Viernes: Pierna posterior + Tríceps + Core ───────────────────────────
+    - name: "Peso Muerto Rumano"
+      day: FRIDAY
+      position: 1
+      rest_after_exercise: 120
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
               value: 10
             - name: "Peso"
-              value: 10.0
+              value: 40.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 120
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 60.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 120
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 65.0
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 70.0
+
+    - name: "Curl Femoral Acostado"
+      day: FRIDAY
+      position: 2
+      rest_after_exercise: 75
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 20.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 75
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+            - name: "Peso"
+              value: 35.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 75
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+            - name: "Peso"
+              value: 40.0
         - position: 4
           type: NORMAL
           rest_after_set: null
@@ -525,12 +992,49 @@ gym_routine:
             - name: "Repeticiones"
               value: 10
             - name: "Peso"
-              value: 12.0
+              value: 45.0
 
-    # ── Viernes: Pierna + Espalda ─────────────────────────────────────────
     - name: "Dominadas"
       day: FRIDAY
-      position: 5
+      position: 3
+      rest_after_exercise: 90
+      sets:
+        - position: 1
+          type: WARM_UP
+          rest_after_set: 45
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 0.0
+        - position: 2
+          type: NORMAL
+          rest_after_set: 90
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 0.0
+        - position: 3
+          type: NORMAL
+          rest_after_set: 90
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 5.0
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
+              value: 8
+            - name: "Peso"
+              value: 5.0
+
+    - name: "Flexiones Explosivas"
+      day: FRIDAY
+      position: 4
       rest_after_exercise: 90
       sets:
         - position: 1
@@ -544,61 +1048,69 @@ gym_routine:
           rest_after_set: 90
           parameters:
             - name: "Repeticiones"
-              value: 8
+              value: 6
         - position: 3
           type: NORMAL
           rest_after_set: 90
           parameters:
             - name: "Repeticiones"
-              value: 8
+              value: 6
         - position: 4
           type: NORMAL
           rest_after_set: null
           parameters:
             - name: "Repeticiones"
-              value: 8
+              value: 6
 
-    - name: "Remo con Barra"
+    - name: "Press Francés con Mancuerna"
       day: FRIDAY
-      position: 6
-      rest_after_exercise: 75
+      position: 5
+      rest_after_exercise: 60
       sets:
         - position: 1
-          type: WARM_UP
-          rest_after_set: 45
+          type: NORMAL
+          rest_after_set: 60
           parameters:
             - name: "Repeticiones"
               value: 10
             - name: "Peso"
-              value: 40.0
+              value: 14.0
         - position: 2
           type: NORMAL
-          rest_after_set: 75
+          rest_after_set: 60
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 10
             - name: "Peso"
-              value: 60.0
+              value: 16.0
         - position: 3
-          type: NORMAL
-          rest_after_set: 75
+          type: DROP_SET
+          rest_after_set: 0
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 12
             - name: "Peso"
-              value: 65.0
+              value: 12.0
         - position: 4
-          type: NORMAL
+          type: DROP_SET
+          rest_after_set: 0
+          parameters:
+            - name: "Repeticiones"
+              value: 12
+            - name: "Peso"
+              value: 10.0
+        - position: 5
+          type: DROP_SET
           rest_after_set: null
           parameters:
             - name: "Repeticiones"
-              value: 6
+              value: 12
             - name: "Peso"
-              value: 70.0
+              value: 8.0
 
-    - name: "Pullover con Mancuerna"
+    - name: "Rueda Abdominal"
       day: FRIDAY
-      position: 7
+      position: 6
       rest_after_exercise: 60
       sets:
         - position: 1
@@ -606,68 +1118,22 @@ gym_routine:
           rest_after_set: 30
           parameters:
             - name: "Repeticiones"
+              value: 8
+        - position: 2
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+        - position: 3
+          type: NORMAL
+          rest_after_set: 60
+          parameters:
+            - name: "Repeticiones"
+              value: 10
+        - position: 4
+          type: NORMAL
+          rest_after_set: null
+          parameters:
+            - name: "Repeticiones"
               value: 12
-            - name: "Peso"
-              value: 10.0
-        - position: 2
-          type: NORMAL
-          rest_after_set: 60
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 18.0
-        - position: 3
-          type: NORMAL
-          rest_after_set: 60
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 20.0
-        - position: 4
-          type: NORMAL
-          rest_after_set: null
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 22.0
-
-    - name: "Remo en Máquina"
-      day: FRIDAY
-      position: 8
-      rest_after_exercise: 120
-      sets:
-        - position: 1
-          type: WARM_UP
-          rest_after_set: 30
-          parameters:
-            - name: "Repeticiones"
-              value: 15
-            - name: "Peso"
-              value: 20.0
-        - position: 2
-          type: NORMAL
-          rest_after_set: 60
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 40.0
-        - position: 3
-          type: NORMAL
-          rest_after_set: 60
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 45.0
-        - position: 4
-          type: NORMAL
-          rest_after_set: null
-          parameters:
-            - name: "Repeticiones"
-              value: 10
-            - name: "Peso"
-              value: 50.0

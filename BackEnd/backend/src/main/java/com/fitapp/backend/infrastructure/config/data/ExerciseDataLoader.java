@@ -26,7 +26,7 @@ import java.util.Set;
  * Carga los ejercicios predefinidos del sistema.
  *
  * Cubre tres bloques:
- *   1. Musculación — ejercicios de la rutina Push/Pull/Legs
+ *   1. Musculación — ejercicios de la rutina Fuerza + Prep Box (5 días)
  *   2. Boxeo       — técnica, acondicionamiento y fuerza auxiliar
  *   3. Generales   — running, natación, atletismo y otros deportes medibles
  *
@@ -191,7 +191,7 @@ public class ExerciseDataLoader implements ApplicationRunner {
             ),
             exercise(
                 "Press Inclinado con Barra",
-                "Press de banca en banco inclinado 30-45°. Enfatiza la porción superior del pectoral.",
+                "Press inclinado 30-45° en banco o máquina. Enfatiza la porción superior del pectoral.",
                 ExerciseType.WEIGHTED,
                 sports(gymSport),
                 cats(catPecho, catEmpuje),
@@ -292,7 +292,7 @@ public class ExerciseDataLoader implements ApplicationRunner {
             // ── Piernas ───────────────────────────────────────────────────────
             exercise(
                 "Sentadilla con Barra",
-                "Ejercicio rey del tren inferior. Barra en trapecio, baja hasta paralelo o por debajo.",
+                "Sentadilla con barra libre o en máquina Hack/Smith de pie. Baja hasta paralelo o por debajo.",
                 ExerciseType.WEIGHTED,
                 sports(gymSport),
                 cats(catPiernas, catSentadilla, catGluteos),
@@ -366,7 +366,7 @@ public class ExerciseDataLoader implements ApplicationRunner {
             // ── Core / Abdomen ────────────────────────────────────────────────
             exercise(
                 "Crunch Declinado con Peso",
-                "Flexión de tronco en banco declinado con disco o mancuerna en el pecho.",
+                "Crunch en banco declinado o máquina de abdominales, con carga opcional.",
                 ExerciseType.WEIGHTED,
                 sports(gymSport),
                 cats(catCore),
