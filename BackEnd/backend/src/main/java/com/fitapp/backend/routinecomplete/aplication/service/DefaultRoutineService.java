@@ -1,5 +1,7 @@
 package com.fitapp.backend.routinecomplete.aplication.service;
 
+import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutineExercisePersistencePort;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutinePersistencePort;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutineSetParameterPersistencePort;
@@ -35,11 +37,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultRoutineService {
 
+    private static final List<String> DEFAULT_GYM_ROUTINE_NAMES = List.of(
+            "Push / Pull / Legs — Gym",
+            "Fuerza + Prep Box — 5 días"
+    );
+
     private final RoutinePersistencePort routinePersistencePort;
     private final RoutineExercisePersistencePort routineExercisePersistencePort;
     private final RoutineSetTemplatePersistencePort setTemplatePersistencePort;
     private final RoutineSetParameterPersistencePort setParameterPersistencePort;
     private final SportPersistencePort sportPersistencePort;
+    private final UserPersistencePort userPersistencePort;
     private final RoutineYamlBuilder yamlBuilder;
 
     // ── API pública ────────────────────────────────────────────────────────────
@@ -57,7 +65,16 @@ public class DefaultRoutineService {
         Long gymSportId = sportPersistencePort.findIdByName("Musculación")
                 .orElseThrow(() -> new IllegalStateException("Sport 'Musculación' not found"));
 
+        Long userId = resolveUserId(userEmail);
+        removePreviousDefaultGymRoutines(userId);
+
         RoutineModel routine = yamlBuilder.buildRoutineFromYaml("gym_routine.yaml", userEmail, gymSportId);
+        log.info("GENERATE_GYM_ROUTINE_YAML | name={} | exercises={} | totalSets={}",
+                routine.getName(),
+                routine.getExercises() != null ? routine.getExercises().size() : 0,
+                routine.getExercises() != null
+                        ? routine.getExercises().stream().mapToInt(e -> e.getSets().size()).sum()
+                        : 0);
         RoutineModel saved = persistRoutine(routine);
 
         log.info("GENERATE_GYM_ROUTINE_OK | userId={} | routineId={}", 
@@ -105,6 +122,23 @@ public class DefaultRoutineService {
 
         log.info("ROUTINE_GENERATED_FROM_YAML | routineId={} | name={}", saved.getId(), saved.getName());
         return saved;
+    }
+
+    private Long resolveUserId(String userEmail) {
+        return userPersistencePort.findByEmail(userEmail)
+                .map(UserModel::getId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
+    }
+
+    private void removePreviousDefaultGymRoutines(Long userId) {
+        List<RoutineModel> existing = routinePersistencePort.findByUserIdAndNames(
+                userId, DEFAULT_GYM_ROUTINE_NAMES);
+
+        for (RoutineModel routine : existing) {
+            routinePersistencePort.deleteByIdAndUserId(routine.getId(), userId);
+            log.info("REMOVED_OLD_DEFAULT_GYM_ROUTINE | routineId={} | name={}",
+                    routine.getId(), routine.getName());
+        }
     }
 
     // ── Persistencia en 3 pasos ────────────────────────────────────────────────

@@ -41,6 +41,8 @@ public interface RoutinePersistencePort {
 
     void deleteByIdAndUserId(Long id, Long userId);
 
+    List<RoutineModel> findByUserIdAndNames(Long userId, List<String> names);
+
     void toggleActiveStatus(Long id, Long userId, boolean isActive);
 
     void updateLastUsedAt(Long id, Long userId, LocalDateTime lastUsedAt);

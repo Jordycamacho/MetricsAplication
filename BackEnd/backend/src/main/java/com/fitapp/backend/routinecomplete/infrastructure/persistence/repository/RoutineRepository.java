@@ -54,6 +54,11 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, J
                         @Param("name") String name,
                         Pageable pageable);
 
+        @Query("SELECT r FROM RoutineEntity r WHERE r.user.id = :userId AND r.name IN :names")
+        List<RoutineEntity> findByUserIdAndNameIn(
+                        @Param("userId") Long userId,
+                        @Param("names") List<String> names);
+
         @Modifying
         @Query("UPDATE RoutineEntity r SET r.isActive = :isActive WHERE r.id = :id AND r.user.id = :userId")
         int updateActiveStatus(@Param("id") Long id, @Param("userId") Long userId, @Param("isActive") Boolean isActive);

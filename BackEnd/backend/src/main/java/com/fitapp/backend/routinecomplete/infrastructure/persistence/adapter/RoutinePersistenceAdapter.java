@@ -179,6 +179,16 @@ public class RoutinePersistenceAdapter implements RoutinePersistencePort {
     }
 
     @Override
+    public List<RoutineModel> findByUserIdAndNames(Long userId, List<String> names) {
+        if (names == null || names.isEmpty()) {
+            return List.of();
+        }
+        return routineRepository.findByUserIdAndNameIn(userId, names).stream()
+                .map(routineConverter::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void toggleActiveStatus(Long id, Long userId, boolean isActive) {
         int updated = routineRepository.updateActiveStatus(id, userId, isActive);
