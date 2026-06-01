@@ -17,4 +17,11 @@ interface SetParameterDao {
 
     @Query("DELETE FROM set_parameters WHERE setTemplateId = :setTemplateId")
     suspend fun deleteBySetTemplate(setTemplateId: Long)
+
+    @Query(
+        "DELETE FROM set_parameters WHERE setTemplateId IN (" +
+                "SELECT id FROM set_templates WHERE routineExerciseId IN (" +
+                "SELECT id FROM routine_exercises WHERE routineId = :routineId))"
+    )
+    suspend fun deleteByRoutineId(routineId: Long)
 }

@@ -3,7 +3,7 @@
 > **Leyenda:** ✅ completada · 🔴 bloqueante v1 · 🟡 pendiente v1 · 🔵 post-v1 / feature grande  
 > **Prioridad v1:** correcciones de ejecución de rutinas y workout → sync → suscripción → resto.
 
-Última actualización: 2026-05-29
+Última actualización: 2026-06-01
 
 ---
 
@@ -12,7 +12,7 @@
 | Estado | Cantidad |
 |--------|----------|
 | ✅ Completadas | 16 |
-| 🟡 Pendientes v1 | ~13 |
+| 🟡 Pendientes v1 | ~14 |
 | 🔵 Post-v1 / grandes | ~8 |
 
 ---
@@ -66,6 +66,12 @@
 | 18 | Arrancar sync al iniciar app | `SyncWorker.schedulePeriodic()` + `NetworkMonitor.start()` no wired |
 | 19 | Sync de `ROUTINE_EXERCISE` | Stub actual borra operación sin sincronizar |
 | 20 | Sync de `SET_TEMPLATE` | Tipo definido en cola pero no procesado |
+
+### Room / caché local Android (interferencias detectadas en uso real)
+
+| # | Tarea | Notas |
+|---|-------|-------|
+| 24 | **Auditar y reducir interferencias de SQLite (Room) local** | La BD local del móvil provoca inconsistencias en varios flujos. **Síntomas:** rutina regenerada en servidor sigue viéndose antigua; listados/ejecución no coinciden con API; datos mezclados tras actualizar rutina. **Dónde impacta:** (1) `RoutineRepository` cachea listado y rutina completa en Room (`routines`, `routine_exercises`, `set_templates`, `set_parameters`); (2) **ejecución de rutina** (`WorkoutFragment` / `getRoutineForTraining`) usa fallback offline a Room si falla red — puede entrenar con ejercicios/sets viejos sin llamada al backend; (3) `LastSetExecutionEntity` aplica valores históricos locales sobre la plantilla en memoria; (4) `ActiveWorkoutCache` (SharedPreferences) restaura sesión con IDs de sets antiguos; (5) `getRoutines` persiste summaries con `userId=""` y no purga entradas huérfanas al sincronizar. **Objetivo v1:** definir estrategia clara servidor↔local (invalidar caché al regenerar/borrar rutina, TTL o versión de rutina, no mezclar plantilla API + histórico local sin validar `routineId`/versión). Archivos: `RoutineRepository.kt`, `WorkoutExecutionViewModel.kt`, `LocalLastExecutionValuesHelper.kt`, `ActiveWorkoutCache.kt`, DAOs en `feature/routine/database/`. **Workaround actual:** borrar datos de app o limpiar caché tras regenerar rutina en backend |
 
 ---
 

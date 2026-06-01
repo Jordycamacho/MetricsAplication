@@ -17,6 +17,7 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentRoutinesListBinding
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineSummaryResponse
 import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
+import com.google.android.material.snackbar.Snackbar
 import java.util.concurrent.atomic.AtomicBoolean
 
 class RoutinesFragment : Fragment() {
@@ -28,6 +29,11 @@ class RoutinesFragment : Fragment() {
     private lateinit var routineAdapter: RoutineAdapter
 
     private val generationLock = AtomicBoolean(false)
+
+    private companion object {
+        private const val LEGACY_GYM_ROUTINE_NAME = "Push / Pull / Legs — Gym"
+        private const val CURRENT_GYM_ROUTINE_NAME = "Fuerza + Prep Box — 5 días"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -135,11 +141,11 @@ class RoutinesFragment : Fragment() {
                     binding.progressBar.visibility = View.VISIBLE
                 }
                 is Resource.Success -> {
+                    generationLock.set(false)
                     binding.layoutEmptyState.visibility = View.GONE
-                    binding.btnGenerateGym.visibility = View.GONE
-                    binding.btnGenerateBoxing.visibility = View.GONE
-                    binding.progressBar.visibility = View.VISIBLE
-                    Toast.makeText(requireContext(), "✓ Rutina creada", Toast.LENGTH_SHORT).show()
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(requireContext(), "✓ Rutina de gym actualizada", Toast.LENGTH_SHORT).show()
+                    routineViewModel.getRoutines(0, 20)
                 }
                 is Resource.Error -> {
                     generationLock.set(false)
@@ -219,6 +225,24 @@ class RoutinesFragment : Fragment() {
         binding.btnGenerateGym.visibility = View.GONE
         binding.btnGenerateBoxing.visibility = View.GONE
         routineAdapter.updateRoutines(routines)
+        maybeOfferGymRoutineRefresh(routines)
+    }
+
+    private fun maybeOfferGymRoutineRefresh(routines: List<RoutineSummaryResponse>) {
+        val hasLegacyGymRoutine = routines.any { it.name == LEGACY_GYM_ROUTINE_NAME }
+        val hasCurrentGymRoutine = routines.any { it.name == CURRENT_GYM_ROUTINE_NAME }
+        if (!hasLegacyGymRoutine || hasCurrentGymRoutine || generationLock.get()) return
+
+        Snackbar.make(
+            binding.root,
+            "Hay una versión nueva de la rutina de gym",
+            Snackbar.LENGTH_LONG
+        ).setAction("Actualizar") {
+            if (generationLock.compareAndSet(false, true)) {
+                binding.progressBar.visibility = View.VISIBLE
+                routineViewModel.generateDefaultRoutine("GYM")
+            }
+        }.show()
     }
 
     private fun showEmpty() {

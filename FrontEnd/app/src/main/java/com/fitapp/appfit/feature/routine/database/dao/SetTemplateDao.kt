@@ -32,6 +32,9 @@ interface SetTemplateDao {
     @Query("DELETE FROM set_templates WHERE routineExerciseId IN (SELECT id FROM routine_exercises WHERE routineId = :routineId) AND syncStatus = 'SYNCED'")
     suspend fun deleteSyncedByRoutine(routineId: Long)
 
+    @Query("DELETE FROM set_templates WHERE routineExerciseId IN (SELECT id FROM routine_exercises WHERE routineId = :routineId)")
+    suspend fun deleteByRoutineId(routineId: Long)
+
     @Query("SELECT * FROM set_templates WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<SetTemplateEntity>
 

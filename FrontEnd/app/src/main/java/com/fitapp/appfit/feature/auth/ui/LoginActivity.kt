@@ -8,7 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.fitapp.appfit.MainActivity
+import com.fitapp.appfit.core.network.TokenRefreshCoordinator
 import com.fitapp.appfit.core.session.SessionManager
+import kotlinx.coroutines.runBlocking
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.core.util.applySystemBarInsets
 import com.fitapp.appfit.databinding.ActivityAuthLoginBinding
@@ -45,7 +47,10 @@ class LoginActivity : AppCompatActivity() {
         }
 
         if (SessionManager.hasSession()) {
-            navigateToMain()
+            val refreshed = runBlocking { TokenRefreshCoordinator.refreshSession() }
+            if (refreshed) {
+                navigateToMain()
+            }
             return
         }
 

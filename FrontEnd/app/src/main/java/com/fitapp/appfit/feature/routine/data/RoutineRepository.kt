@@ -26,12 +26,21 @@ import java.net.SocketTimeoutException
 
 class RoutineRepository(private val context: Context) {
 
+    companion object {
+        private const val TAG = "RoutineRepository"
+        private val DEFAULT_GYM_ROUTINE_NAMES = listOf(
+            "Push / Pull / Legs — Gym",
+            "Fuerza + Prep Box — 5 días"
+        )
+    }
+
     private val service = RoutineService.instance
     private val db by lazy { AppDatabase.getInstance(context) }
     private val routineDao by lazy { db.routineDao() }
     private val exerciseDao by lazy { db.routineExerciseDao() }
     private val setTemplateDao by lazy { db.setTemplateDao() }
     private val setParameterDao by lazy { db.setParameterDao() }
+    private val lastSetExecutionDao by lazy { db.lastSetExecutionDao() }
 
     // ── CRUD básico ───────────────────────────────────────────────────────────
 
@@ -50,8 +59,28 @@ class RoutineRepository(private val context: Context) {
     suspend fun toggleRoutineActiveStatus(id: Long, active: Boolean) =
         callUnit { service.toggleRoutineActiveStatus(id, active) }
 
-    suspend fun generateDefaultRoutine(type: String) =
-        call { service.generateDefaultRoutine(type) }
+    suspend fun generateDefaultRoutine(type: String): Resource<Map<String, Long>> {
+        if (type.equals("GYM", ignoreCase = true)) {
+            clearLocalDefaultGymRoutines()
+        }
+
+        val result = call { service.generateDefaultRoutine(type) }
+        if (result is Resource.Success) {
+            val routineId = result.data?.get("routineId")
+            if (routineId != null) {
+                Log.i(TAG, "GENERATE_DEFAULT_OK | type=$type | routineId=$routineId — prefetch for-training")
+                when (val training = getRoutineForTraining(routineId)) {
+                    is Resource.Success -> Log.i(
+                        TAG,
+                        "GENERATE_DEFAULT_CACHED | routineId=$routineId | name=${training.data?.name} | exercises=${training.data?.exercises?.size ?: 0}"
+                    )
+                    is Resource.Error -> Log.w(TAG, "GENERATE_DEFAULT_CACHE_FAILED | routineId=$routineId | ${training.message}")
+                    else -> Unit
+                }
+            }
+        }
+        return result
+    }
 
     suspend fun markRoutineAsUsed(id: Long) =
         callUnit { service.markRoutineAsUsed(id) }
@@ -71,6 +100,7 @@ class RoutineRepository(private val context: Context) {
         val networkResult = call { service.getRoutines(page, size) }
         if (networkResult is Resource.Success) {
             networkResult.data?.content?.let { summaries ->
+                purgeStaleLocalRoutines(summaries.map { it.id }.toSet())
                 val entities = summaries.map { it.toEntity() }
                 routineDao.insertRoutines(entities)
             }
@@ -379,12 +409,51 @@ class RoutineRepository(private val context: Context) {
 
     // ── Cache helpers ─────────────────────────────────────────────────────────
 
+    private suspend fun clearLocalDefaultGymRoutines() {
+        val ids = routineDao.getIdsByNames(DEFAULT_GYM_ROUTINE_NAMES)
+        ids.forEach { clearLocalRoutineTree(it) }
+        Log.i(TAG, "CLEARED_LOCAL_GYM_ROUTINES | count=${ids.size}")
+    }
+
+    private suspend fun purgeStaleLocalRoutines(serverIds: Set<Long>) {
+        val localIds = routineDao.getRoutines("").map { it.id }
+        localIds.filter { it !in serverIds }.forEach { clearLocalRoutineTree(it) }
+    }
+
+    private suspend fun clearLocalRoutineTree(routineId: Long) {
+        setParameterDao.deleteByRoutineId(routineId)
+        setTemplateDao.deleteByRoutineId(routineId)
+        exerciseDao.deleteByRoutineId(routineId)
+        lastSetExecutionDao.deleteByRoutine(routineId)
+        routineDao.deleteRoutine(routineId)
+        Log.d(TAG, "CLEARED_LOCAL_ROUTINE_TREE | routineId=$routineId")
+    }
+
     private suspend fun cacheRoutineForTraining(routine: RoutineResponse) {
         try {
-            Log.d("RoutineRepository", "Cacheando rutina ${routine.id}, ejercicios: ${routine.exercises.orEmpty().size}")
+            clearLocalRoutineTree(routine.id)
+            routineDao.insertRoutine(
+                RoutineEntity(
+                    id = routine.id,
+                    userId = "",
+                    name = routine.name,
+                    description = routine.description,
+                    sportId = routine.sportId,
+                    sportName = routine.sportName,
+                    isActive = routine.isActive,
+                    goal = routine.goal,
+                    sessionsPerWeek = routine.sessionsPerWeek,
+                    trainingDays = routine.trainingDays?.joinToString(","),
+                    createdAt = routine.createdAt,
+                    updatedAt = routine.updatedAt,
+                    lastUsedAt = routine.lastUsedAt,
+                    syncStatus = SyncStatus.SYNCED
+                )
+            )
+            Log.d(TAG, "Cacheando rutina ${routine.id}, ejercicios: ${routine.exercises.orEmpty().size}")
 
             val exerciseEntities = routine.exercises.orEmpty().map { ex ->
-                Log.d("RoutineRepository", "  Cacheando ejercicio ${ex.id} (${ex.exerciseName}), routineId=${routine.id}")
+            Log.d(TAG, "  Cacheando ejercicio ${ex.id} (${ex.exerciseName}), routineId=${routine.id}")
                 RoutineExerciseEntity(
                     id = ex.id,
                     routineId = routine.id,

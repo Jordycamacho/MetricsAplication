@@ -32,6 +32,9 @@ interface RoutineExerciseDao {
     @Query("DELETE FROM routine_exercises WHERE routineId = :routineId AND syncStatus = 'SYNCED'")
     suspend fun deleteSyncedByRoutine(routineId: Long)
 
+    @Query("DELETE FROM routine_exercises WHERE routineId = :routineId")
+    suspend fun deleteByRoutineId(routineId: Long)
+
     @Query("SELECT * FROM routine_exercises WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<RoutineExerciseEntity>
 

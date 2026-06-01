@@ -46,6 +46,9 @@ interface RoutineDao {
     @Query("DELETE FROM routines WHERE id = :routineId")
     suspend fun deleteRoutine(routineId: Long)
 
+    @Query("SELECT id FROM routines WHERE name IN (:names)")
+    suspend fun getIdsByNames(names: List<String>): List<Long>
+
     @Query("SELECT * FROM routines WHERE isActive = 1 AND userId = :userId AND syncStatus != 'PENDING_DELETE'")
     fun observeActiveRoutines(userId: String): Flow<List<RoutineEntity>>
 }
