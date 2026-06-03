@@ -98,26 +98,38 @@ public class ExerciseDataLoader implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (exerciseRepository.count() > 0) {
-            log.info("Ejercicios ya inicializados, saltando seed.");
-            return;
-        }
-
-        log.info("Inicializando ejercicios predefinidos...");
         loadRefs();
 
-        int total = 0;
-        total += saveAll(buildGymChestTriceps());
-        total += saveAll(buildGymLegsAbs());
-        total += saveAll(buildGymBackBiceps());
-        total += saveAll(buildGymShoulders());
-        total += saveAll(buildBoxeo());
-        total += saveAll(buildRunning());
-        total += saveAll(buildNatacion());
-        total += saveAll(buildCiclismo());
-        total += saveAll(buildGeneralConditioning());
+        List<ExerciseEntity> predefined = new java.util.ArrayList<>();
+        predefined.addAll(buildGymChestTriceps());
+        predefined.addAll(buildGymLegsAbs());
+        predefined.addAll(buildGymBackBiceps());
+        predefined.addAll(buildGymShoulders());
+        predefined.addAll(buildBoxeo());
+        predefined.addAll(buildRunning());
+        predefined.addAll(buildNatacion());
+        predefined.addAll(buildCiclismo());
+        predefined.addAll(buildGeneralConditioning());
 
-        log.info("Ejercicios predefinidos inicializados correctamente: {} ejercicios", total);
+        int inserted = ensurePredefinedExercises(predefined);
+        log.info("Ejercicios predefinidos sincronizados | insertados={} | totalCatalogo={}",
+                inserted, exerciseRepository.count());
+    }
+
+    /**
+     * Inserta por nombre los que falten (p. ej. tras ampliar el catálogo sin vaciar la BD).
+     */
+    private int ensurePredefinedExercises(List<ExerciseEntity> predefined) {
+        int inserted = 0;
+        for (ExerciseEntity candidate : predefined) {
+            if (exerciseRepository.findByName(candidate.getName()).isPresent()) {
+                continue;
+            }
+            exerciseRepository.save(candidate);
+            inserted++;
+            log.info("EXERCISE_SEED_INSERTED | name={}", candidate.getName());
+        }
+        return inserted;
     }
 
     // ── Carga de referencias ──────────────────────────────────────────────────
@@ -992,11 +1004,6 @@ public class ExerciseDataLoader implements ApplicationRunner {
     // ══════════════════════════════════════════════════════════════════════════
     // HELPERS
     // ══════════════════════════════════════════════════════════════════════════
-
-    private int saveAll(List<ExerciseEntity> exercises) {
-        exerciseRepository.saveAll(exercises);
-        return exercises.size();
-    }
 
     private ExerciseEntity exercise(
             String name,

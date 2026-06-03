@@ -1,5 +1,6 @@
 package com.fitapp.backend.workout.infrastructure.persistence.converter;
 
+import com.fitapp.backend.Exercise.domain.exception.ExerciseNotFoundException;
 import com.fitapp.backend.Exercise.infrastructure.persistence.entity.ExerciseEntity;
 import com.fitapp.backend.Exercise.infrastructure.persistence.repository.ExerciseRepository;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseStatus;
@@ -74,7 +75,7 @@ public class SessionExerciseConverter {
             ExerciseEntity exercise = exerciseRepository.findById(model.getExerciseId())
                     .orElseThrow(() -> {
                         log.error("SESSION_EXERCISE_CONVERTER_EXERCISE_NOT_FOUND | exerciseId={}", model.getExerciseId());
-                        return new RuntimeException("Exercise not found: " + model.getExerciseId());
+                        return new ExerciseNotFoundException(model.getExerciseId());
                     });
             entity.setExercise(exercise);
         }

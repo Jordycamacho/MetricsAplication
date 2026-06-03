@@ -1,5 +1,7 @@
 package com.fitapp.backend.workout.aplication.service;
 
+import com.fitapp.backend.Exercise.aplication.port.output.ExercisePersistencePort;
+import com.fitapp.backend.Exercise.domain.exception.ExerciseNotFoundException;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.ExerciseStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetExecutionStatus;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
@@ -43,6 +45,7 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
 
         private final WorkoutSessionPersistencePort workoutSessionPersistencePort;
         private final RoutinePersistencePort routinePersistencePort;
+        private final ExercisePersistencePort exercisePersistencePort;
         private final WorkoutSessionRepository workoutSessionRepository;
         private final WorkoutConverter workoutConverter;
 
@@ -174,6 +177,19 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                 if (request.getEndTime().isBefore(request.getStartTime())) {
                         log.error("VALIDATION_FAILED | reason=INVALID_TIME_RANGE | userId={}", userId);
                         throw InvalidWorkoutDataException.invalidTimeRange();
+                }
+
+                Set<Long> exerciseIds = request.getSetExecutions().stream()
+                                .map(SaveWorkoutSessionRequest.SetExecutionRequest::getExerciseId)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toSet());
+
+                for (Long exerciseId : exerciseIds) {
+                        if (!exercisePersistencePort.existsById(exerciseId)) {
+                                log.error("VALIDATION_FAILED | reason=EXERCISE_NOT_FOUND | exerciseId={} | userId={}",
+                                                exerciseId, userId);
+                                throw new ExerciseNotFoundException(exerciseId);
+                        }
                 }
 
                 for (SaveWorkoutSessionRequest.SetExecutionRequest setExec : request.getSetExecutions()) {
