@@ -88,6 +88,15 @@ class SetParameterStateManager {
         state[setId]?.parameters?.get(parameterId)?.integerValue = value
     }
 
+    /** Reps en ejecución: la UI escribe integerValue; repetitions alinea guardado y API. */
+    fun updateRepsValue(setId: Long, parameterId: Long, reps: Int) {
+        Log.d(TAG, "UPDATE_REPS_VALUE | setId=$setId | parameterId=$parameterId | reps=$reps")
+        state[setId]?.parameters?.get(parameterId)?.let { pv ->
+            pv.integerValue = reps
+            pv.repetitions = reps
+        }
+    }
+
     fun updateDurationValue(setId: Long, parameterId: Long, value: Long) {
         Log.d(TAG, "UPDATE_DURATION | setId=$setId | parameterId=$parameterId | value=$value")
         state[setId]?.parameters?.get(parameterId)?.durationValue = value

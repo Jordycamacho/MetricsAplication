@@ -5,6 +5,7 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSet
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.data.database.dao.LastSetExecutionDao
 import com.fitapp.appfit.feature.workout.data.database.entity.LastSetExecutionEntity
+import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 
 /**
  * Helper para guardar los valores de una sesión de entrenamiento completada
@@ -45,6 +46,10 @@ class SaveLastExecutionValuesHelper(
 
             parameters.forEach { (paramId, paramValues) ->
                 val paramTemplate = setTemplate?.parameters?.find { it.parameterId == paramId }
+                val reps = paramValues["repetitions"] as? Int
+                val integer = paramValues["integerValue"] as? Int
+                val isReps = paramTemplate?.let { WorkoutParameterHelper.isRepsParameter(it) } == true
+                val repsToStore = if (isReps) reps ?: integer else reps
 
                 val entity = LastSetExecutionEntity(
                     routineId = routineId,
@@ -53,10 +58,10 @@ class SaveLastExecutionValuesHelper(
                     parameterName = paramTemplate?.parameterName,
                     parameterType = paramTemplate?.parameterType,
                     unit = paramTemplate?.unit,
-                    lastRepetitions = (paramValues["repetitions"] as? Int),
+                    lastRepetitions = repsToStore,
                     lastNumericValue = (paramValues["numericValue"] as? Double),
                     lastDurationValue = (paramValues["durationValue"] as? Long),
-                    lastIntegerValue = (paramValues["integerValue"] as? Int),
+                    lastIntegerValue = if (isReps) repsToStore else integer,
                     recordedAt = System.currentTimeMillis()
                 )
 

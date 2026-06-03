@@ -7,6 +7,7 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSet
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.data.database.dao.LastSetExecutionDao
 import com.fitapp.appfit.feature.workout.data.database.entity.LastSetExecutionEntity
+import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 
 /**
  * Helper que carga los últimos valores de ejecución DESDE SQLITE LOCAL
@@ -111,7 +112,9 @@ class LocalLastExecutionValuesHelper(
                     "int=${lastExecution.lastIntegerValue}"
         )
 
-        // Crear copia con últimos valores usados
+        val isReps = WorkoutParameterHelper.isRepsParameter(param)
+        val repsFromHistory = lastExecution.lastRepetitions ?: lastExecution.lastIntegerValue
+
         return RoutineSetParameterResponse(
             id = param.id,
             setTemplateId = param.setTemplateId,
@@ -119,10 +122,10 @@ class LocalLastExecutionValuesHelper(
             parameterName = param.parameterName,
             parameterType = param.parameterType,
             unit = param.unit,
-            repetitions = lastExecution.lastRepetitions ?: param.repetitions,
+            repetitions = if (isReps) repsFromHistory ?: param.repetitions else lastExecution.lastRepetitions ?: param.repetitions,
             numericValue = lastExecution.lastNumericValue ?: param.numericValue,
             durationValue = lastExecution.lastDurationValue ?: param.durationValue,
-            integerValue = lastExecution.lastIntegerValue ?: param.integerValue
+            integerValue = if (isReps) repsFromHistory ?: param.integerValue else lastExecution.lastIntegerValue ?: param.integerValue
         )
     }
 

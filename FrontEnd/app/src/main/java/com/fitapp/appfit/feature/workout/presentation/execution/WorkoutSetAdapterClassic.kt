@@ -340,14 +340,14 @@ class WorkoutSetAdapterClassic(
                 val cur = getRepsValue() ?: 0
                 if (cur > 0) {
                     val n = cur - 1
-                    stateManager.updateIntegerValue(currentSetId, repsParam.parameterId, n)
+                    stateManager.updateRepsValue(currentSetId, repsParam.parameterId, n)
                     tvRepsValue.text = n.toString()
                     onValueChanged(set, "reps", n.toDouble())
                 }
             })
             incRepsHelper.attach(btnIncReps, onStep = {
                 val n = (getRepsValue() ?: 0) + 1
-                stateManager.updateIntegerValue(currentSetId, repsParam.parameterId, n)
+                stateManager.updateRepsValue(currentSetId, repsParam.parameterId, n)
                 tvRepsValue.text = n.toString()
                 onValueChanged(set, "reps", n.toDouble())
             })
@@ -415,7 +415,7 @@ class WorkoutSetAdapterClassic(
         ) {
             if (WorkoutParameterHelper.isRepsParameter(param)) {
                 val intVal = value.toInt()
-                stateManager.updateIntegerValue(currentSetId, param.parameterId, intVal)
+                stateManager.updateRepsValue(currentSetId, param.parameterId, intVal)
                 tvRepsValue.text = intVal.toString()
                 onValueChanged(set, "reps", value)
             } else {

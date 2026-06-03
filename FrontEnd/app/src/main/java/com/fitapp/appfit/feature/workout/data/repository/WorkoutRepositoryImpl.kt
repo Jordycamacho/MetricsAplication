@@ -335,20 +335,27 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
                 (setOrderByExercise[exerciseId]?.indexOf(setTemplateId) ?: 0) + 1
 
             val validParams = params.mapNotNull { result ->
-                val hasValue = result.numericValue != null ||
-                        result.integerValue != null ||
-                        result.durationValue != null ||
-                        result.repetitions != null
+                val numeric = result.numericValue
+                val integer = result.integerValue ?: result.repetitions
+                val duration = result.durationValue
 
-                if (!hasValue) return@mapNotNull null
+                if (numeric == null && integer == null && duration == null) return@mapNotNull null
 
-                SaveWorkoutSessionRequest.ParameterValueRequest(
+                val request = SaveWorkoutSessionRequest.ParameterValueRequest(
                     parameterId = result.parameterId,
-                    numericValue = result.numericValue?.takeIf { it != 0.0 },
-                    integerValue = (result.integerValue ?: result.repetitions)?.takeIf { it != 0 },
-                    durationValue = result.durationValue?.takeIf { it != 0L },
+                    numericValue = numeric,
+                    integerValue = integer,
+                    durationValue = duration,
                     stringValue = null
                 )
+                // No enviar {"parameterId":N} sin valor (provoca 500 en backend)
+                if (request.numericValue == null && request.integerValue == null &&
+                    request.durationValue == null &&
+                    request.stringValue.isNullOrBlank()
+                ) {
+                    return@mapNotNull null
+                }
+                request
             }
 
             SaveWorkoutSessionRequest.SetExecutionRequest(

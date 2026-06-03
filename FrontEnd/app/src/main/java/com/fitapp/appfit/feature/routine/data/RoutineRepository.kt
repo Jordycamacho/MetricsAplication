@@ -40,7 +40,6 @@ class RoutineRepository(private val context: Context) {
     private val exerciseDao by lazy { db.routineExerciseDao() }
     private val setTemplateDao by lazy { db.setTemplateDao() }
     private val setParameterDao by lazy { db.setParameterDao() }
-    private val lastSetExecutionDao by lazy { db.lastSetExecutionDao() }
 
     // ── CRUD básico ───────────────────────────────────────────────────────────
 
@@ -424,7 +423,7 @@ class RoutineRepository(private val context: Context) {
         setParameterDao.deleteByRoutineId(routineId)
         setTemplateDao.deleteByRoutineId(routineId)
         exerciseDao.deleteByRoutineId(routineId)
-        lastSetExecutionDao.deleteByRoutine(routineId)
+        // No borrar last_set_executions: historial de última ejecución por setTemplateId
         routineDao.deleteRoutine(routineId)
         Log.d(TAG, "CLEARED_LOCAL_ROUTINE_TREE | routineId=$routineId")
     }

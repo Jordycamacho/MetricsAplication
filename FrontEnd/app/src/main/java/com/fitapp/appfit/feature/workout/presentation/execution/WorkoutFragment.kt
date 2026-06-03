@@ -424,7 +424,7 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                 )
                 when (valueType) {
                     "reps" -> WorkoutParameterHelper.findRepsParameter(set.parameters)?.let { repsParam ->
-                        stateManager.updateIntegerValue(set.id, repsParam.parameterId, newValue.toInt())
+                        stateManager.updateRepsValue(set.id, repsParam.parameterId, newValue.toInt())
                     }
                     "param" -> WorkoutParameterHelper.findNumericParameter(set.parameters)?.let { param ->
                         if (WorkoutParameterHelper.isIntegerInput(param)) {
@@ -521,10 +521,13 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                 if (completionState.isSetCompleted(setId) && addedSetIds.add(setId)) {
                     val params = stateManager.getSetParameters(
                         setId = setId,
-                        defaultExerciseId = exercise.id,
+                        defaultExerciseId = exercise.exerciseId,
                         defaultParameters = setTemplate.parameters ?: emptyList()
                     )
-                    if (params != null) fullParamState[setId] = params
+                    if (params != null) {
+                        // Siempre ID del catálogo (exerciseId), nunca routine_exercise.id
+                        fullParamState[setId] = params + ("exerciseId" to exercise.exerciseId)
+                    }
                     else Log.w(TAG, "NO_PARAMS_FOR_SET | setId=$setId")
                 }
             }
