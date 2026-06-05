@@ -1,10 +1,12 @@
 package com.fitapp.appfit.feature.workout.data.repository
 
 import android.util.Log
+import com.fitapp.appfit.feature.routine.database.dao.RoutineDao
+import com.fitapp.appfit.feature.routine.database.entity.RoutineEntity
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
-import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.data.database.dao.LastSetExecutionDao
 import com.fitapp.appfit.feature.workout.data.database.entity.LastSetExecutionEntity
+import com.fitapp.appfit.shared.enums.SyncStatus
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 
 /**
@@ -14,7 +16,8 @@ import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
  * Se llama cuando el usuario guarda un entrenamiento con sets completados.
  */
 class SaveLastExecutionValuesHelper(
-    private val lastSetExecutionDao: LastSetExecutionDao
+    private val lastSetExecutionDao: LastSetExecutionDao,
+    private val routineDao: RoutineDao
 ) {
 
     companion object {
@@ -78,12 +81,36 @@ class SaveLastExecutionValuesHelper(
 
         if (executionEntities.isNotEmpty()) {
             try {
+                ensureRoutineHeaderExists(routineId)
                 lastSetExecutionDao.insertOrUpdateBatch(executionEntities)
                 Log.i(TAG, "EXECUTION_VALUES_SAVED | count=${executionEntities.size}")
             } catch (e: Exception) {
                 Log.e(TAG, "ERROR_SAVING_EXECUTION_VALUES | error=${e.message}", e)
             }
         }
+    }
+
+    private suspend fun ensureRoutineHeaderExists(routineId: Long) {
+        if (routineDao.getRoutineById(routineId) != null) return
+        routineDao.insertRoutine(
+            RoutineEntity(
+                id = routineId,
+                userId = "",
+                name = "",
+                description = null,
+                sportId = null,
+                sportName = null,
+                isActive = true,
+                goal = null,
+                sessionsPerWeek = null,
+                trainingDays = null,
+                createdAt = null,
+                updatedAt = null,
+                lastUsedAt = null,
+                syncStatus = SyncStatus.SYNCED
+            )
+        )
+        Log.i(TAG, "ENSURED_ROUTINE_HEADER | routineId=$routineId")
     }
 
     /**
@@ -116,6 +143,7 @@ class SaveLastExecutionValuesHelper(
         )
 
         try {
+            ensureRoutineHeaderExists(routineId)
             lastSetExecutionDao.insertOrUpdate(entity)
             Log.d(
                 TAG,

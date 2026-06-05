@@ -33,7 +33,6 @@ import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
 import com.fitapp.appfit.feature.workout.data.repository.LocalLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
-import com.fitapp.appfit.feature.workout.domain.manager.LastWorkoutValuesApplier
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutLayoutResolver
 import com.fitapp.appfit.feature.workout.data.repository.WorkoutRepositoryImpl
@@ -144,21 +143,20 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
 
         val appDatabase = AppDatabase.getInstance(requireContext())
         val lastSetExecutionDao = appDatabase.lastSetExecutionDao()
+        val routineDao = appDatabase.routineDao()
 
         val localLastExecutionHelper = LocalLastExecutionValuesHelper(lastSetExecutionDao)
-        val saveLastExecutionHelper = SaveLastExecutionValuesHelper(lastSetExecutionDao)
+        val saveLastExecutionHelper = SaveLastExecutionValuesHelper(lastSetExecutionDao, routineDao)
 
         val repository = WorkoutRepositoryImpl(requireContext())
         val saveUseCase = SaveWorkoutSessionUseCase(repository, saveLastExecutionHelper)
         val loadLocalUseCase = LoadLocalLastExecutionValuesUseCase(localLastExecutionHelper)
 
-        val applier = LastWorkoutValuesApplier()
         val cache = ActiveWorkoutCache(requireContext())
 
         val factory = WorkoutExecutionViewModelFactory(
             saveUseCase,
             loadLocalUseCase,
-            applier,
             saveLastExecutionHelper,
             cache
         )
@@ -266,28 +264,44 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
     private fun observeWorkoutState() {
         workoutViewModel.routineWithValuesState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
+                is Resource.Loading -> {
+                    binding.progressBar.isVisible = true
+                }
                 is Resource.Success -> {
-                    resource.data?.let { routineWithValues ->
-                        Log.i(TAG, "ROUTINE_WITH_VALUES_RECEIVED")
+                    binding.progressBar.isVisible = false
+                    resource.data?.let { prepared ->
+                        val routineWithValues = prepared.routine
+                        Log.i(
+                            TAG,
+                            "WORKOUT_DISPLAY_READY | appliedLocalHistory=${prepared.appliedLocalHistory}"
+                        )
                         onRoutineLoaded(routineWithValues)
+
+                        if (!sessionRestoredFromCache) {
+                            stateManager.clear()
+                            stateManager.seedFromRoutine(routineWithValues)
+                        }
+
                         applyRoutineToAdapter(routineWithValues)
                         initializeCompletionStructure(routineWithValues)
 
                         workoutViewModel.activeWorkoutCache.saveRoutineId(args.routineId)
                         workoutViewModel.activeWorkoutCache.saveStartedAt(workoutStartedAt)
 
-                        Snackbar.make(
-                            binding.root,
-                            "Valores de tu última sesión cargados",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
+                        if (prepared.appliedLocalHistory) {
+                            Snackbar.make(
+                                binding.root,
+                                "Valores de tu última sesión cargados",
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
                 is Resource.Error -> {
+                    binding.progressBar.isVisible = false
                     Log.w(TAG, "LOAD_VALUES_FAILED | error=${resource.message}")
                     Toast.makeText(requireContext(), "No se pudieron cargar los valores previos", Toast.LENGTH_SHORT).show()
                 }
-                else -> {}
             }
         }
     }
@@ -404,7 +418,7 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
 
     private fun loadRoutineData() {
         Log.i(TAG, "LOAD_ROUTINE | routineId=${args.routineId}")
-        routineViewModel.getRoutineForTraining(args.routineId)
+        routineViewModel.getRoutineForTrainingLocalFirst(args.routineId)
         routineViewModel.markRoutineAsUsed(args.routineId)
         if (!sessionRestoredFromCache) {
             workoutStartedAt = System.currentTimeMillis()
@@ -412,8 +426,8 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
     }
 
     private fun loadLastValuesAndSubmit(routine: RoutineResponse) {
-        Log.i(TAG, "LOAD_LAST_VALUES_FROM_LOCAL | routineId=${routine.id}")
-        workoutViewModel.loadAndApplyLastValuesLocal(routine)
+        Log.i(TAG, "PREPARE_WORKOUT_DISPLAY | routineId=${routine.id}")
+        workoutViewModel.prepareWorkoutDisplay(routine)
     }
 
     // ── RecyclerView ───────────────────────────────────────────────────────
@@ -522,8 +536,19 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
             setCompletionState = completionState.getAllCompletedSets().associateWith { true },
             startedAt = workoutStartedAt,
             finishedAt = System.currentTimeMillis(),
-            performanceScore = null
+            performanceScore = null,
+            setTemplateResponses = buildSetTemplateMap()
         )
+    }
+
+    private fun buildSetTemplateMap(): Map<Long, com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse> {
+        val map = mutableMapOf<Long, com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse>()
+        currentRoutine?.exercises.orEmpty().forEach { exercise ->
+            exercise.setsTemplate.orEmpty().forEach { set ->
+                map[set.id] = set
+            }
+        }
+        return map
     }
 
     private fun buildParamStateForSave(): Map<Long, Map<String, Any?>> {
@@ -784,7 +809,8 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                                         setCompletionState = completionState.getAllCompletedSets()
                                             .associateWith { true },
                                         startedAt = workoutStartedAt,
-                                        finishedAt = System.currentTimeMillis()
+                                        finishedAt = System.currentTimeMillis(),
+                                        setTemplateResponses = buildSetTemplateMap()
                                     )
                                 }
                             }

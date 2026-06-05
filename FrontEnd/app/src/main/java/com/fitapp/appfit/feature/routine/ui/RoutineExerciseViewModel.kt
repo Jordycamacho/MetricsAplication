@@ -51,6 +51,7 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
         viewModelScope.launch {
             val result = repository.addExerciseToRoutine(routineId, request)
             if (result is Resource.Success) {
+                routineRepository.markTrainingCacheStale(routineId)
                 routineRepository.refreshTrainingCache(routineId)
             }
             _addExerciseState.value = result
@@ -68,6 +69,7 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
         viewModelScope.launch {
             val result = repository.updateExerciseInRoutine(routineId, exerciseId, request)
             if (result is Resource.Success) {
+                routineRepository.markTrainingCacheStale(routineId)
                 routineRepository.refreshTrainingCache(routineId)
             }
             _updateExerciseState.value = result
@@ -82,6 +84,7 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
             val result = repository.removeExerciseFromRoutine(routineId, exerciseId)
             _deleteState.value = result
             if (result is Resource.Success) {
+                routineRepository.markTrainingCacheStale(routineId)
                 routineRepository.refreshTrainingCache(routineId)
                 loadRoutineExercises(routineId)
             }

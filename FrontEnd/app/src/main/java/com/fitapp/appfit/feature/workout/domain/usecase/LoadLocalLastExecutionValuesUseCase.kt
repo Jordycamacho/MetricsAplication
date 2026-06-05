@@ -1,7 +1,6 @@
 package com.fitapp.appfit.feature.workout.domain.usecase
 
 import android.util.Log
-import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.workout.data.repository.LocalLastExecutionValuesHelper
 
@@ -24,30 +23,25 @@ class LoadLocalLastExecutionValuesUseCase(
      */
     suspend operator fun invoke(
         routine: RoutineResponse
-    ): Resource<RoutineResponse> {
+    ): RoutineWithLocalHistory {
         Log.i(TAG, "LOADING_LOCAL_VALUES | routineId=${routine.id}")
 
         return try {
-            // Comprueba si hay historial local
             val hasHistory = localHelper.hasLocalHistory(routine.id)
             if (!hasHistory) {
                 Log.d(TAG, "NO_LOCAL_HISTORY_FOUND | routineId=${routine.id}")
-                return Resource.Success(routine)
+                return RoutineWithLocalHistory(routine, appliedLocalHistory = false)
             }
 
-            // Obtiene el timestamp del último entrenamiento
             val lastWorkoutTime = localHelper.getLastWorkoutTime(routine.id)
             Log.i(TAG, "LOCAL_HISTORY_FOUND | lastWorkout=${lastWorkoutTime ?: "unknown"}")
 
-            // Aplica los valores históricos
             val routineWithValues = localHelper.applyLastValuesToRoutine(routine)
-
             Log.i(TAG, "LOCAL_VALUES_APPLIED | routineId=${routine.id}")
-            Resource.Success(routineWithValues)
+            RoutineWithLocalHistory(routineWithValues, appliedLocalHistory = true)
         } catch (e: Exception) {
             Log.e(TAG, "ERROR_LOADING_LOCAL_VALUES | error=${e.message}", e)
-            // Si hay error, devuelve la rutina sin valores históricos
-            Resource.Success(routine)
+            RoutineWithLocalHistory(routine, appliedLocalHistory = false)
         }
     }
 }

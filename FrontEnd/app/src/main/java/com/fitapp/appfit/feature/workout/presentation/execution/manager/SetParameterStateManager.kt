@@ -2,6 +2,7 @@ package com.fitapp.appfit.feature.workout.presentation.execution.manager
 
 import android.util.Log
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
+import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 
 class SetParameterStateManager {
@@ -36,6 +37,28 @@ class SetParameterStateManager {
             return
         }
 
+        state[setId] = buildSetState(routineExerciseId, exerciseId, setTemplate)
+        Log.d(TAG, "SET_INITIALIZED | setId=$setId | exerciseId=$exerciseId | params=${state[setId]?.parameters?.size}")
+    }
+
+    /**
+     * Pre-populates all sets from a routine before the adapter binds.
+     * Ensures last-execution values merged into the routine tree reach the UI.
+     */
+    fun seedFromRoutine(routine: RoutineResponse) {
+        Log.i(TAG, "SEED_FROM_ROUTINE | routineId=${routine.id}")
+        routine.exercises.orEmpty().forEach { exercise ->
+            exercise.setsTemplate.orEmpty().forEach { set ->
+                state[set.id] = buildSetState(exercise.id, exercise.exerciseId, set)
+            }
+        }
+    }
+
+    private fun buildSetState(
+        routineExerciseId: Long,
+        exerciseId: Long,
+        setTemplate: RoutineSetTemplateResponse
+    ): SetState {
         val paramMap = mutableMapOf<Long, ParameterValues>()
         setTemplate.parameters?.forEach { param ->
             paramMap[param.parameterId] = ParameterValues(
@@ -45,9 +68,7 @@ class SetParameterStateManager {
                 integerValue = param.integerValue
             )
         }
-
-        state[setId] = SetState(routineExerciseId, exerciseId, paramMap)
-        Log.d(TAG, "SET_INITIALIZED | setId=$setId | exerciseId=$exerciseId | params=${paramMap.size}")
+        return SetState(routineExerciseId, exerciseId, paramMap)
     }
 
     fun restoreFromExport(

@@ -17,6 +17,7 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExe
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.routine.util.RoutineErrorHandler
+import com.fitapp.appfit.feature.routine.util.TrainingCachePreferences
 import com.fitapp.appfit.shared.enums.SyncStatus
 import com.fitapp.appfit.shared.model.PageResponse
 import retrofit2.HttpException
@@ -41,6 +42,7 @@ class RoutineRepository(private val context: Context) {
     private val exerciseDao by lazy { db.routineExerciseDao() }
     private val setTemplateDao by lazy { db.setTemplateDao() }
     private val setParameterDao by lazy { db.setParameterDao() }
+    private val lastSetExecutionDao by lazy { db.lastSetExecutionDao() }
 
     // ── CRUD básico ───────────────────────────────────────────────────────────
 
@@ -53,8 +55,13 @@ class RoutineRepository(private val context: Context) {
     suspend fun updateRoutine(id: Long, request: UpdateRoutineRequest) =
         call { service.updateRoutine(id, request) }
 
-    suspend fun deleteRoutine(id: Long) =
-        callUnit { service.deleteRoutine(id) }
+    suspend fun deleteRoutine(id: Long): Resource<Unit> {
+        val result = callUnit { service.deleteRoutine(id) }
+        if (result is Resource.Success) {
+            deleteRoutineLocally(id)
+        }
+        return result
+    }
 
     suspend fun toggleRoutineActiveStatus(id: Long, active: Boolean) =
         callUnit { service.toggleRoutineActiveStatus(id, active) }
@@ -223,6 +230,27 @@ class RoutineRepository(private val context: Context) {
 
     // ── getRoutineForTraining con fallback completo ───────────────────────────
 
+    /**
+     * Loads training routine from Room when a valid local tree exists and the cache
+     * is not marked stale. Falls back to [getRoutineForTraining] (network + cache).
+     */
+    suspend fun getRoutineForTrainingLocalFirst(id: Long): Resource<RoutineResponse> {
+        if (!TrainingCachePreferences.needsRefresh(context, id)) {
+            loadTrainingRoutineFromRoom(id)?.let { local ->
+                if (!local.exercises.isNullOrEmpty()) {
+                    Log.i(
+                        TAG,
+                        "FOR_TRAINING_LOCAL_FIRST | routineId=$id | exercises=${local.exercises?.size}"
+                    )
+                    return Resource.Success(local)
+                }
+            }
+        } else {
+            Log.i(TAG, "FOR_TRAINING_STALE_CACHE | routineId=$id — fetching from server")
+        }
+        return getRoutineForTraining(id)
+    }
+
     suspend fun getRoutineForTraining(id: Long): Resource<RoutineResponse> {
         val networkResult = call { service.getRoutineForTraining(id) }
         if (networkResult is Resource.Success) {
@@ -240,35 +268,31 @@ class RoutineRepository(private val context: Context) {
             }
         }
 
+        return loadTrainingRoutineFromRoom(id)?.let { local ->
+            Log.d(TAG, "FOR_TRAINING_OFFLINE_FALLBACK | routineId=$id")
+            Resource.Success(local)
+        } ?: networkResult
+    }
+
+    private suspend fun loadTrainingRoutineFromRoom(id: Long): RoutineResponse? {
         return try {
-            Log.d("RoutineRepository", "Fallback offline: buscando rutina $id en Room")
-
-            val routine = routineDao.getRoutineById(id)
-            if (routine == null) {
-                Log.w("RoutineRepository", "Rutina $id NO encontrada en Room — sin cache previo")
-                return networkResult
-            }
-            Log.d("RoutineRepository", "Rutina $id encontrada en Room: ${routine.name}")
-
+            val routine = routineDao.getRoutineById(id) ?: return null
             val exercises = exerciseDao.getExercises(id)
-            Log.d("RoutineRepository", "Ejercicios en Room para rutina $id: ${exercises.size}")
+            if (exercises.isEmpty()) return null
 
             val exerciseResponses = exercises.map { exercise ->
                 val sets = setTemplateDao.getSets(exercise.id)
-                Log.d("RoutineRepository", "  Ejercicio ${exercise.id} (${exercise.exerciseName}): ${sets.size} sets")
                 val setResponses = sets.map { set ->
                     val params = setParameterDao.getParameters(set.id)
-                    Log.d("RoutineRepository", "    Set ${set.id}: ${params.size} params")
                     set.toResponse(params)
                 }
                 exercise.toResponse(routineId = id, setsTemplate = setResponses)
             }
 
-            Log.d("RoutineRepository", "Fallback completado OK para rutina $id")
-            Resource.Success(routine.toFullResponse(exerciseResponses))
+            routine.toFullResponse(exerciseResponses)
         } catch (e: Exception) {
-            Log.e("RoutineRepository", "Error en fallback Room para rutina $id: ${e.message}", e)
-            networkResult
+            Log.e(TAG, "Error loading training routine from Room | routineId=$id | ${e.message}", e)
+            null
         }
     }
 
@@ -420,8 +444,14 @@ class RoutineRepository(private val context: Context) {
     // ── Cache helpers ─────────────────────────────────────────────────────────
 
     suspend fun invalidateTrainingCache(routineId: Long) {
-        clearLocalRoutineTree(routineId)
+        TrainingCachePreferences.markNeedsRefresh(context, routineId)
+        deleteRoutineLocally(routineId)
         Log.i(TAG, "INVALIDATED_TRAINING_CACHE | routineId=$routineId")
+    }
+
+    fun markTrainingCacheStale(routineId: Long) {
+        TrainingCachePreferences.markNeedsRefresh(context, routineId)
+        Log.i(TAG, "MARKED_TRAINING_CACHE_STALE | routineId=$routineId")
     }
 
     /** Repopulates local training cache from API (for-training or exercises fallback). */
@@ -461,27 +491,53 @@ class RoutineRepository(private val context: Context) {
 
     private suspend fun clearLocalDefaultGymRoutines() {
         val ids = routineDao.getIdsByNames(DEFAULT_GYM_ROUTINE_NAMES)
-        ids.forEach { clearLocalRoutineTree(it) }
+        ids.forEach { deleteRoutineLocally(it) }
         Log.i(TAG, "CLEARED_LOCAL_GYM_ROUTINES | count=${ids.size}")
     }
 
     private suspend fun purgeStaleLocalRoutines(serverIds: Set<Long>) {
         val localIds = routineDao.getRoutines("").map { it.id }
-        localIds.filter { it !in serverIds }.forEach { clearLocalRoutineTree(it) }
+        localIds.filter { it !in serverIds }.forEach { deleteRoutineLocally(it) }
     }
 
-    private suspend fun clearLocalRoutineTree(routineId: Long) {
+    /** Removes exercises/sets/params for cache refresh; keeps routine row and last execution history. */
+    private suspend fun clearRoutineTrainingChildren(routineId: Long) {
         setParameterDao.deleteByRoutineId(routineId)
         setTemplateDao.deleteByRoutineId(routineId)
         exerciseDao.deleteByRoutineId(routineId)
-        // No borrar last_set_executions: historial de última ejecución por setTemplateId
+        Log.d(TAG, "CLEARED_TRAINING_CHILDREN | routineId=$routineId")
+    }
+
+    /** Full local removal: training cache, last execution values, and routine header. */
+    private suspend fun deleteRoutineLocally(routineId: Long) {
+        lastSetExecutionDao.deleteByRoutine(routineId)
+        clearRoutineTrainingChildren(routineId)
         routineDao.deleteRoutine(routineId)
-        Log.d(TAG, "CLEARED_LOCAL_ROUTINE_TREE | routineId=$routineId")
+        Log.d(TAG, "DELETED_ROUTINE_LOCALLY | routineId=$routineId")
+    }
+
+    private suspend fun pruneStaleLastExecutions(routine: RoutineResponse) {
+        val currentSetIds = routine.exercises.orEmpty()
+            .flatMap { ex -> ex.setsTemplate.orEmpty().map { it.id } }
+            .toSet()
+        if (currentSetIds.isEmpty()) return
+
+        val staleSetIds = lastSetExecutionDao.getLastExecutionsByRoutine(routine.id)
+            .map { it.setTemplateId }
+            .distinct()
+            .filter { it !in currentSetIds }
+
+        staleSetIds.forEach { setId ->
+            lastSetExecutionDao.deleteBySet(routine.id, setId)
+        }
+        if (staleSetIds.isNotEmpty()) {
+            Log.i(TAG, "PRUNED_STALE_LAST_EXECUTIONS | routineId=${routine.id} | sets=${staleSetIds.size}")
+        }
     }
 
     private suspend fun cacheRoutineForTraining(routine: RoutineResponse) {
         try {
-            clearLocalRoutineTree(routine.id)
+            clearRoutineTrainingChildren(routine.id)
             routineDao.insertRoutine(
                 RoutineEntity(
                     id = routine.id,
@@ -565,6 +621,8 @@ class RoutineRepository(private val context: Context) {
                     }
                 }
             }
+            pruneStaleLastExecutions(routine)
+            TrainingCachePreferences.clearNeedsRefresh(context, routine.id)
         } catch (e: Exception) {
             Log.e("RoutineRepository", "Error cacheando rutina ${routine.id}: ${e.message}", e)
         }

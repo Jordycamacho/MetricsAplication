@@ -9,6 +9,7 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.workout.data.repository.SaveLastExecutionValuesHelper
 import com.fitapp.appfit.feature.workout.domain.usecase.LoadLocalLastExecutionValuesUseCase
+import com.fitapp.appfit.feature.workout.domain.usecase.RoutineWithLocalHistory
 import com.fitapp.appfit.feature.workout.domain.usecase.SaveWorkoutSessionUseCase
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import kotlinx.coroutines.launch
@@ -24,9 +25,9 @@ class WorkoutExecutionViewModel(
         private const val TAG = "WorkoutExecutionViewModel"
     }
 
-    // Rutina final lista para mostrar (con o sin valores históricos aplicados)
-    private val _routineWithValuesState = MutableLiveData<Resource<RoutineResponse>>()
-    val routineWithValuesState: LiveData<Resource<RoutineResponse>> = _routineWithValuesState
+    // Rutina final lista para mostrar (estructura + valores históricos locales aplicados)
+    private val _routineWithValuesState = MutableLiveData<Resource<RoutineWithLocalHistory>>()
+    val routineWithValuesState: LiveData<Resource<RoutineWithLocalHistory>> = _routineWithValuesState
 
     // Resultado del guardado de sesión
     private val _saveSessionState = MutableLiveData<Resource<Long>>()
@@ -77,22 +78,27 @@ class WorkoutExecutionViewModel(
     // ── Last values ───────────────────────────────────────────────────────────
 
     /**
-     * Carga los últimos valores DESDE SQLITE LOCAL (no desde servidor)
+     * Applies last execution values from SQLite and emits a single ready-to-display routine.
      */
-    fun loadAndApplyLastValuesLocal(routine: RoutineResponse) {
-        Log.i(TAG, "LOAD_AND_APPLY_LAST_VALUES_LOCAL | routineId=${routine.id}")
+    fun prepareWorkoutDisplay(routine: RoutineResponse) {
+        Log.i(TAG, "PREPARE_WORKOUT_DISPLAY | routineId=${routine.id}")
         _routineWithValuesState.value = Resource.Loading()
 
         viewModelScope.launch {
             try {
-                val resourceWithValues = loadLocalLastExecutionValuesUseCase(routine)
-                _routineWithValuesState.value = resourceWithValues
+                val prepared = loadLocalLastExecutionValuesUseCase(routine)
+                _routineWithValuesState.value = Resource.Success(prepared)
             } catch (e: Exception) {
-                Log.e(TAG, "ERROR_LOADING_LOCAL_VALUES | ${e.message}", e)
-                _routineWithValuesState.value = Resource.Success(routine)
+                Log.e(TAG, "ERROR_PREPARING_WORKOUT | ${e.message}", e)
+                _routineWithValuesState.value = Resource.Success(
+                    RoutineWithLocalHistory(routine, appliedLocalHistory = false)
+                )
             }
         }
     }
+
+    /** @deprecated Use [prepareWorkoutDisplay] */
+    fun loadAndApplyLastValuesLocal(routine: RoutineResponse) = prepareWorkoutDisplay(routine)
 
     // ── Save session ──────────────────────────────────────────────────────────
 
@@ -103,7 +109,8 @@ class WorkoutExecutionViewModel(
         setCompletionState: Map<Long, Boolean>,
         startedAt: Long,
         finishedAt: Long,
-        performanceScore: Int? = null
+        performanceScore: Int? = null,
+        setTemplateResponses: Map<Long, com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse> = emptyMap()
     ) {
         Log.i(TAG, "SAVE_WORKOUT_SESSION | routineId=$routineId | userId=$userId")
         _saveSessionState.value = Resource.Loading()
@@ -117,7 +124,8 @@ class WorkoutExecutionViewModel(
                     setCompletionState = setCompletionState,
                     startedAt = startedAt,
                     finishedAt = finishedAt,
-                    performanceScore = performanceScore
+                    performanceScore = performanceScore,
+                    setTemplateResponses = setTemplateResponses
                 )
 
                 if (result.isSuccess) {

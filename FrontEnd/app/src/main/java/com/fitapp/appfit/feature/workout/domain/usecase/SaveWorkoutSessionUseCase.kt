@@ -21,11 +21,11 @@ class SaveWorkoutSessionUseCase(
         setCompletionState: Map<Long, Boolean>,
         startedAt: Long,
         finishedAt: Long,
-        performanceScore: Int? = null
+        performanceScore: Int? = null,
+        setTemplateResponses: Map<Long, RoutineSetTemplateResponse> = emptyMap()
     ): Result<Long> {
         Log.i(TAG, "SAVE_WORKOUT_INVOKED | routineId=$routineId | userId=$userId")
 
-        // Validar entrada
         if (setCompletionState.isEmpty()) {
             Log.w(TAG, "NO_SETS_TO_SAVE")
             return Result.failure(Exception("No hay sets para guardar"))
@@ -42,6 +42,21 @@ class SaveWorkoutSessionUseCase(
         }
 
         return try {
+            // Persist last execution values locally first — independent of server sync.
+            try {
+                saveLastExecutionValuesHelper.saveExecutedValues(
+                    routineId,
+                    setParamState,
+                    setTemplateResponses
+                )
+                Log.i(
+                    TAG,
+                    "EXECUTION_VALUES_SAVED_TO_LOCAL_DB | routineId=$routineId | sets=${setParamState.size}"
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "ERROR_SAVING_TO_LOCAL_DB | ${e.message}", e)
+            }
+
             val result = workoutRepository.saveWorkoutSession(
                 routineId = routineId,
                 userId = userId,
@@ -51,20 +66,6 @@ class SaveWorkoutSessionUseCase(
                 finishedAt = finishedAt,
                 performanceScore = performanceScore
             )
-
-            if (result.isSuccess) {
-                try {
-
-                    saveLastExecutionValuesHelper.saveExecutedValues(
-                        routineId,
-                        setParamState,
-                        emptyMap()
-                    )
-                    Log.i(TAG, "EXECUTION_VALUES_SAVED_TO_LOCAL_DB | routineId=$routineId | sets=${setParamState.size}")
-                } catch (e: Exception) {
-                    Log.e(TAG, "ERROR_SAVING_TO_LOCAL_DB | ${e.message}", e)
-                }
-            }
 
             when {
                 result.isSuccess -> Log.i(TAG, "SAVE_SUCCESS | sessionId=${result.getOrNull()}")

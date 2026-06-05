@@ -117,6 +117,10 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
         repository.getRoutineForTraining(id)
     }
 
+    fun getRoutineForTrainingLocalFirst(id: Long) = launch(_workoutRoutineState) {
+        repository.getRoutineForTrainingLocalFirst(id)
+    }
+
     fun updateRoutine(id: Long, request: UpdateRoutineRequest) {
         val errors = RoutineValidation.validateUpdateForm(
             request.name, request.description, request.goal,
