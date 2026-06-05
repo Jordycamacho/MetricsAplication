@@ -199,6 +199,9 @@ class WorkoutDayAdapter(
                 else allDays.filter { it.dayOfWeek == filterDayOfWeek }
             }
         }
+        if (days.isEmpty() && allDays.isNotEmpty()) {
+            days = allDays
+        }
         expandedDays.clear()
         exerciseExpandCommand = ExerciseExpandCommand.NONE
         updateFilterSubtitle()

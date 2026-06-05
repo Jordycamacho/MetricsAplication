@@ -346,26 +346,41 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
         val savedMode = WorkoutPreferences.getLastFilterMode(ctx)
         val savedSession = WorkoutPreferences.getLastFilterSession(ctx)
         val savedDay = WorkoutPreferences.getLastFilterDay(ctx)
+        val hasExercises = routine.exercises.orEmpty().isNotEmpty()
 
-        val mode = when {
+        var mode = when {
             savedMode != WorkoutPreferences.WorkoutFilterMode.ALL -> savedMode
             WorkoutPreferences.isFilterTodayOnStart(ctx) &&
                 usesDayGrouping &&
                 routine.trainingDays?.contains(LocalDate.now().dayOfWeek.name) == true ->
                 WorkoutPreferences.WorkoutFilterMode.TODAY
-            !usesDayGrouping -> WorkoutPreferences.WorkoutFilterMode.SESSION
             else -> WorkoutPreferences.WorkoutFilterMode.ALL
         }
 
-        val session = if (mode == WorkoutPreferences.WorkoutFilterMode.SESSION) {
-            adapter.suggestSessionNumber(routine.sessionsPerWeek).coerceAtLeast(1)
-        } else savedSession
+        val availableSessions = adapter.availableSessionNumbers()
+        var session = when {
+            mode != WorkoutPreferences.WorkoutFilterMode.SESSION -> savedSession
+            savedSession in availableSessions -> savedSession
+            availableSessions.isNotEmpty() -> availableSessions.first()
+            else -> 1
+        }
 
-        val day = if (mode == WorkoutPreferences.WorkoutFilterMode.DAY) {
-            savedDay ?: adapter.availableDays().firstOrNull()?.first
-        } else null
+        var day = if (mode == WorkoutPreferences.WorkoutFilterMode.DAY) {
+            savedDay?.takeIf { key -> adapter.availableDays().any { it.first == key } }
+                ?: adapter.availableDays().firstOrNull()?.first
+        } else {
+            null
+        }
 
         adapter.setFilter(mode, session, day)
+
+        if (hasExercises && adapter.itemCount == 0) {
+            Log.w(TAG, "FILTER_EMPTY_FALLBACK | mode=$mode session=$session day=$day -> ALL")
+            mode = WorkoutPreferences.WorkoutFilterMode.ALL
+            session = availableSessions.firstOrNull() ?: 1
+            day = null
+            adapter.setFilter(mode, session, day)
+        }
     }
 
     // ── Cache restore ──────────────────────────────────────────────────────

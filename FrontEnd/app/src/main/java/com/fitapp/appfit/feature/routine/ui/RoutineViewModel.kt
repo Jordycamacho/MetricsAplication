@@ -72,8 +72,6 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
     private val _anyUpdateEvent = MutableLiveData<Unit>()
     val anyUpdateEvent: LiveData<Unit> = _anyUpdateEvent
 
-    private var workoutRoutineLoaded = false
-
     // ── CRUD con validación ───────────────────────────────────────────────────
 
     fun createRoutine(
@@ -115,13 +113,8 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
         repository.getRoutine(id)
     }
 
-    fun getRoutineForTraining(id: Long) {
-        if (workoutRoutineLoaded && _workoutRoutineState.value is Resource.Success) {
-            val current = (_workoutRoutineState.value as Resource.Success).data
-            if (current?.id == id) return
-        }
-        workoutRoutineLoaded = true
-        launch(_workoutRoutineState) { repository.getRoutineForTraining(id) }
+    fun getRoutineForTraining(id: Long) = launch(_workoutRoutineState) {
+        repository.getRoutineForTraining(id)
     }
 
     fun updateRoutine(id: Long, request: UpdateRoutineRequest) {

@@ -1,19 +1,22 @@
 package com.fitapp.appfit.feature.routine.ui
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.data.RoutineExerciseRepository
+import com.fitapp.appfit.feature.routine.data.RoutineRepository
 import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.exercise.model.exercise.response.ExerciseResponse
 import kotlinx.coroutines.launch
 
-class RoutineExerciseViewModel : ViewModel() {
+class RoutineExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RoutineExerciseRepository()
+    private val routineRepository = RoutineRepository(application)
 
     // ── Estados ──────────────────────────────────────────────────────────────
 
@@ -46,7 +49,11 @@ class RoutineExerciseViewModel : ViewModel() {
     fun addExerciseToRoutine(routineId: Long, request: AddExerciseToRoutineRequest) {
         _addExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _addExerciseState.value = repository.addExerciseToRoutine(routineId, request)
+            val result = repository.addExerciseToRoutine(routineId, request)
+            if (result is Resource.Success) {
+                routineRepository.refreshTrainingCache(routineId)
+            }
+            _addExerciseState.value = result
         }
     }
 
@@ -59,7 +66,11 @@ class RoutineExerciseViewModel : ViewModel() {
     ) {
         _updateExerciseState.value = Resource.Loading()
         viewModelScope.launch {
-            _updateExerciseState.value = repository.updateExerciseInRoutine(routineId, exerciseId, request)
+            val result = repository.updateExerciseInRoutine(routineId, exerciseId, request)
+            if (result is Resource.Success) {
+                routineRepository.refreshTrainingCache(routineId)
+            }
+            _updateExerciseState.value = result
         }
     }
 
@@ -71,6 +82,7 @@ class RoutineExerciseViewModel : ViewModel() {
             val result = repository.removeExerciseFromRoutine(routineId, exerciseId)
             _deleteState.value = result
             if (result is Resource.Success) {
+                routineRepository.refreshTrainingCache(routineId)
                 loadRoutineExercises(routineId)
             }
         }

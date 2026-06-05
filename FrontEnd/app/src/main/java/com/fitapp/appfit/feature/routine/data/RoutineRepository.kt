@@ -35,6 +35,7 @@ class RoutineRepository(private val context: Context) {
     }
 
     private val service = RoutineService.instance
+    private val exerciseService = RoutineExerciseService.instance
     private val db by lazy { AppDatabase.getInstance(context) }
     private val routineDao by lazy { db.routineDao() }
     private val exerciseDao by lazy { db.routineExerciseDao() }
@@ -229,6 +230,16 @@ class RoutineRepository(private val context: Context) {
             return networkResult
         }
 
+        tryFetchTrainingViaExercisesEndpoint(id)?.let { alternate ->
+            if (alternate is Resource.Success && !alternate.data?.exercises.isNullOrEmpty()) {
+                Log.i(
+                    TAG,
+                    "FOR_TRAINING_FALLBACK_EXERCISES_OK | routineId=$id | exercises=${alternate.data?.exercises?.size}"
+                )
+                return alternate
+            }
+        }
+
         return try {
             Log.d("RoutineRepository", "Fallback offline: buscando rutina $id en Room")
 
@@ -407,6 +418,46 @@ class RoutineRepository(private val context: Context) {
     }
 
     // ── Cache helpers ─────────────────────────────────────────────────────────
+
+    suspend fun invalidateTrainingCache(routineId: Long) {
+        clearLocalRoutineTree(routineId)
+        Log.i(TAG, "INVALIDATED_TRAINING_CACHE | routineId=$routineId")
+    }
+
+    /** Repopulates local training cache from API (for-training or exercises fallback). */
+    suspend fun refreshTrainingCache(routineId: Long) {
+        when (val result = getRoutineForTraining(routineId)) {
+            is Resource.Success -> Log.i(
+                TAG,
+                "REFRESH_TRAINING_CACHE_OK | routineId=$routineId | exercises=${result.data?.exercises?.size ?: 0}"
+            )
+            is Resource.Error -> Log.w(TAG, "REFRESH_TRAINING_CACHE_FAILED | routineId=$routineId | ${result.message}")
+            else -> Unit
+        }
+    }
+
+    private suspend fun tryFetchTrainingViaExercisesEndpoint(id: Long): Resource<RoutineResponse>? {
+        val exercisesResult = call { exerciseService.getRoutineExercises(id) }
+        if (exercisesResult !is Resource.Success) {
+            Log.w(TAG, "FOR_TRAINING_FALLBACK_EXERCISES_FAILED | routineId=$id")
+            return null
+        }
+
+        val exercises = exercisesResult.data.orEmpty()
+        if (exercises.isEmpty()) return null
+
+        val header = when (val routineResult = call { service.getRoutine(id) }) {
+            is Resource.Success -> routineResult.data
+            else -> null
+        }
+
+        val response = header?.copy(exercises = exercises)
+            ?: routineDao.getRoutineById(id)?.toFullResponse(exercises)
+            ?: return null
+
+        cacheRoutineForTraining(response)
+        return Resource.Success(response)
+    }
 
     private suspend fun clearLocalDefaultGymRoutines() {
         val ids = routineDao.getIdsByNames(DEFAULT_GYM_ROUTINE_NAMES)

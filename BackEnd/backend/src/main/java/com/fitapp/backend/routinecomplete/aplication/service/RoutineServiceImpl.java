@@ -121,6 +121,8 @@ public class RoutineServiceImpl implements RoutineUseCase {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "lastUsedRoutines", allEntries = true)
     public RoutineResponse getRoutineForTraining(Long id, String userEmail) {
         log.info("GET_ROUTINE_TRAINING | routineId={} | user={}", id, userEmail);
 
