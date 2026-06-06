@@ -1,6 +1,7 @@
 package com.fitapp.backend.workout.infrastructure.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -37,4 +38,18 @@ public interface SetExecutionRepository extends JpaRepository<SetExecutionEntity
            "JOIN FETCH se.parameters p " +
            "WHERE se.sessionExercise.session.id = :sessionId")
     List<SetExecutionEntity> findBySessionIdWithParameters(@Param("sessionId") Long sessionId);
+
+    /**
+     * Clears set_template_id on historical workout sets so routine templates can be removed
+     * without deleting past session metrics.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            UPDATE set_executions
+            SET set_template_id = NULL
+            WHERE set_template_id IN (
+                SELECT id FROM routine_set_templates WHERE routine_exercise_id = :routineExerciseId
+            )
+            """, nativeQuery = true)
+    int detachSetTemplateByRoutineExerciseId(@Param("routineExerciseId") Long routineExerciseId);
 }

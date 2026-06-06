@@ -15,9 +15,13 @@ public interface RoutineSetParameterRepository extends JpaRepository<RoutineSetP
 
     List<RoutineSetParameterEntity> findBySetTemplateId(Long setTemplateId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM RoutineSetParameterEntity p WHERE p.setTemplate.id = :setTemplateId")
     int deleteBySetTemplateId(@Param("setTemplateId") Long setTemplateId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM RoutineSetParameterEntity p WHERE p.setTemplate.routineExercise.id = :routineExerciseId")
+    int deleteByRoutineExerciseId(@Param("routineExerciseId") Long routineExerciseId);
 
     @Modifying
     @Query("DELETE FROM RoutineSetParameterEntity p WHERE p.id IN :ids")

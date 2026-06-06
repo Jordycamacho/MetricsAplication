@@ -15,7 +15,11 @@ import com.fitapp.backend.routinecomplete.domain.model.RoutineExerciseModel;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.converter.RoutineConverter;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineEntity;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineExerciseEntity;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.repository.RoutineExerciseParameterRepository;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.repository.RoutineExerciseRepository;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.repository.RoutineSetParameterRepository;
+import com.fitapp.backend.routinecomplete.infrastructure.persistence.repository.RoutineSetTemplateRepository;
+import com.fitapp.backend.workout.infrastructure.persistence.repository.SetExecutionRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 public class RoutineExercisePersistenceAdapter implements RoutineExercisePersistencePort {
 
     private final RoutineExerciseRepository routineExerciseRepository;
+    private final RoutineSetTemplateRepository setTemplateRepository;
+    private final RoutineSetParameterRepository setParameterRepository;
+    private final RoutineExerciseParameterRepository routineExerciseParameterRepository;
+    private final SetExecutionRepository setExecutionRepository;
     private final RoutineConverter routineConverter;
 
     @Override
@@ -88,10 +96,22 @@ public class RoutineExercisePersistenceAdapter implements RoutineExercisePersist
     @Transactional
     public void deleteByIdAndRoutineId(Long id, Long routineId) {
         log.info("DELETE_ROUTINE_EXERCISE | id={} | routineId={}", id, routineId);
-        RoutineExerciseEntity entity = routineExerciseRepository.findByIdAndRoutineIdWithSets(id, routineId)
-                .orElseThrow(() -> new RuntimeException("RoutineExercise not found: id=" + id + ", routineId=" + routineId));
-        routineExerciseRepository.delete(entity);
-        log.info("DELETE_ROUTINE_EXERCISE_OK | id={} | routineId={}", id, routineId);
+        if (!routineExerciseRepository.findByIdAndRoutineId(id, routineId).isPresent()) {
+            throw new RuntimeException("RoutineExercise not found: id=" + id + ", routineId=" + routineId);
+        }
+
+        // Detach historical workout metrics, then bulk-delete template graph (no bag fetch).
+        int detachedExecutions = setExecutionRepository.detachSetTemplateByRoutineExerciseId(id);
+        int deletedSetParams = setParameterRepository.deleteByRoutineExerciseId(id);
+        int deletedSets = setTemplateRepository.deleteByRoutineExerciseId(id);
+        int deletedTargetParams = routineExerciseParameterRepository.deleteByRoutineExerciseId(id);
+        int deleted = routineExerciseRepository.deleteRowByIdAndRoutineId(id, routineId);
+        if (deleted == 0) {
+            throw new RuntimeException("RoutineExercise not found: id=" + id + ", routineId=" + routineId);
+        }
+
+        log.info("DELETE_ROUTINE_EXERCISE_OK | id={} | routineId={} | detachedExecutions={} | sets={} | setParams={} | targetParams={}",
+                id, routineId, detachedExecutions, deletedSets, deletedSetParams, deletedTargetParams);
     }
 
     @Override

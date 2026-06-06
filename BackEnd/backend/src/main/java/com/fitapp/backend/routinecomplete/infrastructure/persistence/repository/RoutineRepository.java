@@ -28,6 +28,8 @@ public interface RoutineRepository extends JpaRepository<RoutineEntity, Long>, J
         @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
         Optional<RoutineEntity> findByIdAndUserId(Long id, Long userId);
 
+        boolean existsByIdAndUserId(Long id, Long userId);
+
         @EntityGraph(attributePaths = { "sport", "exercises", "exercises.exercise" })
         Page<RoutineEntity> findByUserId(Long userId, Pageable pageable);
 

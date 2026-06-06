@@ -29,7 +29,7 @@ class RoutineExerciseRepository {
         call { service.updateExerciseInRoutine(routineId, exerciseId, request) }
 
     suspend fun removeExerciseFromRoutine(routineId: Long, exerciseId: Long): Resource<Unit> =
-        callUnit { service.removeExerciseFromRoutine(routineId, exerciseId) }
+        callUnitNoContent { service.removeExerciseFromRoutine(routineId, exerciseId) }
 
     suspend fun reorderExercises(routineId: Long, exerciseIds: List<Long>): Resource<Unit> =
         callUnit { service.reorderExercises(routineId, exerciseIds) }
@@ -54,6 +54,16 @@ class RoutineExerciseRepository {
         return try {
             val response = block()
             if (response.isSuccessful) Resource.Success(Unit)
+            else Resource.Error(httpError(response.code()))
+        } catch (e: Exception) {
+            Resource.Error(networkError(e))
+        }
+    }
+
+    private suspend fun callUnitNoContent(block: suspend () -> Response<*>): Resource<Unit> {
+        return try {
+            val response = block()
+            if (response.code() == 204) Resource.Success(Unit)
             else Resource.Error(httpError(response.code()))
         } catch (e: Exception) {
             Resource.Error(networkError(e))

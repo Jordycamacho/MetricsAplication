@@ -22,7 +22,7 @@ public interface RoutineSetTemplateRepository extends JpaRepository<RoutineSetTe
 
         boolean existsByRoutineExerciseIdAndPosition(Long routineExerciseId, Integer position);
 
-        @Modifying
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
         @Query("DELETE FROM RoutineSetTemplateEntity s WHERE s.routineExercise.id = :routineExerciseId")
         int deleteByRoutineExerciseId(@Param("routineExerciseId") Long routineExerciseId);
 

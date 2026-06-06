@@ -157,9 +157,11 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
 
                 UserModel user = findUser(userEmail);
 
-                // Verificar que la rutina existe y pertenece al usuario
-                routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new BusinessException("Routine not found: " + routineId));
+                // Lightweight ownership check — do not load exercises into the persistence context,
+                // or Hibernate can re-attach the row we delete via the parent collection.
+                if (!routineRepository.existsByIdAndUserId(routineId, user.getId())) {
+                        throw new BusinessException("Routine not found: " + routineId);
+                }
 
                 routineExercisePersistencePort.deleteByIdAndRoutineId(exerciseId, routineId);
 
