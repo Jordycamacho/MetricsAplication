@@ -2,6 +2,8 @@
 
 Aplicación full-stack de fitness con cliente Android nativo y backend Spring Boot, que incluye gestión de entrenamientos, métricas personalizadas, planificación de rutinas y seguimiento de sesiones en tiempo real.
 
+**Documentación del producto:** visión y propósito en [`docs/VISION.md`](docs/VISION.md) · tareas v1 en [`docs/BACKLOG.md`](docs/BACKLOG.md)
+
 ---
 
 ## Tabla de Contenidos

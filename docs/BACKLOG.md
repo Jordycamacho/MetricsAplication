@@ -1,7 +1,8 @@
 # JNOBFIT — Backlog v1
 
 > **Leyenda:** ✅ completada · 🔴 bloqueante v1 · 🟡 pendiente v1 · 🔵 post-v1 / feature grande  
-> **Prioridad v1:** correcciones de ejecución de rutinas y workout → sync → suscripción → resto.
+> **Prioridad v1:** correcciones de ejecución de rutinas y workout → sync → suscripción → resto.  
+> **Visión y propósito del producto:** [`docs/VISION.md`](VISION.md)
 
 Última actualización: 2026-06-01
 
