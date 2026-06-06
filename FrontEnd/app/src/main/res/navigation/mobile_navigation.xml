@@ -168,6 +168,9 @@
         android:label="Sets del ejercicio"
         tools:layout="@layout/fragment_routine_sets">
         <argument
+            android:name="routineId"
+            app:argType="long" />
+        <argument
             android:name="routineExerciseId"
             app:argType="long" />
         <argument
@@ -183,6 +186,9 @@
         android:name="com.fitapp.appfit.feature.routine.ui.sets.AddEditSetFragment"
         android:label="Nuevo Set"
         tools:layout="@layout/fragment_add_edit_set">
+        <argument
+            android:name="routineId"
+            app:argType="long" />
         <argument
             android:name="routineExerciseId"
             app:argType="long" />

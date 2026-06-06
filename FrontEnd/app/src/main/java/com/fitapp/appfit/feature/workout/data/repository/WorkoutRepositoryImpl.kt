@@ -328,7 +328,7 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
             rows.map { it.setTemplateId }.distinct()
         }
 
-        val setExecutions = groupedBySet.map { (key, params) ->
+        val setExecutions = groupedBySet.mapNotNull { (key, params) ->
             val (setTemplateId, exerciseId) = key
 
             val positionInExercise =
@@ -357,6 +357,8 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
                 }
                 request
             }
+
+            if (validParams.isEmpty()) return@mapNotNull null
 
             SaveWorkoutSessionRequest.SetExecutionRequest(
                 setTemplateId = setTemplateId,

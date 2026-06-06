@@ -133,6 +133,7 @@ class RoutineExercisesFragment : Fragment() {
 
     private fun navigateToConfigureSets(exercise: RoutineExerciseResponse) {
         val action = RoutineExercisesFragmentDirections.actionRoutineExercisesToRoutineSets(
+            routineId = args.routineId,
             routineExerciseId = exercise.id,
             exerciseId = exercise.exerciseId
         )

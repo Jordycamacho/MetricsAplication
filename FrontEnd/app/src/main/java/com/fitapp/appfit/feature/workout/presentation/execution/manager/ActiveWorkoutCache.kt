@@ -96,6 +96,14 @@ class ActiveWorkoutCache(context: Context) {
     fun hasActiveWorkout(routineId: Long): Boolean =
         prefs.getLong(KEY_ROUTINE_ID, NO_ACTIVE_WORKOUT) == routineId
 
+    /** Clears cached in-progress session when routine structure changes. */
+    fun clearIfRoutine(routineId: Long) {
+        if (hasActiveWorkout(routineId)) {
+            Log.i(TAG, "CACHE_CLEARED_ROUTINE_STRUCTURE_CHANGED | routineId=$routineId")
+            clear()
+        }
+    }
+
     /**
      * Devuelve el estado de parámetros en el mismo formato que exportState()
      * del SetParameterStateManager, o mapa vacío si no hay nada guardado.

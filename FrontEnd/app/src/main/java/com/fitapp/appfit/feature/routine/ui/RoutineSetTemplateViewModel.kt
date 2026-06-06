@@ -1,19 +1,22 @@
 package com.fitapp.appfit.feature.routine.ui
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.core.util.Resource
+import com.fitapp.appfit.feature.routine.data.RoutineRepository
 import com.fitapp.appfit.feature.routine.data.RoutineSetTemplateRepository
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setemplate.request.CreateSetTemplateRequest
 import com.fitapp.appfit.feature.routine.model.setemplate.request.UpdateSetTemplateRequest
 import kotlinx.coroutines.launch
 
-class RoutineSetTemplateViewModel : ViewModel() {
+class RoutineSetTemplateViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RoutineSetTemplateRepository()
+    private val routineRepository = RoutineRepository(application)
 
     // ── Estados ──────────────────────────────────────────────────────────────
 
@@ -61,32 +64,53 @@ class RoutineSetTemplateViewModel : ViewModel() {
         }
     }
 
-    fun createSet(request: CreateSetTemplateRequest) {
+    fun createSet(routineId: Long, request: CreateSetTemplateRequest) {
         _saveState.value = Resource.Loading()
         viewModelScope.launch {
-            _saveState.value = repository.createSetTemplate(request)
+            val result = repository.createSetTemplate(request)
+            if (result is Resource.Success) {
+                invalidateTrainingCache(routineId)
+            }
+            _saveState.value = result
         }
     }
 
-    fun updateSet(id: Long, request: UpdateSetTemplateRequest) {
+    fun updateSet(routineId: Long, id: Long, request: UpdateSetTemplateRequest) {
         _saveState.value = Resource.Loading()
         viewModelScope.launch {
-            _saveState.value = repository.updateSetTemplate(id, request)
+            val result = repository.updateSetTemplate(id, request)
+            if (result is Resource.Success) {
+                invalidateTrainingCache(routineId)
+            }
+            _saveState.value = result
         }
     }
 
-    fun deleteSet(id: Long) {
+    fun deleteSet(routineId: Long, id: Long) {
         _deleteState.value = Resource.Loading()
         viewModelScope.launch {
-            _deleteState.value = repository.deleteSetTemplate(id)
+            val result = repository.deleteSetTemplate(id)
+            if (result is Resource.Success) {
+                invalidateTrainingCache(routineId)
+            }
+            _deleteState.value = result
         }
     }
 
-    fun deleteAllSets(routineExerciseId: Long) {
+    fun deleteAllSets(routineId: Long, routineExerciseId: Long) {
         _deleteAllState.value = Resource.Loading()
         viewModelScope.launch {
-            _deleteAllState.value = repository.deleteSetTemplatesByRoutineExercise(routineExerciseId)
+            val result = repository.deleteSetTemplatesByRoutineExercise(routineExerciseId)
+            if (result is Resource.Success) {
+                invalidateTrainingCache(routineId)
+            }
+            _deleteAllState.value = result
         }
+    }
+
+    private suspend fun invalidateTrainingCache(routineId: Long) {
+        routineRepository.markTrainingCacheStale(routineId)
+        routineRepository.refreshTrainingCache(routineId)
     }
 
     // ── Limpiar one-shots ─────────────────────────────────────────────────────

@@ -240,15 +240,13 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                     binding.recyclerView.isVisible = true
                     resource.data?.let { routine ->
                         onRoutineLoaded(routine)
-                        if (adapter.itemCount == 0) {
-                            if (sessionRestoredFromCache) {
-                                currentRoutine = routine
-                                applyRoutineToAdapter(routine)
-                                initializeCompletionStructure(routine)
-                                restoreCompletedSetsIntoCompletionState()
-                            } else {
-                                loadLastValuesAndSubmit(routine)
-                            }
+                        if (sessionRestoredFromCache) {
+                            currentRoutine = routine
+                            applyRoutineToAdapter(routine)
+                            initializeCompletionStructure(routine)
+                            restoreCompletedSetsIntoCompletionState()
+                        } else {
+                            loadLastValuesAndSubmit(routine)
                         }
                     }
                 }

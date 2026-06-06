@@ -18,6 +18,7 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSet
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.routine.util.RoutineErrorHandler
 import com.fitapp.appfit.feature.routine.util.TrainingCachePreferences
+import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import com.fitapp.appfit.shared.enums.SyncStatus
 import com.fitapp.appfit.shared.model.PageResponse
 import retrofit2.HttpException
@@ -254,8 +255,15 @@ class RoutineRepository(private val context: Context) {
     suspend fun getRoutineForTraining(id: Long): Resource<RoutineResponse> {
         val networkResult = call { service.getRoutineForTraining(id) }
         if (networkResult is Resource.Success) {
-            networkResult.data?.let { cacheRoutineForTraining(it) }
-            return networkResult
+            val training = networkResult.data
+            if (!training?.exercises.isNullOrEmpty()) {
+                cacheRoutineForTraining(training)
+                return networkResult
+            }
+            Log.w(
+                TAG,
+                "FOR_TRAINING_EMPTY_EXERCISES | routineId=$id — trying exercises endpoint"
+            )
         }
 
         tryFetchTrainingViaExercisesEndpoint(id)?.let { alternate ->
@@ -266,6 +274,11 @@ class RoutineRepository(private val context: Context) {
                 )
                 return alternate
             }
+        }
+
+        if (networkResult is Resource.Success) {
+            TrainingCachePreferences.markNeedsRefresh(context, id)
+            return networkResult
         }
 
         return loadTrainingRoutineFromRoom(id)?.let { local ->
@@ -451,6 +464,7 @@ class RoutineRepository(private val context: Context) {
 
     fun markTrainingCacheStale(routineId: Long) {
         TrainingCachePreferences.markNeedsRefresh(context, routineId)
+        ActiveWorkoutCache(context).clearIfRoutine(routineId)
         Log.i(TAG, "MARKED_TRAINING_CACHE_STALE | routineId=$routineId")
     }
 
@@ -517,25 +531,50 @@ class RoutineRepository(private val context: Context) {
     }
 
     private suspend fun pruneStaleLastExecutions(routine: RoutineResponse) {
-        val currentSetIds = routine.exercises.orEmpty()
-            .flatMap { ex -> ex.setsTemplate.orEmpty().map { it.id } }
-            .toSet()
-        if (currentSetIds.isEmpty()) return
+        val paramsBySetId = routine.exercises.orEmpty()
+            .flatMap { ex -> ex.setsTemplate.orEmpty() }
+            .associate { set ->
+                set.id to set.parameters.orEmpty().map { it.parameterId }.toSet()
+            }
+        val currentSetIds = paramsBySetId.keys
 
-        val staleSetIds = lastSetExecutionDao.getLastExecutionsByRoutine(routine.id)
-            .map { it.setTemplateId }
-            .distinct()
-            .filter { it !in currentSetIds }
+        val executions = lastSetExecutionDao.getLastExecutionsByRoutine(routine.id)
+        if (executions.isEmpty()) return
 
-        staleSetIds.forEach { setId ->
-            lastSetExecutionDao.deleteBySet(routine.id, setId)
+        if (currentSetIds.isEmpty()) {
+            lastSetExecutionDao.deleteByRoutine(routine.id)
+            Log.i(TAG, "PRUNED_ALL_LAST_EXECUTIONS | routineId=${routine.id} | reason=no_sets")
+            return
         }
-        if (staleSetIds.isNotEmpty()) {
-            Log.i(TAG, "PRUNED_STALE_LAST_EXECUTIONS | routineId=${routine.id} | sets=${staleSetIds.size}")
+
+        var prunedSets = 0
+        var prunedParams = 0
+        executions.groupBy { it.setTemplateId }.forEach { (setId, rows) ->
+            if (setId !in currentSetIds) {
+                lastSetExecutionDao.deleteBySet(routine.id, setId)
+                prunedSets++
+            } else {
+                val validParamIds = paramsBySetId[setId].orEmpty()
+                rows.filter { it.parameterId !in validParamIds }.forEach { row ->
+                    lastSetExecutionDao.deleteBySetAndParameter(routine.id, setId, row.parameterId)
+                    prunedParams++
+                }
+            }
+        }
+        if (prunedSets > 0 || prunedParams > 0) {
+            Log.i(
+                TAG,
+                "PRUNED_STALE_LAST_EXECUTIONS | routineId=${routine.id} | sets=$prunedSets | params=$prunedParams"
+            )
         }
     }
 
     private suspend fun cacheRoutineForTraining(routine: RoutineResponse) {
+        if (routine.exercises.isNullOrEmpty()) {
+            Log.w(TAG, "SKIP_CACHE_EMPTY_TRAINING_TREE | routineId=${routine.id}")
+            TrainingCachePreferences.markNeedsRefresh(context, routine.id)
+            return
+        }
         try {
             clearRoutineTrainingChildren(routine.id)
             routineDao.insertRoutine(

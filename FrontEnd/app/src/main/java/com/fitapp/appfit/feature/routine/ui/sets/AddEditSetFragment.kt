@@ -311,6 +311,7 @@ class AddEditSetFragment : Fragment() {
                 )
             }
             setViewModel.createSet(
+                args.routineId,
                 CreateSetTemplateRequest(
                     routineExerciseId = args.routineExerciseId,
                     position     = position,
@@ -323,6 +324,7 @@ class AddEditSetFragment : Fragment() {
             )
         } else {
             setViewModel.updateSet(
+                args.routineId,
                 editingSetId!!,
                 UpdateSetTemplateRequest(
                     position     = position,

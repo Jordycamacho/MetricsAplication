@@ -74,6 +74,12 @@ interface LastSetExecutionDao {
     )
     suspend fun deleteBySet(routineId: Long, setTemplateId: Long)
 
+    @Query(
+        "DELETE FROM last_set_executions " +
+                "WHERE routineId = :routineId AND setTemplateId = :setTemplateId AND parameterId = :parameterId"
+    )
+    suspend fun deleteBySetAndParameter(routineId: Long, setTemplateId: Long, parameterId: Long)
+
     /**
      * Comprueba si hay registros para una rutina.
      */

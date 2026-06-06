@@ -61,6 +61,7 @@ class RoutineSetsFragment : Fragment() {
     private fun setupFab() {
         binding.fabAddSet.setOnClickListener {
             val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(
+                routineId = args.routineId,
                 routineExerciseId = args.routineExerciseId,
                 exerciseId = args.exerciseId,
                 setId = -1L
@@ -108,6 +109,7 @@ class RoutineSetsFragment : Fragment() {
 
     private fun navigateToEdit(set: RoutineSetTemplateResponse) {
         val action = RoutineSetsFragmentDirections.actionRoutineSetsToAddEditSet(
+            routineId = args.routineId,
             routineExerciseId = args.routineExerciseId,
             exerciseId = args.exerciseId,
             setId = set.id
@@ -119,7 +121,7 @@ class RoutineSetsFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar set")
             .setMessage("¿Eliminar Set ${set.position}?")
-            .setPositiveButton("Eliminar") { _, _ -> viewModel.deleteSet(set.id) }
+            .setPositiveButton("Eliminar") { _, _ -> viewModel.deleteSet(args.routineId, set.id) }
             .setNegativeButton("Cancelar", null)
             .show()
     }
