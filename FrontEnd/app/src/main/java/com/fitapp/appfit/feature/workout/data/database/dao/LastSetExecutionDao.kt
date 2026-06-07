@@ -92,4 +92,14 @@ interface LastSetExecutionDao {
      */
     @Query("SELECT MAX(recordedAt) FROM last_set_executions WHERE routineId = :routineId")
     suspend fun getLastRecordedTime(routineId: Long): Long?
+
+    @Query(
+        "SELECT * FROM last_set_executions " +
+            "WHERE exerciseId = :exerciseId AND parameterName = :parameterName " +
+            "ORDER BY recordedAt DESC LIMIT 1"
+    )
+    suspend fun getLatestForExerciseParameter(
+        exerciseId: Long,
+        parameterName: String
+    ): LastSetExecutionEntity?
 }

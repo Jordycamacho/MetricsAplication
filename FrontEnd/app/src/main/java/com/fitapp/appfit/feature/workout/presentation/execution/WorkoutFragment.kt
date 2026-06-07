@@ -145,12 +145,12 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
         val lastSetExecutionDao = appDatabase.lastSetExecutionDao()
         val routineDao = appDatabase.routineDao()
 
-        val localLastExecutionHelper = LocalLastExecutionValuesHelper(lastSetExecutionDao)
+        val localLastExecutionHelper = LocalLastExecutionValuesHelper(requireContext(), lastSetExecutionDao)
         val saveLastExecutionHelper = SaveLastExecutionValuesHelper(lastSetExecutionDao, routineDao)
 
         val repository = WorkoutRepositoryImpl(requireContext())
         val saveUseCase = SaveWorkoutSessionUseCase(repository, saveLastExecutionHelper)
-        val loadLocalUseCase = LoadLocalLastExecutionValuesUseCase(localLastExecutionHelper)
+        val loadLocalUseCase = LoadLocalLastExecutionValuesUseCase(requireContext(), localLastExecutionHelper)
 
         val cache = ActiveWorkoutCache(requireContext())
 

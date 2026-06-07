@@ -1,6 +1,8 @@
 package com.fitapp.appfit.feature.workout.domain.usecase
 
+import android.content.Context
 import android.util.Log
+import com.fitapp.appfit.core.preferences.AppPreferences
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.workout.data.repository.LocalLastExecutionValuesHelper
 
@@ -11,9 +13,9 @@ import com.fitapp.appfit.feature.workout.data.repository.LocalLastExecutionValue
  * Reemplaza a LoadLastExerciseValuesUseCase que hacía consultas API.
  */
 class LoadLocalLastExecutionValuesUseCase(
+    private val context: Context,
     private val localHelper: LocalLastExecutionValuesHelper
 ) {
-
     companion object {
         private const val TAG = "LoadLocalLastExecValuesUseCase"
     }
@@ -27,7 +29,12 @@ class LoadLocalLastExecutionValuesUseCase(
         Log.i(TAG, "LOADING_LOCAL_VALUES | routineId=${routine.id}")
 
         return try {
-            val hasHistory = localHelper.hasLocalHistory(routine.id)
+            val strategy = AppPreferences.getPrefillStrategy(context)
+            val hasHistory = when (strategy) {
+                AppPreferences.PrefillStrategy.LAST_EXERCISE -> true
+                AppPreferences.PrefillStrategy.LAST_SAME_ROUTINE ->
+                    localHelper.hasLocalHistory(routine.id)
+            }
             if (!hasHistory) {
                 Log.d(TAG, "NO_LOCAL_HISTORY_FOUND | routineId=${routine.id}")
                 return RoutineWithLocalHistory(routine, appliedLocalHistory = false)

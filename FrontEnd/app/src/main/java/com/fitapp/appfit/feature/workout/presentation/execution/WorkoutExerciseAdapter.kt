@@ -142,6 +142,7 @@ class WorkoutExerciseAdapter(
                     executionConfig = executionConfig
                 )
                 WorkoutPreferences.SetViewType.MODERN -> WorkoutSetAdapter(
+                    context = itemView.context,
                     onValueChanged = { set, type, value ->
                         currentExercise?.let { onSetValueChanged(it, set, type, value) }
                     },

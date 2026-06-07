@@ -52,6 +52,9 @@
         <action
             android:id="@+id/action_profile_to_workout_preferences"
             app:destination="@id/navigation_workout_preferences" />
+        <action
+            android:id="@+id/action_profile_to_import_export"
+            app:destination="@id/navigation_import_export" />
     </fragment>
 
     <!-- Rutinas -->

@@ -1,20 +1,27 @@
 package com.fitapp.appfit.feature.profile
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.profile.data.UserRepository
 import com.fitapp.appfit.feature.profile.model.response.UserResponse
+import com.fitapp.appfit.feature.routine.data.RoutineRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
     private val userRepository = UserRepository()
+    private val routineRepository = RoutineRepository(application)
 
     private val _profileState = MutableLiveData<Resource<UserResponse>>()
     val profileState: LiveData<Resource<UserResponse>> = _profileState
+
+    private val _routineCount = MutableLiveData<Long>()
+    val routineCount: LiveData<Long> = _routineCount
 
     private val _updateProfileState = MutableLiveData<Resource<UserResponse>>()
     val updateProfileState: LiveData<Resource<UserResponse>> = _updateProfileState
@@ -34,7 +41,14 @@ class ProfileViewModel : ViewModel() {
     fun loadProfile() {
         _profileState.value = Resource.Loading()
         viewModelScope.launch {
+            val routinesDeferred = async {
+                when (val result = routineRepository.getRoutines(page = 0, size = 1)) {
+                    is Resource.Success -> result.data?.totalElements ?: 0L
+                    else -> null
+                }
+            }
             _profileState.value = userRepository.getMyProfile()
+            routinesDeferred.await()?.let { _routineCount.value = it }
         }
     }
 

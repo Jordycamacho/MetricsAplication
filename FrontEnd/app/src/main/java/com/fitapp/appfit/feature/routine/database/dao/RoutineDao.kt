@@ -51,6 +51,9 @@ interface RoutineDao {
 
     @Query("SELECT * FROM routines WHERE isActive = 1 AND userId = :userId AND syncStatus != 'PENDING_DELETE'")
     fun observeActiveRoutines(userId: String): Flow<List<RoutineEntity>>
+
+    @Query("DELETE FROM routines WHERE syncStatus = 'SYNCED'")
+    suspend fun deleteAllCachedRoutines()
 }
 
 @Dao

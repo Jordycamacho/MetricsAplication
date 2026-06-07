@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface_dark"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Valores pre-rellenados"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Al iniciar un entrenamiento, ¿de dónde tomar los valores anteriores?"
+        android:textColor="#666666"
+        android:textSize="12sp"
+        android:layout_marginBottom="20dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_prefill_strategy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rb_prefill_same_routine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Última sesión de esta rutina"
+            android:textColor="#FFFFFF"
+            android:buttonTint="@color/gold_primary"
+            android:paddingVertical="6dp" />
+
+        <RadioButton
+            android:id="@+id/rb_prefill_last_exercise"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Último registro del mismo ejercicio"
+            android:textColor="#FFFFFF"
+            android:buttonTint="@color/gold_primary"
+            android:paddingVertical="6dp" />
+    </RadioGroup>
+
+</LinearLayout>

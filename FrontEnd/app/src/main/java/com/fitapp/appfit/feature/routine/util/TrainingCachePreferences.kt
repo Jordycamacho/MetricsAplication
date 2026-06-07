@@ -24,5 +24,9 @@ object TrainingCachePreferences {
     fun needsRefresh(context: Context, routineId: Long): Boolean =
         prefs(context).getBoolean(key(routineId), false)
 
+    fun clearAll(context: Context) {
+        prefs(context).edit().clear().apply()
+    }
+
     private fun key(routineId: Long) = "needs_refresh_$routineId"
 }

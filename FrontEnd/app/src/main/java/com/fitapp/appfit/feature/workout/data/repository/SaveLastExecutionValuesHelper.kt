@@ -44,6 +44,7 @@ class SaveLastExecutionValuesHelper(
         sets.forEach { (setId, setData) ->
             @Suppress("UNCHECKED_CAST")
             val parameters = setData["parameters"] as? Map<Long, Map<String, Any?>> ?: return@forEach
+            val exerciseId = setData["exerciseId"] as? Long
 
             val setTemplate = setTemplateResponses[setId]
 
@@ -58,6 +59,7 @@ class SaveLastExecutionValuesHelper(
                     routineId = routineId,
                     setTemplateId = setId,
                     parameterId = paramId,
+                    exerciseId = exerciseId,
                     parameterName = paramTemplate?.parameterName,
                     parameterType = paramTemplate?.parameterType,
                     unit = paramTemplate?.unit,

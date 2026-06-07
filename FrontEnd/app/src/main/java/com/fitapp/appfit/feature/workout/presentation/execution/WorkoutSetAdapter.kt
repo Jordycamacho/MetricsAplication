@@ -21,10 +21,12 @@ import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSet
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
+import com.fitapp.appfit.core.util.UnitFormatter
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 
 class WorkoutSetAdapter(
+    private val context: Context,
     private val onValueChanged: (RoutineSetTemplateResponse, String, Double) -> Unit,
     private val onSetCompletedToggled: (RoutineSetTemplateResponse, Boolean) -> Unit,
     private val onSequenceComplete: () -> Unit = {},
@@ -63,7 +65,7 @@ class WorkoutSetAdapter(
         val numericParam = WorkoutParameterHelper.findNumericParameter(params)
         if (numericParam != null) {
             currentParam[setId] = numericParam.numericValue ?: numericParam.integerValue?.toDouble() ?: 0.0
-            paramLabel[setId] = WorkoutParameterHelper.displayUnit(numericParam)
+            paramLabel[setId] = UnitFormatter.displayUnit(context, numericParam)
             paramType[setId] = numericParam.parameterType?.lowercase() ?: "number"
         } else {
             currentParam[setId] = 0.0
@@ -318,14 +320,18 @@ class WorkoutSetAdapter(
             layoutParam.visibility = View.VISIBLE
             pickerParam.visibility = View.VISIBLE
             val numericParam = WorkoutParameterHelper.findNumericParameter(set.parameters) ?: return
-            val unit = WorkoutParameterHelper.displayUnit(numericParam)
+            val unit = UnitFormatter.displayUnit(itemView.context, numericParam)
             val type = numericParam.parameterType?.lowercase() ?: "number"
             tvParamUnit.text = unit
 
             val step = 1.0
-            val values = generateParamValues(type, step)
-            val initialValue = currentParam[set.id] ?: 0.0
-            val startPos = values.indexOfFirst { it >= initialValue }.coerceAtLeast(0)
+            val storedValues = generateParamValues(type, step)
+            val values = storedValues.map {
+                UnitFormatter.displayNumericValue(itemView.context, it, numericParam)
+            }
+            val initialStored = currentParam[set.id] ?: 0.0
+            val initialDisplay = UnitFormatter.displayNumericValue(itemView.context, initialStored, numericParam)
+            val startPos = values.indexOfFirst { it >= initialDisplay }.coerceAtLeast(0)
 
             val pickerAdapter = PickerAdapter(
                 values      = values.map { formatValue(it, type) },
@@ -354,11 +360,16 @@ class WorkoutSetAdapter(
                     if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                         val snapView = snapParam.findSnapView(llm) ?: return
                         val pos = llm.getPosition(snapView).coerceIn(0, values.lastIndex)
-                        val newVal = values[pos]
-                        if (currentParam[set.id] != newVal) {
-                            currentParam[set.id] = newVal
+                        val displayVal = values[pos]
+                        val storedVal = UnitFormatter.toStoredNumericValue(
+                            itemView.context,
+                            displayVal,
+                            numericParam
+                        )
+                        if (currentParam[set.id] != storedVal) {
+                            currentParam[set.id] = storedVal
                             pickerAdapter.setSelected(pos)
-                            onValueChanged(set, "param", newVal)
+                            onValueChanged(set, "param", storedVal)
                         }
                     }
                 }

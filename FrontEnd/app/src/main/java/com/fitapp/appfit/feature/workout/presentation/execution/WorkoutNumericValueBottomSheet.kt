@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
+import com.fitapp.appfit.core.util.UnitFormatter
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.textfield.TextInputEditText
@@ -92,7 +93,7 @@ class WorkoutNumericValueBottomSheet : BottomSheetDialogFragment() {
 
         val unitRow = view.findViewById<LinearLayout>(R.id.bs_row_numeric_unit)
         val unitView = view.findViewById<TextView>(R.id.bs_numeric_unit)
-        val displayUnit = WorkoutParameterHelper.displayUnit(param)
+        val displayUnit = UnitFormatter.displayUnit(requireContext(), param)
         if (displayUnit != "—") {
             unitView.text = displayUnit
             unitRow.isVisible = true
@@ -101,7 +102,7 @@ class WorkoutNumericValueBottomSheet : BottomSheetDialogFragment() {
         }
 
         val input = view.findViewById<TextInputEditText>(R.id.bs_numeric_input)
-        input.setText(WorkoutParameterHelper.formatNumericValue(currentValue, param))
+        input.setText(UnitFormatter.formatNumericForDisplay(requireContext(), currentValue, param))
         input.inputType = if (WorkoutParameterHelper.isIntegerInput(param)) {
             InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
         } else {
@@ -118,8 +119,9 @@ class WorkoutNumericValueBottomSheet : BottomSheetDialogFragment() {
                 input.text?.toString().orEmpty(),
                 param
             ) ?: return@setOnClickListener
+            val storedValue = UnitFormatter.toStoredNumericValue(requireContext(), parsed, param)
             val callbackKey = requireArguments().getString(ARG_CALLBACK_KEY).orEmpty()
-            pendingCallbacks.remove(callbackKey)?.invoke(parsed)
+            pendingCallbacks.remove(callbackKey)?.invoke(storedValue)
             dismiss()
         }
     }

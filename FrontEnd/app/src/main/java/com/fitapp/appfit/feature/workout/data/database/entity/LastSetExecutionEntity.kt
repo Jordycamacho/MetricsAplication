@@ -30,10 +30,11 @@ import androidx.room.Index
     ]
 )
 data class LastSetExecutionEntity(
-    val routineId: Long,           // FK a routine
-    val setTemplateId: Long,        // ID del template del set
-    val parameterId: Long,          // ID del parámetro
-    val parameterName: String?,     // Nombre del parámetro (ej: "Repeticiones", "Peso")
+    val routineId: Long,
+    val setTemplateId: Long,
+    val parameterId: Long,
+    val exerciseId: Long? = null,
+    val parameterName: String?,
     val parameterType: String?,     // Tipo: NUMBER, INTEGER, DURATION, etc.
     val unit: String?,              // Unidad (KG, M, %, etc.)
 

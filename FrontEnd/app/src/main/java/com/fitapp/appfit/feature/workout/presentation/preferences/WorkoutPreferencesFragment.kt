@@ -52,6 +52,8 @@ class WorkoutPreferencesFragment : Fragment() {
         binding.switchAutoRest.isChecked = WorkoutPreferences.isAutoRestEnabled(ctx)
         binding.switchKeepScreenOn.isChecked = WorkoutPreferences.isKeepScreenOn(ctx)
         binding.switchExpandActive.isChecked = WorkoutPreferences.isExpandActiveOnly(ctx)
+        binding.switchIncludeWarmupStats.isChecked = WorkoutPreferences.isIncludeWarmupInStats(ctx)
+        binding.switchNotifyPr.isChecked = WorkoutPreferences.isNotifyPersonalRecords(ctx)
 
         val defaultRest = WorkoutPreferences.getDefaultRestSeconds(ctx)
         binding.sliderDefaultRest.value = defaultRest.toFloat()
@@ -132,6 +134,16 @@ class WorkoutPreferencesFragment : Fragment() {
         binding.switchExpandActive.setOnCheckedChangeListener { _, checked ->
             if (isLoadingPreferences) return@setOnCheckedChangeListener
             WorkoutPreferences.setExpandActiveOnly(requireContext(), checked)
+        }
+
+        binding.switchIncludeWarmupStats.setOnCheckedChangeListener { _, checked ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            WorkoutPreferences.setIncludeWarmupInStats(requireContext(), checked)
+        }
+
+        binding.switchNotifyPr.setOnCheckedChangeListener { _, checked ->
+            if (isLoadingPreferences) return@setOnCheckedChangeListener
+            WorkoutPreferences.setNotifyPersonalRecords(requireContext(), checked)
         }
 
         binding.sliderDefaultRest.addOnChangeListener { _, value, fromUser ->

@@ -1,24 +1,34 @@
 package com.fitapp.appfit.feature.profile.ui
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.fitapp.appfit.BuildConfig
 import com.fitapp.appfit.R
+import com.fitapp.appfit.core.preferences.AppPreferences
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentProfileBinding
 import com.fitapp.appfit.feature.auth.ui.LoginActivity
-import com.fitapp.appfit.feature.profile.model.response.UserResponse
 import com.fitapp.appfit.feature.profile.ProfileViewModel
+import com.fitapp.appfit.feature.profile.model.response.UserResponse
+import com.fitapp.appfit.feature.profile.util.LocalCacheCleaner
+import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
 
 class ProfileFragment : Fragment() {
 
@@ -36,9 +46,21 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupStaticUi()
         setupRows()
         setupObservers()
         viewModel.loadProfile()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshAppRowSubtitles()
+        binding.rowWorkoutSettings.tvRowSubtitle.text =
+            WorkoutPreferences.getProfileSummary(requireContext())
+    }
+
+    private fun setupStaticUi() {
+        binding.tvVersion.text = "JNOBFIT v${BuildConfig.VERSION_NAME}"
     }
 
     // ── Filas ────────────────────────────────────────────────────────────────
@@ -80,14 +102,68 @@ class ProfileFragment : Fragment() {
         }
 
         with(binding.rowWorkoutSettings) {
-            ivRowIcon.setImageResource(R.drawable.ic_add)
+            ivRowIcon.setImageResource(R.drawable.ic_settings_24)
             ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
             tvRowTitle.text = "Ajustes de entrenamiento"
-            tvRowSubtitle.text = "Vibración, sonido y alertas"
+            tvRowSubtitle.text = WorkoutPreferences.getProfileSummary(requireContext())
             tvRowSubtitle.visibility = View.VISIBLE
             root.setOnClickListener {
                 findNavController().navigate(R.id.navigation_workout_preferences)
             }
+        }
+
+        with(binding.rowUnits) {
+            ivRowIcon.setImageResource(R.drawable.ic_settings_24)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Unidades de medida"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener { showUnitsSheet() }
+        }
+
+        with(binding.rowPrefill) {
+            ivRowIcon.setImageResource(R.drawable.ic_settings_24)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Valores pre-rellenados"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener { showPrefillSheet() }
+        }
+
+        with(binding.rowClearCache) {
+            ivRowIcon.setImageResource(R.drawable.ic_delete)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Limpiar caché local"
+            tvRowSubtitle.text = "Rutinas y datos offline en caché"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener { confirmClearCache() }
+        }
+
+        with(binding.rowAbout) {
+            ivRowIcon.setImageResource(R.drawable.ic_profile)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Acerca de JNOBFIT"
+            tvRowSubtitle.text = "JNOBFIT v${BuildConfig.VERSION_NAME}"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener { showAboutSheet() }
+        }
+
+        with(binding.rowImportExport) {
+            ivRowIcon.setImageResource(R.drawable.ic_add)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Importar / Exportar"
+            tvRowSubtitle.text = "Beta — copia de rutinas"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener {
+                findNavController().navigate(R.id.action_profile_to_import_export)
+            }
+        }
+
+        with(binding.rowLegal) {
+            ivRowIcon.setImageResource(R.drawable.ic_lock)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = "Privacidad y términos"
+            tvRowSubtitle.text = "Próximamente"
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener { showLegalSheet() }
         }
 
         with(binding.rowLogout) {
@@ -108,6 +184,15 @@ class ProfileFragment : Fragment() {
             tvRowSubtitle.visibility = View.VISIBLE
             root.setOnClickListener { confirmDeleteAccount() }
         }
+
+        refreshAppRowSubtitles()
+    }
+
+    private fun refreshAppRowSubtitles() {
+        val ctx = requireContext()
+        binding.rowUnits.tvRowSubtitle.text =
+            "Peso: ${AppPreferences.getWeightUnitLabel(ctx)} · Dist: ${AppPreferences.getDistanceUnitLabel(ctx)}"
+        binding.rowPrefill.tvRowSubtitle.text = AppPreferences.getPrefillStrategyLabel(ctx)
     }
 
     // ── Observers ────────────────────────────────────────────────────────────
@@ -119,6 +204,10 @@ class ProfileFragment : Fragment() {
                 is Resource.Success -> populateProfile(resource.data!!)
                 is Resource.Error   -> showSnackbar(resource.message ?: "Error al cargar perfil")
             }
+        }
+
+        viewModel.routineCount.observe(viewLifecycleOwner) { count ->
+            binding.tvStatRoutines.text = count.toString()
         }
 
         viewModel.updateProfileState.observe(viewLifecycleOwner) { resource ->
@@ -161,10 +250,13 @@ class ProfileFragment : Fragment() {
     // ── Poblar UI ────────────────────────────────────────────────────────────
 
     private fun populateProfile(user: UserResponse) {
-        binding.tvFullName.text = user.fullName?.takeIf { it.isNotBlank() } ?: "Sin nombre"
+        val displayName = user.fullName?.takeIf { it.isNotBlank() } ?: "Sin nombre"
+        binding.tvFullName.text = displayName
         binding.tvEmail.text = user.email
         binding.tvStatPlan.text = user.subscription?.type ?: "FREE"
         binding.tvPlanBadge.text = user.subscription?.type ?: "FREE"
+        binding.tvStatMaxRoutines.text = user.subscription?.maxRoutines?.toString() ?: "—"
+        updateAvatarInitials(displayName)
 
         with(binding.rowVerifyEmail) {
             if (user.emailVerified) {
@@ -183,6 +275,116 @@ class ProfileFragment : Fragment() {
             binding.rowSubscription.tvRowSubtitle.text = "Expira: $endDate"
             binding.rowSubscription.tvRowSubtitle.visibility = View.VISIBLE
         }
+    }
+
+    private fun updateAvatarInitials(fullName: String) {
+        val initials = deriveInitials(fullName)
+        if (initials.isNullOrBlank() || fullName == "Sin nombre") {
+            binding.tvAvatarInitials.visibility = View.GONE
+            binding.ivAvatar.visibility = View.VISIBLE
+            return
+        }
+        binding.tvAvatarInitials.text = initials
+        binding.tvAvatarInitials.visibility = View.VISIBLE
+        binding.ivAvatar.visibility = View.INVISIBLE
+    }
+
+    private fun deriveInitials(fullName: String): String? {
+        val parts = fullName.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (parts.isEmpty()) return null
+        return when {
+            parts.size >= 2 -> "${parts[0].first()}${parts[1].first()}".uppercase()
+            else -> parts[0].take(2).uppercase()
+        }
+    }
+
+    // ── Bottom sheets ────────────────────────────────────────────────────────
+
+    private fun showUnitsSheet() {
+        val dialog = BottomSheetDialog(requireContext(), R.style.DarkBottomSheetDialog)
+        val sheetView = layoutInflater.inflate(R.layout.sheet_units, null)
+        dialog.setContentView(sheetView)
+
+        val ctx = requireContext()
+        when (AppPreferences.getWeightUnit(ctx)) {
+            AppPreferences.WeightUnit.KG -> sheetView.findViewById<RadioButton>(R.id.rb_weight_kg).isChecked = true
+            AppPreferences.WeightUnit.LBS -> sheetView.findViewById<RadioButton>(R.id.rb_weight_lbs).isChecked = true
+        }
+        when (AppPreferences.getDistanceUnit(ctx)) {
+            AppPreferences.DistanceUnit.M -> sheetView.findViewById<RadioButton>(R.id.rb_distance_m).isChecked = true
+            AppPreferences.DistanceUnit.FT -> sheetView.findViewById<RadioButton>(R.id.rb_distance_ft).isChecked = true
+        }
+
+        sheetView.findViewById<RadioGroup>(R.id.rg_weight_unit)
+            .setOnCheckedChangeListener { _, checkedId ->
+                val unit = if (checkedId == R.id.rb_weight_lbs) {
+                    AppPreferences.WeightUnit.LBS
+                } else {
+                    AppPreferences.WeightUnit.KG
+                }
+                AppPreferences.setWeightUnit(ctx, unit)
+                refreshAppRowSubtitles()
+            }
+
+        sheetView.findViewById<RadioGroup>(R.id.rg_distance_unit)
+            .setOnCheckedChangeListener { _, checkedId ->
+                val unit = if (checkedId == R.id.rb_distance_ft) {
+                    AppPreferences.DistanceUnit.FT
+                } else {
+                    AppPreferences.DistanceUnit.M
+                }
+                AppPreferences.setDistanceUnit(ctx, unit)
+                refreshAppRowSubtitles()
+            }
+
+        dialog.show()
+    }
+
+    private fun showPrefillSheet() {
+        val dialog = BottomSheetDialog(requireContext(), R.style.DarkBottomSheetDialog)
+        val sheetView = layoutInflater.inflate(R.layout.sheet_prefill, null)
+        dialog.setContentView(sheetView)
+
+        val ctx = requireContext()
+        when (AppPreferences.getPrefillStrategy(ctx)) {
+            AppPreferences.PrefillStrategy.LAST_SAME_ROUTINE ->
+                sheetView.findViewById<RadioButton>(R.id.rb_prefill_same_routine).isChecked = true
+            AppPreferences.PrefillStrategy.LAST_EXERCISE ->
+                sheetView.findViewById<RadioButton>(R.id.rb_prefill_last_exercise).isChecked = true
+        }
+
+        sheetView.findViewById<RadioGroup>(R.id.rg_prefill_strategy)
+            .setOnCheckedChangeListener { _, checkedId ->
+                val strategy = if (checkedId == R.id.rb_prefill_last_exercise) {
+                    AppPreferences.PrefillStrategy.LAST_EXERCISE
+                } else {
+                    AppPreferences.PrefillStrategy.LAST_SAME_ROUTINE
+                }
+                AppPreferences.setPrefillStrategy(ctx, strategy)
+                refreshAppRowSubtitles()
+            }
+
+        dialog.show()
+    }
+
+    private fun showAboutSheet() {
+        val dialog = BottomSheetDialog(requireContext(), R.style.DarkBottomSheetDialog)
+        val sheetView = layoutInflater.inflate(R.layout.sheet_about, null)
+        dialog.setContentView(sheetView)
+
+        sheetView.findViewById<TextView>(R.id.tv_about_version).text =
+            "JNOBFIT v${BuildConfig.VERSION_NAME}"
+        sheetView.findViewById<TextView>(R.id.tv_about_website).setOnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://jnobfit.online")))
+        }
+
+        dialog.show()
+    }
+
+    private fun showLegalSheet() {
+        val dialog = BottomSheetDialog(requireContext(), R.style.DarkBottomSheetDialog)
+        dialog.setContentView(layoutInflater.inflate(R.layout.sheet_legal, null))
+        dialog.show()
     }
 
     // ── Diálogos ─────────────────────────────────────────────────────────────
@@ -236,6 +438,29 @@ class ProfileFragment : Fragment() {
             dialog.dismiss()
         }
         dialog.show()
+    }
+
+    private fun confirmClearCache() {
+        MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+            .setTitle("Limpiar caché local")
+            .setMessage(
+                "Se eliminarán las rutinas guardadas offline y los datos en caché. " +
+                    "Tu sesión no se cerrará.\n\n¿Continuar?"
+            )
+            .setPositiveButton("Limpiar") { _, _ ->
+                lifecycleScope.launch {
+                    when (val result = LocalCacheCleaner.clearRoutineCache(requireContext())) {
+                        LocalCacheCleaner.Result.Success ->
+                            showSnackbar("Caché local limpiada")
+                        LocalCacheCleaner.Result.ActiveWorkoutInProgress ->
+                            showSnackbar("Hay un entrenamiento en curso. Termínalo antes de limpiar.")
+                        is LocalCacheCleaner.Result.Error ->
+                            showSnackbar(result.message)
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun confirmLogout() {

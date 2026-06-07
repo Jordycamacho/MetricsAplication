@@ -60,6 +60,16 @@
                             app:strokeWidth="2dp" />
 
                         <TextView
+                            android:id="@+id/tv_avatar_initials"
+                            android:layout_width="76dp"
+                            android:layout_height="76dp"
+                            android:gravity="center"
+                            android:textColor="@color/gold_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                        <TextView
                             android:id="@+id/tv_plan_badge"
                             android:layout_width="wrap_content"
                             android:layout_height="18dp"
@@ -180,6 +190,44 @@
                 android:orientation="vertical" android:layout_marginHorizontal="16dp"
                 android:background="@drawable/bg_card_dark">
                 <include android:id="@+id/row_workout_settings" layout="@layout/item_profile_row" />
+            </LinearLayout>
+
+            <!-- ── APP ────────────────────────────────────────── -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="APP" android:textColor="@color/gold_primary" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_dark">
+
+                <include android:id="@+id/row_units" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_prefill" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_clear_cache" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_about" layout="@layout/item_profile_row" />
+            </LinearLayout>
+
+            <!-- ── DATOS ──────────────────────────────────────── -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="DATOS" android:textColor="@color/gold_primary" android:textSize="11sp"
+                android:textStyle="bold" android:letterSpacing="0.12"
+                android:layout_marginStart="20dp" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:layout_marginHorizontal="16dp"
+                android:background="@drawable/bg_card_dark">
+
+                <include android:id="@+id/row_import_export" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_legal" layout="@layout/item_profile_row" />
             </LinearLayout>
 
             <!-- ── SESIÓN ─────────────────────────────────────── -->

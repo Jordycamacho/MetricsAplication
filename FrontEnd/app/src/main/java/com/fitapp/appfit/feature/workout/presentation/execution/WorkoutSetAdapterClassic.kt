@@ -19,6 +19,7 @@ import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetP
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
+import com.fitapp.appfit.core.util.UnitFormatter
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 import com.fitapp.appfit.feature.workout.util.WorkoutRepeatButtonHelper
 import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
@@ -241,7 +242,7 @@ class WorkoutSetAdapterClassic(
         private fun getNumericUnit(): String {
             val param = getNumericParameter() ?: return "—"
             Log.d("PARAM_UNIT_DEBUG", "paramName=${param.parameterName}, serverUnit=${param.unit}, paramType=${param.parameterType}")
-            return WorkoutParameterHelper.displayUnit(param)
+            return UnitFormatter.displayUnit(itemView.context, param)
         }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -364,7 +365,7 @@ class WorkoutSetAdapterClassic(
             val unit = getNumericUnit()
 
             tvParamUnit.text = unit
-            tvParamValue.text = WorkoutParameterHelper.formatNumericValue(value, numericParam)
+            tvParamValue.text = UnitFormatter.formatNumericForDisplay(itemView.context, value, numericParam)
 
             decParamHelper.attach(btnDecParam, onStep = {
                 val cur = getNumericValue() ?: 0.0
@@ -390,7 +391,7 @@ class WorkoutSetAdapterClassic(
             value: Double
         ) {
             updateNumericInStateManager(numericParam, value)
-            tvParamValue.text = WorkoutParameterHelper.formatNumericValue(value, numericParam)
+            tvParamValue.text = UnitFormatter.formatNumericForDisplay(itemView.context, value, numericParam)
             onValueChanged(set, "param", value)
         }
 

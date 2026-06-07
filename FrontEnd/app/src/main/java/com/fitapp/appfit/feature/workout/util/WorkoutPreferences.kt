@@ -24,6 +24,8 @@ object WorkoutPreferences {
     private const val KEY_LAST_FILTER_MODE = "last_filter_mode"
     private const val KEY_LAST_FILTER_SESSION = "last_filter_session"
     private const val KEY_LAST_FILTER_DAY = "last_filter_day"
+    private const val KEY_INCLUDE_WARMUP_IN_STATS = "include_warmup_in_stats"
+    private const val KEY_NOTIFY_PERSONAL_RECORDS = "notify_personal_records"
 
     enum class SoundType { BEEP, BELL, CHIME }
     enum class SetViewType { CLASSIC, MODERN }
@@ -159,6 +161,33 @@ object WorkoutPreferences {
             if (dayOfWeek.isNullOrBlank()) remove(KEY_LAST_FILTER_DAY)
             else putString(KEY_LAST_FILTER_DAY, dayOfWeek)
         }.apply()
+    }
+
+    fun isIncludeWarmupInStats(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_INCLUDE_WARMUP_IN_STATS, true)
+
+    fun setIncludeWarmupInStats(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_INCLUDE_WARMUP_IN_STATS, enabled).apply()
+    }
+
+    fun isNotifyPersonalRecords(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_NOTIFY_PERSONAL_RECORDS, true)
+
+    fun setNotifyPersonalRecords(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_NOTIFY_PERSONAL_RECORDS, enabled).apply()
+    }
+
+    fun getProfileSummary(context: Context): String {
+        val parts = mutableListOf<String>()
+        if (isSoundEnabled(context)) parts.add("Sonido")
+        if (isVibrationEnabled(context)) parts.add("Vibración")
+        if (WorkoutPreferences.isAutoRestEnabled(context)) {
+            val rest = getDefaultRestSeconds(context)
+            parts.add(if (rest == 0) "Auto-descanso off" else "Auto-descanso ${rest}s")
+        } else if (parts.size < 3) {
+            parts.add("Sin auto-descanso")
+        }
+        return parts.take(3).joinToString(" · ").ifEmpty { "Valores predeterminados" }
     }
 
     // ── Legacy (deprecated) ──

@@ -1,6 +1,8 @@
 package com.fitapp.appfit.feature.workout.data.repository
 
+import android.content.Context
 import android.util.Log
+import com.fitapp.appfit.core.preferences.AppPreferences
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
@@ -20,6 +22,7 @@ import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
  * las plantillas originales en la base de datos.
  */
 class LocalLastExecutionValuesHelper(
+    private val context: Context,
     private val lastSetExecutionDao: LastSetExecutionDao
 ) {
 
@@ -34,72 +37,80 @@ class LocalLastExecutionValuesHelper(
      * NO HACE CONSULTAS AL SERVIDOR.
      */
     suspend fun applyLastValuesToRoutine(routine: RoutineResponse): RoutineResponse {
+        val strategy = AppPreferences.getPrefillStrategy(context)
         val lastExecutions = lastSetExecutionDao.getLastExecutionsByRoutine(routine.id)
 
-        if (lastExecutions.isEmpty()) {
+        if (lastExecutions.isEmpty() && strategy == AppPreferences.PrefillStrategy.LAST_SAME_ROUTINE) {
             Log.d(TAG, "NO_LOCAL_HISTORY | routineId=${routine.id}")
             return routine
         }
 
         Log.i(
             TAG,
-            "APPLYING_LOCAL_HISTORY | routineId=${routine.id} | " +
-                    "records=${lastExecutions.size}"
+            "APPLYING_LOCAL_HISTORY | routineId=${routine.id} | strategy=$strategy | " +
+                "records=${lastExecutions.size}"
         )
 
-        // Agrupar por setTemplateId y parameterId
         val lastValuesBySetAndParam = lastExecutions
             .groupBy { it.setTemplateId }
             .mapValues { (_, executions) ->
                 executions.associateBy { it.parameterId }
             }
 
-        // Clonar rutina y aplicar valores
         val modifiedExercises = routine.exercises?.map { exercise ->
-            applyLastValuesToExercise(exercise, lastValuesBySetAndParam)
+            applyLastValuesToExercise(exercise, lastValuesBySetAndParam, strategy)
         }
 
         return routine.copy(exercises = modifiedExercises)
     }
 
-    private fun applyLastValuesToExercise(
+    private suspend fun applyLastValuesToExercise(
         exercise: RoutineExerciseResponse,
-        lastValuesBySetAndParam: Map<Long, Map<Long, LastSetExecutionEntity>>
+        lastValuesBySetAndParam: Map<Long, Map<Long, LastSetExecutionEntity>>,
+        strategy: AppPreferences.PrefillStrategy
     ): RoutineExerciseResponse {
         val modifiedSets = exercise.setsTemplate?.map { set ->
-            applyLastValuesToSet(set, lastValuesBySetAndParam)
+            applyLastValuesToSet(exercise.exerciseId, set, lastValuesBySetAndParam, strategy)
         }
 
         return exercise.copy(setsTemplate = modifiedSets)
     }
 
-    private fun applyLastValuesToSet(
+    private suspend fun applyLastValuesToSet(
+        exerciseId: Long?,
         set: RoutineSetTemplateResponse,
-        lastValuesBySetAndParam: Map<Long, Map<Long, LastSetExecutionEntity>>
+        lastValuesBySetAndParam: Map<Long, Map<Long, LastSetExecutionEntity>>,
+        strategy: AppPreferences.PrefillStrategy
     ): RoutineSetTemplateResponse {
         val lastValuesForSet = lastValuesBySetAndParam[set.id]
 
-        if (lastValuesForSet == null) {
-            // No hay valores previos para este set
-            return set
-        }
-
-        // Clonar parámetros y aplicar últimos valores
         val modifiedParams = set.parameters?.map { param ->
-            applyLastValuesToParameter(param, lastValuesForSet)
+            applyLastValuesToParameter(exerciseId, param, lastValuesForSet, strategy)
         }
 
         return set.copy(parameters = modifiedParams)
     }
 
-    private fun applyLastValuesToParameter(
+    private suspend fun applyLastValuesToParameter(
+        exerciseId: Long?,
         param: RoutineSetParameterResponse,
-        lastValuesForSet: Map<Long, LastSetExecutionEntity>
+        lastValuesForSet: Map<Long, LastSetExecutionEntity>?,
+        strategy: AppPreferences.PrefillStrategy
     ): RoutineSetParameterResponse {
-        val lastExecution = lastValuesForSet[param.parameterId]
+        var lastExecution = lastValuesForSet?.get(param.parameterId)
+
+        if (lastExecution == null &&
+            strategy == AppPreferences.PrefillStrategy.LAST_EXERCISE &&
+            exerciseId != null &&
+            !param.parameterName.isNullOrBlank()
+        ) {
+            lastExecution = lastSetExecutionDao.getLatestForExerciseParameter(
+                exerciseId = exerciseId,
+                parameterName = param.parameterName
+            )
+        }
 
         if (lastExecution == null) {
-            // No hay valor previo para este parámetro
             return param
         }
 
