@@ -22,7 +22,9 @@ class SaveWorkoutSessionUseCase(
         startedAt: Long,
         finishedAt: Long,
         performanceScore: Int? = null,
-        setTemplateResponses: Map<Long, RoutineSetTemplateResponse> = emptyMap()
+        setTemplateResponses: Map<Long, RoutineSetTemplateResponse> = emptyMap(),
+        dayOfWeek: String? = null,
+        sessionNumber: Int? = null
     ): Result<Long> {
         Log.i(TAG, "SAVE_WORKOUT_INVOKED | routineId=$routineId | userId=$userId")
 
@@ -64,7 +66,9 @@ class SaveWorkoutSessionUseCase(
                 setCompletionState = setCompletionState,
                 startedAt = startedAt,
                 finishedAt = finishedAt,
-                performanceScore = performanceScore
+                performanceScore = performanceScore,
+                dayOfWeek = dayOfWeek,
+                sessionNumber = sessionNumber
             )
 
             when {

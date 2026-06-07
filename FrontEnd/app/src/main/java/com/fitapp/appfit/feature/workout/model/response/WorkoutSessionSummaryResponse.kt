@@ -31,5 +31,14 @@ data class WorkoutSessionSummaryResponse(
     val exerciseCount: Int,
 
     @SerializedName("setCount")
-    val setCount: Int
+    val setCount: Int,
+
+    @SerializedName("dayOfWeek")
+    val dayOfWeek: String? = null,
+
+    @SerializedName("sessionNumber")
+    val sessionNumber: Int? = null,
+
+    @SerializedName("dayLabel")
+    val dayLabel: String? = null
 )

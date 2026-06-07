@@ -15,7 +15,9 @@ interface IWorkoutRepository {
         setCompletionState: Map<Long, Boolean>,
         startedAt: Long = System.currentTimeMillis(),
         finishedAt: Long = System.currentTimeMillis(),
-        performanceScore: Int? = null
+        performanceScore: Int? = null,
+        dayOfWeek: String? = null,
+        sessionNumber: Int? = null
     ): Result<Long>
 
     suspend fun getLastValuesForRoutine(routineId: Long): Resource<Map<Long, LastExerciseValuesResponse>>

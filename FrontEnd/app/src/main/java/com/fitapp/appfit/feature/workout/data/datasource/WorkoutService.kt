@@ -31,6 +31,8 @@ interface WorkoutService {
         @Query("routineId") routineId: Long? = null,
         @Query("fromDate") fromDate: String? = null,
         @Query("toDate") toDate: String? = null,
+        @Query("dayOfWeek") dayOfWeek: String? = null,
+        @Query("sessionNumber") sessionNumber: Int? = null,
         @Query("minPerformanceScore") minPerformanceScore: Int? = null,
         @Query("maxPerformanceScore") maxPerformanceScore: Int? = null,
         @Query("sortBy") sortBy: String = "startTime",

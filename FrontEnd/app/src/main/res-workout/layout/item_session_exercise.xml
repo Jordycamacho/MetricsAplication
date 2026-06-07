@@ -46,6 +46,15 @@
 
             <!-- Badge: número de sets -->
             <TextView
+                android:id="@+id/tv_day_session_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/gold_primary"
+                android:textSize="10sp"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/tv_set_count_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

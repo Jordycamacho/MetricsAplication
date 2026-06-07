@@ -8,10 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.home.domain.DayActivity
 import com.fitapp.appfit.feature.home.domain.WeeklyStatsHelper
+import com.fitapp.appfit.feature.metrics.data.MetricsReadRepositoryImpl
+import com.fitapp.appfit.feature.metrics.domain.model.SessionHistoryFilter
+import com.fitapp.appfit.feature.metrics.domain.usecase.GetConsistencyStatsUseCase
 import com.fitapp.appfit.feature.profile.data.UserRepository
 import com.fitapp.appfit.feature.routine.data.RoutineRepository
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineSummaryResponse
-import com.fitapp.appfit.feature.workout.data.repository.WorkoutRepositoryImpl
 import com.fitapp.appfit.feature.workout.model.response.WorkoutSessionSummaryResponse
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.ActiveWorkoutCache
 import kotlinx.coroutines.async
@@ -41,7 +43,7 @@ data class HomeUiState(
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val routineRepository = RoutineRepository(application)
-    private val workoutRepository = WorkoutRepositoryImpl(application)
+    private val metricsRepository = MetricsReadRepositoryImpl(application)
     private val userRepository = UserRepository()
     private val activeWorkoutCache = ActiveWorkoutCache(application)
 
@@ -68,14 +70,16 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             val routinesDeferred = async { routineRepository.getLastUsedRoutines(3) }
             val activeRoutinesDeferred = async { routineRepository.getActiveRoutines() }
             val historyDeferred = async {
-                workoutRepository.getWorkoutHistory(
-                    fromDate = historyFrom.format(dateFormatter),
-                    toDate = today.format(dateFormatter),
-                    page = 0,
-                    size = 200
+                metricsRepository.getWorkoutHistory(
+                    SessionHistoryFilter(
+                        fromDate = historyFrom.format(dateFormatter),
+                        toDate = today.format(dateFormatter),
+                        page = 0,
+                        size = 200
+                    )
                 )
             }
-            val recentDeferred = async { workoutRepository.getRecentWorkouts(1) }
+            val recentDeferred = async { metricsRepository.getRecentWorkouts(1) }
 
             val profileResult = profileDeferred.await()
             val routinesResult = routinesDeferred.await()
@@ -90,7 +94,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
             val routines = (routinesResult as? Resource.Success)?.data.orEmpty()
             val activeRoutines = (activeRoutinesResult as? Resource.Success)?.data.orEmpty()
-            val weeklyStats = WeeklyStatsHelper.fromSessions(historySessions, today)
+            val weeklyStats = GetConsistencyStatsUseCase.computeFromSessions(historySessions, today)
             val lastSession = (recentResult as? Resource.Success)?.data?.content?.firstOrNull()
 
             val heroRoutine = routines.firstOrNull()
@@ -108,10 +112,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 activeWorkout = activeWorkout,
                 heroRoutine = heroRoutine,
                 otherRoutines = routines.drop(1),
-                weeklySessions = weeklyStats.sessionsCount,
-                weeklyVolumeKg = weeklyStats.volumeKg,
+                weeklySessions = weeklyStats.sessionsThisWeek,
+                weeklyVolumeKg = weeklyStats.volumeThisWeekKg,
                 streakWeeks = weeklyStats.streakWeeks,
-                activityDots = WeeklyStatsHelper.buildWeekActivityDots(historySessions, today),
+                activityDots = GetConsistencyStatsUseCase.buildWeekActivityDots(historySessions, today),
                 lastSession = lastSession,
                 plannedTodayRoutine = plannedToday,
                 isLoadingRoutines = false
@@ -131,19 +135,19 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val today = LocalDate.now()
             val routinesResult = routineRepository.getLastUsedRoutines(3)
-            val recentResult = workoutRepository.getRecentWorkouts(1)
+            val recentResult = metricsRepository.getRecentWorkouts(1)
             val routines = (routinesResult as? Resource.Success)?.data.orEmpty()
-            val weeklyStats = WeeklyStatsHelper.fromSessions(cachedHistorySessions, today)
+            val weeklyStats = GetConsistencyStatsUseCase.computeFromSessions(cachedHistorySessions, today)
             val lastSession = (recentResult as? Resource.Success)?.data?.content?.firstOrNull()
             val current = _uiState.value ?: HomeUiState()
 
             _uiState.value = current.copy(
                 heroRoutine = routines.firstOrNull(),
                 otherRoutines = routines.drop(1),
-                weeklySessions = weeklyStats.sessionsCount,
-                weeklyVolumeKg = weeklyStats.volumeKg,
+                weeklySessions = weeklyStats.sessionsThisWeek,
+                weeklyVolumeKg = weeklyStats.volumeThisWeekKg,
                 streakWeeks = weeklyStats.streakWeeks,
-                activityDots = WeeklyStatsHelper.buildWeekActivityDots(cachedHistorySessions, today),
+                activityDots = GetConsistencyStatsUseCase.buildWeekActivityDots(cachedHistorySessions, today),
                 lastSession = lastSession
             )
         }

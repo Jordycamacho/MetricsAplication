@@ -22,10 +22,10 @@
             app:destination="@id/navigation_routine_exercises" />
         <action
             android:id="@+id/action_home_to_workout_history"
-            app:destination="@id/navigation_workout_history" />
+            app:destination="@id/metricsSessionHistory" />
         <action
             android:id="@+id/action_home_to_workout_detail"
-            app:destination="@id/workoutSessionDetailFragment" />
+            app:destination="@id/metricsSessionDetail" />
     </fragment>
 
     <fragment
@@ -40,8 +40,26 @@
         android:label="@string/title_metrics"
         tools:layout="@layout/fragment_metrics">
         <action
-            android:id="@+id/action_metrics_to_workout_history"
-            app:destination="@id/navigation_workout_history" />
+            android:id="@+id/action_metrics_to_session_history"
+            app:destination="@id/metricsSessionHistory" />
+        <action
+            android:id="@+id/action_metrics_to_weekly_volume"
+            app:destination="@id/metricsWeeklyVolume" />
+        <action
+            android:id="@+id/action_metrics_to_consistency"
+            app:destination="@id/metricsConsistency" />
+        <action
+            android:id="@+id/action_metrics_to_personal_records"
+            app:destination="@id/metricsPersonalRecords" />
+        <action
+            android:id="@+id/action_metrics_to_exercise_progress"
+            app:destination="@id/metricsExerciseProgress" />
+        <action
+            android:id="@+id/action_metrics_to_advanced_analytics"
+            app:destination="@id/metricsAdvancedAnalytics" />
+        <action
+            android:id="@+id/action_metrics_to_settings"
+            app:destination="@id/metricsSettings" />
     </fragment>
 
     <fragment
@@ -427,38 +445,71 @@
 
 
     <fragment
-        android:id="@+id/navigation_workout_history"
-        android:name="com.fitapp.appfit.feature.workout.presentation.history.WorkoutHistoryFragment"
+        android:id="@+id/metricsSessionHistory"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.history.SessionHistoryFragment"
         android:label="Historial"
-        tools:layout="@layout/fragment_workout_history">
-
+        tools:layout="@layout/fragment_metrics_session_history">
         <action
-            android:id="@+id/action_workoutHistory_to_detail"
-            app:destination="@id/workoutSessionDetailFragment" />
-
+            android:id="@+id/action_metricsSessionHistory_to_detail"
+            app:destination="@id/metricsSessionDetail" />
     </fragment>
 
     <fragment
-        android:id="@+id/workoutHistoryFragment"
-        android:name="com.fitapp.appfit.feature.workout.presentation.history.WorkoutHistoryFragment"
-        android:label="Historial"
-        tools:layout="@layout/fragment_workout_history">
-
-        <action
-            android:id="@+id/action_workoutHistory_to_detail"
-            app:destination="@id/workoutSessionDetailFragment" />
-
-    </fragment>
-
-    <fragment
-        android:id="@+id/workoutSessionDetailFragment"
-        android:name="com.fitapp.appfit.feature.workout.presentation.history.WorkoutSessionDetailFragment"
+        android:id="@+id/metricsSessionDetail"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.detail.SessionDetailFragment"
         android:label="Detalle de sesión"
-        tools:layout="@layout/fragment_workout_session_detail">
-
+        tools:layout="@layout/fragment_metrics_session_detail">
         <argument
             android:name="sessionId"
             app:argType="long" />
-
     </fragment>
+
+    <fragment
+        android:id="@+id/metricsWeeklyVolume"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.weekly.WeeklyVolumeFragment"
+        android:label="Volumen semanal"
+        tools:layout="@layout/fragment_metrics_weekly" />
+
+    <fragment
+        android:id="@+id/metricsConsistency"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.consistency.ConsistencyFragment"
+        android:label="Consistencia"
+        tools:layout="@layout/fragment_metrics_consistency" />
+
+    <fragment
+        android:id="@+id/metricsPersonalRecords"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.records.PersonalRecordsFragment"
+        android:label="Récords"
+        tools:layout="@layout/fragment_metrics_records" />
+
+    <fragment
+        android:id="@+id/metricsExerciseProgress"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.placeholder.MetricsPlaceholderFragment"
+        android:label="Progreso por ejercicio"
+        tools:layout="@layout/fragment_metrics_placeholder">
+        <argument android:name="title" app:argType="string" android:defaultValue="Progreso por ejercicio" />
+        <argument android:name="message" app:argType="string" android:defaultValue="Gráficas de evolución por ejercicio. Disponible en la versión avanzada de métricas (v2)." />
+        <argument android:name="badge" app:argType="string" android:defaultValue="PRONTO" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/metricsAdvancedAnalytics"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.placeholder.MetricsPlaceholderFragment"
+        android:label="Analytics avanzado"
+        tools:layout="@layout/fragment_metrics_placeholder">
+        <argument android:name="title" app:argType="string" android:defaultValue="Analytics avanzado" />
+        <argument android:name="message" app:argType="string" android:defaultValue="Tendencias, predicciones y comparativas avanzadas. Funcionalidad premium planificada para v2." />
+        <argument android:name="badge" app:argType="string" android:defaultValue="PREMIUM" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/metricsSettings"
+        android:name="com.fitapp.appfit.feature.metrics.presentation.placeholder.MetricsPlaceholderFragment"
+        android:label="Configuración"
+        tools:layout="@layout/fragment_metrics_placeholder">
+        <argument android:name="title" app:argType="string" android:defaultValue="Configuración de métricas" />
+        <argument android:name="message" app:argType="string" android:defaultValue="Personaliza qué métricas ver y cómo se muestran. Próximamente." />
+        <argument android:name="badge" app:argType="string" android:defaultValue="PRONTO" />
+    </fragment>
+
 </navigation>

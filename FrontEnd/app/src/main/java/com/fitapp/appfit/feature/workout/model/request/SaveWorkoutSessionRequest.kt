@@ -15,6 +15,12 @@ data class SaveWorkoutSessionRequest(
     @SerializedName("performanceScore")
     val performanceScore: Int? = null,
 
+    @SerializedName("dayOfWeek")
+    val dayOfWeek: String? = null,
+
+    @SerializedName("sessionNumber")
+    val sessionNumber: Int? = null,
+
     @SerializedName("setExecutions")
     val setExecutions: List<SetExecutionRequest>
 ) {

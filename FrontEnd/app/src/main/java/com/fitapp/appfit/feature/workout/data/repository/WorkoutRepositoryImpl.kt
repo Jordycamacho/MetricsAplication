@@ -45,7 +45,9 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
         setCompletionState: Map<Long, Boolean>,
         startedAt: Long,
         finishedAt: Long,
-        performanceScore: Int?
+        performanceScore: Int?,
+        dayOfWeek: String?,
+        sessionNumber: Int?
     ): Result<Long> {
 
         Log.i(TAG, "SAVE_WORKOUT_START | routineId=$routineId | userId=$userId " +
@@ -59,6 +61,8 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
                 userId = userId,
                 startedAt = startedAt,
                 finishedAt = finishedAt,
+                dayOfWeek = dayOfWeek,
+                sessionNumber = sessionNumber,
                 syncStatus = SyncStatus.PENDING_CREATE,
                 lastModifiedLocally = System.currentTimeMillis()
             )
@@ -89,7 +93,7 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
 
         // 3. Sync to backend
         val syncResult = syncSessionToBackend(
-            sessionId, routineId, startedAt, finishedAt, performanceScore, results
+            sessionId, routineId, startedAt, finishedAt, performanceScore, dayOfWeek, sessionNumber, results
         )
 
         when (syncResult) {
@@ -230,6 +234,8 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
                 startedAt = session.startedAt,
                 finishedAt = session.finishedAt,
                 performanceScore = null,
+                dayOfWeek = session.dayOfWeek,
+                sessionNumber = session.sessionNumber,
                 results = results
             )
 
@@ -255,11 +261,13 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
         startedAt: Long,
         finishedAt: Long,
         performanceScore: Int?,
+        dayOfWeek: String?,
+        sessionNumber: Int?,
         results: List<WorkoutSetResultEntity>
     ): Resource<WorkoutSessionResponse> {
         return try {
             val request = buildSaveWorkoutSessionRequest(
-                routineId, startedAt, finishedAt, performanceScore, results
+                routineId, startedAt, finishedAt, performanceScore, dayOfWeek, sessionNumber, results
             )
             Log.i(TAG, "SYNC_REQUEST_BUILT | setExecutions=${request.setExecutions.size}")
             call { service.saveWorkoutSession(request) }
@@ -316,6 +324,8 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
         startedAt: Long,
         finishedAt: Long,
         performanceScore: Int?,
+        dayOfWeek: String?,
+        sessionNumber: Int?,
         results: List<WorkoutSetResultEntity>
     ): SaveWorkoutSessionRequest {
 
@@ -375,6 +385,8 @@ class WorkoutRepositoryImpl(private val context: Context) : IWorkoutRepository {
             startTime = startTime,
             endTime = endTime,
             performanceScore = performanceScore,
+            dayOfWeek = dayOfWeek,
+            sessionNumber = sessionNumber,
             setExecutions = setExecutions
         )
     }

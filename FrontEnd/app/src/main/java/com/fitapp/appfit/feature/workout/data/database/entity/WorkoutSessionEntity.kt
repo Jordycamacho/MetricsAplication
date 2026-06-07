@@ -39,6 +39,10 @@ data class WorkoutSessionEntity(
 
     val notes: String? = null,
 
+    val dayOfWeek: String? = null,
+
+    val sessionNumber: Int? = null,
+
     val syncStatus: SyncStatus = SyncStatus.PENDING_CREATE,
 
     val lastModifiedLocally: Long = System.currentTimeMillis()

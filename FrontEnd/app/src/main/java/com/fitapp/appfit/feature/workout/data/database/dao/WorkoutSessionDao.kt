@@ -29,6 +29,9 @@ interface WorkoutSessionDao {
     @Query("SELECT * FROM workout_sessions WHERE id = :sessionId")
     suspend fun getSessionById(sessionId: Long): WorkoutSessionEntity?
 
+    @Query("SELECT * FROM workout_sessions WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getSessionByRemoteId(remoteId: Long): WorkoutSessionEntity?
+
     @Query("SELECT * FROM workout_sessions WHERE routineId = :routineId ORDER BY startedAt DESC")
     suspend fun getSessionsByRoutine(routineId: Long): List<WorkoutSessionEntity>
 

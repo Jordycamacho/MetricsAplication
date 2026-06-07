@@ -40,4 +40,7 @@ interface SetTemplateDao {
 
     @Query("UPDATE set_templates SET syncStatus = 'SYNCED' WHERE id = :setId")
     suspend fun markAsSynced(setId: Long)
+
+    @Query("SELECT * FROM set_templates WHERE id = :setTemplateId LIMIT 1")
+    suspend fun getSetTemplateById(setTemplateId: Long): SetTemplateEntity?
 }

@@ -527,6 +527,7 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
             return
         }
 
+        val (trainedDay, trainedSession) = resolveTrainedDaySession()
         workoutViewModel.saveWorkoutSession(
             routineId = args.routineId,
             userId = currentUserId,
@@ -535,8 +536,24 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
             startedAt = workoutStartedAt,
             finishedAt = System.currentTimeMillis(),
             performanceScore = null,
-            setTemplateResponses = buildSetTemplateMap()
+            setTemplateResponses = buildSetTemplateMap(),
+            dayOfWeek = trainedDay,
+            sessionNumber = trainedSession
         )
+    }
+
+    private fun resolveTrainedDaySession(): Pair<String?, Int?> {
+        return when (adapter.filterMode) {
+            WorkoutPreferences.WorkoutFilterMode.DAY ->
+                adapter.filterDayOfWeek to null
+            WorkoutPreferences.WorkoutFilterMode.SESSION ->
+                null to adapter.filterSessionNumber.takeIf { it > 0 }
+            WorkoutPreferences.WorkoutFilterMode.TODAY ->
+                if (usesDayGrouping) java.time.LocalDate.now().dayOfWeek.name to null
+                else null to adapter.filterSessionNumber.takeIf { it > 0 }
+            WorkoutPreferences.WorkoutFilterMode.ALL ->
+                null to null
+        }
     }
 
     private fun buildSetTemplateMap(): Map<Long, com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse> {
@@ -800,6 +817,7 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                             val paramState = buildParamStateForSave()
                             if (paramState.isNotEmpty()) {
                                 lifecycleScope.launch {
+                                    val (trainedDay, trainedSession) = resolveTrainedDaySession()
                                     workoutViewModel.saveWorkoutSession(
                                         routineId = args.routineId,
                                         userId = currentUserId,
@@ -808,7 +826,9 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
                                             .associateWith { true },
                                         startedAt = workoutStartedAt,
                                         finishedAt = System.currentTimeMillis(),
-                                        setTemplateResponses = buildSetTemplateMap()
+                                        setTemplateResponses = buildSetTemplateMap(),
+                                        dayOfWeek = trainedDay,
+                                        sessionNumber = trainedSession
                                     )
                                 }
                             }

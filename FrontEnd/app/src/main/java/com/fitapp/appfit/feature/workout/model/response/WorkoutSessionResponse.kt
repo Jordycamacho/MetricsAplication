@@ -30,6 +30,15 @@ data class WorkoutSessionResponse(
     @SerializedName("totalVolume")
     val totalVolume: Double?,
 
+    @SerializedName("dayOfWeek")
+    val dayOfWeek: String? = null,
+
+    @SerializedName("sessionNumber")
+    val sessionNumber: Int? = null,
+
+    @SerializedName("dayLabel")
+    val dayLabel: String? = null,
+
     @SerializedName("exercises")
     val exercises: List<SessionExerciseResponse>?
 )
@@ -55,6 +64,12 @@ data class SessionExerciseResponse(
 
     @SerializedName("personalNotes")
     val personalNotes: String?,
+
+    @SerializedName("dayOfWeek")
+    val dayOfWeek: String? = null,
+
+    @SerializedName("sessionNumber")
+    val sessionNumber: Int? = null,
 
     @SerializedName("sets")
     val sets: List<SetExecutionResponse>?

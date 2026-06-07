@@ -110,7 +110,9 @@ class WorkoutExecutionViewModel(
         startedAt: Long,
         finishedAt: Long,
         performanceScore: Int? = null,
-        setTemplateResponses: Map<Long, com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse> = emptyMap()
+        setTemplateResponses: Map<Long, com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse> = emptyMap(),
+        dayOfWeek: String? = null,
+        sessionNumber: Int? = null
     ) {
         Log.i(TAG, "SAVE_WORKOUT_SESSION | routineId=$routineId | userId=$userId")
         _saveSessionState.value = Resource.Loading()
@@ -125,7 +127,9 @@ class WorkoutExecutionViewModel(
                     startedAt = startedAt,
                     finishedAt = finishedAt,
                     performanceScore = performanceScore,
-                    setTemplateResponses = setTemplateResponses
+                    setTemplateResponses = setTemplateResponses,
+                    dayOfWeek = dayOfWeek,
+                    sessionNumber = sessionNumber
                 )
 
                 if (result.isSuccess) {
