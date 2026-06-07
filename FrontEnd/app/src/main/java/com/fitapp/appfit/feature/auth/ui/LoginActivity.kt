@@ -10,12 +10,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.fitapp.appfit.MainActivity
 import com.fitapp.appfit.core.network.TokenRefreshCoordinator
 import com.fitapp.appfit.core.session.SessionManager
-import kotlinx.coroutines.runBlocking
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.core.util.applySystemBarInsets
 import com.fitapp.appfit.databinding.ActivityAuthLoginBinding
 import com.fitapp.appfit.feature.auth.AuthViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.runBlocking
 
 class LoginActivity : AppCompatActivity() {
 
@@ -29,7 +30,6 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.root.applySystemBarInsets(applyTop = true, applyBottom = true)
-
         SessionManager.initialize(applicationContext)
 
         SessionManager.onSessionExpired = {
@@ -55,7 +55,6 @@ class LoginActivity : AppCompatActivity() {
         }
 
         handleDeepLinkIfPresent(intent)
-
         setupObservers()
         setupClickListeners()
     }
@@ -67,9 +66,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun handleDeepLinkIfPresent(intent: Intent?) {
-        val data = intent?.data
-        if (data != null && data.scheme == "fitapp" && data.host == "auth") {
-            viewModel.handleGoogleCallback(data)
+        val data = intent?.data ?: return
+        if (data.scheme != "fitapp" || data.host != "auth") return
+
+        when (data.path) {
+            "/callback" -> viewModel.handleGoogleCallback(data)
+            "/verify-email" -> viewModel.handleEmailVerifiedDeepLink(data)
         }
     }
 
@@ -84,6 +86,13 @@ class LoginActivity : AppCompatActivity() {
 
         binding.tvRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
+        }
+
+        binding.tvForgotPassword.setOnClickListener {
+            val email = binding.etEmail.text.toString().trim()
+            startActivity(Intent(this, ForgotPasswordActivity::class.java).apply {
+                putExtra(ForgotPasswordActivity.EXTRA_EMAIL, email)
+            })
         }
 
         binding.btnGoogleLogin.setOnClickListener {
@@ -101,14 +110,16 @@ class LoginActivity : AppCompatActivity() {
                 }
                 is Resource.Error -> {
                     showLoading(false)
-                    val message = when {
+                    when {
+                        resource.message == "EMAIL_NOT_VERIFIED" -> showEmailNotVerifiedDialog()
                         resource.message?.contains("401") == true ||
-                                resource.message?.contains("Credenciales") == true -> "Email o contraseña incorrectos"
+                                resource.message?.contains("Credenciales") == true ->
+                            showError("Email o contraseña incorrectos")
                         resource.message?.contains("timeout", ignoreCase = true) == true ||
-                                resource.message?.contains("connect", ignoreCase = true) == true -> "No se puede conectar al servidor"
-                        else -> resource.message ?: "Error al iniciar sesión"
+                                resource.message?.contains("connect", ignoreCase = true) == true ->
+                            showError("No se puede conectar al servidor")
+                        else -> showError(resource.message ?: "Error al iniciar sesión")
                     }
-                    showError(message)
                 }
             }
         }
@@ -126,6 +137,38 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
+
+        viewModel.emailVerifiedState.observe(this) { resource ->
+            if (resource is Resource.Success) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Correo verificado")
+                    .setMessage("Tu correo ha sido verificado. Ya puedes iniciar sesión.")
+                    .setPositiveButton("Aceptar", null)
+                    .show()
+            }
+        }
+
+        viewModel.resendVerificationState.observe(this) { resource ->
+            when (resource) {
+                is Resource.Success -> showError("Correo de verificación reenviado")
+                is Resource.Error -> showError(resource.message ?: "No se pudo reenviar el correo")
+                else -> {}
+            }
+        }
+    }
+
+    private fun showEmailNotVerifiedDialog() {
+        val email = binding.etEmail.text.toString().trim()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Correo no verificado")
+            .setMessage("Debes verificar tu correo antes de iniciar sesión. ¿Reenviar el correo de verificación?")
+            .setPositiveButton("Reenviar") { _, _ ->
+                if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    viewModel.resendVerificationByEmail(email)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun showLoading(show: Boolean) {

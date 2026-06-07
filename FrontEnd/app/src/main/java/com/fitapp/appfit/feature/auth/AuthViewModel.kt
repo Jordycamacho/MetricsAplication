@@ -12,6 +12,7 @@ import com.fitapp.appfit.feature.auth.data.AuthRepository
 import com.fitapp.appfit.feature.auth.data.GoogleAuthRepository
 import com.fitapp.appfit.feature.profile.data.UserRepository
 import com.fitapp.appfit.feature.auth.model.AuthResponse
+import com.fitapp.appfit.feature.auth.model.RegisterResponse
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
@@ -25,11 +26,23 @@ class AuthViewModel : ViewModel() {
     private val _loginState = MutableLiveData<Resource<AuthResponse>>()
     val loginState: LiveData<Resource<AuthResponse>> = _loginState
 
-    private val _registerState = MutableLiveData<Resource<AuthResponse>>()
-    val registerState: LiveData<Resource<AuthResponse>> = _registerState
+    private val _registerState = MutableLiveData<Resource<RegisterResponse>>()
+    val registerState: LiveData<Resource<RegisterResponse>> = _registerState
 
     private val _logoutState = MutableLiveData<Resource<Unit>>()
     val logoutState: LiveData<Resource<Unit>> = _logoutState
+
+    private val _forgotPasswordState = MutableLiveData<Resource<Unit>>()
+    val forgotPasswordState: LiveData<Resource<Unit>> = _forgotPasswordState
+
+    private val _resetPasswordState = MutableLiveData<Resource<Unit>>()
+    val resetPasswordState: LiveData<Resource<Unit>> = _resetPasswordState
+
+    private val _resendVerificationState = MutableLiveData<Resource<Unit>>()
+    val resendVerificationState: LiveData<Resource<Unit>> = _resendVerificationState
+
+    private val _emailVerifiedState = MutableLiveData<Resource<Unit>>()
+    val emailVerifiedState: LiveData<Resource<Unit>> = _emailVerifiedState
 
     fun login(email: String, password: String) {
         _loginState.value = Resource.Loading()
@@ -52,6 +65,12 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun handleEmailVerifiedDeepLink(uri: Uri) {
+        if (uri.getQueryParameter("verified") == "true") {
+            _emailVerifiedState.value = Resource.Success(Unit)
+        }
+    }
+
     fun openGoogleLogin(context: Context) {
         googleAuthRepository.openGoogleLogin(context)
     }
@@ -60,6 +79,27 @@ class AuthViewModel : ViewModel() {
         _registerState.value = Resource.Loading()
         viewModelScope.launch {
             _registerState.value = authRepository.register(email, password, fullName)
+        }
+    }
+
+    fun resendVerificationByEmail(email: String) {
+        _resendVerificationState.value = Resource.Loading()
+        viewModelScope.launch {
+            _resendVerificationState.value = authRepository.resendVerificationByEmail(email)
+        }
+    }
+
+    fun forgotPassword(email: String) {
+        _forgotPasswordState.value = Resource.Loading()
+        viewModelScope.launch {
+            _forgotPasswordState.value = authRepository.forgotPassword(email)
+        }
+    }
+
+    fun resetPassword(token: String, newPassword: String) {
+        _resetPasswordState.value = Resource.Loading()
+        viewModelScope.launch {
+            _resetPasswordState.value = authRepository.resetPassword(token, newPassword)
         }
     }
 

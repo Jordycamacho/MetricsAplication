@@ -46,6 +46,37 @@
                     android:pathPrefix="/callback" />
             </intent-filter>
 
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="fitapp"
+                    android:host="auth"
+                    android:pathPrefix="/verify-email" />
+            </intent-filter>
+
+        </activity>
+
+        <activity
+            android:name=".feature.auth.ui.ForgotPasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".feature.auth.ui.ResetPasswordActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="fitapp"
+                    android:host="auth"
+                    android:pathPrefix="/reset-password" />
+            </intent-filter>
+
         </activity>
 
         <activity

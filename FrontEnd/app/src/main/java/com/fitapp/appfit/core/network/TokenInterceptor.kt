@@ -10,7 +10,10 @@ class TokenInterceptor : Interceptor {
         "/api/auth/login",
         "/api/auth/register",
         "/api/auth/refresh",
-        "/api/auth/verify-email"
+        "/api/auth/verify-email",
+        "/api/auth/resend-verification-email",
+        "/api/auth/forgot-password",
+        "/api/auth/reset-password"
     )
 
     override fun intercept(chain: Interceptor.Chain): Response {

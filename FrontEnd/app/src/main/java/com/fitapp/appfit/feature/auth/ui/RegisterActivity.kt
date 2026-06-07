@@ -10,12 +10,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
-import com.fitapp.appfit.MainActivity
-import com.fitapp.appfit.core.session.SessionManager
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.core.util.applySystemBarInsets
 import com.fitapp.appfit.databinding.ActivityAuthRegisterBinding
 import com.fitapp.appfit.feature.auth.AuthViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 
 class RegisterActivity : AppCompatActivity() {
@@ -30,8 +29,6 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.root.applySystemBarInsets(applyTop = true, applyBottom = true)
-
-        SessionManager.initialize(applicationContext)
 
         setupRealTimeValidation()
         setupObservers()
@@ -49,13 +46,11 @@ class RegisterActivity : AppCompatActivity() {
         binding.tvLogin.setOnClickListener { finish() }
     }
 
-    // Limpia el error del campo en tiempo real mientras el usuario escribe
     private fun setupRealTimeValidation() {
         binding.etFullName.doAfterTextChanged { binding.tilFullName.error = null }
         binding.etEmail.doAfterTextChanged { binding.tilEmail.error = null }
         binding.etPassword.doAfterTextChanged {
             binding.tilPassword.error = null
-            // Si ya escribió en confirmar, revalidar en tiempo real
             if (!binding.etConfirmPassword.text.isNullOrEmpty()) {
                 if (binding.etPassword.text.toString() == binding.etConfirmPassword.text.toString()) {
                     binding.tilConfirmPassword.error = null
@@ -77,12 +72,13 @@ class RegisterActivity : AppCompatActivity() {
                 is Resource.Loading -> showLoading(true)
                 is Resource.Success -> {
                     showLoading(false)
-                    showSuccessAndNavigate()
+                    showVerificationDialog(resource.data!!)
                 }
                 is Resource.Error -> {
                     showLoading(false)
                     val message = when {
-                        resource.message?.contains("409") == true ||
+                        resource.message == "EMAIL_EXISTS" ||
+                                resource.message?.contains("409") == true ||
                                 resource.message?.contains("already", ignoreCase = true) == true ||
                                 resource.message?.contains("existe", ignoreCase = true) == true ->
                             "Este correo ya está registrado"
@@ -105,7 +101,6 @@ class RegisterActivity : AppCompatActivity() {
     ): Boolean {
         var isValid = true
 
-        // Nombre completo
         when {
             fullName.isBlank() -> {
                 binding.tilFullName.error = "Ingresa tu nombre completo"
@@ -125,7 +120,6 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        // Email
         when {
             email.isBlank() -> {
                 binding.tilEmail.error = "Ingresa tu correo"
@@ -137,7 +131,6 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        // Contraseña
         when {
             password.isBlank() -> {
                 binding.tilPassword.error = "Ingresa una contraseña"
@@ -157,7 +150,6 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        // Confirmar contraseña (solo si la contraseña es válida)
         if (isValid || binding.tilPassword.error == null) {
             when {
                 confirmPassword.isBlank() -> {
@@ -171,7 +163,6 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        // Foco al primer campo con error
         if (!isValid) {
             listOf(
                 binding.tilFullName,
@@ -198,13 +189,14 @@ class RegisterActivity : AppCompatActivity() {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 
-    private fun showSuccessAndNavigate() {
-        Snackbar.make(binding.root, "¡Cuenta creada con éxito!", Snackbar.LENGTH_SHORT).show()
-        Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
-            finish()
-        }, 1500)
+    private fun showVerificationDialog(response: com.fitapp.appfit.feature.auth.model.RegisterResponse) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Revisa tu correo")
+            .setMessage(response.message)
+            .setPositiveButton("Ir a iniciar sesión") { _, _ ->
+                finish()
+            }
+            .setCancelable(false)
+            .show()
     }
 }
