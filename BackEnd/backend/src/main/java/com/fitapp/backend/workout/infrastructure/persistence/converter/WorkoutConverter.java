@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -39,6 +42,8 @@ public class WorkoutConverter {
                 .startTime(entity.getStartTime())
                 .endTime(entity.getEndTime())
                 .performanceScore(entity.getPerformanceScore())
+                .dayOfWeek(entity.getDayOfWeek())
+                .sessionNumber(entity.getSessionNumber())
                 .totalVolume(entity.getTotalVolume())
                 .durationSeconds(entity.getDurationSeconds())
                 .build();
@@ -69,6 +74,8 @@ public class WorkoutConverter {
         entity.setStartTime(model.getStartTime());
         entity.setEndTime(model.getEndTime());
         entity.setPerformanceScore(model.getPerformanceScore());
+        entity.setDayOfWeek(model.getDayOfWeek());
+        entity.setSessionNumber(model.getSessionNumber());
         entity.setTotalVolume(model.getTotalVolume());
         // durationSeconds es @Formula en la entidad, no se setea manualmente
 
@@ -114,6 +121,9 @@ public class WorkoutConverter {
                 .endTime(model.getEndTime())
                 .durationSeconds(model.getDurationSeconds())
                 .performanceScore(model.getPerformanceScore())
+                .dayOfWeek(model.getDayOfWeek())
+                .sessionNumber(model.getSessionNumber())
+                .dayLabel(formatDayLabel(model.getDayOfWeek(), model.getSessionNumber()))
                 .totalVolume(model.getTotalVolume())
                 .exercises(model.getExercises() != null
                         ? model.getExercises().stream()
@@ -152,6 +162,9 @@ public class WorkoutConverter {
                 .endTime(entity.getEndTime())
                 .durationSeconds(entity.getDurationSeconds())
                 .performanceScore(entity.getPerformanceScore())
+                .dayOfWeek(entity.getDayOfWeek())
+                .sessionNumber(entity.getSessionNumber())
+                .dayLabel(formatDayLabel(entity.getDayOfWeek(), entity.getSessionNumber()))
                 .totalVolume(entity.getTotalVolume())
                 .exerciseCount(exerciseCount)
                 .setCount(setCount)
@@ -170,6 +183,9 @@ public class WorkoutConverter {
             .endTime(entity.getEndTime())
             .durationSeconds(entity.getDurationSeconds())
             .performanceScore(entity.getPerformanceScore())
+            .dayOfWeek(entity.getDayOfWeek())
+            .sessionNumber(entity.getSessionNumber())
+            .dayLabel(formatDayLabel(entity.getDayOfWeek(), entity.getSessionNumber()))
             .totalVolume(entity.getTotalVolume())
             .exercises(entity.getExercises() != null
                     ? entity.getExercises().stream()
@@ -202,9 +218,36 @@ public class WorkoutConverter {
                 .endTime(model.getEndTime())
                 .durationSeconds(model.getDurationSeconds())
                 .performanceScore(model.getPerformanceScore())
+                .dayOfWeek(model.getDayOfWeek())
+                .sessionNumber(model.getSessionNumber())
+                .dayLabel(formatDayLabel(model.getDayOfWeek(), model.getSessionNumber()))
                 .totalVolume(model.getTotalVolume())
                 .exerciseCount(exerciseCount)
                 .setCount(setCount)
                 .build();
+    }
+
+    private static String formatDayLabel(String dayOfWeek, Integer sessionNumber) {
+        List<String> parts = new ArrayList<>();
+        if (dayOfWeek != null && !dayOfWeek.isBlank()) {
+            try {
+                DayOfWeek dow = DayOfWeek.valueOf(dayOfWeek);
+                parts.add(switch (dow) {
+                    case MONDAY -> "Lunes";
+                    case TUESDAY -> "Martes";
+                    case WEDNESDAY -> "Miércoles";
+                    case THURSDAY -> "Jueves";
+                    case FRIDAY -> "Viernes";
+                    case SATURDAY -> "Sábado";
+                    case SUNDAY -> "Domingo";
+                });
+            } catch (IllegalArgumentException e) {
+                parts.add(dayOfWeek);
+            }
+        }
+        if (sessionNumber != null && sessionNumber > 0) {
+            parts.add("Sesión " + sessionNumber);
+        }
+        return parts.isEmpty() ? null : String.join(" · ", parts);
     }
 }

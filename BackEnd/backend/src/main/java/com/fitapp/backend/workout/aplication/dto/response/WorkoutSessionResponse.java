@@ -53,6 +53,15 @@ public class WorkoutSessionResponse {
     @JsonProperty("totalVolume")
     @Schema(description = "Total volume (weight × reps)", example = "12500.5")
     private Double totalVolume;
+
+    @JsonProperty("dayOfWeek")
+    private String dayOfWeek;
+
+    @JsonProperty("sessionNumber")
+    private Integer sessionNumber;
+
+    @JsonProperty("dayLabel")
+    private String dayLabel;
     
     @Builder.Default
     @JsonProperty("exercises")

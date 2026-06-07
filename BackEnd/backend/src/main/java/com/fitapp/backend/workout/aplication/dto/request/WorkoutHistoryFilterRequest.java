@@ -26,6 +26,14 @@ public class WorkoutHistoryFilterRequest {
     @Schema(description = "Filter by specific routine", example = "123")
     private Long routineId;
 
+    @JsonProperty("dayOfWeek")
+    @Schema(description = "Filter by training day", example = "MONDAY")
+    private String dayOfWeek;
+
+    @JsonProperty("sessionNumber")
+    @Schema(description = "Filter by session number", example = "2")
+    private Integer sessionNumber;
+
     @JsonProperty("fromDate")
     @Schema(description = "Start date inclusive (ISO-8601)", example = "2026-01-01")
     private LocalDate fromDate;

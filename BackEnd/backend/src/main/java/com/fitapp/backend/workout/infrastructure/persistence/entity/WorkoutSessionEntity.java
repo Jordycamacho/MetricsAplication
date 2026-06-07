@@ -57,6 +57,12 @@ public class WorkoutSessionEntity {
     @Column(name = "performance_score")
     private Integer performanceScore;
 
+    @Column(name = "day_of_week")
+    private String dayOfWeek;
+
+    @Column(name = "session_number")
+    private Integer sessionNumber;
+
     @Column(name = "total_volume")
     private Double totalVolume;
 

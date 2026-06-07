@@ -42,6 +42,14 @@ public class SaveWorkoutSessionRequest {
     @JsonProperty("performanceScore")
     @Schema(description = "User's self-rated performance (1-10)", example = "8")
     private Integer performanceScore;
+
+    @JsonProperty("dayOfWeek")
+    @Schema(description = "Training day executed (e.g. MONDAY)", example = "MONDAY")
+    private String dayOfWeek;
+
+    @JsonProperty("sessionNumber")
+    @Schema(description = "Session number executed within routine", example = "2")
+    private Integer sessionNumber;
     
     @Valid
     @Builder.Default

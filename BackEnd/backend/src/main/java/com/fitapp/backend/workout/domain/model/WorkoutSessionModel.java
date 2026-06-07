@@ -21,6 +21,8 @@ public class WorkoutSessionModel {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Integer performanceScore;
+    private String dayOfWeek;
+    private Integer sessionNumber;
     private Double totalVolume;
     private Long durationSeconds;
 

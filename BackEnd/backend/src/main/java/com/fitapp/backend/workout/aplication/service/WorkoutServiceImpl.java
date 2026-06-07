@@ -232,6 +232,8 @@ public class WorkoutServiceImpl implements WorkoutUseCase {
                                 .startTime(request.getStartTime())
                                 .endTime(request.getEndTime())
                                 .performanceScore(request.getPerformanceScore())
+                                .dayOfWeek(request.getDayOfWeek())
+                                .sessionNumber(request.getSessionNumber())
                                 .exercises(exercises)
                                 .build();
         }

@@ -59,6 +59,14 @@ public class WorkoutSessionSpecification {
                         root.get("performanceScore"), filters.getMaxPerformanceScore()));
             }
 
+            if (filters.getDayOfWeek() != null && !filters.getDayOfWeek().isBlank()) {
+                predicates.add(cb.equal(root.get("dayOfWeek"), filters.getDayOfWeek()));
+            }
+
+            if (filters.getSessionNumber() != null) {
+                predicates.add(cb.equal(root.get("sessionNumber"), filters.getSessionNumber()));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

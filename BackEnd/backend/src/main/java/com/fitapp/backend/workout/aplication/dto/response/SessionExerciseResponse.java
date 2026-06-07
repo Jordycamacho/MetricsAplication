@@ -45,6 +45,12 @@ public class SessionExerciseResponse {
     @JsonProperty("personalNotes")
     @Schema(description = "User notes for this exercise")
     private String personalNotes;
+
+    @JsonProperty("dayOfWeek")
+    private String dayOfWeek;
+
+    @JsonProperty("sessionNumber")
+    private Integer sessionNumber;
     
     @Builder.Default
     @JsonProperty("sets")

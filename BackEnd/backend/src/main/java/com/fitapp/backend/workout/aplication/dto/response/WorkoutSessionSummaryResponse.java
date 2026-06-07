@@ -55,4 +55,13 @@ public class WorkoutSessionSummaryResponse {
     @JsonProperty("setCount")
     @Schema(description = "Total number of sets performed", example = "24")
     private Integer setCount;
+
+    @JsonProperty("dayOfWeek")
+    private String dayOfWeek;
+
+    @JsonProperty("sessionNumber")
+    private Integer sessionNumber;
+
+    @JsonProperty("dayLabel")
+    private String dayLabel;
 }
