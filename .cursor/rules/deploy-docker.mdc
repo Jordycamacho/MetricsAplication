@@ -24,7 +24,7 @@ curl http://localhost:8082/actuator/health
 ```
 
 ## Variables críticas
-`DB_*`, `REDIS_*`, `JWT_SECRET`, `GOOGLE_*`, `APP_BASE_URL`, `CORS_*`, `MAIL_*`, `GRAFANA_*`
+`DB_*`, `REDIS_*`, `JWT_SECRET`, `GOOGLE_*`, `APP_BASE_URL`, `CORS_*`, `MAIL_*` (Resend → `MAIL_FROM=noreply@mail.jnobfit.online`), `GRAFANA_*`
 
 ## Perfiles Spring
 - `dev` — Swagger activo, logs SQL (local sin Docker app)

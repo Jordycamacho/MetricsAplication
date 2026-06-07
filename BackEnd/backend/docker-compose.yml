@@ -41,6 +41,15 @@ services:
     container_name: fitapp-backend
     restart: unless-stopped
     env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      MAIL_HOST: ${MAIL_HOST:-smtp.resend.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-resend}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM:-noreply@mail.jnobfit.online}
+      APP_BASE_URL: ${APP_BASE_URL}
+      APP_DEEP_LINK_SCHEME: ${APP_DEEP_LINK_SCHEME:-fitapp}
     ports:
       - "8082:8080"
     depends_on:

@@ -12,8 +12,8 @@
 
 | Estado | Cantidad |
 |--------|----------|
-| ✅ Completadas | 16 |
-| 🟡 Pendientes v1 | ~14 |
+| ✅ Completadas | 17 |
+| 🟡 Pendientes v1 | ~13 |
 | 🔵 Post-v1 / grandes | ~8 |
 
 ---
@@ -50,7 +50,7 @@
 
 | # | Tarea | Notas |
 |---|-------|-------|
-| 10 | Verificación de email | Flujo registro/confirmación por correo |
+| 10 | Verificación de email | ✅ Flujo registro/confirmación por correo, hard gate login, módulo notification |
 | 11 | Eliminación en cascada (general) | Revisar otras entidades además de RoutineExercise |
 | 12 | Paquetes (marketplace) | Completar flujo de paquetes |
 | 13 | Import / export | Pantalla `ImportExportFragment` |

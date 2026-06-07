@@ -72,7 +72,12 @@
   {
     "name": "app.frontend.url",
     "type": "java.lang.String",
-    "description": "A description for 'app.frontend.url'"
+    "description": "Base URL for email links and OAuth redirects"
+  },
+  {
+    "name": "app.deep-link.scheme",
+    "type": "java.lang.String",
+    "description": "Android deep link scheme (default: fitapp)"
   },
   {
     "name": "google.client-id",

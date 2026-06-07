@@ -211,9 +211,13 @@ APP_BASE_URL=https://tu-dominio.com
 # CORS
 CORS_ALLOWED_ORIGINS=https://tu-dominio.com
 
-# Correo electrónico (Gmail SMTP)
-MAIL_USERNAME=tu@gmail.com
-MAIL_PASSWORD=tu_contraseña_de_aplicacion
+# Correo electrónico (Resend SMTP — dominio mail.jnobfit.online)
+MAIL_HOST=smtp.resend.com
+MAIL_PORT=587
+MAIL_USERNAME=resend
+MAIL_PASSWORD=re_tu_api_key
+MAIL_FROM=noreply@mail.jnobfit.online
+APP_DEEP_LINK_SCHEME=fitapp
 
 # Grafana
 GRAFANA_USER=admin
