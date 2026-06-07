@@ -58,6 +58,13 @@ public class UserPersistenceAdapter implements UserPersistencePort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<UserModel> findByPasswordResetToken(String token) {
+        return springDataUserRepository.findByPasswordResetToken(token)
+                .map(userConverter::toDomain);
+    }
+
+    @Override
     @Transactional
     public UserModel save(UserModel userModel) {
         UserEntity entity;

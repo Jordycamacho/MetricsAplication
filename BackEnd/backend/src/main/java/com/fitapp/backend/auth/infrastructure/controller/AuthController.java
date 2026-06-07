@@ -1,10 +1,14 @@
 package com.fitapp.backend.auth.infrastructure.controller;
 
+import com.fitapp.backend.auth.aplication.dto.request.ForgotPasswordRequest;
 import com.fitapp.backend.auth.aplication.dto.request.LoginRequest;
 import com.fitapp.backend.auth.aplication.dto.request.PasswordUpdateRequest;
 import com.fitapp.backend.auth.aplication.dto.request.RefreshTokenRequest;
 import com.fitapp.backend.auth.aplication.dto.request.RegisterRequest;
+import com.fitapp.backend.auth.aplication.dto.request.ResendVerificationByEmailRequest;
+import com.fitapp.backend.auth.aplication.dto.request.ResetPasswordRequest;
 import com.fitapp.backend.auth.aplication.dto.response.AuthResponse;
+import com.fitapp.backend.auth.aplication.dto.response.RegisterResponse;
 import com.fitapp.backend.auth.aplication.port.input.AuthUseCase;
 import com.fitapp.backend.auth.aplication.port.input.UserUseCase;
 
@@ -13,8 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -36,9 +42,12 @@ public class AuthController {
     private final AuthUseCase authUseCase;
     private final UserUseCase userUseCase;
 
+    @Value("${app.deep-link.scheme:fitapp}")
+    private String deepLinkScheme;
+
     @Operation(summary = "Registrar nuevo usuario")
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authUseCase.register(request));
     }
 
@@ -68,9 +77,15 @@ public class AuthController {
 
     @Operation(summary = "Verificar correo electrónico")
     @GetMapping("/verify-email")
-    public ResponseEntity<Void> verifyEmail(@RequestParam("token") String token) {
-        authUseCase.verifyEmail(token);
-        return ResponseEntity.noContent().build();
+    public void verifyEmail(
+            @RequestParam("token") String token,
+            HttpServletResponse response) throws IOException {
+        try {
+            authUseCase.verifyEmail(token);
+            writeHtmlPage(response, buildVerifySuccessHtml());
+        } catch (BadCredentialsException e) {
+            writeHtmlPage(response, buildVerifyErrorHtml(e.getMessage()));
+        }
     }
 
     @Operation(summary = "Reenviar correo de verificación")
@@ -80,6 +95,38 @@ public class AuthController {
         Long userId = extractUserId(authentication);
         authUseCase.resendVerificationEmail(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Reenviar verificación por email (público)")
+    @PostMapping("/resend-verification-email")
+    public ResponseEntity<Void> resendVerificationByEmail(
+            @Valid @RequestBody ResendVerificationByEmailRequest request) {
+        authUseCase.resendVerificationByEmail(request.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Solicitar restablecimiento de contraseña")
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authUseCase.forgotPassword(request.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Restablecer contraseña con token")
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authUseCase.resetPassword(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Landing de restablecimiento de contraseña (deep link)")
+    @GetMapping("/reset-password")
+    public void resetPasswordLanding(
+            @RequestParam("token") String token,
+            HttpServletResponse response) throws IOException {
+        String deepLink = deepLinkScheme + "://auth/reset-password?token="
+                + URLEncoder.encode(token, StandardCharsets.UTF_8);
+        writeHtmlPage(response, buildRedirectHtml("Abriendo JNOBFIT...", deepLink));
     }
 
     @Operation(summary = "Actualizar contraseña (admin/reset)")
@@ -112,18 +159,58 @@ public class AuthController {
                 ? URLDecoder.decode(expiresAt, StandardCharsets.UTF_8)
                 : Instant.now().plus(12, ChronoUnit.HOURS).toString();
 
-        String deepLink = "fitapp://auth/callback"
+        String deepLink = deepLinkScheme + "://auth/callback"
                 + "?token=" + URLEncoder.encode(decodedToken, StandardCharsets.UTF_8)
                 + "&refreshToken=" + URLEncoder.encode(decodedRefreshToken, StandardCharsets.UTF_8)
                 + "&expiresAt=" + URLEncoder.encode(decodedExpiresAt, StandardCharsets.UTF_8);
 
-        String html = """
+        writeHtmlPage(response, buildRedirectHtml("Abriendo AppFit...", deepLink));
+    }
+
+    // ── HTML helpers ──────────────────────────────────────────────────────────
+
+    private String buildVerifySuccessHtml() {
+        String deepLink = deepLinkScheme + "://auth/verify-email?verified=true";
+        return """
+                <!DOCTYPE html>
+                <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+                <title>Correo verificado</title>
+                <style>
+                    body{background:#0A0A0A;display:flex;flex-direction:column;align-items:center;
+                    justify-content:center;height:100vh;font-family:sans-serif;margin:0;gap:12px;}
+                    h1{color:#C8B560;font-size:22px;margin:0;} p{color:#888;font-size:14px;text-align:center;max-width:320px;}
+                </style></head><body>
+                <h1>¡Correo verificado!</h1>
+                <p>Ya puedes iniciar sesión en JNOBFIT.</p>
+                <script>window.location.href='%s';</script>
+                </body></html>
+                """.formatted(deepLink);
+    }
+
+    private String buildVerifyErrorHtml(String message) {
+        return """
+                <!DOCTYPE html>
+                <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+                <title>Error de verificación</title>
+                <style>
+                    body{background:#0A0A0A;display:flex;flex-direction:column;align-items:center;
+                    justify-content:center;height:100vh;font-family:sans-serif;margin:0;gap:12px;padding:24px;}
+                    h1{color:#C8B560;font-size:20px;margin:0;} p{color:#888;font-size:14px;text-align:center;max-width:360px;}
+                </style></head><body>
+                <h1>No se pudo verificar</h1>
+                <p>%s</p>
+                </body></html>
+                """.formatted(escapeHtml(message));
+    }
+
+    private String buildRedirectHtml(String title, String deepLink) {
+        return """
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Redirigiendo a AppFit...</title>
+                    <title>%s</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body {
@@ -159,18 +246,28 @@ public class AuthController {
                         <div class="dot"></div>
                         <div class="dot"></div>
                     </div>
-                    <p>Abriendo AppFit...</p>
+                    <p>%s</p>
                     <span class="hint">Puedes cerrar este navegador</span>
                     <script>
                         window.location.href = '%s';
                     </script>
                 </body>
                 </html>
-                """.formatted(deepLink);
+                """.formatted(title, title, deepLink);
+    }
 
+    private void writeHtmlPage(HttpServletResponse response, String html) throws IOException {
         response.setContentType("text/html;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(html);
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 
     // ── Helper ──────────────────────────────────────────────────────────────

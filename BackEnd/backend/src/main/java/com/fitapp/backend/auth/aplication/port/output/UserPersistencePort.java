@@ -14,4 +14,5 @@ public interface UserPersistencePort {
     Optional<UserModel> findByEmail(String email);
     UserModel save(UserModel user);
     Optional<UserModel> findByEmailVerificationToken(String token);
+    Optional<UserModel> findByPasswordResetToken(String token);
 }

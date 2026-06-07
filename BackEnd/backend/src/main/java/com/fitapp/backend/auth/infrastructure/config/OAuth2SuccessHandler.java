@@ -100,6 +100,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         private UserModel linkGoogleToExistingUser(UserModel user, String googleId) {
                 user.setGoogleId(googleId);
                 user.setProvider("GOOGLE");
+                user.setEmailVerified(true);
                 return userRepository.save(user);
         }
 

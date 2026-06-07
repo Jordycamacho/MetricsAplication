@@ -94,6 +94,13 @@ public class UserEntity {
     @Column(name = "email_verification_token_expires_at")
     private LocalDateTime emailVerificationTokenExpiresAt;
 
+    // ── Restablecer contraseña ────────────────────────────────────────────────────
+    @Column(name = "password_reset_token", length = 128)
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expires_at")
+    private LocalDateTime passwordResetTokenExpiresAt;
+
     // ── Soft delete ─────────────────────────────────────────────────────────────
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;

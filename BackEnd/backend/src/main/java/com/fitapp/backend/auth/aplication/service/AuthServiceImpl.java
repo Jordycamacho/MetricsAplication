@@ -2,17 +2,21 @@ package com.fitapp.backend.auth.aplication.service;
 
 import com.fitapp.backend.auth.aplication.dto.request.LoginRequest;
 import com.fitapp.backend.auth.aplication.dto.request.RegisterRequest;
+import com.fitapp.backend.auth.aplication.dto.request.ResetPasswordRequest;
 import com.fitapp.backend.auth.aplication.dto.request.UserCreationRequest;
 import com.fitapp.backend.auth.aplication.dto.response.AuthResponse;
+import com.fitapp.backend.auth.aplication.dto.response.RegisterResponse;
 import com.fitapp.backend.auth.aplication.port.input.AuthUseCase;
 import com.fitapp.backend.auth.aplication.port.input.UserUseCase;
 import com.fitapp.backend.auth.aplication.port.output.TokenBlacklistPort;
 import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
+import com.fitapp.backend.auth.domain.exception.EmailNotVerifiedException;
 import com.fitapp.backend.auth.domain.model.CustomUserDetails;
 import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
-import com.fitapp.backend.infrastructure.shared.EmailService;
 import com.fitapp.backend.infrastructure.shared.exception.EmailAlreadyExistsException;
+import com.fitapp.backend.notification.aplication.port.input.NotificationUseCase;
+import com.fitapp.backend.notification.infrastructure.ratelimit.EmailRateLimitService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +43,8 @@ public class AuthServiceImpl implements AuthUseCase {
     private final PasswordEncoder passwordEncoder;
     private final JwtDecoder jwtDecoder;
     private final TokenBlacklistPort tokenBlacklistPort;
-    private final EmailService emailService;
+    private final NotificationUseCase notificationUseCase;
+    private final EmailRateLimitService emailRateLimitService;
 
     private final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
@@ -80,8 +85,9 @@ public class AuthServiceImpl implements AuthUseCase {
             throw new BadCredentialsException("El token de verificación ha expirado. Solicita uno nuevo.");
         }
 
-        user.verifyEmail(); // limpia token y marca emailVerified = true
+        user.verifyEmail();
         userPersistence.save(user);
+        notificationUseCase.sendWelcomeEmail(user.getEmail(), user.getFullName());
         log.info("Email verificado para userId: {}", user.getId());
     }
 
@@ -94,15 +100,28 @@ public class AuthServiceImpl implements AuthUseCase {
             throw new IllegalStateException("El correo ya está verificado");
         }
 
+        emailRateLimitService.checkAndIncrement("resend", user.getEmail());
         sendVerificationEmail(user);
         log.info("Correo de verificación reenviado para userId: {}", userId);
+    }
+
+    @Override
+    @Transactional
+    public void resendVerificationByEmail(String email) {
+        userUseCase.findByEmail(email).ifPresent(user -> {
+            if (!user.isEmailVerified()) {
+                emailRateLimitService.checkAndIncrement("resend", email);
+                sendVerificationEmail(user);
+                log.info("Correo de verificación reenviado para email: {}", email);
+            }
+        });
     }
 
     // ── Registro ────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         log.info("Intento de registro con email: {}", request.getEmail());
 
         if (userUseCase.findByEmail(request.getEmail()).isPresent()) {
@@ -119,8 +138,12 @@ public class AuthServiceImpl implements AuthUseCase {
 
         sendVerificationEmail(userModel);
 
-        log.info("Usuario registrado, userId: {}", userModel.getId());
-        return generateAuthResponse(userModel);
+        log.info("Usuario registrado, userId: {} — pendiente verificación", userModel.getId());
+        return RegisterResponse.builder()
+                .email(userModel.getEmail())
+                .message("Revisa tu correo para verificar tu cuenta antes de iniciar sesión")
+                .requiresEmailVerification(true)
+                .build();
     }
 
     // ── Login ───────────────────────────────────────────────────────────────────
@@ -141,10 +164,51 @@ public class AuthServiceImpl implements AuthUseCase {
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
+        if (!userModel.isEmailVerified()) {
+            log.warn("[AUTH] FALLO login: email no verificado={}", request.email());
+            throw new EmailNotVerifiedException();
+        }
+
         userUseCase.updateLastLogin(userModel.getId());
         log.info("[AUTH] Login exitoso userId={} roles={}",
                 userModel.getId(), userModel.getGrantedAuthorities());
         return generateAuthResponse(userModel);
+    }
+
+    // ── Password reset ──────────────────────────────────────────────────────────
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) {
+        emailRateLimitService.checkAndIncrement("forgot", email);
+        userUseCase.findByEmail(email).ifPresent(user -> {
+            if ("GOOGLE".equalsIgnoreCase(user.getProvider())) {
+                return;
+            }
+            String token = UUID.randomUUID().toString();
+            user.setPasswordResetToken(token);
+            user.setPasswordResetTokenExpiresAt(LocalDateTime.now().plusHours(1));
+            userPersistence.save(user);
+            notificationUseCase.sendPasswordResetEmail(user.getEmail(), user.getFullName(), token);
+            log.info("Correo de restablecimiento enviado para email: {}", email);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        UserModel user = userPersistence.findByPasswordResetToken(request.getToken())
+                .orElseThrow(() -> new BadCredentialsException("Token de restablecimiento inválido o ya usado"));
+
+        if (user.getPasswordResetTokenExpiresAt() != null
+                && user.getPasswordResetTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadCredentialsException("El token de restablecimiento ha expirado. Solicita uno nuevo.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.clearPasswordResetToken();
+        userPersistence.save(user);
+        log.info("Contraseña restablecida para userId: {}", user.getId());
     }
 
     // ── Refresh ─────────────────────────────────────────────────────────────────
@@ -172,9 +236,13 @@ public class AuthServiceImpl implements AuthUseCase {
                         return new BadCredentialsException("Token inválido");
                     });
 
+            if (!user.isEmailVerified()) {
+                throw new EmailNotVerifiedException();
+            }
+
             log.info("[AUTH] Refresh exitoso para userId={} email={}", user.getId(), user.getEmail());
             return generateAuthResponse(user);
-        } catch (BadCredentialsException e) {
+        } catch (BadCredentialsException | EmailNotVerifiedException e) {
             throw e;
         } catch (Exception e) {
             log.error("[AUTH] EXCEPCIÓN en refreshAccessToken: tipo={} mensaje={}",
@@ -185,7 +253,11 @@ public class AuthServiceImpl implements AuthUseCase {
 
     @Override
     public AuthResponse refreshToken(CustomUserDetails userDetails) {
-        return generateAuthResponse(userUseCase.findById(userDetails.getUserId()));
+        UserModel user = userUseCase.findById(userDetails.getUserId());
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException();
+        }
+        return generateAuthResponse(user);
     }
 
     // ── Helpers privados ────────────────────────────────────────────────────────
@@ -197,12 +269,11 @@ public class AuthServiceImpl implements AuthUseCase {
                 Instant.now().plus(12, ChronoUnit.HOURS));
     }
 
-    /** Genera token UUID, lo persiste en el usuario y envía el correo. */
     private void sendVerificationEmail(UserModel user) {
         String token = UUID.randomUUID().toString();
         user.setEmailVerificationToken(token);
         user.setEmailVerificationTokenExpiresAt(LocalDateTime.now().plusHours(24));
         userPersistence.save(user);
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        notificationUseCase.sendVerificationEmail(user.getEmail(), token);
     }
 }

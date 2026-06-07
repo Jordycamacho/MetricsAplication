@@ -32,7 +32,10 @@ public class UserResponse {
     
     @JsonProperty("isActive")
     private boolean isActive;
-    
+
+    @JsonProperty("emailVerified")
+    private boolean emailVerified;
+
     @JsonProperty("subscription")
     private SubscriptionResponse subscription;
 }

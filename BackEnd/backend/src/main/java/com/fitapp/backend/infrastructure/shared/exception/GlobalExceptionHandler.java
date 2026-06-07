@@ -13,6 +13,7 @@ import com.fitapp.backend.Exercise.domain.exception.ExerciseAlreadyExistsExcepti
 import com.fitapp.backend.Exercise.domain.exception.ExerciseNotFoundException;
 import com.fitapp.backend.Exercise.domain.exception.ExerciseOwnershipException;
 import com.fitapp.backend.Exercise.domain.exception.ExerciseRatingException;
+import com.fitapp.backend.auth.domain.exception.EmailNotVerifiedException;
 import com.fitapp.backend.auth.domain.exception.UserNotFoundException;
 import com.fitapp.backend.category.domain.exception.CategoryDuplicateException;
 import com.fitapp.backend.category.domain.exception.CategoryNotFoundException;
@@ -26,6 +27,7 @@ import com.fitapp.backend.routinecomplete.domain.exception.SetTemplatePositionCo
 import com.fitapp.backend.sport.domain.exception.PredefinedSportException;
 import com.fitapp.backend.sport.domain.exception.SportNotFoundException;
 import com.fitapp.backend.sport.domain.exception.SportOwnershipException;
+import com.fitapp.backend.notification.domain.exception.EmailRateLimitExceededException;
 import com.fitapp.backend.suscription.domain.exception.SubscriptionLimitException;
 
 import java.io.PrintWriter;
@@ -82,6 +84,42 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                                 ErrorResponse.builder()
                                                 .code("USER_NOT_FOUND")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(EmailNotVerifiedException.class)
+        public ResponseEntity<ErrorResponse> handleEmailNotVerified(EmailNotVerifiedException ex) {
+                log.warn("EMAIL_NOT_VERIFIED | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                ErrorResponse.builder()
+                                                .code("EMAIL_NOT_VERIFIED")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(EmailAlreadyExistsException.class)
+        public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+                log.warn("EMAIL_ALREADY_EXISTS | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                                ErrorResponse.builder()
+                                                .code("EMAIL_ALREADY_EXISTS")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(EmailRateLimitExceededException.class)
+        public ResponseEntity<ErrorResponse> handleEmailRateLimit(EmailRateLimitExceededException ex) {
+                log.warn("EMAIL_RATE_LIMIT | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                                ErrorResponse.builder()
+                                                .code("EMAIL_RATE_LIMIT")
                                                 .message(ex.getMessage())
                                                 .timestamp(Instant.now())
                                                 .correlationId(MDC.get("correlationId"))

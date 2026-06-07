@@ -30,6 +30,8 @@ public class UserConverter {
                 .emailVerified(entity.isEmailVerified())
                 .emailVerificationToken(entity.getEmailVerificationToken())
                 .emailVerificationTokenExpiresAt(entity.getEmailVerificationTokenExpiresAt())
+                .passwordResetToken(entity.getPasswordResetToken())
+                .passwordResetTokenExpiresAt(entity.getPasswordResetTokenExpiresAt())
                 .deletedAt(entity.getDeletedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -60,6 +62,8 @@ public class UserConverter {
         entity.setEmailVerified(model.isEmailVerified());
         entity.setEmailVerificationToken(model.getEmailVerificationToken());
         entity.setEmailVerificationTokenExpiresAt(model.getEmailVerificationTokenExpiresAt());
+        entity.setPasswordResetToken(model.getPasswordResetToken());
+        entity.setPasswordResetTokenExpiresAt(model.getPasswordResetTokenExpiresAt());
         entity.setDeletedAt(model.getDeletedAt());
         return entity;
     }
@@ -77,6 +81,8 @@ public class UserConverter {
         entity.setEmailVerified(model.isEmailVerified());
         entity.setEmailVerificationToken(model.getEmailVerificationToken());
         entity.setEmailVerificationTokenExpiresAt(model.getEmailVerificationTokenExpiresAt());
+        entity.setPasswordResetToken(model.getPasswordResetToken());
+        entity.setPasswordResetTokenExpiresAt(model.getPasswordResetTokenExpiresAt());
         entity.setDeletedAt(model.getDeletedAt());
     }
 }

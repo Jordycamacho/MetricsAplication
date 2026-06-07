@@ -7,7 +7,7 @@ import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
 import com.fitapp.backend.auth.domain.exception.UserNotFoundException;
 import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.Role;
-import com.fitapp.backend.infrastructure.shared.EmailService;
+import com.fitapp.backend.notification.aplication.port.input.NotificationUseCase;
 import com.fitapp.backend.infrastructure.shared.exception.EmailAlreadyExistsException;
 import com.fitapp.backend.suscription.aplication.port.input.SubscriptionUseCase;
 import com.fitapp.backend.suscription.domain.model.SubscriptionModel;
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserUseCase {
     private final SubscriptionUseCase subscriptionUseCase;
     private final UserPersistencePort userPersistence;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
+    private final NotificationUseCase notificationUseCase;
 
     // ── Contraseñas ─────────────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserUseCase {
         UserModel user = findOrThrow(userId);
         user.softDelete();
         userPersistence.save(user);
-        emailService.sendAccountDeletionConfirmation(user.getEmail(), user.getFullName());
+        notificationUseCase.sendAccountDeletionConfirmation(user.getEmail(), user.getFullName());
     }
 
     // ── Sesión ──────────────────────────────────────────────────────────────────

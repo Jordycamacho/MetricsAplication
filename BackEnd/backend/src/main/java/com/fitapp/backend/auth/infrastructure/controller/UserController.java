@@ -150,6 +150,7 @@ public class UserController {
                 .fullName(u.getFullName())
                 .role(u.getRole())
                 .isActive(u.isActive())
+                .emailVerified(u.isEmailVerified())
                 .createdAt(u.getCreatedAt())
                 .updatedAt(u.getUpdatedAt());
         if (u.getSubscription() != null) {

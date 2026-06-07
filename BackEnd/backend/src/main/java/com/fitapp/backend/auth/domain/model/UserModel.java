@@ -43,6 +43,10 @@ public class UserModel {
     private String emailVerificationToken;
     private LocalDateTime emailVerificationTokenExpiresAt;
 
+    // ── Restablecer contraseña ────────────────────────────────────────────────────
+    private String passwordResetToken;
+    private LocalDateTime passwordResetTokenExpiresAt;
+
     // ── Soft delete ─────────────────────────────────────────────────────────────
     private LocalDateTime deletedAt;
 
@@ -73,6 +77,11 @@ public class UserModel {
         this.emailVerified = true;
         this.emailVerificationToken = null;
         this.emailVerificationTokenExpiresAt = null;
+    }
+
+    public void clearPasswordResetToken() {
+        this.passwordResetToken = null;
+        this.passwordResetTokenExpiresAt = null;
     }
 
     public List<SimpleGrantedAuthority> getGrantedAuthorities() {

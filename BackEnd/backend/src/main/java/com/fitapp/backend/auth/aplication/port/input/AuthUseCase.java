@@ -2,11 +2,13 @@ package com.fitapp.backend.auth.aplication.port.input;
 
 import com.fitapp.backend.auth.aplication.dto.request.LoginRequest;
 import com.fitapp.backend.auth.aplication.dto.request.RegisterRequest;
+import com.fitapp.backend.auth.aplication.dto.request.ResetPasswordRequest;
 import com.fitapp.backend.auth.aplication.dto.response.AuthResponse;
+import com.fitapp.backend.auth.aplication.dto.response.RegisterResponse;
 import com.fitapp.backend.auth.domain.model.CustomUserDetails;
 
 public interface AuthUseCase {
-    AuthResponse register(RegisterRequest request);
+    RegisterResponse register(RegisterRequest request);
     AuthResponse login(LoginRequest request);
     AuthResponse refreshAccessToken(String refreshToken);
     AuthResponse refreshToken(CustomUserDetails userDetails);
@@ -19,4 +21,13 @@ public interface AuthUseCase {
 
     /** Reenvía el correo de verificación al usuario autenticado. */
     void resendVerificationEmail(Long userId);
+
+    /** Reenvía verificación por email (público, rate limited). */
+    void resendVerificationByEmail(String email);
+
+    /** Solicita restablecimiento de contraseña (público, rate limited). */
+    void forgotPassword(String email);
+
+    /** Restablece la contraseña con token del correo. */
+    void resetPassword(ResetPasswordRequest request);
 }
