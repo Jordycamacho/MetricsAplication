@@ -181,6 +181,17 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
 
                         validateUserOwnsSetTemplate(user.getId(), existingSet);
 
+                        RoutineExerciseModel routineExercise = routineExercisePersistencePort
+                                        .findById(existingSet.getRoutineExerciseId())
+                                        .orElseThrow(() -> new RuntimeException(
+                                                        "Routine exercise not found: "
+                                                                        + existingSet.getRoutineExerciseId()));
+
+                        ExerciseModel exercise = exercisePersistencePort.findById(routineExercise.getExerciseId())
+                                        .orElseThrow(() -> new RuntimeException("Exercise not found"));
+
+                        Set<Long> supportedParamIds = exercise.getSupportedParameterIds();
+
                         if (request.getPosition() != null) {
                                 validateUniquePosition(existingSet.getRoutineExerciseId(), request.getPosition(), id);
                                 existingSet.setPosition(request.getPosition());
@@ -202,7 +213,8 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
                         existingSet.logModelData("UPDATING");
 
                         if (request.getParameters() != null) {
-                                updateSetParameters(existingSet, request.getParameters());
+                                updateSetParameters(existingSet, request.getParameters(), supportedParamIds,
+                                                exercise.getId());
                         }
 
                         RoutineSetTemplateModel updatedSet = setTemplatePersistencePort.save(existingSet);
@@ -400,6 +412,7 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
 
                         validateUserOwnsSetTemplate(user.getId(), setTemplate);
 
+                        setParameterPersistencePort.deleteBySetTemplateId(id);
                         setTemplatePersistencePort.deleteById(id);
 
                         metrics.recordDeleted();
@@ -544,7 +557,8 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
         }
 
         private void updateSetParameters(RoutineSetTemplateModel setTemplate,
-                        List<UpdateSetTemplateRequest.SetParameterRequest> parameterRequests) {
+                        List<UpdateSetTemplateRequest.SetParameterRequest> parameterRequests,
+                        Set<Long> supportedParamIds, Long exerciseId) {
 
                 List<RoutineSetParameterModel> existingParameters = setParameterPersistencePort
                                 .findBySetTemplateId(setTemplate.getId());
@@ -562,6 +576,10 @@ public class RoutineSetTemplateServiceImpl implements RoutineSetTemplateUseCase 
                                 updatedParameters.add(existingParam);
                                 existingParamsMap.remove(paramRequest.getId());
                         } else {
+                                if (!supportedParamIds.contains(paramRequest.getParameterId())) {
+                                        throw new UnsupportedParameterException(paramRequest.getParameterId(),
+                                                        exerciseId);
+                                }
                                 RoutineSetParameterModel newParam = createSetParameterModelFromUpdateRequest(
                                                 paramRequest, setTemplate.getId());
                                 updatedParameters.add(newParam);

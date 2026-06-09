@@ -1,6 +1,8 @@
 package com.fitapp.backend.routinecomplete.infrastructure.persistence.adapter;
 
+import com.fitapp.backend.infrastructure.persistence.entity.enums.SetType;
 import com.fitapp.backend.routinecomplete.aplication.port.output.RoutineSetTemplatePersistencePort;
+import com.fitapp.backend.routinecomplete.domain.exception.SetTemplateNotFoundException;
 import com.fitapp.backend.routinecomplete.domain.model.RoutineSetTemplateModel;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.converter.SetConverter;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineSetTemplateEntity;
@@ -32,7 +34,9 @@ public class RoutineSetTemplatePersistenceAdapter implements RoutineSetTemplateP
     public RoutineSetTemplateModel save(RoutineSetTemplateModel model) {
         log.debug("Saving set template model: {}", model.getId());
         try {
-            RoutineSetTemplateEntity entity = setConverter.toSetTemplateEntity(model);
+            RoutineSetTemplateEntity entity = model.getId() != null
+                    ? updateManagedEntity(model)
+                    : setConverter.toSetTemplateEntity(model);
             RoutineSetTemplateEntity savedEntity = setTemplateRepository.save(entity);
             log.info("Set template saved successfully: id={}, position={}",
                     savedEntity.getId(), savedEntity.getPosition());
@@ -41,6 +45,32 @@ public class RoutineSetTemplatePersistenceAdapter implements RoutineSetTemplateP
             log.error("Data access error while saving set template: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to save set template", e);
         }
+    }
+
+    private RoutineSetTemplateEntity updateManagedEntity(RoutineSetTemplateModel model) {
+        RoutineSetTemplateEntity entity = setTemplateRepository.findById(model.getId())
+                .orElseThrow(() -> new SetTemplateNotFoundException(model.getId()));
+
+        if (model.getPosition() != null) {
+            entity.setPosition(model.getPosition());
+        }
+        if (model.getSubSetNumber() != null) {
+            entity.setSubSetNumber(model.getSubSetNumber());
+        }
+        if (model.getGroupId() != null) {
+            entity.setGroupId(model.getGroupId());
+        }
+        if (model.getRestAfterSet() != null) {
+            entity.setRestAfterSet(model.getRestAfterSet());
+        }
+        if (model.getSetType() != null) {
+            try {
+                entity.setSetType(SetType.valueOf(model.getSetType()));
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid set type on update: {}, keeping current value", model.getSetType());
+            }
+        }
+        return entity;
     }
 
     @Override
@@ -75,7 +105,7 @@ public class RoutineSetTemplatePersistenceAdapter implements RoutineSetTemplateP
     @Cacheable(value = "setTemplates", key = "#id")
     public Optional<RoutineSetTemplateModel> findById(Long id) {
         log.debug("Finding set template by id: {}", id);
-        return setTemplateRepository.findById(id)
+        return setTemplateRepository.findByIdWithRoutineExercise(id)
                 .map(setConverter::toSetTemplateModel);
     }
 

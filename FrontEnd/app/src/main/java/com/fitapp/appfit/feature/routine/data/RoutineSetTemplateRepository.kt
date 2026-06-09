@@ -4,7 +4,7 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setemplate.request.CreateSetTemplateRequest
 import com.fitapp.appfit.feature.routine.model.setemplate.request.UpdateSetTemplateRequest
-import com.fitapp.appfit.feature.routine.data.RoutineSetTemplateService
+import com.fitapp.appfit.feature.routine.util.RoutineErrorHandler
 import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -42,7 +42,7 @@ class RoutineSetTemplateRepository {
             if (r.isSuccessful) {
                 r.body()?.let { Resource.Success(it) } ?: Resource.Error("Respuesta vacía del servidor")
             } else {
-                Resource.Error(httpError(r.code()))
+                Resource.Error(RoutineErrorHandler.getErrorMessage(r))
             }
         } catch (e: Exception) {
             Resource.Error(networkError(e))
@@ -53,18 +53,10 @@ class RoutineSetTemplateRepository {
         return try {
             val r = block()
             if (r.isSuccessful) Resource.Success(Unit)
-            else Resource.Error(httpError(r.code()))
+            else Resource.Error(RoutineErrorHandler.getErrorMessage(r))
         } catch (e: Exception) {
             Resource.Error(networkError(e))
         }
-    }
-
-    private fun httpError(code: Int) = when (code) {
-        401 -> "Sesión expirada"
-        403 -> "Sin permisos"
-        404 -> "No encontrado"
-        500 -> "Error del servidor"
-        else -> "Error $code"
     }
 
     private fun networkError(e: Exception) = when (e) {

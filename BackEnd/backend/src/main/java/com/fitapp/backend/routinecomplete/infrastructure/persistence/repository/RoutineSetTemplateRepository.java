@@ -9,9 +9,13 @@ import org.springframework.stereotype.Repository;
 import com.fitapp.backend.routinecomplete.infrastructure.persistence.entity.RoutineSetTemplateEntity;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RoutineSetTemplateRepository extends JpaRepository<RoutineSetTemplateEntity, Long> {
+
+        @Query("SELECT s FROM RoutineSetTemplateEntity s JOIN FETCH s.routineExercise WHERE s.id = :id")
+        Optional<RoutineSetTemplateEntity> findByIdWithRoutineExercise(@Param("id") Long id);
 
         @Query("SELECT COUNT(s) FROM RoutineSetTemplateEntity s WHERE s.routineExercise.id = :routineExerciseId")
         long countByRoutineExerciseId(@Param("routineExerciseId") Long routineExerciseId);

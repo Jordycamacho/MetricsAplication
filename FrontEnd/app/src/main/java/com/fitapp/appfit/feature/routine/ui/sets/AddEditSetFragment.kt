@@ -159,11 +159,12 @@ class AddEditSetFragment : Fragment() {
         }
 
         binding.btnSaveSet.setOnClickListener {
-            if (editingSetId == null) captureRetainedFields()
+            captureRetainedFields()
             saveSet(navigateBack = false)
         }
 
         binding.btnSaveAndExit?.setOnClickListener {
+            captureRetainedFields()
             saveSet(navigateBack = true)
         }
     }
@@ -266,10 +267,7 @@ class AddEditSetFragment : Fragment() {
                         nextPosition++
                         retainedSubSetBase = retainedSubSetBase?.plus(1)
                         restoreRetainedFields()
-
-                        pendingParameters.clear()
-                        refreshParameterChips()
-
+                        retainParametersForNextSet()
                         showSavedFeedback()
                     }
 
@@ -290,15 +288,24 @@ class AddEditSetFragment : Fragment() {
 
     // ── Guardar ───────────────────────────────────────────────────────────────
 
+    private fun readFormFields(): SetFormFields {
+        val position = if (editingSetId == null) {
+            nextPosition
+        } else {
+            binding.etSetPosition.text.toString().toIntOrNull() ?: 1
+        }
+        return SetFormFields(
+            position = position,
+            setType = SET_TYPES.getOrElse(binding.spinnerSetType.selectedItemPosition) { "NORMAL" },
+            restAfterSet = binding.etRestAfterSet.text.toString().toIntOrNull(),
+            subSetNumber = binding.etSubSetNumber.text.toString().toIntOrNull(),
+            groupId = binding.etGroupId.text.toString().takeIf { it.isNotEmpty() }
+        )
+    }
+
     private fun saveSet(navigateBack: Boolean) {
         pendingSaveNavigateBack = navigateBack
-
-        val position    = if (editingSetId == null) nextPosition
-        else binding.etSetPosition.text.toString().toIntOrNull() ?: 1
-        val setType     = SET_TYPES.getOrElse(binding.spinnerSetType.selectedItemPosition) { "NORMAL" }
-        val restAfterSet = binding.etRestAfterSet.text.toString().toIntOrNull()
-        val subSetNumber = binding.etSubSetNumber.text.toString().toIntOrNull()
-        val groupId     = binding.etGroupId.text.toString().takeIf { it.isNotEmpty() }
+        val fields = readFormFields()
 
         if (editingSetId == null) {
             val params = pendingParameters.map { p ->
@@ -314,12 +321,12 @@ class AddEditSetFragment : Fragment() {
                 args.routineId,
                 CreateSetTemplateRequest(
                     routineExerciseId = args.routineExerciseId,
-                    position     = position,
-                    setType      = setType,
-                    restAfterSet = restAfterSet,
-                    subSetNumber = subSetNumber,
-                    groupId      = groupId,
-                    parameters   = params.ifEmpty { null }
+                    position = fields.position,
+                    setType = fields.setType,
+                    restAfterSet = fields.restAfterSet,
+                    subSetNumber = fields.subSetNumber,
+                    groupId = fields.groupId,
+                    parameters = params.ifEmpty { null }
                 )
             )
         } else {
@@ -327,16 +334,24 @@ class AddEditSetFragment : Fragment() {
                 args.routineId,
                 editingSetId!!,
                 UpdateSetTemplateRequest(
-                    position     = position,
-                    setType      = setType,
-                    restAfterSet = restAfterSet,
-                    subSetNumber = subSetNumber,
-                    groupId      = groupId,
-                    parameters   = pendingParameters.ifEmpty { null }
+                    position = fields.position,
+                    setType = fields.setType,
+                    restAfterSet = fields.restAfterSet,
+                    subSetNumber = fields.subSetNumber,
+                    groupId = fields.groupId,
+                    parameters = pendingParameters.toList()
                 )
             )
         }
     }
+
+    private data class SetFormFields(
+        val position: Int,
+        val setType: String,
+        val restAfterSet: Int?,
+        val subSetNumber: Int?,
+        val groupId: String?
+    )
 
     // ── Retención de campos ───────────────────────────────────────────────────
 
@@ -353,6 +368,14 @@ class AddEditSetFragment : Fragment() {
         binding.etGroupId.setText(retainedGroupId)
         binding.etRestAfterSet.setText(retainedRest)
         binding.etSubSetNumber.setText(retainedSubSetBase?.toString() ?: "")
+    }
+
+    /** Conserva los parámetros del set guardado para reutilizarlos en el siguiente (sin id de servidor). */
+    private fun retainParametersForNextSet() {
+        val retained = pendingParameters.map { it.copy(id = null) }
+        pendingParameters.clear()
+        pendingParameters.addAll(retained)
+        refreshParameterChips()
     }
 
     // ── Diálogo de parámetros (MEJORADO) ──────────────────────────────────────
@@ -401,11 +424,15 @@ class AddEditSetFragment : Fragment() {
             }
         }
 
-        MaterialAlertDialogBuilder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Añadir ${parameter.name}")
             .setView(dialogBinding.root)
-            .setPositiveButton("Añadir") { _, _ ->
-                // Validar que al menos un valor está presente
+            .setPositiveButton("Añadir", null)
+            .setNegativeButton("Cancelar", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val repetitions = dialogBinding.etRepetitions.text.toString().toIntOrNull()
                 val numericValue = dialogBinding.etNumericValue.text.toString().toDoubleOrNull()
                 val integerValue = dialogBinding.etIntegerValue.text.toString().toIntOrNull()
@@ -413,33 +440,31 @@ class AddEditSetFragment : Fragment() {
 
                 if (repetitions == null && numericValue == null && integerValue == null && durationValue == null) {
                     showError("Por favor ingresa un valor")
-                    return@setPositiveButton
+                    return@setOnClickListener
                 }
 
-                // Crear nuevo parámetro
-                val newParam = UpdateSetParameterRequest(
-                    id            = null,
-                    parameterId   = parameter.id,
-                    repetitions   = repetitions,
-                    numericValue  = numericValue,
-                    integerValue  = integerValue,
-                    durationValue = durationValue
-                )
-
-                // Verificar si ya existe un parámetro con este ID
-                val exists = pendingParameters.any { it.parameterId == parameter.id }
-                if (exists) {
+                if (pendingParameters.any { it.parameterId == parameter.id }) {
                     showError("Este parámetro ya ha sido agregado al set")
-                    return@setPositiveButton
+                    return@setOnClickListener
                 }
 
-                pendingParameters.add(newParam)
+                pendingParameters.add(
+                    UpdateSetParameterRequest(
+                        id = null,
+                        parameterId = parameter.id,
+                        repetitions = repetitions,
+                        numericValue = numericValue,
+                        integerValue = integerValue,
+                        durationValue = durationValue
+                    )
+                )
                 refreshParameterChips()
                 binding.layoutParameterSection.visibility = View.GONE
                 Snackbar.make(binding.root, "✓ ${parameter.name} añadido", Snackbar.LENGTH_SHORT).show()
+                dialog.dismiss()
             }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        }
+        dialog.show()
     }
 
     private fun refreshParameterChips() {
