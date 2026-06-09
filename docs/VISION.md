@@ -3,7 +3,7 @@
 > Documento de referencia para desarrolladores y asistentes de IA.  
 > Prioridades tácticas: [`docs/BACKLOG.md`](BACKLOG.md)
 
-Última actualización: 2026-06-06
+Última actualización: 2026-06-07
 
 ---
 
@@ -91,11 +91,71 @@ Las customizaciones por deporte se incorporan **de forma incremental**: primero 
 
 ---
 
-## Futuro (ecosistema)
+## Ecosistema JNOB (visión a largo plazo)
 
-A largo plazo, el ecosistema **JNOB** podría incluir productos complementarios. **JNOB Cook** (nutrición y cocina) es una **idea futura**, no un producto en desarrollo ni parte del alcance actual de este repositorio.
+Más allá de JNOBFIT, la visión es un **ecosistema de productos** que comparten la misma estructura flexible: la comunidad puede crear contenido **gratis o de pago**, y cada app reutiliza el mismo patrón de producto sin reescribir la plataforma.
 
-Hoy todo el esfuerzo va a **JNOBFIT**.
+### Patrón de producto compartido
+
+Todas las apps del ecosistema siguen el mismo ciclo:
+
+1. **Crear entidades** con parámetros configurables (ejercicios, ingredientes, materiales, hábitos…).
+2. **Organizar en plantillas o paquetes** (rutinas, recetas, protocolos, planes de estudio…).
+3. **Ejecutar con guía** (timers, pasos, avisos de temperatura, descansos, etc.).
+4. **Medir y guardar historial** cuando las reglas del dominio lo permitan.
+5. **Compartir o vender** en un marketplace comunitario.
+
+### Productos previstos
+
+| Producto | Estado | Descripción |
+|----------|--------|-------------|
+| **JNOBFIT** | **En desarrollo** | Deporte general; v1 centrada en gimnasio, escalable a otros deportes |
+| **JNOB Cook** | Idea futura | Cocina y nutrición: alimentos con calorías/macros, recetas, ejecución con timers y temperatura, porciones para una o varias personas; marketplace de paquetes de recetas; integración con Fit (alimentación ↔ entrenamiento) |
+| **JNOB Body** | Idea futura | Composición corporal y medidas (peso, circunferencias, fotos de progreso, objetivos); complementa las métricas de entreno |
+| **JNOB Rehab / Mobility** | Idea futura | Protocolos de recuperación, estiramientos y fisioterapia guiada; mismo motor de ejecución que Fit con otro perfil (tiempo, amplitud, escala de dolor, etc.) |
+| **JNOB Mind** | Idea futura | Bienestar mental: respiración, meditación, sueño, hábitos con sesiones cronometradas e historial |
+| **JNOB Outdoor** | Idea futura | Actividades al aire libre (rutas, ascensos, aguas abiertas); distancia, tiempo, GPS; paquetes de rutas de la comunidad |
+| **JNOB Learn** | Idea futura | Aprendizaje de habilidades: drills, planes de estudio, ejecución con Pomodoro/timers; paquetes de creadores |
+| **JNOB Craft / DIY** | Idea futura | Proyectos manuales: materiales, pasos, tiempos; paralelo directo con Cook (ingredientes → materiales, receta → proyecto) |
+
+Hidratación, hábitos generales u otros nichos (p. ej. entrenamiento canino) pueden empezar como **módulos** dentro de apps existentes antes de justificar una app independiente.
+
+### Webs de plataforma (no son apps de consumo)
+
+| Web | Rol |
+|-----|-----|
+| **JNOB Hub** | Descubrimiento: perfiles, reseñas, rankings, seguir creadores, explorar paquetes gratis y de pago |
+| **Portal de creadores** | Subir paquetes, fijar precios, ver analytics de ventas; taller para entrenadores, nutricionistas y otros creadores |
+| **Dashboard unificado** | Una cuenta JNOB: progreso global, objetivos cruzados entre Fit, Cook y futuras apps |
+| **Admin / moderación** | Calidad de contenido, reportes, políticas del marketplace |
+
+El marketplace y la participación comunitaria dependen tanto de estas webs como de las apps; sin Hub + creadores, el ecosistema queda limitado al consumo pasivo.
+
+### Núcleo compartido vs extensión por app
+
+Para que el ecosistema escale sin fragmentarse, conviene separar:
+
+| Núcleo compartido (plataforma) | Extensión por app / dominio |
+|-------------------------------|-----------------------------|
+| Cuenta y autenticación | Tipos de parámetro específicos |
+| Suscripción y límites por plan | Reglas de agregación a métricas |
+| Modelo de paquetes y marketplace | UI de ejecución por deporte/receta/etc. |
+| Ejecución con pasos, timers e historial | Integraciones entre apps (p. ej. calorías ↔ gasto de entreno) |
+| Sync offline y cola de operaciones | |
+
+Nuevas apps deben ser **sabores del mismo motor**, no reescrituras desde cero.
+
+### Orden estratégico sugerido
+
+1. **JNOBFIT v1** estable (gimnasio funcional, arquitectura deporte-agnóstica).
+2. **Plataforma compartida** en backend (cuenta, suscripción, paquetes, sync) — aunque al principio solo la use Fit.
+3. **JNOB Cook** como segunda app que valida que el modelo no es exclusivo del deporte.
+4. **Webs Hub + Creadores** para habilitar contenido comunitario gratis y de pago.
+5. **Tercera vertical** según tracción: Rehab (cercana a Fit) o Body (métricas simples, alto valor para el usuario).
+
+Añadir muchas apps antes de tener marketplace, creadores y cuenta unificada multiplica coste y fragmenta la comunidad.
+
+**Hoy todo el esfuerzo de este repositorio va a JNOBFIT.** El resto del ecosistema es visión y planificación, no alcance de implementación actual.
 
 ---
 
@@ -104,7 +164,7 @@ Hoy todo el esfuerzo va a **JNOBFIT**.
 Para evitar desviaciones de foco:
 
 - **No** es una app exclusiva de gimnasio (aunque v1 se centre en perfeccionar ese flujo).
-- **No** incluye JNOB Cook ni funcionalidades de nutrición/recetas.
+- **No** incluye JNOB Cook, otras apps del ecosistema JNOB ni sus webs (Hub, creadores, etc.).
 - **No** prioriza marketplace, métricas avanzadas u objetivos por encima de estabilidad de ejecución y sync.
 - **No** implica soportar todos los deportes en v1; implica **no cerrar la puerta** a ellos en diseño y arquitectura.
 - **No** es un refactor arquitectónico masivo; v1 es estabilizar lo existente con cambios acotados.
