@@ -106,27 +106,29 @@
             app:destination="@id/navigation_add_exercises_to_routine" />
         <action
             android:id="@+id/action_routine_exercises_to_edit_exercise"
-            app:destination="@id/navigation_edit_exercise_in_routine" />
+            app:destination="@id/navigation_add_exercises_to_routine" />
         <action
             android:id="@+id/action_routine_exercises_to_routine_sets"
             app:destination="@id/navigation_routine_sets" />
     </fragment>
 
-    <!-- Editar ejercicio dentro de una rutina -->
+    <!-- Añadir / editar ejercicios en rutina -->
     <fragment
-        android:id="@+id/navigation_edit_exercise_in_routine"
-        android:name="com.fitapp.appfit.feature.routine.ui.exercises.EditExerciseInRoutineFragment"
-        android:label="Editar Ejercicio"
-        tools:layout="@layout/fragment_edit_exercise_in_routine">
+        android:id="@+id/navigation_add_exercises_to_routine"
+        android:name="com.fitapp.appfit.feature.routine.ui.exercises.AddExercisesToRoutineFragment"
+        android:label="Ejercicio en rutina"
+        tools:layout="@layout/fragment_add_exercises_to_routine">
         <argument
             android:name="routineId"
             app:argType="long" />
         <argument
             android:name="routineExerciseId"
-            app:argType="long" />
+            app:argType="long"
+            android:defaultValue="-1L" />
         <argument
             android:name="exerciseId"
-            app:argType="long" />
+            app:argType="long"
+            android:defaultValue="-1L" />
         <argument
             android:name="exerciseName"
             app:argType="string"
@@ -147,21 +149,6 @@
             android:name="trainingDays"
             app:argType="string"
             android:defaultValue="" />
-    </fragment>
-
-    <!-- Añadir ejercicios a rutina -->
-    <fragment
-        android:id="@+id/navigation_add_exercises_to_routine"
-        android:name="com.fitapp.appfit.feature.routine.ui.exercises.AddExercisesToRoutineFragment"
-        android:label="Agregar Ejercicio"
-        tools:layout="@layout/fragment_add_exercises_to_routine">
-        <argument
-            android:name="routineId"
-            app:argType="long" />
-        <argument
-            android:name="exerciseId"
-            app:argType="long"
-            android:defaultValue="-1L" />
     </fragment>
 
     <fragment
@@ -302,7 +289,39 @@
         android:id="@+id/navigation_add_exercises"
         android:name="com.fitapp.appfit.feature.routine.ui.exercises.AddExercisesToRoutineFragment"
         android:label="@string/title_add_exercises"
-        tools:layout="@layout/fragment_add_exercises_to_routine" />
+        tools:layout="@layout/fragment_add_exercises_to_routine">
+        <argument
+            android:name="routineId"
+            app:argType="long" />
+        <argument
+            android:name="routineExerciseId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+        <argument
+            android:name="exerciseId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+        <argument
+            android:name="exerciseName"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="dayOfWeek"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="sessionOrder"
+            app:argType="integer"
+            android:defaultValue="1" />
+        <argument
+            android:name="restAfterExercise"
+            app:argType="integer"
+            android:defaultValue="60" />
+        <argument
+            android:name="trainingDays"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_edit_routine"

@@ -3,7 +3,7 @@ package com.fitapp.appfit.feature.routine.data
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
-import com.fitapp.appfit.feature.routine.data.RoutineExerciseService
+import com.fitapp.appfit.feature.routine.util.RoutineErrorHandler
 import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -23,18 +23,16 @@ class RoutineExerciseRepository {
 
     suspend fun updateExerciseInRoutine(
         routineId: Long,
-        exerciseId: Long,
+        routineExerciseId: Long,
         request: AddExerciseToRoutineRequest
     ): Resource<RoutineExerciseResponse> =
-        call { service.updateExerciseInRoutine(routineId, exerciseId, request) }
+        call { service.updateExerciseInRoutine(routineId, routineExerciseId, request) }
 
-    suspend fun removeExerciseFromRoutine(routineId: Long, exerciseId: Long): Resource<Unit> =
-        callUnitNoContent { service.removeExerciseFromRoutine(routineId, exerciseId) }
+    suspend fun removeExerciseFromRoutine(routineId: Long, routineExerciseId: Long): Resource<Unit> =
+        callUnitNoContent { service.removeExerciseFromRoutine(routineId, routineExerciseId) }
 
     suspend fun reorderExercises(routineId: Long, exerciseIds: List<Long>): Resource<Unit> =
         callUnit { service.reorderExercises(routineId, exerciseIds) }
-
-    // ── Helpers genéricos ────────────────────────────────────────────────────
 
     private suspend fun <T> call(block: suspend () -> Response<T>): Resource<T> {
         return try {
@@ -43,7 +41,7 @@ class RoutineExerciseRepository {
                 response.body()?.let { Resource.Success(it) }
                     ?: Resource.Error("Respuesta vacía del servidor")
             } else {
-                Resource.Error(httpError(response.code()))
+                Resource.Error(RoutineErrorHandler.getErrorMessage(response))
             }
         } catch (e: Exception) {
             Resource.Error(networkError(e))
@@ -54,7 +52,7 @@ class RoutineExerciseRepository {
         return try {
             val response = block()
             if (response.isSuccessful) Resource.Success(Unit)
-            else Resource.Error(httpError(response.code()))
+            else Resource.Error(RoutineErrorHandler.getErrorMessage(response))
         } catch (e: Exception) {
             Resource.Error(networkError(e))
         }
@@ -64,18 +62,10 @@ class RoutineExerciseRepository {
         return try {
             val response = block()
             if (response.code() == 204) Resource.Success(Unit)
-            else Resource.Error(httpError(response.code()))
+            else Resource.Error(RoutineErrorHandler.getErrorMessage(response))
         } catch (e: Exception) {
             Resource.Error(networkError(e))
         }
-    }
-
-    private fun httpError(code: Int) = when (code) {
-        401 -> "Sesión expirada, vuelve a iniciar sesión"
-        403 -> "No tienes permisos para esta acción"
-        404 -> "Recurso no encontrado"
-        500 -> "Error interno del servidor"
-        else -> "Error $code"
     }
 
     private fun networkError(e: Exception) = when (e) {

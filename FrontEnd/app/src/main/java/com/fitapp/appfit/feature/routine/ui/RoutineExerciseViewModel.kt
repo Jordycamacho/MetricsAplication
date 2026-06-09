@@ -10,7 +10,6 @@ import com.fitapp.appfit.feature.routine.data.RoutineExerciseRepository
 import com.fitapp.appfit.feature.routine.data.RoutineRepository
 import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
-import com.fitapp.appfit.feature.exercise.model.exercise.response.ExerciseResponse
 import kotlinx.coroutines.launch
 
 class RoutineExerciseViewModel(application: Application) : AndroidViewModel(application) {
@@ -18,24 +17,20 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
     private val repository = RoutineExerciseRepository()
     private val routineRepository = RoutineRepository(application)
 
-    // ── Estados ──────────────────────────────────────────────────────────────
-
     private val _exercisesState = MutableLiveData<Resource<List<RoutineExerciseResponse>>>()
     val exercisesState: LiveData<Resource<List<RoutineExerciseResponse>>> = _exercisesState
 
-    private val _addExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>?>()
-    val addExerciseState: LiveData<Resource<RoutineExerciseResponse>?> = _addExerciseState
+    private val _orderBaselineState = MutableLiveData<Map<String, Int>>()
+    val orderBaselineState: LiveData<Map<String, Int>> = _orderBaselineState
 
-    private val _updateExerciseState = MutableLiveData<Resource<RoutineExerciseResponse>?>()
-    val updateExerciseState: LiveData<Resource<RoutineExerciseResponse>?> = _updateExerciseState
+    private val _saveState = MutableLiveData<Resource<RoutineExerciseResponse>?>()
+    val saveState: LiveData<Resource<RoutineExerciseResponse>?> = _saveState
 
     private val _deleteState = MutableLiveData<Resource<Unit>?>()
     val deleteState: LiveData<Resource<Unit>?> = _deleteState
 
     private val _reorderState = MutableLiveData<Resource<Unit>?>()
     val reorderState: LiveData<Resource<Unit>?> = _reorderState
-
-    // ── Carga de ejercicios ───────────────────────────────────────────────────
 
     fun loadRoutineExercises(routineId: Long) {
         _exercisesState.value = Resource.Loading()
@@ -44,54 +39,53 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // ── Añadir ejercicio(s) ───────────────────────────────────────────────────
-
-    fun addExerciseToRoutine(routineId: Long, request: AddExerciseToRoutineRequest) {
-        _addExerciseState.value = Resource.Loading()
+    fun loadOrderBaseline(routineId: Long) {
         viewModelScope.launch {
-            val result = repository.addExerciseToRoutine(routineId, request)
-            if (result is Resource.Success) {
-                routineRepository.markTrainingCacheStale(routineId)
-                routineRepository.refreshTrainingCache(routineId)
+            when (val result = repository.getRoutineExercises(routineId)) {
+                is Resource.Success -> {
+                    val baseline = result.data.orEmpty()
+                        .filter { !it.dayOfWeek.isNullOrBlank() }
+                        .groupBy { it.dayOfWeek!! }
+                        .mapValues { (_, exercises) ->
+                            (exercises.maxOfOrNull { it.sessionOrder ?: 0 } ?: 0) + 1
+                        }
+                    _orderBaselineState.value = baseline
+                }
+                else -> _orderBaselineState.value = emptyMap()
             }
-            _addExerciseState.value = result
         }
     }
 
-    // ── Editar ────────────────────────────────────────────────────────────────
-
-    fun updateExerciseInRoutine(
+    fun saveExercise(
         routineId: Long,
-        exerciseId: Long,
+        routineExerciseId: Long?,
         request: AddExerciseToRoutineRequest
     ) {
-        _updateExerciseState.value = Resource.Loading()
+        _saveState.value = Resource.Loading()
         viewModelScope.launch {
-            val result = repository.updateExerciseInRoutine(routineId, exerciseId, request)
-            if (result is Resource.Success) {
-                routineRepository.markTrainingCacheStale(routineId)
-                routineRepository.refreshTrainingCache(routineId)
+            val result = if (routineExerciseId == null) {
+                repository.addExerciseToRoutine(routineId, request)
+            } else {
+                repository.updateExerciseInRoutine(routineId, routineExerciseId, request)
             }
-            _updateExerciseState.value = result
+            if (result is Resource.Success) {
+                invalidateTrainingCache(routineId)
+            }
+            _saveState.value = result
         }
     }
 
-    // ── Eliminar ──────────────────────────────────────────────────────────────
-
-    fun deleteExercise(routineId: Long, exerciseId: Long) {
+    fun deleteExercise(routineId: Long, routineExerciseId: Long) {
         _deleteState.value = Resource.Loading()
         viewModelScope.launch {
-            val result = repository.removeExerciseFromRoutine(routineId, exerciseId)
+            val result = repository.removeExerciseFromRoutine(routineId, routineExerciseId)
             _deleteState.value = result
             if (result is Resource.Success) {
-                routineRepository.markTrainingCacheStale(routineId)
-                routineRepository.refreshTrainingCache(routineId)
+                invalidateTrainingCache(routineId)
                 loadRoutineExercises(routineId)
             }
         }
     }
-
-    // ── Reordenar ─────────────────────────────────────────────────────────────
 
     fun reorderExercises(routineId: Long, exerciseIds: List<Long>) {
         _reorderState.value = Resource.Loading()
@@ -100,10 +94,12 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // ── Limpiar estados one-shot ──────────────────────────────────────────────
+    private suspend fun invalidateTrainingCache(routineId: Long) {
+        routineRepository.markTrainingCacheStale(routineId)
+        routineRepository.refreshTrainingCache(routineId)
+    }
 
-    fun clearAddState() { _addExerciseState.value = null }
-    fun clearUpdateState() { _updateExerciseState.value = null }
+    fun clearSaveState() { _saveState.value = null }
     fun clearDeleteState() { _deleteState.value = null }
     fun clearReorderState() { _reorderState.value = null }
 }

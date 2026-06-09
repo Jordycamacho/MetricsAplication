@@ -1,141 +1,174 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:orientation="vertical"
+    android:background="#0D0D0D">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#131313">
 
-        <!-- ══ Header: toolbar + búsqueda + filtros ═══════════════════════════ -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/transparent"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="#C8B560"
+            app:title="Nuevo Ejercicio"
+            app:titleTextColor="#FFFFFF" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1.5dp"
+            android:background="#C8B560"
+            android:alpha="0.35" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:indeterminateTint="#C8B560"
+        android:visibility="gone" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:fillViewport="true">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1E1E1E"
-            android:paddingBottom="12dp">
-
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="#1E1E1E"
-                app:navigationIcon="@drawable/ic_arrow_back"
-                app:navigationIconTint="#78703F"
-                app:title="Agregar Ejercicio"
-                app:titleTextColor="#FFFFFF" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="12dp"
-                app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="#121212"
-                app:boxCornerRadiusTopStart="10dp"
-                app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp"
-                app:boxCornerRadiusBottomEnd="10dp"
-                app:boxStrokeColor="#333333"
-                app:boxStrokeWidth="1dp"
-                app:startIconDrawable="@android:drawable/ic_menu_search"
-                app:startIconTint="#78703F"
-                android:hint="Buscar ejercicios..."
-                app:hintTextColor="#666666">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_search"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#666666"
-                    android:inputType="text"
-                    android:imeOptions="actionSearch"
-                    android:paddingVertical="12dp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.chip.ChipGroup
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                app:singleSelection="true"
-                app:selectionRequired="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_all"
-                    style="@style/FilterChip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="Todos"
-                    android:checked="true" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_my"
-                    style="@style/FilterChip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="Mis ejercicios" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_available"
-                    style="@style/FilterChip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="Disponibles" />
-
-            </com.google.android.material.chip.ChipGroup>
-
-        </LinearLayout>
-
-        <!-- Separador dorado -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#78703F"
-            android:alpha="0.4" />
-
-        <!-- ══ Scroll para toda la configuración ══════════════════════════════ -->
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:overScrollMode="never">
+            android:paddingHorizontal="18dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="32dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="20dp">
 
-                <!-- ── Configuración básica: día + orden + descanso ──────────── -->
+                <TextView
+                    android:id="@+id/tv_exercise_counter_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="EJERCICIO #1"
+                    android:textColor="#0D0D0D"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.12"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="6dp"
+                    android:background="@drawable/bg_badge_gold" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#C8B560"
+                    android:alpha="0.2"
+                    android:layout_marginStart="10dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="EJERCICIO SELECCIONADO"
+                android:textColor="#C8B560"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.15"
+                android:layout_marginBottom="10dp" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_selected_exercise"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="#1E1E1E"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="16dp">
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tv_selected_exercise_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Toca abajo para elegir un ejercicio"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_toggle_exercise_picker"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Elegir / cambiar ejercicio"
+                        android:textColor="#C8B560"
+                        android:textSize="12sp"
+                        app:strokeColor="#C8B560"
+                        app:strokeWidth="1dp"
+                        app:cornerRadius="10dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CONFIGURACIÓN"
+                android:textColor="#C8B560"
+                android:textSize="10.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.15"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="DÍA DE ENTRENAMIENTO"
-                        android:textColor="#78703F"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
+                        android:text="DÍA"
+                        android:textColor="#666666"
+                        android:textSize="10sp"
                         android:letterSpacing="0.1"
-                        android:layout_marginBottom="10dp" />
+                        android:layout_marginBottom="8dp" />
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:scrollbars="none"
-                        android:layout_marginBottom="20dp">
+                        android:layout_marginBottom="14dp">
 
                         <com.google.android.material.chip.ChipGroup
                             android:id="@+id/chip_group_days"
@@ -144,94 +177,53 @@
                             app:singleSelection="true"
                             app:selectionRequired="true">
 
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_monday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Lun" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_tuesday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Mar" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_wednesday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Mié" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_thursday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Jue" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_friday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Vie" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_saturday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Sáb" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_sunday"
-                                style="@style/DayChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Dom" />
-
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_monday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Lun" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_tuesday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mar" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_wednesday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mié" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_thursday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Jue" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_friday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Vie" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_saturday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sáb" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_sunday" style="@style/DayChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dom" />
                         </com.google.android.material.chip.ChipGroup>
-
                     </HorizontalScrollView>
 
-                    <!-- Orden + Descanso -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
-                        <com.google.android.material.textfield.TextInputLayout
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            app:boxBackgroundMode="outline"
-                            app:boxBackgroundColor="#121212"
-                            app:boxCornerRadiusTopStart="10dp"
-                            app:boxCornerRadiusTopEnd="10dp"
-                            app:boxCornerRadiusBottomStart="10dp"
-                            app:boxCornerRadiusBottomEnd="10dp"
-                            app:boxStrokeColor="#333333"
-                            app:hintTextColor="#B3B3B3"
-                            android:hint="Orden">
+                            android:orientation="vertical"
+                            android:layout_marginEnd="10dp">
 
-                            <com.google.android.material.textfield.TextInputEditText
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ORDEN"
+                                android:textColor="#666666"
+                                android:textSize="10sp"
+                                android:letterSpacing="0.1"
+                                android:layout_marginBottom="6dp" />
+
+                            <TextView
                                 android:id="@+id/et_session_order"
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textColor="#FFFFFF"
-                                android:inputType="number"
-                                android:paddingVertical="12dp" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
+                                android:layout_height="48dp"
+                                android:gravity="center"
+                                android:text="1"
+                                android:textColor="#C8B560"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:background="@drawable/bg_card_dark" />
+                        </LinearLayout>
 
                         <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
+                            android:layout_weight="1.4"
                             app:boxBackgroundMode="outline"
                             app:boxBackgroundColor="#121212"
                             app:boxCornerRadiusTopStart="10dp"
@@ -246,110 +238,81 @@
                                 android:id="@+id/et_rest_after"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:text="60"
                                 android:textColor="#FFFFFF"
                                 android:inputType="number"
                                 android:paddingVertical="12dp" />
-
                         </com.google.android.material.textfield.TextInputLayout>
-
                     </LinearLayout>
-
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <!-- Separador -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#78703F"
-                    android:alpha="0.2" />
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp">
 
-                <!-- ── Sección Agrupación (colapsable) ───────────────────────── -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="#1E1E1E">
+                    android:padding="16dp">
 
-                    <!-- Cabecera toggle -->
                     <TextView
                         android:id="@+id/btn_toggle_grouping"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="14dp"
-                        android:text="▶ Agrupación"
-                        android:textColor="#B3B3B3"
-                        android:textSize="13sp"
+                        android:text="▶ Agrupación (opcional)"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.05"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
-                        android:focusable="true" />
+                        android:focusable="true"
+                        android:paddingVertical="4dp" />
 
-                    <!-- Contenido colapsable -->
                     <LinearLayout
                         android:id="@+id/layout_grouping_content"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingHorizontal="16dp"
-                        android:paddingBottom="16dp"
-                        android:visibility="gone">
+                        android:visibility="gone"
+                        android:paddingTop="10dp">
 
-                        <!-- Tipo de agrupación -->
                         <com.google.android.material.chip.ChipGroup
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
+                            android:layout_marginBottom="10dp"
                             app:singleSelection="true"
                             app:selectionRequired="true">
 
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_group_none"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Ninguno"
-                                android:checked="true" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_group_circuit"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Circuito" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_group_superset"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Superset / Giant set" />
-
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_group_none" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ninguno" android:checked="true" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_group_circuit" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Circuito" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_group_superset" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Superset" />
                         </com.google.android.material.chip.ChipGroup>
 
-                        <!-- Hint del grupo activo -->
                         <TextView
                             android:id="@+id/tv_group_id_hint"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:textColor="#78703F"
+                            android:textColor="#C8B560"
                             android:textSize="12sp"
-                            android:visibility="gone" />
+                            android:visibility="gone"
+                            android:layout_marginBottom="8dp" />
 
-                        <!-- Botón nuevo grupo -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_new_group"
                             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
                             android:text="Nuevo grupo"
-                            android:textColor="#78703F"
-                            app:strokeColor="#78703F" />
+                            android:textColor="#C8B560"
+                            app:strokeColor="#C8B560"
+                            android:layout_marginBottom="8dp" />
 
-                        <!-- Rondas de circuito (sólo visible en modo Circuito) -->
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/layout_circuit_rounds"
                             android:layout_width="match_parent"
@@ -357,12 +320,7 @@
                             android:visibility="gone"
                             app:boxBackgroundMode="outline"
                             app:boxBackgroundColor="#121212"
-                            app:boxCornerRadiusTopStart="10dp"
-                            app:boxCornerRadiusTopEnd="10dp"
-                            app:boxCornerRadiusBottomStart="10dp"
-                            app:boxCornerRadiusBottomEnd="10dp"
                             app:boxStrokeColor="#333333"
-                            app:hintTextColor="#B3B3B3"
                             android:hint="Rondas del circuito">
 
                             <com.google.android.material.textfield.TextInputEditText
@@ -370,308 +328,87 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:textColor="#FFFFFF"
-                                android:inputType="number"
-                                android:paddingVertical="12dp" />
-
+                                android:inputType="number" />
                         </com.google.android.material.textfield.TextInputLayout>
-
                     </LinearLayout>
 
-                </LinearLayout>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#2A2A2A"
+                        android:layout_marginVertical="10dp" />
 
-                <!-- Separador -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#78703F"
-                    android:alpha="0.2" />
-
-                <!-- ── Sección Modo especial (colapsable) ────────────────────── -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#1E1E1E">
-
-                    <!-- Cabecera toggle -->
                     <TextView
                         android:id="@+id/btn_toggle_special_mode"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="14dp"
-                        android:text="▶ Modo especial"
-                        android:textColor="#B3B3B3"
-                        android:textSize="13sp"
+                        android:text="▶ Modo especial (opcional)"
+                        android:textColor="#888888"
+                        android:textSize="12sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.05"
                         android:background="?attr/selectableItemBackground"
                         android:clickable="true"
-                        android:focusable="true" />
+                        android:focusable="true"
+                        android:paddingVertical="4dp" />
 
-                    <!-- Contenido colapsable -->
                     <LinearLayout
                         android:id="@+id/layout_special_mode_content"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingHorizontal="16dp"
-                        android:paddingBottom="16dp"
-                        android:visibility="gone">
+                        android:visibility="gone"
+                        android:paddingTop="10dp">
 
-                        <!-- Selector de modo -->
                         <com.google.android.material.chip.ChipGroup
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="16dp"
+                            android:layout_marginBottom="10dp"
                             app:singleSelection="true"
                             app:selectionRequired="true">
 
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_mode_none"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Normal"
-                                android:checked="true" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_mode_amrap"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="AMRAP" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_mode_emom"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="EMOM" />
-
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chip_mode_tabata"
-                                style="@style/FilterChip"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Tabata" />
-
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_mode_none" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Normal" android:checked="true" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_mode_amrap" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AMRAP" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_mode_emom" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="EMOM" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chip_mode_tabata" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tabata" />
                         </com.google.android.material.chip.ChipGroup>
 
-                        <!-- AMRAP -->
-                        <LinearLayout
-                            android:id="@+id/layout_amrap"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:visibility="gone">
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:boxBackgroundMode="outline"
-                                app:boxBackgroundColor="#121212"
-                                app:boxCornerRadiusTopStart="10dp"
-                                app:boxCornerRadiusTopEnd="10dp"
-                                app:boxCornerRadiusBottomStart="10dp"
-                                app:boxCornerRadiusBottomEnd="10dp"
-                                app:boxStrokeColor="#333333"
-                                app:hintTextColor="#B3B3B3"
-                                android:hint="Duración AMRAP (segundos)">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/et_amrap_duration"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:textColor="#FFFFFF"
-                                    android:inputType="number"
-                                    android:paddingVertical="12dp" />
-
+                        <LinearLayout android:id="@+id/layout_amrap" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:boxBackgroundMode="outline" app:boxBackgroundColor="#121212" app:boxStrokeColor="#333333" android:hint="Duración AMRAP (s)">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_amrap_duration" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:inputType="number" />
                             </com.google.android.material.textfield.TextInputLayout>
-
                         </LinearLayout>
 
-                        <!-- EMOM -->
-                        <LinearLayout
-                            android:id="@+id/layout_emom"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:visibility="gone">
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginEnd="8dp"
-                                app:boxBackgroundMode="outline"
-                                app:boxBackgroundColor="#121212"
-                                app:boxCornerRadiusTopStart="10dp"
-                                app:boxCornerRadiusTopEnd="10dp"
-                                app:boxCornerRadiusBottomStart="10dp"
-                                app:boxCornerRadiusBottomEnd="10dp"
-                                app:boxStrokeColor="#333333"
-                                app:hintTextColor="#B3B3B3"
-                                android:hint="Intervalo (s)">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/et_emom_interval"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:textColor="#FFFFFF"
-                                    android:inputType="number"
-                                    android:paddingVertical="12dp" />
-
+                        <LinearLayout android:id="@+id/layout_emom" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:visibility="gone">
+                            <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp" app:boxBackgroundMode="outline" app:boxBackgroundColor="#121212" app:boxStrokeColor="#333333" android:hint="Intervalo (s)">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_emom_interval" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:inputType="number" />
                             </com.google.android.material.textfield.TextInputLayout>
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                app:boxBackgroundMode="outline"
-                                app:boxBackgroundColor="#121212"
-                                app:boxCornerRadiusTopStart="10dp"
-                                app:boxCornerRadiusTopEnd="10dp"
-                                app:boxCornerRadiusBottomStart="10dp"
-                                app:boxCornerRadiusBottomEnd="10dp"
-                                app:boxStrokeColor="#333333"
-                                app:hintTextColor="#B3B3B3"
-                                android:hint="Rondas EMOM">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/et_emom_rounds"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:textColor="#FFFFFF"
-                                    android:inputType="number"
-                                    android:paddingVertical="12dp" />
-
+                            <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" app:boxBackgroundMode="outline" app:boxBackgroundColor="#121212" app:boxStrokeColor="#333333" android:hint="Rondas">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_emom_rounds" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:inputType="number" />
                             </com.google.android.material.textfield.TextInputLayout>
-
                         </LinearLayout>
 
-                        <!-- Tabata -->
-                        <LinearLayout
-                            android:id="@+id/layout_tabata"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:visibility="gone">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginBottom="8dp">
-
-                                <com.google.android.material.textfield.TextInputLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:layout_marginEnd="8dp"
-                                    app:boxBackgroundMode="outline"
-                                    app:boxBackgroundColor="#121212"
-                                    app:boxCornerRadiusTopStart="10dp"
-                                    app:boxCornerRadiusTopEnd="10dp"
-                                    app:boxCornerRadiusBottomStart="10dp"
-                                    app:boxCornerRadiusBottomEnd="10dp"
-                                    app:boxStrokeColor="#333333"
-                                    app:hintTextColor="#B3B3B3"
-                                    android:hint="Trabajo (s)">
-
-                                    <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/et_tabata_work"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:textColor="#FFFFFF"
-                                        android:inputType="number"
-                                        android:paddingVertical="12dp" />
-
+                        <LinearLayout android:id="@+id/layout_tabata" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
+                                <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp" app:boxBackgroundMode="outline" app:boxBackgroundColor="#121212" app:boxStrokeColor="#333333" android:hint="Trabajo (s)">
+                                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_tabata_work" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:inputType="number" />
                                 </com.google.android.material.textfield.TextInputLayout>
-
-                                <com.google.android.material.textfield.TextInputLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    app:boxBackgroundMode="outline"
-                                    app:boxBackgroundColor="#121212"
-                                    app:boxCornerRadiusTopStart="10dp"
-                                    app:boxCornerRadiusTopEnd="10dp"
-                                    app:boxCornerRadiusBottomStart="10dp"
-                                    app:boxCornerRadiusBottomEnd="10dp"
-                                    app:boxStrokeColor="#333333"
-                                    app:hintTextColor="#B3B3B3"
-                                    android:hint="Descanso (s)">
-
-                                    <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/et_tabata_rest"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:textColor="#FFFFFF"
-                                        android:inputType="number"
-                                        android:paddingVertical="12dp" />
-
+                                <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" app:boxBackgroundMode="outline" app:boxBackgroundColor="#121212" app:boxStrokeColor="#333333" android:hint="Descanso (s)">
+                                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_tabata_rest" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:inputType="number" />
                                 </com.google.android.material.textfield.TextInputLayout>
-
                             </LinearLayout>
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:boxBackgroundMode="outline"
-                                app:boxBackgroundColor="#121212"
-                                app:boxCornerRadiusTopStart="10dp"
-                                app:boxCornerRadiusTopEnd="10dp"
-                                app:boxCornerRadiusBottomStart="10dp"
-                                app:boxCornerRadiusBottomEnd="10dp"
-                                app:boxStrokeColor="#333333"
-                                app:hintTextColor="#B3B3B3"
-                                android:hint="Rondas Tabata">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/et_tabata_rounds"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:textColor="#FFFFFF"
-                                    android:inputType="number"
-                                    android:paddingVertical="12dp" />
-
+                            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:boxBackgroundMode="outline" app:boxBackgroundColor="#121212" app:boxStrokeColor="#333333" android:hint="Rondas Tabata">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_tabata_rounds" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:inputType="number" />
                             </com.google.android.material.textfield.TextInputLayout>
-
                         </LinearLayout>
-
                     </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Separador -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#78703F"
-                    android:alpha="0.2" />
-
-                <!-- ── Notas (siempre visible, campo simple) ─────────────────── -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#1E1E1E"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="16dp">
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
                         app:boxBackgroundMode="outline"
                         app:boxBackgroundColor="#121212"
-                        app:boxCornerRadiusTopStart="10dp"
-                        app:boxCornerRadiusTopEnd="10dp"
-                        app:boxCornerRadiusBottomStart="10dp"
-                        app:boxCornerRadiusBottomEnd="10dp"
                         app:boxStrokeColor="#333333"
-                        app:hintTextColor="#666666"
                         android:hint="Notas (opcional)">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -680,67 +417,116 @@
                             android:layout_height="wrap_content"
                             android:textColor="#FFFFFF"
                             android:inputType="textMultiLine"
-                            android:maxLines="3"
-                            android:paddingVertical="12dp" />
+                            android:maxLines="3" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_exercise_picker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#181818"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="BUSCAR EJERCICIO"
+                        android:textColor="#C8B560"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.15"
+                        android:layout_marginBottom="10dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        app:boxBackgroundMode="outline"
+                        app:boxBackgroundColor="#121212"
+                        app:boxStrokeColor="#333333"
+                        app:startIconDrawable="@android:drawable/ic_menu_search"
+                        app:startIconTint="#C8B560"
+                        android:hint="Buscar ejercicios...">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_search"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="#FFFFFF"
+                            android:imeOptions="actionSearch"
+                            android:inputType="text" />
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <ImageButton
+                        android:id="@+id/btn_clear_search"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone"
+                        android:contentDescription="@null" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.chip.Chip android:id="@+id/chip_all" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="30dp" android:text="Todos" android:checked="true" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chip_my" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="30dp" android:text="Mis ejercicios" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chip_available" style="@style/FilterChip" android:layout_width="wrap_content" android:layout_height="30dp" android:text="Disponibles" />
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_exercises"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never" />
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <!-- Separador dorado -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#78703F"
-                    android:alpha="0.4" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_continue"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:text="GUARDAR Y CONTINUAR"
+                android:textColor="#0D0D0D"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                app:backgroundTint="#C8B560"
+                app:cornerRadius="14dp"
+                android:layout_marginBottom="10dp" />
 
-                <!-- ── Lista de ejercicios ────────────────────────────────────── -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_and_exit"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:text="Guardar y salir"
+                android:textColor="#888888"
+                android:textSize="13sp"
+                app:strokeColor="#2A2A2A"
+                app:strokeWidth="1dp"
+                app:cornerRadius="14dp" />
 
-                <ProgressBar
-                    android:id="@+id/progress_bar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="16dp"
-                    android:indeterminateTint="#78703F"
-                    android:visibility="gone" />
+            <View
+                android:id="@+id/btn_add_exercise"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_exercises"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="16dp"
-                    android:clipToPadding="false"
-                    android:overScrollMode="never"
-                    android:nestedScrollingEnabled="false" />
-
-            </LinearLayout>
-
-        </androidx.core.widget.NestedScrollView>
-
-    </LinearLayout>
-
-    <!-- FAB flotante -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/btn_add_exercise"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        android:text="Añadir ejercicio"
-        android:textColor="#121212"
-        app:icon="@drawable/ic_add"
-        app:iconTint="#121212"
-        app:backgroundTint="#78703F"
-        android:visibility="gone" />
-
-    <!-- Placeholder para btn_clear_search referenciado en el fragment -->
-    <View
-        android:id="@+id/btn_clear_search"
-        android:layout_width="0dp"
-        android:layout_height="0dp" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

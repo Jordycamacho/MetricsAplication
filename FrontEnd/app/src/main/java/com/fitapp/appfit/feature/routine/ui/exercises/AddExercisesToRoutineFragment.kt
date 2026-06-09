@@ -5,22 +5,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.ImageButton
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fitapp.appfit.R
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentAddExercisesToRoutineBinding
-import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
 import com.fitapp.appfit.feature.exercise.ExerciseViewModel
-import com.fitapp.appfit.feature.routine.ui.RoutineExerciseViewModel
-import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
 import com.fitapp.appfit.feature.exercise.model.exercise.request.ExerciseFilterRequest
 import com.fitapp.appfit.feature.exercise.model.exercise.response.ExerciseResponse
 import com.fitapp.appfit.feature.exercise.ui.list.ExerciseAdapter
+import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
+import com.fitapp.appfit.feature.routine.ui.RoutineExerciseViewModel
+import com.fitapp.appfit.feature.routine.ui.RoutineViewModel
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import java.util.UUID
@@ -30,35 +32,35 @@ class AddExercisesToRoutineFragment : Fragment() {
     private var _binding: FragmentAddExercisesToRoutineBinding? = null
     private val binding get() = _binding!!
 
+    private val args: AddExercisesToRoutineFragmentArgs by navArgs()
     private val exerciseViewModel: ExerciseViewModel by viewModels()
     private val routineExerciseViewModel: RoutineExerciseViewModel by viewModels()
     private val routineViewModel: RoutineViewModel by viewModels()
 
     private lateinit var exerciseAdapter: ExerciseAdapter
     private var selectedExercise: ExerciseResponse? = null
-    private var routineId: Long = 0
+    private var editingRoutineExerciseId: Long? = null
 
-    // Auto-incremento de orden por día (igual que sessionOrder existente)
     private val orderCounterByDay = mutableMapOf<String, Int>()
+    private var orderInitialized = false
     private var sortedTrainingDays: List<String> = emptyList()
+    private var pendingSaveNavigateBack: Boolean? = null
 
-    // Auto-incremento de groupId por tipo de agrupación:
-    // circuitGroupId y superSetGroupId se auto-generan y son persistentes mientras
-    // el usuario siga en el mismo "grupo". Se resetean al cambiar de tipo o manualmente.
     private var currentCircuitGroupId: String? = null
     private var currentSuperSetGroupId: String? = null
 
     private val chipToDayMap = mapOf(
-        R.id.chip_monday    to "MONDAY",
-        R.id.chip_tuesday   to "TUESDAY",
+        R.id.chip_monday to "MONDAY",
+        R.id.chip_tuesday to "TUESDAY",
         R.id.chip_wednesday to "WEDNESDAY",
-        R.id.chip_thursday  to "THURSDAY",
-        R.id.chip_friday    to "FRIDAY",
-        R.id.chip_saturday  to "SATURDAY",
-        R.id.chip_sunday    to "SUNDAY"
+        R.id.chip_thursday to "THURSDAY",
+        R.id.chip_friday to "FRIDAY",
+        R.id.chip_saturday to "SATURDAY",
+        R.id.chip_sunday to "SUNDAY"
     )
 
-    // Modos especiales mutuamente excluyentes
+    private val dayToChipMap = chipToDayMap.entries.associate { (chipId, day) -> day to chipId }
+
     private enum class SpecialMode { NONE, AMRAP, EMOM, TABATA }
     private var currentSpecialMode = SpecialMode.NONE
 
@@ -72,11 +74,7 @@ class AddExercisesToRoutineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        routineId = arguments?.getLong("routineId") ?: 0
-        if (routineId == 0L) {
-            findNavController().navigateUp()
-            return
-        }
+        editingRoutineExerciseId = if (args.routineExerciseId == -1L) null else args.routineExerciseId
 
         setupToolbar()
         setupRecyclerView()
@@ -85,16 +83,18 @@ class AddExercisesToRoutineFragment : Fragment() {
         setupDayChips()
         setupGroupingSection()
         setupSpecialModeSection()
-        setupAddButton()
+        setupExercisePicker()
+        setupSaveButtons()
         setupObservers()
+        prefillEditData()
 
+        routineViewModel.getRoutine(args.routineId)
+        routineExerciseViewModel.loadOrderBaseline(args.routineId)
         loadExercises()
-        routineViewModel.getRoutine(routineId)
     }
 
-    // ── Setup ─────────────────────────────────────────────────────────────────
-
     private fun setupToolbar() {
+        binding.toolbar.title = if (editingRoutineExerciseId == null) "Nuevo Ejercicio" else "Editar Ejercicio"
         binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
     }
 
@@ -109,13 +109,19 @@ class AddExercisesToRoutineFragment : Fragment() {
 
     private fun setupSearch() {
         binding.etSearch.addTextChangedListener {
-            binding.btnClearSearch.visibility = if (it.isNullOrEmpty()) View.GONE else View.VISIBLE
+            val clearBtn = binding.root.findViewById<ImageButton>(R.id.btn_clear_search)
+            clearBtn?.visibility = if (it.isNullOrEmpty()) View.GONE else View.VISIBLE
             loadExercises()
         }
         binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) { loadExercises(); true } else false
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                loadExercises()
+                true
+            } else false
         }
-        binding.btnClearSearch.setOnClickListener { binding.etSearch.text?.clear() }
+        binding.root.findViewById<ImageButton>(R.id.btn_clear_search)?.setOnClickListener {
+            binding.etSearch.text?.clear()
+        }
     }
 
     private fun setupFilterChips() {
@@ -128,39 +134,100 @@ class AddExercisesToRoutineFragment : Fragment() {
         binding.chipGroupDays.setOnCheckedStateChangeListener { _, checkedIds ->
             val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
             val day = chipToDayMap[checkedId] ?: return@setOnCheckedStateChangeListener
-            updateOrderFieldForDay(day)
+            updateOrderUiForDay(day)
         }
     }
 
-    // ── Agrupación (Circuito / Superset) ─────────────────────────────────────
+    private fun setupExercisePicker() {
+        binding.btnToggleExercisePicker.setOnClickListener { toggleExercisePicker() }
+        if (editingRoutineExerciseId == null) {
+            binding.cardExercisePicker.isVisible = true
+            binding.btnToggleExercisePicker.text = "Elegir ejercicio"
+        }
+    }
+
+    private fun toggleExercisePicker() {
+        val show = !binding.cardExercisePicker.isVisible
+        binding.cardExercisePicker.isVisible = show
+        binding.btnToggleExercisePicker.text = if (show) {
+            "Ocultar lista"
+        } else if (selectedExercise != null) {
+            "Cambiar ejercicio"
+        } else {
+            "Elegir ejercicio"
+        }
+    }
+
+    private fun setupSaveButtons() {
+        binding.btnSaveContinue.setOnClickListener { saveExercise(navigateBack = false) }
+        binding.btnSaveAndExit.setOnClickListener { saveExercise(navigateBack = true) }
+
+        if (editingRoutineExerciseId != null) {
+            binding.btnSaveContinue.text = "GUARDAR CAMBIOS"
+            binding.btnSaveAndExit.text = "Guardar y salir"
+        }
+    }
+
+    private fun prefillEditData() {
+        if (editingRoutineExerciseId == null) return
+
+        if (args.exerciseId != -1L && args.exerciseName.isNotBlank()) {
+            selectedExercise = ExerciseResponse(
+                id = args.exerciseId,
+                name = args.exerciseName,
+                description = null,
+                exerciseType = null,
+                createdById = null,
+                isActive = null,
+                isPublic = null,
+                usageCount = null,
+                rating = null,
+                ratingCount = null,
+                createdAt = null,
+                updatedAt = null,
+                lastUsedAt = null
+            )
+            updateSelectedExerciseUi()
+        }
+
+        val day = args.dayOfWeek
+        if (day.isNotBlank()) {
+            dayToChipMap[day]?.let { binding.chipGroupDays.check(it) }
+            binding.etSessionOrder.text = args.sessionOrder.takeIf { it > 0 }?.toString() ?: "1"
+        }
+
+        binding.etRestAfter.setText(args.restAfterExercise.takeIf { it > 0 }?.toString() ?: "60")
+        binding.tvExerciseCounterBadge.text =
+            "EJERCICIO #${args.sessionOrder.takeIf { it > 0 } ?: 1}"
+
+        val allowedDays = args.trainingDays
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        if (allowedDays.isNotEmpty()) {
+            setupDayChipsForRoutine(allowedDays)
+        }
+    }
 
     private fun setupGroupingSection() {
-        // Toggle visibilidad del panel
         binding.btnToggleGrouping.setOnClickListener {
-            val isVisible = binding.layoutGroupingContent.isVisible
-            binding.layoutGroupingContent.isVisible = !isVisible
-            binding.btnToggleGrouping.text = if (isVisible) "▶ Agrupación" else "▼ Agrupación"
+            val visible = binding.layoutGroupingContent.isVisible
+            binding.layoutGroupingContent.isVisible = !visible
+            binding.btnToggleGrouping.text =
+                if (visible) "▶ Agrupación (opcional)" else "▼ Agrupación (opcional)"
         }
 
-        // Tipo de agrupación: ninguno / circuito / superset
         binding.chipGroupNone.setOnCheckedChangeListener { _, checked ->
-            if (checked) {
-                setGroupingType(GroupingType.NONE)
-            }
+            if (checked) setGroupingType(GroupingType.NONE)
         }
         binding.chipGroupCircuit.setOnCheckedChangeListener { _, checked ->
-            if (checked) {
-                setGroupingType(GroupingType.CIRCUIT)
-            }
+            if (checked) setGroupingType(GroupingType.CIRCUIT)
         }
         binding.chipGroupSuperset.setOnCheckedChangeListener { _, checked ->
-            if (checked) {
-                setGroupingType(GroupingType.SUPERSET)
-            }
+            if (checked) setGroupingType(GroupingType.SUPERSET)
         }
 
-        // Botón "nuevo grupo": genera un UUID nuevo para el tipo activo,
-        // igual que el auto-incremento de sessionOrder al cambiar de día.
         binding.btnNewGroup.setOnClickListener {
             when (getGroupingType()) {
                 GroupingType.CIRCUIT -> {
@@ -171,26 +238,19 @@ class AddExercisesToRoutineFragment : Fragment() {
                     currentSuperSetGroupId = generateGroupId()
                     showGroupIdHint(currentSuperSetGroupId)
                 }
-                GroupingType.NONE -> { /* noop */ }
+                GroupingType.NONE -> Unit
             }
         }
-
-        // Rondas de circuito: sólo visible cuando es circuito
-        binding.layoutCircuitRounds.isVisible = false
-        binding.tvGroupIdHint.isVisible = false
     }
-
-    // ── Modos especiales (AMRAP / EMOM / TABATA) ─────────────────────────────
 
     private fun setupSpecialModeSection() {
         binding.btnToggleSpecialMode.setOnClickListener {
-            val isVisible = binding.layoutSpecialModeContent.isVisible
-            binding.layoutSpecialModeContent.isVisible = !isVisible
+            val visible = binding.layoutSpecialModeContent.isVisible
+            binding.layoutSpecialModeContent.isVisible = !visible
             binding.btnToggleSpecialMode.text =
-                if (isVisible) "▶ Modo especial" else "▼ Modo especial"
+                if (visible) "▶ Modo especial (opcional)" else "▼ Modo especial (opcional)"
         }
 
-        // Chips de modo especial son mutuamente excluyentes
         binding.chipModeNone.setOnCheckedChangeListener { _, checked ->
             if (checked) applySpecialMode(SpecialMode.NONE)
         }
@@ -203,23 +263,8 @@ class AddExercisesToRoutineFragment : Fragment() {
         binding.chipModeTabata.setOnCheckedChangeListener { _, checked ->
             if (checked) applySpecialMode(SpecialMode.TABATA)
         }
-
-        // Estado inicial
         applySpecialMode(SpecialMode.NONE)
     }
-
-    private fun applySpecialMode(mode: SpecialMode) {
-        currentSpecialMode = mode
-        binding.layoutAmrap.isVisible = mode == SpecialMode.AMRAP
-        binding.layoutEmom.isVisible = mode == SpecialMode.EMOM
-        binding.layoutTabata.isVisible = mode == SpecialMode.TABATA
-    }
-
-    private fun setupAddButton() {
-        binding.btnAddExercise.setOnClickListener { addExerciseToRoutine() }
-    }
-
-    // ── Observers ─────────────────────────────────────────────────────────────
 
     private fun setupObservers() {
         exerciseViewModel.allExercisesState.observe(viewLifecycleOwner) { resource ->
@@ -233,7 +278,7 @@ class AddExercisesToRoutineFragment : Fragment() {
                     hideLoading()
                     showError(resource.message ?: "Error cargando ejercicios")
                 }
-                else -> {}
+                else -> Unit
             }
         }
 
@@ -246,73 +291,66 @@ class AddExercisesToRoutineFragment : Fragment() {
                     )
                     sortedTrainingDays = (routine.trainingDays ?: emptyList())
                         .sortedBy { dayOrder[it] ?: 8 }
-                    setupDayChipsForRoutine(sortedTrainingDays)
+                    if (editingRoutineExerciseId == null) {
+                        setupDayChipsForRoutine(sortedTrainingDays)
+                    }
                 }
             }
         }
 
-        routineExerciseViewModel.addExerciseState.observe(viewLifecycleOwner) { resource ->
+        routineExerciseViewModel.orderBaselineState.observe(viewLifecycleOwner) { baseline ->
+            if (editingRoutineExerciseId != null || orderInitialized) return@observe
+            orderCounterByDay.clear()
+            orderCounterByDay.putAll(baseline)
+            val day = getSelectedDay()
+            if (day != null) updateOrderUiForDay(day)
+            orderInitialized = true
+        }
+
+        routineExerciseViewModel.saveState.observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Loading -> setFormEnabled(false)
                 is Resource.Success -> {
                     setFormEnabled(true)
-                    val name = selectedExercise?.name ?: "Ejercicio"
+                    routineExerciseViewModel.clearSaveState()
 
-                    // Auto-incremento de orden por día (igual que antes)
-                    val currentDay = getSelectedDay()
-                    if (currentDay != null) {
-                        val current = orderCounterByDay[currentDay] ?: 1
-                        orderCounterByDay[currentDay] = current + 1
-                        updateOrderFieldForDay(currentDay)
+                    if (editingRoutineExerciseId != null || pendingSaveNavigateBack == true) {
+                        Snackbar.make(
+                            binding.root,
+                            if (editingRoutineExerciseId != null) "✅ Ejercicio actualizado" else "✅ Ejercicio guardado",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        findNavController().navigateUp()
+                    } else {
+                        val day = getSelectedDay()
+                        if (day != null) {
+                            val current = orderCounterByDay[day] ?: 1
+                            orderCounterByDay[day] = current + 1
+                            updateOrderUiForDay(day)
+                        }
+                        clearExerciseSelection()
+                        showSavedFeedback()
                     }
-
-                    Snackbar.make(binding.root, "✅ $name añadido", Snackbar.LENGTH_LONG)
-                        .setAction("Volver") { findNavController().navigateUp() }
-                        .show()
-
-                    clearSelection()
-                    routineExerciseViewModel.clearAddState()
+                    pendingSaveNavigateBack = null
                 }
                 is Resource.Error -> {
                     setFormEnabled(true)
-                    showError(resource.message ?: "Error al añadir ejercicio")
-                    routineExerciseViewModel.clearAddState()
+                    showError(resource.message ?: "Error al guardar")
+                    routineExerciseViewModel.clearSaveState()
+                    pendingSaveNavigateBack = null
                 }
-                null -> {}
-                else -> {}
+                null -> Unit
+                else -> Unit
             }
         }
     }
 
-    // ── Carga de ejercicios ───────────────────────────────────────────────────
+    private fun saveExercise(navigateBack: Boolean) {
+        pendingSaveNavigateBack = navigateBack
 
-    private fun loadExercises() { exerciseViewModel.searchExercises(buildFilter()) }
-    private fun loadMyExercises() { exerciseViewModel.searchMyExercises(buildFilter()) }
-    private fun loadAvailableExercises() { exerciseViewModel.searchAvailableExercises(buildFilter()) }
-
-    private fun buildFilter() = ExerciseFilterRequest(
-        search = binding.etSearch.text.toString().takeIf { it.isNotEmpty() },
-        page = 0, size = 50, sortBy = "name",
-        direction = ExerciseFilterRequest.SortDirection.ASC
-    )
-
-    // ── Selección y añadir ────────────────────────────────────────────────────
-
-    private fun selectExercise(exercise: ExerciseResponse) {
-        selectedExercise = exercise
-        binding.btnAddExercise.show()
-        binding.btnAddExercise.text = "Añadir: ${exercise.name}"
-    }
-
-    private fun clearSelection() {
-        selectedExercise = null
-        binding.btnAddExercise.hide()
-        binding.btnAddExercise.text = "Añadir ejercicio"
-    }
-
-    private fun addExerciseToRoutine() {
         val exercise = selectedExercise ?: run {
             showError("Selecciona un ejercicio primero")
+            binding.cardExercisePicker.isVisible = true
             return
         }
 
@@ -323,24 +361,20 @@ class AddExercisesToRoutineFragment : Fragment() {
 
         val sessionOrder = binding.etSessionOrder.text.toString().toIntOrNull()
         if (sessionOrder == null || sessionOrder < 1) {
-            binding.etSessionOrder.error = "Orden inválido"
-            binding.etSessionOrder.requestFocus()
+            showError("Orden inválido")
             return
         }
 
         val restAfter = binding.etRestAfter.text.toString().toIntOrNull() ?: 60
-
-        // ── Agrupación ────────────────────────────────────────────────────────
         val groupingType = getGroupingType()
+
         val circuitGroupId = if (groupingType == GroupingType.CIRCUIT) {
-            // Si no hay grupo activo todavía, auto-genera uno
             currentCircuitGroupId ?: generateGroupId().also { currentCircuitGroupId = it }
         } else null
 
         val circuitRoundCount = if (groupingType == GroupingType.CIRCUIT) {
             binding.etCircuitRounds.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etCircuitRounds.error = "Rondas inválidas"
-                binding.etCircuitRounds.requestFocus()
+                showError("Rondas de circuito inválidas")
                 return
             }
         } else null
@@ -349,59 +383,53 @@ class AddExercisesToRoutineFragment : Fragment() {
             currentSuperSetGroupId ?: generateGroupId().also { currentSuperSetGroupId = it }
         } else null
 
-        // ── Modos especiales ──────────────────────────────────────────────────
         val amrapDuration = if (currentSpecialMode == SpecialMode.AMRAP) {
             binding.etAmrapDuration.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etAmrapDuration.error = "Duración inválida"
-                binding.etAmrapDuration.requestFocus()
+                showError("Duración AMRAP inválida")
                 return
             }
         } else null
 
         val emomInterval = if (currentSpecialMode == SpecialMode.EMOM) {
             binding.etEmomInterval.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etEmomInterval.error = "Intervalo inválido"
-                binding.etEmomInterval.requestFocus()
+                showError("Intervalo EMOM inválido")
                 return
             }
         } else null
 
         val emomRounds = if (currentSpecialMode == SpecialMode.EMOM) {
             binding.etEmomRounds.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etEmomRounds.error = "Rondas inválidas"
-                binding.etEmomRounds.requestFocus()
+                showError("Rondas EMOM inválidas")
                 return
             }
         } else null
 
         val tabataWork = if (currentSpecialMode == SpecialMode.TABATA) {
             binding.etTabataWork.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etTabataWork.error = "Tiempo trabajo inválido"
-                binding.etTabataWork.requestFocus()
+                showError("Tiempo trabajo Tabata inválido")
                 return
             }
         } else null
 
         val tabataRest = if (currentSpecialMode == SpecialMode.TABATA) {
             binding.etTabataRest.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etTabataRest.error = "Tiempo descanso inválido"
-                binding.etTabataRest.requestFocus()
+                showError("Tiempo descanso Tabata inválido")
                 return
             }
         } else null
 
         val tabataRounds = if (currentSpecialMode == SpecialMode.TABATA) {
             binding.etTabataRounds.text.toString().toIntOrNull()?.takeIf { it > 0 } ?: run {
-                binding.etTabataRounds.error = "Rondas inválidas"
-                binding.etTabataRounds.requestFocus()
+                showError("Rondas Tabata inválidas")
                 return
             }
         } else null
 
         val notes = binding.etNotes.text.toString().takeIf { it.isNotBlank() }
 
-        routineExerciseViewModel.addExerciseToRoutine(
-            routineId,
+        routineExerciseViewModel.saveExercise(
+            args.routineId,
+            editingRoutineExerciseId,
             AddExerciseToRoutineRequest(
                 exerciseId = exercise.id,
                 sessionNumber = null,
@@ -424,7 +452,24 @@ class AddExercisesToRoutineFragment : Fragment() {
         )
     }
 
-    // ── Días ──────────────────────────────────────────────────────────────────
+    private fun selectExercise(exercise: ExerciseResponse) {
+        selectedExercise = exercise
+        updateSelectedExerciseUi()
+        binding.cardExercisePicker.isVisible = false
+        binding.btnToggleExercisePicker.text = "Cambiar ejercicio"
+        Snackbar.make(binding.root, "✓ ${exercise.name}", Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun updateSelectedExerciseUi() {
+        binding.tvSelectedExerciseName.text = selectedExercise?.name ?: "Toca abajo para elegir un ejercicio"
+    }
+
+    private fun clearExerciseSelection() {
+        selectedExercise = null
+        updateSelectedExerciseUi()
+        binding.cardExercisePicker.isVisible = true
+        binding.btnToggleExercisePicker.text = "Elegir ejercicio"
+    }
 
     private fun setupDayChipsForRoutine(days: List<String>) {
         val daySet = days.toSet()
@@ -435,40 +480,61 @@ class AddExercisesToRoutineFragment : Fragment() {
             chip?.visibility = if (showAll || day in daySet) View.VISIBLE else View.GONE
         }
 
-        val firstAvailableChipId = chipToDayMap.entries
-            .firstOrNull { (_, day) -> showAll || day in daySet }
-            ?.key
-
-        if (firstAvailableChipId != null) {
-            binding.chipGroupDays.check(firstAvailableChipId)
+        if (binding.chipGroupDays.checkedChipId == View.NO_ID) {
+            val firstChipId = chipToDayMap.entries
+                .firstOrNull { (_, day) -> showAll || day in daySet }
+                ?.key
+            if (firstChipId != null) binding.chipGroupDays.check(firstChipId)
         }
     }
 
-    private fun getSelectedDay(): String? {
-        val checkedId = binding.chipGroupDays.checkedChipId
-        return chipToDayMap[checkedId]
+    private fun getSelectedDay(): String? = chipToDayMap[binding.chipGroupDays.checkedChipId]
+
+    private fun updateOrderUiForDay(day: String) {
+        val nextOrder = if (editingRoutineExerciseId != null && args.dayOfWeek == day) {
+            args.sessionOrder.takeIf { it > 0 } ?: orderCounterByDay.getOrDefault(day, 1)
+        } else {
+            orderCounterByDay.getOrDefault(day, 1)
+        }
+        binding.etSessionOrder.text = nextOrder.toString()
+        binding.tvExerciseCounterBadge.text = "EJERCICIO #$nextOrder"
     }
 
-    private fun updateOrderFieldForDay(day: String) {
-        val nextOrder = orderCounterByDay.getOrDefault(day, 1)
-        binding.etSessionOrder.setText(nextOrder.toString())
+    private fun showSavedFeedback() {
+        val badge = binding.tvExerciseCounterBadge
+        val savedOrder = (binding.etSessionOrder.text.toString().toIntOrNull() ?: 1) - 1
+        badge.animate().alpha(0f).setDuration(100).withEndAction {
+            badge.text = "✓ EJERCICIO #$savedOrder guardado"
+            badge.animate().alpha(1f).setDuration(200).withEndAction {
+                badge.postDelayed({
+                    val next = binding.etSessionOrder.text.toString().toIntOrNull() ?: 1
+                    badge.text = "EJERCICIO #$next"
+                }, 1000)
+            }.start()
+        }.start()
     }
 
-    // ── Agrupación helpers ────────────────────────────────────────────────────
+    private fun loadExercises() = exerciseViewModel.searchExercises(buildFilter())
+    private fun loadMyExercises() = exerciseViewModel.searchMyExercises(buildFilter())
+    private fun loadAvailableExercises() = exerciseViewModel.searchAvailableExercises(buildFilter())
+
+    private fun buildFilter() = ExerciseFilterRequest(
+        search = binding.etSearch.text.toString().takeIf { it.isNotEmpty() },
+        page = 0,
+        size = 50,
+        sortBy = "name",
+        direction = ExerciseFilterRequest.SortDirection.ASC
+    )
 
     private enum class GroupingType { NONE, CIRCUIT, SUPERSET }
 
     private fun setGroupingType(type: GroupingType) {
         binding.layoutCircuitRounds.isVisible = type == GroupingType.CIRCUIT
         binding.tvGroupIdHint.isVisible = type != GroupingType.NONE
-
         when (type) {
             GroupingType.CIRCUIT -> showGroupIdHint(currentCircuitGroupId)
             GroupingType.SUPERSET -> showGroupIdHint(currentSuperSetGroupId)
-            GroupingType.NONE -> {
-                // Al deseleccionar agrupación, los IDs guardados se mantienen
-                // para que el usuario pueda volver sin perder el grupo activo.
-            }
+            GroupingType.NONE -> Unit
         }
     }
 
@@ -478,26 +544,36 @@ class AddExercisesToRoutineFragment : Fragment() {
         else -> GroupingType.NONE
     }
 
+    private fun applySpecialMode(mode: SpecialMode) {
+        currentSpecialMode = mode
+        binding.layoutAmrap.isVisible = mode == SpecialMode.AMRAP
+        binding.layoutEmom.isVisible = mode == SpecialMode.EMOM
+        binding.layoutTabata.isVisible = mode == SpecialMode.TABATA
+    }
+
     private fun showGroupIdHint(groupId: String?) {
         binding.tvGroupIdHint.text = if (groupId != null) {
             "Grupo activo: …${groupId.takeLast(6)}"
         } else {
-            "Se creará un nuevo grupo al añadir"
+            "Se creará un nuevo grupo al guardar"
         }
         binding.tvGroupIdHint.isVisible = true
     }
 
-    /** Genera un identificador corto legible (no UUID completo para no saturar la DB). */
     private fun generateGroupId(): String = UUID.randomUUID().toString()
 
-    // ── UI helpers ────────────────────────────────────────────────────────────
+    private fun showLoading() {
+        binding.progressBar.visibility = View.VISIBLE
+    }
 
-    private fun showLoading() { binding.progressBar.visibility = View.VISIBLE }
-    private fun hideLoading() { binding.progressBar.visibility = View.GONE }
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
+    }
 
     private fun setFormEnabled(enabled: Boolean) {
         binding.progressBar.visibility = if (enabled) View.GONE else View.VISIBLE
-        binding.btnAddExercise.isEnabled = enabled
+        binding.btnSaveContinue.isEnabled = enabled
+        binding.btnSaveAndExit.isEnabled = enabled
     }
 
     private fun showError(message: String) {
