@@ -18,6 +18,7 @@ import com.fitapp.backend.auth.aplication.port.output.UserPersistencePort;
 import com.fitapp.backend.auth.domain.model.UserModel;
 import com.fitapp.backend.infrastructure.persistence.entity.enums.DayOfWeek;
 import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.request.AddExerciseToRoutineRequest;
+import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.request.ReorderSessionExercisesRequest;
 import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.response.RoutineExerciseParameterResponse;
 import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.response.RoutineExerciseResponse;
 import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.response.RoutineSetParameterResponse;
@@ -209,6 +210,67 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                 routinePersistencePort.update(routine);
 
                 log.info("REORDER_EXERCISES_OK | routineId={} | reordered={}", routineId, exerciseIds.size());
+        }
+
+        @Override
+        @Transactional
+        @Caching(evict = {
+                        @CacheEvict(value = "routines", allEntries = true),
+                        @CacheEvict(value = "userRoutines", allEntries = true),
+                        @CacheEvict(value = "routineExercises", allEntries = true),
+                        @CacheEvict(value = "routineExercisesBySession", allEntries = true),
+                        @CacheEvict(value = "routineExercisesByDay", allEntries = true)
+        })
+        public void reorderSessionExercises(Long routineId, ReorderSessionExercisesRequest request,
+                        String userEmail) {
+                log.info("REORDER_SESSION_EXERCISES | routineId={} | day={} | session={} | count={}",
+                                routineId, request.getDayOfWeek(), request.getSessionNumber(),
+                                request.getExerciseIds().size());
+
+                UserModel user = findUser(userEmail);
+                if (!routineRepository.existsByIdAndUserId(routineId, user.getId())) {
+                        throw new BusinessException("Routine not found: " + routineId);
+                }
+
+                List<RoutineExerciseModel> inGroup = loadExercisesInGroup(routineId, request);
+                Set<Long> groupIds = inGroup.stream()
+                                .map(RoutineExerciseModel::getId)
+                                .collect(Collectors.toSet());
+
+                if (!groupIds.containsAll(request.getExerciseIds())) {
+                        throw new BusinessException("Some exercise IDs do not belong to this day/session group");
+                }
+                if (request.getExerciseIds().size() != inGroup.size()) {
+                        throw new BusinessException(
+                                        "Exercise list must include all exercises in the group (expected "
+                                                        + inGroup.size() + ", got " + request.getExerciseIds().size()
+                                                        + ")");
+                }
+
+                Map<Long, RoutineExerciseModel> byId = inGroup.stream()
+                                .collect(Collectors.toMap(RoutineExerciseModel::getId, Function.identity()));
+
+                for (int i = 0; i < request.getExerciseIds().size(); i++) {
+                        RoutineExerciseModel exercise = byId.get(request.getExerciseIds().get(i));
+                        exercise.setSessionOrder(i + 1);
+                        routineExercisePersistencePort.update(exercise);
+                }
+
+                log.info("REORDER_SESSION_EXERCISES_OK | routineId={} | day={} | session={}",
+                                routineId, request.getDayOfWeek(), request.getSessionNumber());
+        }
+
+        private List<RoutineExerciseModel> loadExercisesInGroup(Long routineId,
+                        ReorderSessionExercisesRequest request) {
+                if (request.getDayOfWeek() != null && !request.getDayOfWeek().isBlank()) {
+                        return routineExercisePersistencePort.findByRoutineIdAndDayOfWeek(routineId,
+                                        request.getDayOfWeek());
+                }
+                if (request.getSessionNumber() != null) {
+                        return routineExercisePersistencePort.findByRoutineIdAndSessionNumber(routineId,
+                                        request.getSessionNumber());
+                }
+                throw new BusinessException("dayOfWeek or sessionNumber is required");
         }
 
         // ── Consultas (con caché por routineId) ───────────────────────────────────

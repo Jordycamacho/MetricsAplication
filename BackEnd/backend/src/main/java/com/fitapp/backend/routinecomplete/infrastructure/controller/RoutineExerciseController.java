@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.request.AddExerciseToRoutineRequest;
+import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.request.ReorderSessionExercisesRequest;
 import com.fitapp.backend.routinecomplete.aplication.dto.routineexercise.response.RoutineExerciseResponse;
 import com.fitapp.backend.routinecomplete.aplication.port.input.RoutineExerciseUseCase;
 import com.fitapp.backend.routinecomplete.aplication.port.input.RoutineUseCase;
@@ -168,7 +169,30 @@ public class RoutineExerciseController {
                 return ResponseEntity.ok(response);
         }
 
-        @Operation(summary = "Reordenar ejercicios", description = "Actualiza el orden (position) de los ejercicios de la rutina")
+        @Operation(summary = "Reordenar ejercicios por día/sesión", description = "Actualiza sessionOrder dentro de un día o sesión")
+        @ApiResponse(responseCode = "204", description = "Orden de sesión actualizado")
+        @PatchMapping("/reorder-session")
+        public ResponseEntity<Void> reorderSessionExercises(
+                        @PathVariable Long routineId,
+                        @Valid @RequestBody ReorderSessionExercisesRequest request,
+                        @AuthenticationPrincipal Jwt jwt) {
+                String userEmail = jwt.getClaimAsString("email");
+                log.info("REORDER_SESSION_REQUEST | routineId={} | day={} | session={} | count={}",
+                                routineId, request.getDayOfWeek(), request.getSessionNumber(),
+                                request.getExerciseIds().size());
+
+                routineExerciseUseCase.reorderSessionExercises(routineId, request, userEmail);
+
+                try {
+                        routineUseCase.markRoutineAsUsed(routineId, userEmail);
+                } catch (Exception e) {
+                        log.warn("MARK_USED_FAILED | routineId={} | error={}", routineId, e.getMessage());
+                }
+
+                return ResponseEntity.noContent().build();
+        }
+
+        @Operation(summary = "Reordenar ejercicios (legacy position)", description = "Actualiza el orden (position) de los ejercicios de la rutina")
         @ApiResponse(responseCode = "204", description = "Ejercicios reordenados")
         @PatchMapping("/reorder")
         public ResponseEntity<Void> reorderExercises(
