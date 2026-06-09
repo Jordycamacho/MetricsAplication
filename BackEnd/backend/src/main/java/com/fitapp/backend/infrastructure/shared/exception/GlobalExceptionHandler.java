@@ -21,6 +21,7 @@ import com.fitapp.backend.category.domain.exception.CategoryOwnershipException;
 import com.fitapp.backend.category.domain.exception.PredefinedCategoryException;
 import com.fitapp.backend.parameter.domain.exception.UnsupportedParameterException;
 import com.fitapp.backend.routinecomplete.domain.exception.SetParameterNotFoundException;
+import com.fitapp.backend.routinecomplete.domain.exception.BusinessException;
 import com.fitapp.backend.routinecomplete.domain.exception.SetTemplateNotFoundException;
 import com.fitapp.backend.routinecomplete.domain.exception.SetTemplateOwnershipException;
 import com.fitapp.backend.routinecomplete.domain.exception.SetTemplatePositionConflictException;
@@ -264,6 +265,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                 ErrorResponse.builder()
                                                 .code("INTERNAL_ERROR")
                                                 .message("An unexpected error occurred")
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        // ── Routine business rules ────────────────────────────────────────────────
+
+        @ExceptionHandler(BusinessException.class)
+        public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
+                log.warn("BUSINESS_EXCEPTION | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                                ErrorResponse.builder()
+                                                .code("BUSINESS_ERROR")
+                                                .message(ex.getMessage())
                                                 .timestamp(Instant.now())
                                                 .correlationId(MDC.get("correlationId"))
                                                 .build());

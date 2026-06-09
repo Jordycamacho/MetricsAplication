@@ -120,25 +120,19 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                 log.info("UPDATE_EXERCISE | routineId={} | exerciseId={} | user={}", routineId, exerciseId, userEmail);
 
                 UserModel user = findUser(userEmail);
-                RoutineModel routine = routinePersistencePort.findByIdAndUserId(routineId, user.getId())
-                                .orElseThrow(() -> new BusinessException("Routine not found: " + routineId));
+                if (!routineRepository.existsByIdAndUserId(routineId, user.getId())) {
+                        throw new BusinessException("Routine not found: " + routineId);
+                }
 
-                RoutineExerciseModel existingExercise = routine.getExercises().stream()
-                                .filter(e -> e.getId().equals(exerciseId))
-                                .findFirst()
+                RoutineExerciseModel existingExercise = routineExercisePersistencePort
+                                .findByIdAndRoutineId(exerciseId, routineId)
                                 .orElseThrow(() -> new BusinessException("Exercise not in routine: " + exerciseId));
 
                 AddExerciseToRoutineRequest mergedRequest = mergeWithExisting(existingExercise, request);
                 validateExerciseRequest(mergedRequest);
                 updateExerciseModel(existingExercise, request);
-                RoutineModel updated = routinePersistencePort.update(routine);
 
-                RoutineExerciseModel updatedExercise = updated.getExercises().stream()
-                                .filter(e -> e.getId().equals(exerciseId))
-                                .findFirst()
-                                .orElseThrow(() -> new BusinessException(
-                                                "Exercise not found after update: " + exerciseId));
-
+                RoutineExerciseModel updatedExercise = routineExercisePersistencePort.update(existingExercise);
                 String exerciseName = exercisePersistencePort.findNameById(updatedExercise.getExerciseId());
                 log.info("UPDATE_EXERCISE_OK | routineId={} | exerciseId={}", routineId, exerciseId);
 
@@ -354,7 +348,8 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
                         AddExerciseToRoutineRequest request) {
                 AddExerciseToRoutineRequest merged = new AddExerciseToRoutineRequest();
                 // Campos básicos
-                merged.setExerciseId(existing.getExerciseId());
+                merged.setExerciseId(request.getExerciseId() != null ? request.getExerciseId()
+                                : existing.getExerciseId());
                 merged.setSessionNumber(request.getSessionNumber() != null ? request.getSessionNumber()
                                 : existing.getSessionNumber());
                 merged.setDayOfWeek(request.getDayOfWeek() != null ? request.getDayOfWeek()
@@ -400,6 +395,13 @@ public class RoutineExerciseServiceImpl implements RoutineExerciseUseCase {
          * Aplica los cambios de la request al modelo existente.
          */
         private void updateExerciseModel(RoutineExerciseModel exercise, AddExerciseToRoutineRequest request) {
+                if (request.getExerciseId() != null
+                                && !request.getExerciseId().equals(exercise.getExerciseId())) {
+                        if (!exercisePersistencePort.existsById(request.getExerciseId())) {
+                                throw new BusinessException("Exercise not found: " + request.getExerciseId());
+                        }
+                        exercise.setExerciseId(request.getExerciseId());
+                }
                 if (request.getSessionNumber() != null)
                         exercise.setSessionNumber(request.getSessionNumber());
                 if (request.getSessionOrder() != null)

@@ -74,6 +74,74 @@ public class RoutineExercisePersistenceAdapter implements RoutineExercisePersist
     }
 
     @Override
+    @Transactional
+    public RoutineExerciseModel update(RoutineExerciseModel model) {
+        log.debug("UPDATE_ROUTINE_EXERCISE | id={} | routineId={}", model.getId(), model.getRoutineId());
+
+        RoutineExerciseEntity entity = routineExerciseRepository
+                .findByIdAndRoutineId(model.getId(), model.getRoutineId())
+                .orElseThrow(() -> new RuntimeException(
+                        "RoutineExercise not found: id=" + model.getId() + ", routineId=" + model.getRoutineId()));
+
+        if (model.getExerciseId() != null
+                && (entity.getExercise() == null || !model.getExerciseId().equals(entity.getExercise().getId()))) {
+            ExerciseEntity exercise = routineExerciseRepository.findExerciseById(model.getExerciseId())
+                    .orElseThrow(() -> new RuntimeException("Exercise not found: " + model.getExerciseId()));
+            entity.setExercise(exercise);
+        }
+        if (model.getSessionNumber() != null) {
+            entity.setSessionNumber(model.getSessionNumber());
+        }
+        if (model.getDayOfWeek() != null) {
+            entity.setDayOfWeek(model.getDayOfWeek());
+        }
+        if (model.getSessionOrder() != null) {
+            entity.setSessionOrder(model.getSessionOrder());
+        }
+        if (model.getRestAfterExercise() != null) {
+            entity.setRestAfterExercise(model.getRestAfterExercise());
+        }
+        if (model.getPosition() != null) {
+            entity.setPosition(model.getPosition());
+        }
+        if (model.getCircuitGroupId() != null) {
+            entity.setCircuitGroupId(model.getCircuitGroupId());
+        }
+        if (model.getCircuitRoundCount() != null) {
+            entity.setCircuitRoundCount(model.getCircuitRoundCount());
+        }
+        if (model.getSuperSetGroupId() != null) {
+            entity.setSuperSetGroupId(model.getSuperSetGroupId());
+        }
+        if (model.getAmrapDurationSeconds() != null) {
+            entity.setAmrapDurationSeconds(model.getAmrapDurationSeconds());
+        }
+        if (model.getEmomIntervalSeconds() != null) {
+            entity.setEmomIntervalSeconds(model.getEmomIntervalSeconds());
+        }
+        if (model.getEmomTotalRounds() != null) {
+            entity.setEmomTotalRounds(model.getEmomTotalRounds());
+        }
+        if (model.getTabataWorkSeconds() != null) {
+            entity.setTabataWorkSeconds(model.getTabataWorkSeconds());
+        }
+        if (model.getTabataRestSeconds() != null) {
+            entity.setTabataRestSeconds(model.getTabataRestSeconds());
+        }
+        if (model.getTabataRounds() != null) {
+            entity.setTabataRounds(model.getTabataRounds());
+        }
+        if (model.getNotes() != null) {
+            entity.setNotes(model.getNotes());
+        }
+
+        RoutineExerciseEntity saved = routineExerciseRepository.save(entity);
+        log.info("UPDATE_ROUTINE_EXERCISE_OK | id={} | exerciseId={}", saved.getId(),
+                saved.getExercise() != null ? saved.getExercise().getId() : null);
+        return routineConverter.convertRoutineExercise(saved);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<RoutineExerciseModel> findByIdAndRoutineId(Long id, Long routineId) {
         log.debug("FIND_EXERCISE_BY_ID_AND_ROUTINE | id={} | routineId={}", id, routineId);

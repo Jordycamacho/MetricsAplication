@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface RoutineExercisePersistencePort {
     RoutineExerciseModel save(RoutineExerciseModel routineExercise);
+    RoutineExerciseModel update(RoutineExerciseModel routineExercise);
     Optional<RoutineExerciseModel> findByIdAndRoutineId(Long id, Long routineId);
     List<RoutineExerciseModel> findByRoutineId(Long routineId);
     Optional<RoutineExerciseModel> findById(Long id);
