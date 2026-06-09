@@ -2,6 +2,7 @@ package com.fitapp.appfit.feature.routine.data
 
 import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
+import com.fitapp.appfit.feature.routine.model.rutinexercise.request.ReorderSessionExercisesRequest
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.util.RoutineErrorHandler
 import retrofit2.Response
@@ -30,6 +31,11 @@ class RoutineExerciseRepository {
 
     suspend fun removeExerciseFromRoutine(routineId: Long, routineExerciseId: Long): Resource<Unit> =
         callUnitNoContent { service.removeExerciseFromRoutine(routineId, routineExerciseId) }
+
+    suspend fun reorderSessionExercises(
+        routineId: Long,
+        request: ReorderSessionExercisesRequest
+    ): Resource<Unit> = callUnit { service.reorderSessionExercises(routineId, request) }
 
     suspend fun reorderExercises(routineId: Long, exerciseIds: List<Long>): Resource<Unit> =
         callUnit { service.reorderExercises(routineId, exerciseIds) }

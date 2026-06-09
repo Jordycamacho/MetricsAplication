@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -13,7 +14,6 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.databinding.FragmentRoutineExercisesBinding
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.ui.RoutineExerciseViewModel
-import com.fitapp.appfit.feature.routine.ui.exercises.RoutineExerciseAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 
@@ -39,16 +39,17 @@ class RoutineExercisesFragment : Fragment() {
 
         setupToolbar()
         setupRecyclerView()
+        setupReorderControls()
         setupObservers()
         setupFab()
 
         viewModel.loadRoutineExercises(args.routineId)
     }
 
-    // ── Setup ─────────────────────────────────────────────────────────────────
-
     private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
+        binding.toolbar.setNavigationOnClickListener {
+            if (adapter.isReorderMode()) exitReorderMode() else findNavController().navigateUp()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -59,6 +60,13 @@ class RoutineExercisesFragment : Fragment() {
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
+        adapter.attachItemTouchHelper(binding.recyclerView)
+    }
+
+    private fun setupReorderControls() {
+        binding.fabReorder.setOnClickListener { enterReorderMode() }
+        binding.btnSaveOrder.setOnClickListener { saveReorder() }
+        binding.btnCancelReorder.setOnClickListener { exitReorderMode() }
     }
 
     private fun setupFab() {
@@ -69,7 +77,31 @@ class RoutineExercisesFragment : Fragment() {
         }
     }
 
-    // ── Observers ─────────────────────────────────────────────────────────────
+    private fun enterReorderMode() {
+        adapter.setReorderMode(true)
+        binding.layoutReorderActions.isVisible = true
+        binding.fabAddExercise.hide()
+        binding.fabReorder.hide()
+        binding.toolbar.title = "Reordenar ejercicios"
+        Snackbar.make(
+            binding.root,
+            "Arrastra ≡ o usa «Mover» dentro del mismo día/sesión",
+            Snackbar.LENGTH_LONG
+        ).show()
+    }
+
+    private fun exitReorderMode() {
+        adapter.restoreSnapshot()
+        binding.layoutReorderActions.isVisible = false
+        binding.fabAddExercise.show()
+        binding.fabReorder.show()
+        binding.toolbar.title = "Ejercicios de la rutina"
+    }
+
+    private fun saveReorder() {
+        val requests = adapter.buildSessionReorderRequests()
+        viewModel.reorderSessionGroups(args.routineId, requests)
+    }
 
     private fun setupObservers() {
         viewModel.exercisesState.observe(viewLifecycleOwner) { resource ->
@@ -80,6 +112,7 @@ class RoutineExercisesFragment : Fragment() {
                     val list = resource.data ?: emptyList()
                     adapter.submitList(list)
                     showEmptyState(list.isEmpty())
+                    binding.fabReorder.isVisible = list.size > 1
 
                     routineTrainingDays = list
                         .mapNotNull { it.dayOfWeek }
@@ -94,7 +127,39 @@ class RoutineExercisesFragment : Fragment() {
                         Snackbar.LENGTH_LONG
                     ).show()
                 }
-                else -> {}
+                else -> Unit
+            }
+        }
+
+        viewModel.reorderState.observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Loading -> {
+                    binding.btnSaveOrder.isEnabled = false
+                    binding.btnCancelReorder.isEnabled = false
+                }
+                is Resource.Success -> {
+                    binding.btnSaveOrder.isEnabled = true
+                    binding.btnCancelReorder.isEnabled = true
+                    adapter.setReorderMode(false)
+                    binding.layoutReorderActions.isVisible = false
+                    binding.fabAddExercise.show()
+                    binding.fabReorder.show()
+                    binding.toolbar.title = "Ejercicios de la rutina"
+                    Snackbar.make(binding.root, "Orden actualizado", Snackbar.LENGTH_SHORT).show()
+                    viewModel.clearReorderState()
+                }
+                is Resource.Error -> {
+                    binding.btnSaveOrder.isEnabled = true
+                    binding.btnCancelReorder.isEnabled = true
+                    Snackbar.make(
+                        binding.root,
+                        resource.message ?: "Error al reordenar",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    viewModel.clearReorderState()
+                }
+                null -> Unit
+                else -> Unit
             }
         }
 
@@ -108,25 +173,23 @@ class RoutineExercisesFragment : Fragment() {
                         resource.message ?: "Error al eliminar",
                         Snackbar.LENGTH_LONG
                     ).show()
-                else -> {}
+                else -> Unit
             }
             if (resource != null) viewModel.clearDeleteState()
         }
     }
 
-    // ── Navegación ────────────────────────────────────────────────────────────
-
     private fun navigateToEdit(exercise: RoutineExerciseResponse) {
         val action = RoutineExercisesFragmentDirections
             .actionRoutineExercisesToEditExercise(
-                routineId         = args.routineId,
+                routineId = args.routineId,
                 routineExerciseId = exercise.id,
-                exerciseId        = exercise.exerciseId,
-                exerciseName      = exercise.exerciseName ?: "",
-                dayOfWeek         = exercise.dayOfWeek ?: "",
-                sessionOrder      = exercise.sessionOrder ?: 1,
+                exerciseId = exercise.exerciseId,
+                exerciseName = exercise.exerciseName ?: "",
+                dayOfWeek = exercise.dayOfWeek ?: "",
+                sessionOrder = exercise.sessionOrder ?: 1,
                 restAfterExercise = exercise.restAfterExercise ?: 60,
-                trainingDays      = routineTrainingDays
+                trainingDays = routineTrainingDays
             )
         findNavController().navigate(action)
     }
@@ -139,8 +202,6 @@ class RoutineExercisesFragment : Fragment() {
         )
         findNavController().navigate(action)
     }
-
-    // ── UI helpers ────────────────────────────────────────────────────────────
 
     private fun confirmDelete(exercise: RoutineExerciseResponse) {
         MaterialAlertDialogBuilder(requireContext())
@@ -166,6 +227,7 @@ class RoutineExercisesFragment : Fragment() {
     private fun showEmptyState(isEmpty: Boolean) {
         binding.tvEmpty.visibility = if (isEmpty) View.VISIBLE else View.GONE
         binding.recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        binding.fabReorder.isVisible = !isEmpty
     }
 
     override fun onDestroyView() {

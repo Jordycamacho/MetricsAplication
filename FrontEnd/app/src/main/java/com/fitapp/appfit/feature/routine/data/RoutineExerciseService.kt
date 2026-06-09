@@ -2,6 +2,7 @@ package com.fitapp.appfit.feature.routine.data
 
 import com.fitapp.appfit.core.network.ApiClient
 import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
+import com.fitapp.appfit.feature.routine.model.rutinexercise.request.ReorderSessionExercisesRequest
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -50,7 +51,12 @@ interface RoutineExerciseService {
         @Path("dayOfWeek") dayOfWeek: String
     ): Response<List<RoutineExerciseResponse>>
 
-    // Reordenar ejercicios
+    @PATCH("api/routines/{routineId}/exercises/reorder-session")
+    suspend fun reorderSessionExercises(
+        @Path("routineId") routineId: Long,
+        @Body request: ReorderSessionExercisesRequest
+    ): Response<Void>
+
     @PATCH("api/routines/{routineId}/exercises/reorder")
     suspend fun reorderExercises(
         @Path("routineId") routineId: Long,

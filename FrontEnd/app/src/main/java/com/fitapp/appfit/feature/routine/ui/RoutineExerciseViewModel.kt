@@ -9,6 +9,7 @@ import com.fitapp.appfit.core.util.Resource
 import com.fitapp.appfit.feature.routine.data.RoutineExerciseRepository
 import com.fitapp.appfit.feature.routine.data.RoutineRepository
 import com.fitapp.appfit.feature.routine.model.rutinexercise.request.AddExerciseToRoutineRequest
+import com.fitapp.appfit.feature.routine.model.rutinexercise.request.ReorderSessionExercisesRequest
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import kotlinx.coroutines.launch
 
@@ -87,10 +88,23 @@ class RoutineExerciseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    fun reorderExercises(routineId: Long, exerciseIds: List<Long>) {
+    fun reorderSessionGroups(routineId: Long, groups: List<ReorderSessionExercisesRequest>) {
+        if (groups.isEmpty()) return
         _reorderState.value = Resource.Loading()
         viewModelScope.launch {
-            _reorderState.value = repository.reorderExercises(routineId, exerciseIds)
+            for (group in groups) {
+                when (val result = repository.reorderSessionExercises(routineId, group)) {
+                    is Resource.Error -> {
+                        _reorderState.value = result
+                        return@launch
+                    }
+                    else -> Unit
+                }
+            }
+            routineRepository.markTrainingCacheStale(routineId)
+            routineRepository.refreshTrainingCache(routineId)
+            _reorderState.value = Resource.Success(Unit)
+            loadRoutineExercises(routineId)
         }
     }
 
