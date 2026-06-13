@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nuevo feedback</title>
+</head>
+<body style="margin:0;padding:0;background:#0A0A0A;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0A0A0A;padding:32px 16px;">
+    <tr>
+        <td align="center">
+            <table width="100%" style="max-width:520px;background:#131313;border-radius:16px;padding:32px;">
+                <tr>
+                    <td style="text-align:center;padding-bottom:24px;">
+                        <span style="color:#C8B560;font-size:24px;font-weight:bold;letter-spacing:4px;">JNOBFIT</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color:#FFFFFF;font-size:18px;font-weight:bold;padding-bottom:12px;">
+                        Nuevo feedback #<span th:text="${feedbackId}">0</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color:#AAAAAA;font-size:14px;line-height:1.8;padding-bottom:16px;">
+                        <strong>Tipo:</strong> <span th:text="${feedbackType}">BUG</span><br/>
+                        <strong>Categoría:</strong> <span th:text="${category}">OTHER</span><br/>
+                        <strong>Usuario:</strong> <span th:text="${userFullName}">Nombre</span> (<span th:text="${userEmail}">email</span>)
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color:#CCCCCC;font-size:14px;line-height:1.6;padding:16px;background:#1A1A1A;border-radius:8px;margin-bottom:16px;">
+                        <span th:text="${messagePreview}">Mensaje...</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color:#777777;font-size:12px;padding-top:16px;">
+                        <span th:text="${adminPanelHint}">Panel admin próximamente.</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

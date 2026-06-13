@@ -4,7 +4,7 @@
 > **Prioridad v1:** correcciones de ejecución de rutinas y workout → sync → suscripción → resto.  
 > **Visión y propósito del producto:** [`docs/VISION.md`](VISION.md)
 
-Última actualización: 2026-06-01
+Última actualización: 2026-06-13
 
 ---
 
@@ -12,9 +12,9 @@
 
 | Estado | Cantidad |
 |--------|----------|
-| ✅ Completadas | 17 |
+| ✅ Completadas | 18 |
 | 🟡 Pendientes v1 | ~13 |
-| 🔵 Post-v1 / grandes | ~8 |
+| 🔵 Post-v1 / grandes | ~15 |
 
 ---
 
@@ -59,6 +59,7 @@
 | 16 | Funciones del menú superior | Completar acciones del toolbar |
 | 17 | Completar Home | Pantalla principal incompleta |
 | 18 | Migrar diálogos a Bottom Sheets | Reemplazar `AlertDialog`/`MaterialAlertDialog` por sheets estilo `bottom_sheet_parameter_detail` en toda la app |
+| 25 | Reportes y sugerencias (feedback) | ✅ App + backend + emails; ver Completadas |
 
 ### Sync offline (infraestructura — detectado en revisión)
 
@@ -83,6 +84,14 @@
 | 21 | Métricas | Backend tiene entidades; falta API + `MetricsFragment` |
 | 22 | Verificador de rutina | Validación/coherencia de rutinas |
 | 23 | Objetivos | Metas de usuario / progreso |
+| 26 | Sección "Preguntas de ayuda" | Separada de reportes/sugerencias en la app |
+| 27 | Reporte de contenido marketplace | Moderación de paquetes publicados |
+| 28 | Valoración de la app | In-app review / enlace Play Store |
+| 29 | Historial "Mis envíos" en app | Estados visibles del feedback (roadmap) |
+| 30 | Sugerencias públicas + votos | Usar campo `is_public` en `user_feedback` |
+| 31 | Panel admin web (feedback) | UI que consuma `/api/admin/feedback` |
+| 32 | Firebase Crashlytics | Captura automática de crashes |
+| 33 | Política de privacidad (feedback) | Consentimiento explícito antes de multi-idioma |
 
 ---
 
@@ -109,6 +118,7 @@
 - [x] Parámetros NUMBER: botones +/- siempre +1 (decimales → redondeo al entero más cercano)
 - [x] Edición manual vía Bottom Sheet (long press), estilo `bottom_sheet_parameter_detail`
 - [x] Etiqueta superior en ejecución muestra unidad real (kg), no nombre del parámetro
+- [x] Reportes y sugerencias (feedback): `FeedbackFragment`, `POST /api/feedback`, emails usuario + admin, API admin `/api/admin/feedback`
 
 ---
 

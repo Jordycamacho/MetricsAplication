@@ -8,4 +8,9 @@ public interface NotificationUseCase {
     void sendPasswordResetEmail(String toEmail, String fullName, String token);
 
     void sendAccountDeletionConfirmation(String toEmail, String fullName);
+
+    void sendFeedbackReceivedUserEmail(String toEmail, String fullName, Long feedbackId, String feedbackType);
+
+    void sendFeedbackReceivedAdminEmail(Long feedbackId, String feedbackType, String category,
+            String userEmail, String userFullName, String messagePreview);
 }

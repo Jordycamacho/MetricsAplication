@@ -24,6 +24,9 @@ public class NotificationServiceImpl implements NotificationUseCase {
     @Value("${app.deep-link.scheme:fitapp}")
     private String deepLinkScheme;
 
+    @Value("${app.feedback.admin-email:jordycamacho225@gmail.com}")
+    private String feedbackAdminEmail;
+
     @Override
     public void sendVerificationEmail(String toEmail, String token) {
         String verifyUrl = baseUrl + "/api/auth/verify-email?token=" + token;
@@ -55,6 +58,33 @@ public class NotificationServiceImpl implements NotificationUseCase {
     public void sendAccountDeletionConfirmation(String toEmail, String fullName) {
         dispatch(EmailType.ACCOUNT_DELETED, toEmail, Map.of(
                 "fullName", fullName != null ? fullName : ""
+        ));
+    }
+
+    @Override
+    public void sendFeedbackReceivedUserEmail(String toEmail, String fullName, Long feedbackId, String feedbackType) {
+        String typeLabel = "SUGGESTION".equals(feedbackType) ? "sugerencia" : "reporte";
+        dispatch(EmailType.FEEDBACK_RECEIVED_USER, toEmail, Map.of(
+                "fullName", fullName != null ? fullName : "",
+                "feedbackId", feedbackId,
+                "feedbackTypeLabel", typeLabel
+        ));
+    }
+
+    @Override
+    public void sendFeedbackReceivedAdminEmail(Long feedbackId, String feedbackType, String category,
+            String userEmail, String userFullName, String messagePreview) {
+        String preview = messagePreview != null && messagePreview.length() > 300
+                ? messagePreview.substring(0, 300) + "..."
+                : (messagePreview != null ? messagePreview : "");
+        dispatch(EmailType.FEEDBACK_RECEIVED_ADMIN, feedbackAdminEmail, Map.of(
+                "feedbackId", feedbackId,
+                "feedbackType", feedbackType,
+                "category", category,
+                "userEmail", userEmail != null ? userEmail : "",
+                "userFullName", userFullName != null ? userFullName : "",
+                "messagePreview", preview,
+                "adminPanelHint", "Revisa el panel de administración cuando esté disponible."
         ));
     }
 

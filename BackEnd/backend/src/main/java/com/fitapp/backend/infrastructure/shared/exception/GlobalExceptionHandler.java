@@ -30,6 +30,8 @@ import com.fitapp.backend.sport.domain.exception.SportNotFoundException;
 import com.fitapp.backend.sport.domain.exception.SportOwnershipException;
 import com.fitapp.backend.notification.domain.exception.EmailRateLimitExceededException;
 import com.fitapp.backend.suscription.domain.exception.SubscriptionLimitException;
+import com.fitapp.backend.feedback.domain.exception.FeedbackAccessDeniedException;
+import com.fitapp.backend.feedback.domain.exception.FeedbackNotFoundException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -364,6 +366,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .body(ErrorResponse.builder()
                                                 .code("BAD_REQUEST")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(FeedbackNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleFeedbackNotFound(FeedbackNotFoundException ex) {
+                log.warn("FEEDBACK_NOT_FOUND | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                                ErrorResponse.builder()
+                                                .code("FEEDBACK_NOT_FOUND")
+                                                .message(ex.getMessage())
+                                                .timestamp(Instant.now())
+                                                .correlationId(MDC.get("correlationId"))
+                                                .build());
+        }
+
+        @ExceptionHandler(FeedbackAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleFeedbackAccessDenied(FeedbackAccessDeniedException ex) {
+                log.warn("FEEDBACK_ACCESS_DENIED | {}", ex.getMessage());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                ErrorResponse.builder()
+                                                .code("FEEDBACK_FORBIDDEN")
                                                 .message(ex.getMessage())
                                                 .timestamp(Instant.now())
                                                 .correlationId(MDC.get("correlationId"))
