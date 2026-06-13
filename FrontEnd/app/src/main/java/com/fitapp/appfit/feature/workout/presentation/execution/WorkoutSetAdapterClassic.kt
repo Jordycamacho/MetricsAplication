@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.R
 import android.util.Log
-import com.fitapp.appfit.core.util.RestTimer
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
 import com.fitapp.appfit.feature.routine.model.setparameter.response.RoutineSetParameterResponse
 import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
@@ -22,7 +21,7 @@ import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.core.util.UnitFormatter
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
 import com.fitapp.appfit.feature.workout.util.WorkoutRepeatButtonHelper
-import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
+import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 
 class WorkoutSetAdapterClassic(
     private val onShowNumericInput: (
@@ -110,56 +109,60 @@ class WorkoutSetAdapterClassic(
         private val decDurationHelper = WorkoutRepeatButtonHelper()
         private val incDurationHelper = WorkoutRepeatButtonHelper()
 
-        private val restTimer = RestTimer(
-            onTick = { s ->
-                if (restTimerActive && itemView.isAttachedToWindow) {
-                    tvRestTimer.text = "${s}s descanso"
-                    tvRestHint.text = "STOP"
-                }
-            },
-            onFinish = {
-                if (restTimerActive && itemView.isAttachedToWindow) {
+        fun stopAllTimers() {
+            executionConfig.stopWorkoutTimer(this)
+            restTimerActive = false
+            durationTimerActive = false
+            clearButtonHelpers()
+        }
+
+        private fun startRestCountdown() {
+            executionConfig.startWorkoutTimer(
+                owner = this,
+                seconds = restSeconds,
+                label = "Descanso entre sets",
+                soundType = WorkoutPreferences.TimerSoundType.SET_REST,
+                onTick = { s ->
+                    if (restTimerActive) {
+                        tvRestTimer.text = "${s}s descanso"
+                        tvRestHint.text = "STOP"
+                    }
+                },
+                onFinish = {
+                    if (!restTimerActive) return@startWorkoutTimer
                     restTimerActive = false
-                    WorkoutHaptics.restFinished(itemView.context)
-                    Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
                     updateRestLabel()
                     if (isSequenceMode()) onSetRestFinished(myIndex)
                 }
-            }
-        )
+            )
+        }
 
-        private val durationTimer = RestTimer(
-            onTick = { s ->
-                if (durationTimerActive && itemView.isAttachedToWindow) {
-                    durationDisplayView?.text = formatDuration(s.toLong())
-                }
-            },
-            onFinish = {
-                if (durationTimerActive && itemView.isAttachedToWindow) {
+        private fun startDurationCountdown(seconds: Int) {
+            executionConfig.startWorkoutTimer(
+                owner = this,
+                seconds = seconds,
+                label = "Duración del set",
+                soundType = WorkoutPreferences.TimerSoundType.DURATION_COMPLETE,
+                onTick = { s ->
+                    if (durationTimerActive) {
+                        durationDisplayView?.text = formatDuration(s.toLong())
+                    }
+                },
+                onFinish = {
+                    if (!durationTimerActive) return@startWorkoutTimer
                     durationTimerActive = false
-                    val dur = getDurationValue()
-                    durationDisplayView?.text = formatDuration(dur)
-                    WorkoutHaptics.setComplete(itemView.context)
-                    Thread { WorkoutSoundManager.playSetComplete(itemView.context) }.start()
+                    durationDisplayView?.text = formatDuration(getDurationValue())
                     currentSet?.let { onValueChanged(it, "completed", 1.0) }
                     if (isSequenceMode() && restSeconds > 0) {
                         restTimerActive = true
                         tvRestTimer.text = "${restSeconds}s descanso"
                         tvRestHint.text = "STOP"
-                        restTimer.start(restSeconds)
+                        startRestCountdown()
                     } else if (isSequenceMode()) {
                         onSetRestFinished(myIndex)
                     }
                 }
-            }
-        )
-
-        fun stopAllTimers() {
-            restTimerActive = false
-            durationTimerActive = false
-            restTimer.stop()
-            durationTimer.stop()
-            clearButtonHelpers()
+            )
         }
 
         private fun clearButtonHelpers() {
@@ -512,19 +515,19 @@ class WorkoutSetAdapterClassic(
             if (isSequenceMode() && activeSequenceIndex == position && !durationTimerActive) {
                 WorkoutHaptics.exerciseStart(itemView.context)
                 durationTimerActive = true
-                durationTimer.start(getDurationValue().toInt())
+                startDurationCountdown(getDurationValue().toInt())
             }
         }
 
         private fun toggleDuration(set: RoutineSetTemplateResponse, position: Int) {
             if (durationTimerActive) {
                 durationTimerActive = false
-                durationTimer.stop()
+                executionConfig.stopWorkoutTimer(this)
                 durationDisplayView?.text = formatDuration(getDurationValue())
             } else {
                 WorkoutHaptics.exerciseStart(itemView.context)
                 durationTimerActive = true
-                durationTimer.start(getDurationValue().toInt())
+                startDurationCountdown(getDurationValue().toInt())
             }
         }
 
@@ -591,11 +594,11 @@ class WorkoutSetAdapterClassic(
             layoutRestContainer.setOnClickListener {
                 if (restTimerActive) {
                     restTimerActive = false
-                    restTimer.stop()
+                    executionConfig.stopWorkoutTimer(this)
                     updateRestLabel()
                 } else {
                     restTimerActive = true
-                    restTimer.start(restSeconds)
+                    startRestCountdown()
                 }
             }
         }

@@ -210,6 +210,20 @@ class MainActivity : AppCompatActivity() {
 
             )
 
+            .setNeutralButton("Enviar feedback") { _, _ ->
+
+                prefs.edit().putBoolean("beta_warning_shown", true).apply()
+
+                val navController = findNavController(R.id.nav_host_fragment_activity_main)
+
+                binding.navView.selectedItemId = R.id.navigation_profile
+
+                navController.navigate(R.id.navigation_profile)
+
+                navController.navigate(R.id.action_profile_to_feedback)
+
+            }
+
             .setPositiveButton("Entendido") { _, _ ->
 
                 prefs.edit().putBoolean("beta_warning_shown", true).apply()

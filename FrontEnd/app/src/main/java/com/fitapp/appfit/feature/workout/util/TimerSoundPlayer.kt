@@ -19,8 +19,13 @@ object TimerSoundPlayer {
     fun init(context: Context) {
         if (initialized) return
         try {
+            val usage = if (WorkoutAudioOutput.timerStreamType(context) == android.media.AudioManager.STREAM_ALARM) {
+                AudioAttributes.USAGE_ALARM
+            } else {
+                AudioAttributes.USAGE_MEDIA
+            }
             val attrs = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setUsage(usage)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
 
@@ -57,25 +62,32 @@ object TimerSoundPlayer {
         val volume = WorkoutPreferences.getTimerVolume(context) / 100f
 
         try {
-            playSound(soundVariant, volume, timerType)
+            playSound(context, soundVariant, volume, timerType)
         } catch (e: Exception) {
             Timber.e(e, "Error reproduciendo sonido de timer")
         }
     }
 
     private fun playSound(
+        context: Context,
         variant: WorkoutPreferences.SoundVariant,
         volume: Float,
         timerType: WorkoutPreferences.TimerSoundType
     ) {
-        // Reproducir sonido en hilo de IO para no bloquear UI
+        val appContext = context.applicationContext
         Thread {
-            when (variant) {
-                WorkoutPreferences.SoundVariant.BEEP -> playBeep(volume, timerType)
-                WorkoutPreferences.SoundVariant.BELL -> playBell(volume, timerType)
-                WorkoutPreferences.SoundVariant.CHIME -> playChime(volume, timerType)
-                WorkoutPreferences.SoundVariant.BUZZ -> playBuzz(volume, timerType)
-                WorkoutPreferences.SoundVariant.PING -> playPing(volume, timerType)
+            val streamType = WorkoutAudioOutput.timerStreamType(appContext)
+            val focusHandle = WorkoutAudioOutput.requestTimerFocus(appContext, streamType)
+            try {
+                when (variant) {
+                    WorkoutPreferences.SoundVariant.BEEP -> playBeep(volume, timerType, streamType)
+                    WorkoutPreferences.SoundVariant.BELL -> playBell(volume, timerType, streamType)
+                    WorkoutPreferences.SoundVariant.CHIME -> playChime(volume, timerType, streamType)
+                    WorkoutPreferences.SoundVariant.BUZZ -> playBuzz(volume, timerType, streamType)
+                    WorkoutPreferences.SoundVariant.PING -> playPing(volume, timerType, streamType)
+                }
+            } finally {
+                focusHandle?.abandon()
             }
         }.start()
     }
@@ -83,73 +95,73 @@ object TimerSoundPlayer {
     /**
      * BEEP: Pitido doble, discreto. Ideal para sets.
      */
-    private fun playBeep(volume: Float, timerType: WorkoutPreferences.TimerSoundType) {
+    private fun playBeep(volume: Float, timerType: WorkoutPreferences.TimerSoundType, streamType: Int) {
         val frequencies = when (timerType) {
             WorkoutPreferences.TimerSoundType.SET_REST -> listOf(800 to 150, 950 to 150)
             WorkoutPreferences.TimerSoundType.EXERCISE_REST -> listOf(900 to 200, 1050 to 200)
             WorkoutPreferences.TimerSoundType.DURATION_COMPLETE -> listOf(700 to 100, 800 to 100, 900 to 100)
         }
-        playSynthSound(frequencies, volume)
+        playSynthSound(frequencies, volume, streamType)
     }
 
     /**
      * BELL: Campana suave, clásica. Ideal para ejercicios.
      */
-    private fun playBell(volume: Float, timerType: WorkoutPreferences.TimerSoundType) {
+    private fun playBell(volume: Float, timerType: WorkoutPreferences.TimerSoundType, streamType: Int) {
         val frequencies = when (timerType) {
             WorkoutPreferences.TimerSoundType.SET_REST -> listOf(523 to 400, 659 to 200)
             WorkoutPreferences.TimerSoundType.EXERCISE_REST -> listOf(523 to 500, 659 to 300)
             WorkoutPreferences.TimerSoundType.DURATION_COMPLETE -> listOf(523 to 200, 659 to 200, 523 to 200)
         }
-        playSynthSound(frequencies, volume)
+        playSynthSound(frequencies, volume, streamType)
     }
 
     /**
      * CHIME: Tono suave y melodioso. Versátil.
      */
-    private fun playChime(volume: Float, timerType: WorkoutPreferences.TimerSoundType) {
+    private fun playChime(volume: Float, timerType: WorkoutPreferences.TimerSoundType, streamType: Int) {
         val frequencies = when (timerType) {
             WorkoutPreferences.TimerSoundType.SET_REST -> listOf(1047 to 300, 1319 to 200)
             WorkoutPreferences.TimerSoundType.EXERCISE_REST -> listOf(1047 to 400, 1319 to 300)
             WorkoutPreferences.TimerSoundType.DURATION_COMPLETE -> listOf(1047 to 150, 1319 to 150, 1047 to 150)
         }
-        playSynthSound(frequencies, volume)
+        playSynthSound(frequencies, volume, streamType)
     }
 
     /**
      * BUZZ: Sonido de zumbido, único. Muy diferenciador.
      */
-    private fun playBuzz(volume: Float, timerType: WorkoutPreferences.TimerSoundType) {
+    private fun playBuzz(volume: Float, timerType: WorkoutPreferences.TimerSoundType, streamType: Int) {
         val frequencies = when (timerType) {
             WorkoutPreferences.TimerSoundType.SET_REST -> listOf(200 to 250, 150 to 100, 200 to 100)
             WorkoutPreferences.TimerSoundType.EXERCISE_REST -> listOf(200 to 350, 150 to 150, 200 to 150)
             WorkoutPreferences.TimerSoundType.DURATION_COMPLETE -> listOf(200 to 100, 150 to 100, 200 to 100, 250 to 100)
         }
-        playSynthSound(frequencies, volume)
+        playSynthSound(frequencies, volume, streamType)
     }
 
     /**
      * PING: Sonido agudo y corto, muy moderno.
      */
-    private fun playPing(volume: Float, timerType: WorkoutPreferences.TimerSoundType) {
+    private fun playPing(volume: Float, timerType: WorkoutPreferences.TimerSoundType, streamType: Int) {
         val frequencies = when (timerType) {
             WorkoutPreferences.TimerSoundType.SET_REST -> listOf(2000 to 100, 2500 to 100)
             WorkoutPreferences.TimerSoundType.EXERCISE_REST -> listOf(2000 to 150, 2500 to 150)
             WorkoutPreferences.TimerSoundType.DURATION_COMPLETE -> listOf(2000 to 80, 2500 to 80, 2000 to 80)
         }
-        playSynthSound(frequencies, volume)
+        playSynthSound(frequencies, volume, streamType)
     }
 
     /**
      * Reproduce una secuencia de frecuencias sintéticamente usando ToneGenerator.
      * Lista: (frecuencia Hz, duración ms)
      */
-    private fun playSynthSound(frequencies: List<Pair<Int, Int>>, volume: Float) {
+    private fun playSynthSound(frequencies: List<Pair<Int, Int>>, volume: Float, streamType: Int) {
         try {
             // Convertir volumen 0-1 a rango de ToneGenerator (0-100)
             val toneGenVolume = (volume * 100).toInt().coerceIn(0, 100)
 
-            val toneGen = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, toneGenVolume)
+            val toneGen = android.media.ToneGenerator(streamType, toneGenVolume)
 
             for ((freq, duration) in frequencies) {
                 // Aproximar frecuencia a ToneGenerator tones (limitado)

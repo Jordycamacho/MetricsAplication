@@ -12,7 +12,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.fitapp.appfit.R
-import com.fitapp.appfit.core.util.RestTimer
 import com.fitapp.appfit.feature.routine.model.rutine.response.RoutineResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineExerciseResponse
 import com.fitapp.appfit.feature.routine.model.rutinexercise.response.RoutineSetTemplateResponse
@@ -21,7 +20,6 @@ import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.presentation.execution.manager.SetParameterStateManager
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
-import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class WorkoutExerciseAdapter(
@@ -130,12 +128,12 @@ class WorkoutExerciseAdapter(
                         executionConfig.onSetCompleted?.invoke()
                     },
                     onSequenceComplete = {
-                        if (restSeconds > 0 && itemView.isAttachedToWindow) {
+                        if (restSeconds > 0) {
                             WorkoutHaptics.exerciseComplete(itemView.context)
                             restTimerActive = true
                             tvExerciseRest.text = "${restSeconds}s"
                             tvExerciseRestHint.text = "STOP"
-                            restTimer.start(restSeconds)
+                            startExerciseRestCountdown()
                         }
                     },
                     completionState = completionState,
@@ -156,12 +154,12 @@ class WorkoutExerciseAdapter(
                         executionConfig.onSetCompleted?.invoke()
                     },
                     onSequenceComplete = {
-                        if (restSeconds > 0 && itemView.isAttachedToWindow) {
+                        if (restSeconds > 0) {
                             WorkoutHaptics.exerciseComplete(itemView.context)
                             restTimerActive = true
                             tvExerciseRest.text = "${restSeconds}s"
                             tvExerciseRestHint.text = "STOP"
-                            restTimer.start(restSeconds)
+                            startExerciseRestCountdown()
                         }
                     },
                     completionState = completionState,
@@ -170,25 +168,32 @@ class WorkoutExerciseAdapter(
             }
         }
 
-        private val restTimer = RestTimer(
-            onTick = { s ->
-                if (restTimerActive && itemView.isAttachedToWindow) {
-                    tvExerciseRest.text = "${s}s"
-                    tvExerciseRestHint.text = "STOP"
-                }
-            },
-            onFinish = {
-                if (restTimerActive && itemView.isAttachedToWindow) {
+        private fun startExerciseRestCountdown() {
+            val exerciseName = currentExercise?.exerciseName ?: "Ejercicio"
+            executionConfig.startWorkoutTimer(
+                owner = this,
+                seconds = restSeconds,
+                label = "Descanso — $exerciseName",
+                soundType = WorkoutPreferences.TimerSoundType.EXERCISE_REST,
+                onTick = { s ->
+                    if (restTimerActive) {
+                        tvExerciseRest.text = "${s}s"
+                        tvExerciseRestHint.text = "STOP"
+                    }
+                },
+                onFinish = {
+                    if (!restTimerActive) return@startWorkoutTimer
                     restTimerActive = false
-                    WorkoutHaptics.restFinished(itemView.context)
-                    Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
                     tvExerciseRest.text = "${restSeconds}s"
                     tvExerciseRestHint.text = "TAP"
                 }
-            }
-        )
+            )
+        }
 
-        fun stopTimer() { restTimerActive = false; restTimer.stop() }
+        fun stopTimer() {
+            restTimerActive = false
+            executionConfig.stopWorkoutTimer(this)
+        }
 
         init {
             recyclerSets.layoutManager = LinearLayoutManager(itemView.context)
@@ -334,12 +339,12 @@ class WorkoutExerciseAdapter(
                 layoutExerciseRest.setOnClickListener {
                     if (restTimerActive) {
                         restTimerActive = false
-                        restTimer.stop()
+                        executionConfig.stopWorkoutTimer(this)
                         tvExerciseRest.text = "${restSeconds}s"
                         tvExerciseRestHint.text = "TAP"
                     } else {
                         restTimerActive = true
-                        restTimer.start(restSeconds)
+                        startExerciseRestCountdown()
                     }
                 }
             } else {

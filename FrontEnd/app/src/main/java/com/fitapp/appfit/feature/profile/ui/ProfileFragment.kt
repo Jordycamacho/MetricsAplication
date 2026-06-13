@@ -137,6 +137,17 @@ class ProfileFragment : Fragment() {
             root.setOnClickListener { confirmClearCache() }
         }
 
+        with(binding.rowFeedback) {
+            ivRowIcon.setImageResource(R.drawable.ic_email)
+            ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)
+            tvRowTitle.text = getString(R.string.feedback_row_title)
+            tvRowSubtitle.text = getString(R.string.feedback_row_subtitle)
+            tvRowSubtitle.visibility = View.VISIBLE
+            root.setOnClickListener {
+                findNavController().navigate(R.id.action_profile_to_feedback)
+            }
+        }
+
         with(binding.rowAbout) {
             ivRowIcon.setImageResource(R.drawable.ic_profile)
             ivRowIcon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.gold_primary)

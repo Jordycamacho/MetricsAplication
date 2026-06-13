@@ -211,6 +211,9 @@
                 <include android:id="@+id/row_clear_cache" layout="@layout/item_profile_row" />
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="#252525" android:layout_marginStart="52dp" />
+                <include android:id="@+id/row_feedback" layout="@layout/item_profile_row" />
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#252525" android:layout_marginStart="52dp" />
                 <include android:id="@+id/row_about" layout="@layout/item_profile_row" />
             </LinearLayout>
 

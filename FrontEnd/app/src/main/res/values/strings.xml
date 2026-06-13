@@ -42,4 +42,27 @@
     <string name="create_exercise">Crear ejercicio</string>
     <string name="edit_exercise">Editar ejercicio</string>
     <string name="exercise_detail">Detalle del ejercicio</string>
+
+    <!-- Feedback -->
+    <string name="feedback_title">Ayuda y feedback</string>
+    <string name="feedback_row_title">Ayuda y feedback</string>
+    <string name="feedback_row_subtitle">Reportar errores o sugerencias</string>
+    <string name="feedback_intro">Tu opinión nos ayuda a mejorar JNOBFIT. Cuéntanos qué ha fallado o qué te gustaría ver en la app.</string>
+    <string name="feedback_intro_note">Revisamos todos los envíos en beta. Te enviaremos un correo de confirmación con tu referencia.</string>
+    <string name="feedback_type_label">Tipo de envío</string>
+    <string name="feedback_type_bug">Reportar error</string>
+    <string name="feedback_type_suggestion">Sugerencia</string>
+    <string name="feedback_category_label">Categoría</string>
+    <string name="feedback_title_optional">Título (opcional)</string>
+    <string name="feedback_message_label">Mensaje</string>
+    <string name="feedback_steps_label">Pasos para reproducir (opcional)</string>
+    <string name="feedback_technical_checkbox">Incluir datos técnicos del dispositivo</string>
+    <string name="feedback_submit">Enviar</string>
+    <string name="feedback_submit_uppercase">ENVIAR FEEDBACK</string>
+    <string name="feedback_submitting">Enviando…</string>
+    <string name="feedback_message_min_length">El mensaje debe tener al menos 10 caracteres</string>
+    <string name="feedback_success_title">¡Gracias!</string>
+    <string name="feedback_success_message">Hemos recibido tu envío correctamente.\n\nReferencia #%1$d.\n\nTe hemos enviado un correo de confirmación. En beta revisamos todos los envíos.</string>
+    <string name="feedback_error_title">No se pudo enviar</string>
+    <string name="feedback_error_generic">Inténtalo de nuevo más tarde.</string>
 </resources>

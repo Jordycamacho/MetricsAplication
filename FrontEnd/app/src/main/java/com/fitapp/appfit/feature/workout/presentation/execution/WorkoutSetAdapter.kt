@@ -3,7 +3,6 @@ package com.fitapp.appfit.feature.workout.presentation.execution
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
-import android.os.CountDownTimer
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -23,7 +22,7 @@ import com.fitapp.appfit.feature.workout.domain.model.WorkoutCompletionState
 import com.fitapp.appfit.feature.workout.util.WorkoutHaptics
 import com.fitapp.appfit.core.util.UnitFormatter
 import com.fitapp.appfit.feature.workout.util.WorkoutParameterHelper
-import com.fitapp.appfit.feature.workout.util.WorkoutSoundManager
+import com.fitapp.appfit.feature.workout.util.WorkoutPreferences
 
 class WorkoutSetAdapter(
     private val context: Context,
@@ -138,20 +137,104 @@ class WorkoutSetAdapter(
         private val snapDurationMin = LinearSnapHelper()
         private val snapDurationSec = LinearSnapHelper()
 
-        private var countDownTimer: CountDownTimer? = null
-        private var durationCountdownTimer: CountDownTimer? = null
         private var durationCountdownActive = false
-        private var durationDisplay: TextView? = null
+        private var durationDisplayView: TextView? = null
 
         private var isScrolling = false
 
         fun stopAllTimers() {
+            executionConfig.stopWorkoutTimer(this)
             restTimerActive = false
-            countDownTimer?.cancel()
-            countDownTimer = null
-            durationCountdownTimer?.cancel()
-            durationCountdownTimer = null
             durationCountdownActive = false
+            durationDisplayView = null
+        }
+
+        private fun startRestCountdown() {
+            executionConfig.startWorkoutTimer(
+                owner = this,
+                seconds = restSeconds,
+                label = "Descanso entre sets",
+                soundType = WorkoutPreferences.TimerSoundType.SET_REST,
+                onTick = { s ->
+                    if (restTimerActive) {
+                        tvRestTimer.text = "${s}s descanso"
+                        tvRestHint.text = "STOP"
+                    }
+                },
+                onFinish = {
+                    if (!restTimerActive) return@startWorkoutTimer
+                    restTimerActive = false
+                    updateRestLabel()
+                    if (isSequenceMode()) onSetRestFinished(myIndex)
+                }
+            )
+        }
+
+        private fun startDurationCountdown(durationSeconds: Long, displayView: TextView) {
+            if (durationCountdownActive) return
+
+            durationCountdownActive = true
+            durationDisplayView = displayView
+
+            when (displayView.id) {
+                R.id.tv_reps_label -> {
+                    frameRepsPicker.visibility = View.GONE
+                    frameDurationCounter.visibility = View.VISIBLE
+                }
+                R.id.tv_weight_unit -> {
+                    frameParamPicker.visibility = View.GONE
+                }
+            }
+
+            executionConfig.startWorkoutTimer(
+                owner = this,
+                seconds = durationSeconds.toInt(),
+                label = "Duración del set",
+                soundType = WorkoutPreferences.TimerSoundType.DURATION_COMPLETE,
+                onTick = { secondsLeft ->
+                    if (!durationCountdownActive) return@startWorkoutTimer
+                    val formattedTime = formatDuration(secondsLeft.toLong())
+                    when (displayView.id) {
+                        R.id.tv_reps_label -> tvDurationCounter.text = formattedTime
+                        R.id.tv_weight_unit -> {
+                            tvDurationCounterMinutes.text = formattedTime
+                            tvDurationCounterSeconds.text = formattedTime
+                        }
+                    }
+                },
+                onFinish = {
+                    if (!durationCountdownActive) return@startWorkoutTimer
+                    durationCountdownActive = false
+                    durationDisplayView = null
+
+                    when (displayView.id) {
+                        R.id.tv_reps_label -> {
+                            frameRepsPicker.visibility = View.VISIBLE
+                            frameDurationCounter.visibility = View.GONE
+                        }
+                        R.id.tv_weight_unit -> {
+                            frameParamPicker.visibility = View.VISIBLE
+                            itemView.findViewById<View>(R.id.frame_minutes_picker).visibility = View.VISIBLE
+                            itemView.findViewById<View>(R.id.frame_seconds_picker).visibility = View.VISIBLE
+                            frameDurationCounterMinutes.visibility = View.GONE
+                            frameDurationCounterSeconds.visibility = View.GONE
+                        }
+                    }
+
+                    WorkoutHaptics.setComplete(itemView.context)
+
+                    if (isSequenceMode()) {
+                        if (restSeconds > 0) {
+                            restTimerActive = true
+                            tvRestTimer.text = "${restSeconds}s descanso"
+                            tvRestHint.text = "STOP"
+                            startRestCountdown()
+                        } else {
+                            onSetRestFinished(myIndex)
+                        }
+                    }
+                }
+            )
         }
 
         fun bind(set: RoutineSetTemplateResponse, position: Int) {
@@ -459,123 +542,9 @@ class WorkoutSetAdapter(
                 if (isSequenceMode() && !durationCountdownActive) {
                     Log.d(TAG, "setupDurationInline: Starting countdown")
                     val selectedDuration = currentDuration[set.id] ?: 0L
-                    startDurationCountdown(selectedDuration, set.id, tvLabel)
+                    startDurationCountdown(selectedDuration, tvLabel)
                 }
             }
-        }
-
-        private fun startDurationCountdown(durationSeconds: Long, setId: Long, displayView: TextView) {
-            Log.d(TAG, "startDurationCountdown: Starting with $durationSeconds seconds")
-
-            if (durationCountdownActive) {
-                Log.d(TAG, "startDurationCountdown: Already active, returning")
-                return
-            }
-
-            durationCountdownTimer?.cancel()
-            durationCountdownTimer = null
-            durationCountdownActive = true
-            durationDisplay = displayView
-
-            // ⭐ Ocultar picker, mostrar contador
-            when (displayView.id) {
-                R.id.tv_reps_label -> {
-                    frameRepsPicker.visibility = View.GONE
-                    frameDurationCounter.visibility = View.VISIBLE
-                }
-                R.id.tv_weight_unit -> {
-                    frameParamPicker.visibility = View.GONE
-                }
-            }
-
-            durationCountdownTimer = object : CountDownTimer(durationSeconds * 1000, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    val secondsLeft = (millisUntilFinished / 1000).toInt()
-                    Log.d(TAG, "onTick: $secondsLeft seconds left")
-
-                    if (!durationCountdownActive || !itemView.isAttachedToWindow) {
-                        Log.d(TAG, "onTick: Cancelling (not active or not attached)")
-                        cancel()
-                        return
-                    }
-
-                    val formattedTime = formatDuration(secondsLeft.toLong())
-                    when (displayView.id) {
-                        R.id.tv_reps_label -> tvDurationCounter.text = formattedTime
-                        R.id.tv_weight_unit -> {
-                            tvDurationCounterMinutes.text = formattedTime
-                            tvDurationCounterSeconds.text = formattedTime
-                        }
-                    }
-                }
-
-                override fun onFinish() {
-                    Log.d(TAG, "onFinish: Countdown finished")
-                    if (durationCountdownActive && itemView.isAttachedToWindow) {
-                        durationCountdownActive = false
-                        durationCountdownTimer = null
-
-                        // ⭐ Mostrar picker nuevamente, ocultar contador
-                        when (displayView.id) {
-                            R.id.tv_reps_label -> {
-                                frameRepsPicker.visibility = View.VISIBLE
-                                frameDurationCounter.visibility = View.GONE
-                            }
-                            R.id.tv_weight_unit -> {
-                                frameParamPicker.visibility = View.VISIBLE
-                                itemView.findViewById<View>(R.id.frame_minutes_picker).visibility = View.VISIBLE
-                                itemView.findViewById<View>(R.id.frame_seconds_picker).visibility = View.VISIBLE
-                                frameDurationCounterMinutes.visibility = View.GONE
-                                frameDurationCounterSeconds.visibility = View.GONE
-                            }
-                        }
-
-                        Log.d(TAG, "onFinish: Playing haptic and sound")
-                        WorkoutHaptics.setComplete(itemView.context)
-                        Thread { WorkoutSoundManager.playSetComplete(itemView.context) }.start()
-
-                        // ⭐ NUEVO: Secuencia automática
-                        if (isSequenceMode()) {
-                            if (restSeconds > 0) {
-                                // Hay descanso → iniciar descanso automáticamente
-                                Log.d(TAG, "onFinish: Starting rest timer automatically")
-                                restTimerActive = true
-                                tvRestTimer.text = "${restSeconds}s descanso"
-                                tvRestHint.text = "STOP"
-                                countDownTimer?.cancel()
-                                countDownTimer = object : CountDownTimer(restSeconds * 1000L, 1000) {
-                                    override fun onTick(millisUntilFinished: Long) {
-                                        if (restTimerActive && itemView.isAttachedToWindow) {
-                                            val secondsLeft = (millisUntilFinished / 1000).toInt()
-                                            tvRestTimer.text = "${secondsLeft}s descanso"
-                                            tvRestHint.text = "STOP"
-                                        }
-                                    }
-
-                                    override fun onFinish() {
-                                        if (restTimerActive && itemView.isAttachedToWindow) {
-                                            restTimerActive = false
-                                            countDownTimer = null
-                                            WorkoutHaptics.restFinished(itemView.context)
-                                            Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
-                                            updateRestLabel()
-                                            // Avanzar al siguiente set
-                                            Log.d(TAG, "onFinish: Moving to next set after rest")
-                                            onSetRestFinished(myIndex)
-                                        }
-                                    }
-                                }.start()
-                            } else {
-                                // Sin descanso → ir directo al siguiente
-                                Log.d(TAG, "onFinish: No rest, moving to next set")
-                                onSetRestFinished(myIndex)
-                            }
-                        }
-                    }
-                }
-            }.start()
-
-            Log.d(TAG, "startDurationCountdown: Timer started")
         }
 
         private fun setupDurationExtra(set: RoutineSetTemplateResponse, position: Int) {
@@ -672,7 +641,7 @@ class WorkoutSetAdapter(
                     // Mostrar contadores
                     frameDurationCounterMinutes.visibility = View.VISIBLE
                     frameDurationCounterSeconds.visibility = View.VISIBLE
-                    startDurationCountdown(selectedDuration, set.id, tvRepsLabel)
+                    startDurationCountdown(selectedDuration, tvRepsLabel)
                 }
             }
 
@@ -718,7 +687,7 @@ class WorkoutSetAdapter(
                     // Mostrar contadores
                     frameDurationCounterMinutes.visibility = View.VISIBLE
                     frameDurationCounterSeconds.visibility = View.VISIBLE
-                    startDurationCountdown(selectedDuration, set.id, tvParamUnit)
+                    startDurationCountdown(selectedDuration, tvParamUnit)
                 }
             }
         }
@@ -731,40 +700,16 @@ class WorkoutSetAdapter(
             }
             layoutRestContainer.visibility = View.VISIBLE
             updateRestLabel()
-            countDownTimer?.cancel()
             restTimerActive = false
 
             layoutRestContainer.setOnClickListener {
                 if (restTimerActive) {
-                    countDownTimer?.cancel()
-                    countDownTimer = null
                     restTimerActive = false
+                    executionConfig.stopWorkoutTimer(this)
                     updateRestLabel()
                 } else {
                     restTimerActive = true
-
-                    countDownTimer = object : CountDownTimer(restSeconds * 1000L, 1000) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            if (!restTimerActive || !itemView.isAttachedToWindow) {
-                                cancel()
-                                return
-                            }
-                            val secondsLeft = (millisUntilFinished / 1000).toInt()
-                            tvRestTimer.text = "${secondsLeft}s descanso"
-                            tvRestHint.text = "STOP"
-                        }
-
-                        override fun onFinish() {
-                            if (restTimerActive && itemView.isAttachedToWindow) {
-                                restTimerActive = false
-                                countDownTimer = null
-                                WorkoutHaptics.restFinished(itemView.context)
-                                Thread { WorkoutSoundManager.playRestFinished(itemView.context) }.start()
-                                updateRestLabel()
-                                if (isSequenceMode()) onSetRestFinished(myIndex)
-                            }
-                        }
-                    }.start()
+                    startRestCountdown()
                 }
             }
         }

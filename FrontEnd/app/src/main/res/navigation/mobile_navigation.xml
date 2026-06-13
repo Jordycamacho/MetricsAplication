@@ -73,6 +73,9 @@
         <action
             android:id="@+id/action_profile_to_import_export"
             app:destination="@id/navigation_import_export" />
+        <action
+            android:id="@+id/action_profile_to_feedback"
+            app:destination="@id/navigation_feedback" />
     </fragment>
 
     <!-- Rutinas -->
@@ -278,6 +281,12 @@
         android:name="com.fitapp.appfit.feature.importexport.ui.ImportExportFragment"
         android:label="@string/title_import_export"
         tools:layout="@layout/fragment_import_export" />
+
+    <fragment
+        android:id="@+id/navigation_feedback"
+        android:name="com.fitapp.appfit.feature.feedback.ui.FeedbackFragment"
+        android:label="@string/feedback_title"
+        tools:layout="@layout/fragment_feedback" />
 
     <fragment
         android:id="@+id/navigation_create_routine"

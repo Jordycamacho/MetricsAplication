@@ -82,12 +82,21 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
 
     private var restTimerService: RestTimerService? = null
     private var serviceBound = false
-    private var localRestTimer: android.os.CountDownTimer? = null
+    private var timerOnTick: ((Int) -> Unit)? = null
+    private var timerOnFinish: (() -> Unit)? = null
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             restTimerService = (binder as? RestTimerService.LocalBinder)?.getService()
             serviceBound = true
+            if (timerOnTick != null || timerOnFinish != null) {
+                restTimerService?.onTick = { remaining -> timerOnTick?.invoke(remaining) }
+                restTimerService?.onFinish = {
+                    timerOnFinish?.invoke()
+                    timerOnTick = null
+                    timerOnFinish = null
+                }
+            }
         }
         override fun onServiceDisconnected(name: ComponentName?) {
             restTimerService = null
@@ -167,6 +176,10 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
         executionConfig.onAutoRestRequested = { seconds, label, _ ->
             startRestCountdown(seconds, label)
         }
+        executionConfig.onWorkoutTimerStart = { seconds, label, soundType, onTick, onFinish ->
+            startWorkoutTimer(seconds, label, soundType, onTick, onFinish)
+        }
+        executionConfig.onWorkoutTimerStop = { stopWorkoutTimer() }
         executionConfig.onSetCompleted = { updateProgressBadge() }
     }
 
@@ -690,66 +703,78 @@ class WorkoutFragment : Fragment(), WorkoutFilterBottomSheet.Listener {
         binding.tvProgressBadge.text = if (total > 0) "$completed/$total sets · $pct%" else "0 sets"
     }
 
-    // ── Rest countdown (RestTimerService) ───────────────────────────────────
+    // ── Workout timers (RestTimerService) ───────────────────────────────────
+
+    private fun startWorkoutTimer(
+        seconds: Int,
+        label: String,
+        soundType: WorkoutPreferences.TimerSoundType,
+        onTick: (Int) -> Unit,
+        onFinish: () -> Unit
+    ) {
+        timerOnTick = onTick
+        timerOnFinish = onFinish
+
+        restTimerService?.onTick = { remaining -> timerOnTick?.invoke(remaining) }
+        restTimerService?.onFinish = {
+            timerOnFinish?.invoke()
+            timerOnTick = null
+            timerOnFinish = null
+        }
+
+        RestTimerService.startTimer(requireContext(), seconds, label, soundType)
+    }
 
     private fun startRestCountdown(seconds: Int, label: String) {
-        stopRestCountdown(notifyService = false)
-
-        RestTimerService.startTimer(
-            requireContext(),
-            seconds,
-            label,
-            WorkoutPreferences.TimerSoundType.SET_REST
-        )
-
-        restTimerService?.onTick = { remaining ->
-            if (_binding != null) {
-                binding.layoutRestCountdown.isVisible = true
-                binding.tvRestCountdown.text = "Descanso ${remaining}s"
-            }
-        }
-        restTimerService?.onFinish = {
-            onRestCountdownFinished()
-        }
-
-        localRestTimer = object : android.os.CountDownTimer(seconds * 1000L, 1000L) {
-            override fun onTick(millisUntilFinished: Long) {
+        startWorkoutTimer(
+            seconds = seconds,
+            label = label,
+            soundType = WorkoutPreferences.TimerSoundType.SET_REST,
+            onTick = { remaining ->
                 if (_binding != null) {
-                    val remaining = (millisUntilFinished / 1000).toInt() + 1
                     binding.layoutRestCountdown.isVisible = true
                     binding.tvRestCountdown.text = "Descanso ${remaining}s"
                 }
-            }
-            override fun onFinish() {
-                onRestCountdownFinished()
-            }
-        }.start()
+            },
+            onFinish = { onRestCountdownFinished() }
+        )
 
-        binding.layoutRestCountdown.isVisible = true
-        binding.tvRestCountdown.text = "Descanso ${seconds}s"
+        if (_binding != null) {
+            binding.layoutRestCountdown.isVisible = true
+            binding.tvRestCountdown.text = "Descanso ${seconds}s"
+        }
     }
 
     private fun onRestCountdownFinished() {
         if (_binding == null) return
         binding.layoutRestCountdown.isVisible = false
-        localRestTimer = null
-        restTimerService?.onTick = null
-        restTimerService?.onFinish = null
         if (shouldAutoFocusNext()) {
             goToNextIncomplete()
         }
     }
 
-    private fun stopRestCountdown(notifyService: Boolean = true) {
-        localRestTimer?.cancel()
-        localRestTimer = null
-        if (notifyService) {
-            RestTimerService.stopTimer(requireContext())
-        }
+    private fun stopWorkoutTimer() {
+        RestTimerService.stopTimer(requireContext())
         restTimerService?.onTick = null
         restTimerService?.onFinish = null
+        timerOnTick = null
+        timerOnFinish = null
         if (_binding != null) {
             binding.layoutRestCountdown.isVisible = false
+        }
+    }
+
+    private fun stopRestCountdown(notifyService: Boolean = true) {
+        if (notifyService) {
+            stopWorkoutTimer()
+        } else {
+            restTimerService?.onTick = null
+            restTimerService?.onFinish = null
+            timerOnTick = null
+            timerOnFinish = null
+            if (_binding != null) {
+                binding.layoutRestCountdown.isVisible = false
+            }
         }
     }
 
